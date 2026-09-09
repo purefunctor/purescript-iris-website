@@ -183,7 +183,7 @@ impl QueryProxy for Engine {
 }
 
 impl checking::PrettyQueries for Engine {
-    fn lookup_type(&self, id: checking::core::TypeId) -> checking::core::Type {
+    fn lookup_type(&self, id: checking::core::TypeId) -> &checking::core::Type {
         self.interners.lookup_type(id)
     }
     fn lookup_forall_binder(
@@ -192,10 +192,10 @@ impl checking::PrettyQueries for Engine {
     ) -> checking::core::ForallBinder {
         self.interners.lookup_forall_binder(id)
     }
-    fn lookup_row_type(&self, id: checking::core::RowTypeId) -> checking::core::RowType {
+    fn lookup_row_type(&self, id: checking::core::RowTypeId) -> &checking::core::RowType {
         self.interners.lookup_row_type(id)
     }
-    fn lookup_smol_str(&self, id: checking::core::SmolStrId) -> smol_str::SmolStr {
+    fn lookup_smol_str(&self, id: checking::core::SmolStrId) -> &smol_str::SmolStr {
         self.interners.lookup_smol_str(id)
     }
 }
