@@ -103,7 +103,7 @@ function tokenColor(name) {
 
 export function createEditors(sourceElement, outputElement, source, onChange) {
   const color = tokenColor;
-  monaco.editor.defineTheme("alexandrite", {
+  monaco.editor.defineTheme("iris", {
     base: "vs",
     inherit: true,
     rules: [
@@ -126,7 +126,7 @@ export function createEditors(sourceElement, outputElement, source, onChange) {
     },
   });
   const options = {
-    theme: "alexandrite",
+    theme: "iris",
     automaticLayout: true,
     minimap: { enabled: false },
     fontFamily: "JetBrains Mono Variable, monospace",
@@ -177,7 +177,7 @@ export function createEditors(sourceElement, outputElement, source, onChange) {
     setDiagnostics(diagnostics) {
       monaco.editor.setModelMarkers(
         inputModel,
-        "alexandrite",
+        "iris",
         diagnostics
           .filter((diagnostic) => diagnostic.path === "Main.purs")
           .map((diagnostic) => {

@@ -1,6 +1,6 @@
 module Website.Components.Header.Styles (controlStyles) where
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 
 -- Shared by navigation links and the playground's header controls.
 controlStyles = StyleX.create

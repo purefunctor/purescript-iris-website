@@ -15,8 +15,8 @@
     --landing-color-powder-rust-bright: oklch(from var(--landing-color-powder-rust) calc(l + 0.04) calc(c - 0.013) h);
     --landing-color-crystal: oklch(54.66% 0.1932 286.5);
     --landing-color-purescript-charcoal: oklch(19.98% 0.0086 264.4);
-    --landing-color-action-try-alexandrite: var(--landing-color-powder-rust);
-    --landing-color-action-try-alexandrite-foreground: var(--landing-color-ink);
+    --landing-color-action-try-iris: var(--landing-color-powder-rust);
+    --landing-color-action-try-iris-foreground: var(--landing-color-ink);
     --landing-color-action-github: oklch(91% 0.018 285);
     --landing-color-action-github-foreground: var(--landing-color-ink);
     --landing-color-action-bluesky: oklch(91% 0.04 230);

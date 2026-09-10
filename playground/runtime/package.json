@@ -1,5 +1,5 @@
 {
-  "name": "alexandrite-playground-runtime",
+  "name": "iris-playground-runtime",
   "private": true,
   "type": "module",
   "dependencies": {

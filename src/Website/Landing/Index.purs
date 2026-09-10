@@ -2,7 +2,7 @@ module Website.Landing.Index (component) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Data.Foldable (for_)
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
@@ -150,7 +150,7 @@ component = unsafePerformEffect do
                   [ DOM.div (StyleX.props styles.heroContent)
                       [ DOM.h1 (StyleX.props styles.heroTitle)
                           [ DOM.span (StyleX.props styles.line) "PureScript"
-                          , DOM.span (StyleX.props styles.heroTitleAccent) "Alexandrite"
+                          , DOM.span (StyleX.props styles.heroTitleAccent) "Iris"
                           ]
                       , DOM.p (StyleX.props styles.lead)
                           [ DOM.span (StyleX.props styles.line)
@@ -212,11 +212,11 @@ component = unsafePerformEffect do
                   , DOM.a
                       { className: (StyleX.props styles.footerLink).className
                       , href:
-                          "https://github.com/purefunctor/purescript-alexandrite/blob/main/LICENSE"
+                          "https://github.com/purefunctor/purescript-iris/blob/main/LICENSE"
                       , target: targetBlank
                       , rel: "noopener noreferrer"
                       }
-                      "Alexandrite"
+                      "Iris"
                   , DOM.span {} " by purefunctor, 2023–2026"
                   ]
               ]

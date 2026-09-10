@@ -1,6 +1,6 @@
 module Website.Landing.HeroRibbons (heroRibbons, separatorRibbons) where
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 
 foreign import heroRibbonsImpl ::

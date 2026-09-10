@@ -2,7 +2,7 @@ module Website.Playground.ExampleSelect (component) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Data.Array (mapWithIndex)
 import Effect (Effect)
 import Effect.Uncurried (mkEffectFn1)

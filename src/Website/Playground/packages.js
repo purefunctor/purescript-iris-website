@@ -1,5 +1,5 @@
 // Registry archives stay in the browser. Neither sources nor notices are evaluated here.
-const archiveCache = "alexandrite-registry-archives-v1";
+const archiveCache = "iris-registry-archives-v1";
 const decoder = new TextDecoder();
 
 async function readBytes(stream, limit) {

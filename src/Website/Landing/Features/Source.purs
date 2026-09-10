@@ -2,7 +2,7 @@ module Website.Landing.Features.Source (landingPageSource, editorIntelligenceMed
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Website.Landing.Features.Code as Code
 import React.Basic (JSX, ReactComponent, element)
 import Yoga.React.DOM as DOM

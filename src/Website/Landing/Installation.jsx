@@ -5,8 +5,8 @@ import CheckIcon from "~icons/lucide/check";
 import CopyIcon from "~icons/lucide/copy";
 import TerminalIcon from "~icons/lucide/terminal";
 
-const unixCopyCommand = "curl --proto '=https' --tlsv1.2 -LsSf https://install.alexandrite.dev/install.sh | sh";
-const windowsCommand = "irm https://install.alexandrite.dev/install.ps1 | iex";
+const unixCopyCommand = "curl --proto '=https' --tlsv1.2 -LsSf https://raw.githubusercontent.com/purefunctor/purescript-iris/main/install.sh | sh";
+const windowsCommand = "irm https://raw.githubusercontent.com/purefunctor/purescript-iris/main/install.ps1 | iex";
 
 async function copyToClipboard(text) {
   try {

@@ -35,7 +35,7 @@ try {
   assert.equal((await fetch(new URL("/playground/packages.json", url))).status, 404);
   browser("open", url);
   compiled();
-  assert.equal(evaluate('(async () => (await (await caches.open("alexandrite-registry-archives-v1")).keys()).length)()'), manifest.packages.length);
+  assert.equal(evaluate('(async () => (await (await caches.open("iris-registry-archives-v1")).keys()).length)()'), manifest.packages.length);
   // Hold license animations at a deterministic frame to inspect both directions.
   evaluate(`(() => {
     const animate = Element.prototype.animate;
@@ -103,7 +103,7 @@ try {
   browser("network", "route", "https://packages.registry.purescript.org/*", "--abort");
   browser("reload");
   compiled(); // Must work from Cache Storage with Registry traffic blocked.
-  evaluate('caches.delete("alexandrite-registry-archives-v1")');
+  evaluate('caches.delete("iris-registry-archives-v1")');
   browser("reload");
   wait('document.querySelector("#compile-status")?.textContent.includes("Could not download")');
   assert.equal(evaluate('document.querySelector("#compile-status").hidden'), false);

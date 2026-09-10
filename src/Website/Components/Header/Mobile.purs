@@ -10,7 +10,7 @@ module Website.Components.Header.Mobile
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import React.Basic (JSX)
 
 styles = StyleX.create
@@ -145,7 +145,7 @@ styles = StyleX.create
           , outlineWidth: 2
           }
       }
-  , tryAlexandriteLink: { color: "var(--landing-color-action-try-alexandrite-foreground)" }
+  , tryIrisLink: { color: "var(--landing-color-action-try-iris-foreground)" }
   , githubLink: { color: "var(--landing-color-action-github-foreground)" }
   , blueskyLink: { color: "var(--landing-color-action-bluesky-foreground)" }
   , documentationLink: { color: "var(--landing-color-action-documentation-foreground)" }
@@ -209,7 +209,7 @@ navigationIconStyle = StyleX.props styles.navigationIcon
 linkStyle destination =
   StyleX.props
     [ styles.mobileLink
-    , StyleX.conditional (destination == "try-alexandrite") styles.tryAlexandriteLink
+    , StyleX.conditional (destination == "try-iris") styles.tryIrisLink
     , StyleX.conditional (destination == "github") styles.githubLink
     , StyleX.conditional (destination == "bluesky") styles.blueskyLink
     , StyleX.conditional (destination == "documentation") styles.documentationLink

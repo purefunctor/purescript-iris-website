@@ -22,6 +22,10 @@ const evaluate = (code) =>
 const wait = (code) => browser("wait", "--fn", code);
 const status = () =>
   evaluate('document.getElementById("compile-status").textContent');
+const selectExample = (name) => {
+  browser("click", '[aria-haspopup="listbox"]');
+  browser("find", "role", "option", "click", "--name", name, "--exact");
+};
 const compile = (source) => {
   browser("focus", '[aria-label="PureScript source editor"]');
   browser("press", "Control+a");
@@ -43,12 +47,13 @@ try {
   wait(
     'document.getElementById("compile-status")?.textContent.startsWith("Compiled in")',
   );
+  assert.equal(evaluate("document.title"), "Playground — Iris");
   assert.equal(
     evaluate('document.querySelectorAll(".monaco-editor").length'),
     2,
   );
   run();
-  assert.match(browser("snapshot"), /Hello, Alexandrite!/);
+  assert.match(browser("snapshot"), /Hello, Iris!/);
   assert.match(browser("snapshot"), /49/);
   assert.equal(
     evaluate('document.querySelector("iframe").getAttribute("sandbox")'),
@@ -70,7 +75,7 @@ try {
     };
     return true;
   })()`);
-  browser("select", '[aria-label="Example"]', "1");
+  selectExample("React counter");
   wait('!!document.querySelector("[role=status][aria-label^=Preparing]")');
   assert.equal(
     evaluate('document.querySelector("#panel-result [role=status]")'),
@@ -114,18 +119,18 @@ try {
   assert.equal(browser("get", "text", "#root > div > div").trim(), "0");
   assert.match(browser("get", "attr", "#root > div", "style"), /display: flex/);
   browser("frame", "main");
-  browser("select", '[aria-label="Example"]', "2");
+  selectExample("Array transformations");
   wait(
     'document.getElementById("compile-status").textContent.startsWith("Compiled in")',
   );
   run();
   assert.match(browser("snapshot"), /Sum: 220/);
-  browser("select", '[aria-label="Example"]', "0");
+  selectExample("Hello, Iris");
   wait(
     'document.getElementById("compile-status").textContent.startsWith("Compiled in")',
   );
   run();
-  assert.match(browser("snapshot"), /Hello, Alexandrite!/);
+  assert.match(browser("snapshot"), /Hello, Iris!/);
   browser("click", "#tab-javascript");
   assert.equal(
     evaluate('document.getElementById("panel-result").hidden'),
@@ -361,9 +366,9 @@ try {
     ),
     sourceWidth,
   );
-  assert.equal(
-    evaluate('document.querySelector("header h1 a").textContent'),
-    "ALEXANDRITE",
+  assert.match(
+    evaluate("document.querySelector('header a[aria-label=\"Iris home\"]').textContent"),
+    /^IRIS/,
   );
   browser("find", "role", "button", "click", "--name", "Close", "--exact");
   console.log(

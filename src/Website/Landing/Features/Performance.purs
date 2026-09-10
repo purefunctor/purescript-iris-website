@@ -2,7 +2,7 @@ module Website.Landing.Features.Performance (performanceMedia) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import React.Basic (JSX)
 import Yoga.React.DOM as DOM
 

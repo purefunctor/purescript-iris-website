@@ -1,5 +1,5 @@
 {
-  "name": "alexandrite-website",
+  "name": "iris-website",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -11,11 +11,11 @@
     "#playground/*": "./playground/*"
   },
   "scripts": {
-    "build:purescript": "purescript-alexandrite build",
+    "build:purescript": "iris build",
     "build:playground": "node scripts/build-playground-packages.mjs && node scripts/build-playground-runtime.mjs && node scripts/build-playground-wasm.mjs && node scripts/build-playground-assets.mjs",
-    "prepare:dev": ".amp/with-alexandrite pnpm exec concurrently --kill-others-on-fail --names playground,purescript \"pnpm build:playground\" \"pnpm build:purescript\"",
+    "prepare:dev": ".amp/with-iris pnpm exec concurrently --kill-others-on-fail --names playground,purescript \"pnpm build:playground\" \"pnpm build:purescript\"",
     "build": "pnpm prepare:dev && astro build",
-    "dev": "pnpm prepare:dev && PATH=\"${ALEXANDRITE_REPOSITORY:-../repos/purescript-alexandrite}/target/release:$PATH\" concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"purescript-alexandrite watch --output output\" \"astro dev\"",
+    "dev": "pnpm prepare:dev && PATH=\"${IRIS_REPOSITORY:-../repos/purescript-iris}/target/release:$PATH\" concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"iris watch --output output\" \"astro dev\"",
     "test:playground": "node --test src/Website/Playground/*.test.js playground/packages/*.test.mjs",
     "preview": "node server.mjs",
     "start": "node server.mjs",

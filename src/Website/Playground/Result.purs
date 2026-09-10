@@ -2,7 +2,7 @@ module Website.Playground.Result (component, Outputs, Toolbar) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.Nullable (Nullable, toMaybe)
 import Data.Nullable as Nullable

@@ -87,7 +87,7 @@ if (process.env.PLAYGROUND_PACKAGES) {
   assert(full.outputs.some(o => o.path === 'React.Basic.Hooks/index.js'));
   assert(full.outputs.some(o => o.path.startsWith('Halogen.')));
   checkGraph(full.outputs);
-  const defaultMain = compiler.compile([file('Main.purs', 'module Main where\nimport Prelude\nimport Effect (Effect)\nimport Effect.Console (log)\nmain :: Effect Unit\nmain = log "Hello from Alexandrite!"')]);
+  const defaultMain = compiler.compile([file('Main.purs', 'module Main where\nimport Prelude\nimport Effect (Effect)\nimport Effect.Console (log)\nmain :: Effect Unit\nmain = log "Hello from Iris!"')]);
   assert(!defaultMain.diagnostics.some(d => d.severity === 'error'), JSON.stringify(defaultMain.diagnostics));
   const generatedMain = defaultMain.outputs.find(o => o.path === 'Main/index.js');
   assert(generatedMain && /export\s+(const|function)\s+main\b/.test(generatedMain.source), generatedMain?.source);

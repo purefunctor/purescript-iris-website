@@ -1,6 +1,6 @@
 # Website compiler adapter
 
-This directory owns an independent single-threaded query engine using Alexandrite's
+This directory owns an independent single-threaded query engine using Iris's
 frontend and functional/JavaScript backends. It never runs generated JavaScript.
 
 ```js
@@ -48,8 +48,8 @@ node scripts/build-playground-packages.mjs --fixture
 PLAYGROUND_PACKAGES="$PWD/build/playground-packages.json" node scripts/build-playground-wasm.mjs --test-wasm
 ```
 
-`ALEXANDRITE_REPOSITORY` selects the compiler checkout (default
-`../repos/purescript-alexandrite`, relative to the website root). The script generates
+`IRIS_REPOSITORY` selects the compiler checkout (default
+`../repos/purescript-iris`, relative to the website root). The script generates
 a Cargo workspace and resolved path dependencies in ignored `build/playground-compiler/`;
 it does not modify the compiler checkout. Web bindings and WASM are emitted under
 `build/playground-compiler/pkg-web/`. The website's subsequent `build-playground-assets.mjs`
@@ -60,6 +60,6 @@ The WASM test uses `pkg-nodejs/` instead. Test modes download a checksum-pinned
 Registry Prelude 6.0.2 fixture once into the ignored build workspace. The optional
 `PLAYGROUND_PACKAGES` check reads an explicitly generated test fixture; it does not build or publish it.
 
-The adapter is intentionally stricter than Alexandrite's editor recovery for missing
+The adapter is intentionally stricter than Iris's editor recovery for missing
 expressions and its opaque-FFI fallback: incomplete expressions and JavaScript parse
 errors are errors here and suppress all output. Normal compiler warnings remain warnings.

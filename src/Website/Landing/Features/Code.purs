@@ -1,6 +1,6 @@
 module Website.Landing.Features.Code where
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 
 styles = StyleX.create
   { preview:

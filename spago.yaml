@@ -1,5 +1,5 @@
 package:
-  name: alexandrite-website
+  name: iris-website
   dependencies:
     - arrays
     - effect

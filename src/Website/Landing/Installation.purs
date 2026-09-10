@@ -1,6 +1,6 @@
 module Website.Landing.Installation (installationSection) where
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Website.Components.ContentShell as ContentShell
 import React.Basic (JSX, ReactComponent, element)
 import Yoga.React.DOM as DOM
@@ -170,7 +170,7 @@ installationSection =
   DOM.section (StyleX.props styles.section)
     [ DOM.div ContentShell.contentShell
         [ DOM.div (StyleX.props styles.content)
-            [ DOM.h2 (StyleX.props styles.title) "Install Alexandrite"
+            [ DOM.h2 (StyleX.props styles.title) "Install Iris"
             , element installationCommandsImpl
                 { commandClassName: (StyleX.props styles.command).className
                 , copyButtonClassName: (StyleX.props styles.copyButton).className

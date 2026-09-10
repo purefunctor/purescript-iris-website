@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const compiler = await realpath(resolve(root, process.env.ALEXANDRITE_REPOSITORY || '../repos/purescript-alexandrite'));
+const compiler = await realpath(resolve(root, process.env.IRIS_REPOSITORY || '../repos/purescript-iris'));
 const build = join(root, 'build/playground-compiler');
 const run = (command, args) => {
   const child = spawnSync(command, args, { cwd: build, stdio: 'inherit' });

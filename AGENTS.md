@@ -1,12 +1,12 @@
 # Agent guide
 
-This repository is the Alexandrite website: Astro handles routing and server rendering on Node.js; React components are implemented in PureScript and compiled with Alexandrite.
+This repository is the Iris website: Astro handles routing and server rendering on Node.js; React components are implemented in PureScript and compiled with Iris.
 
 ## Sources of truth
 
-- Treat `purefunctor/purescript-alexandrite` as the source of truth for compiler behaviour, architecture, compatibility, and performance claims. In Amp, inspect the additional checkout at `../repos/purescript-alexandrite`; if it is unavailable, use Librarian to research that repository instead of inferring from website-local code.
+- Treat `purefunctor/purescript-iris` as the source of truth for compiler behaviour, architecture, compatibility, and performance claims. In Amp, inspect the additional checkout at `../repos/purescript-iris`; if it is unavailable, use Librarian to research that repository instead of inferring from website-local code.
 - Substantiate product copy before weakening it. Benchmark this website with the release compiler when evaluating build-speed claims, and separate compiler time from Spago and Vite overhead.
-- References to existing PureScript libraries and projects describe Alexandrite's compatibility testing against the PureScript Registry package set. Consult `tests-compatibility` and its CI workflows in the compiler repository for the current scope and evidence.
+- References to existing PureScript libraries and projects describe Iris's compatibility testing against the PureScript Registry package set. Consult `tests-compatibility` and its CI workflows in the compiler repository for the current scope and evidence.
 
 ## Implementation conventions
 
@@ -20,7 +20,7 @@ This repository is the Alexandrite website: Astro handles routing and server ren
 - Use the package import aliases `#src/*`, `#output/*`, `#build/*` and `#playground/*` for cross-directory imports; `#dist/*` is for the production server's built entrypoint. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
 - Keep playground UI and React hooks in `src/Website/Playground/Index.purs` and `src/Website/Playground/Result.purs`. Their JavaScript FFI companions implement browser effects: Monaco and compiler workers, focus, runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
 - Playground dialog animations use only `motion/mini` through `dialog.js`. PureScript owns visibility and controller lifetime; browser controllers own interruption, native modal closing and focus. Cancel backdrop effects explicitly (Mini's `stop()` does not), restore owned inline styles, and keep trivial CSS transitions and React Aria presence unchanged.
-- Author component StyleX declarations in PureScript using `Alexandrite.StyleX`. Alexandrite emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
+- Author component StyleX declarations in PureScript using `Iris.StyleX`. Iris emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
 - Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.Header.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
 
 ### Component exports
@@ -64,8 +64,8 @@ See [README.md](README.md) for installation prerequisites and standard developme
 ### Orb setup and preview
 
 - `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. Their environment is persisted for login shells without manually linking tool binaries. Setup also installs stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127, installs locked dependencies, and runs `pnpm prepare:dev`. Snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
-- `pnpm prepare:dev` builds the native compiler through `.amp/with-alexandrite`, then prepares playground assets and PureScript in parallel. Use the build tools' incremental caches; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
-- `.amp/with-alexandrite` builds the native release compiler from `ALEXANDRITE_REPOSITORY` (default: the additional checkout at `../repos/purescript-alexandrite`) and puts it on PATH for the supplied command. Cargo and Alexandrite reuse existing build caches. If memory is constrained, set `CARGO_BUILD_JOBS=2` rather than assuming a default job limit.
+- `pnpm prepare:dev` builds the native compiler through `.amp/with-iris`, then prepares playground assets and PureScript in parallel. Use the build tools' incremental caches; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
+- `.amp/with-iris` builds the native release compiler from `IRIS_REPOSITORY` (default: the additional checkout at `../repos/purescript-iris`) and puts it on PATH for the supplied command. Cargo and Iris reuse existing build caches. If memory is constrained, set `CARGO_BUILD_JOBS=2` rather than assuming a default job limit.
 - `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/playground` before reporting ready. It generates Website and Playground links in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
 

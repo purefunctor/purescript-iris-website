@@ -2,7 +2,7 @@ module Website.Components.Header (header, playgroundHeader) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Website.Components.Header.Mobile as Mobile
 import Website.Components.Header.Styles (controlStyles)
 import Website.Components.Icon as Icon
@@ -158,7 +158,7 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
-data NavigationDestination = TryAlexandrite | GitHub | Bluesky | Documentation
+data NavigationDestination = TryIris | GitHub | Bluesky | Documentation
 data NavigationLayout = DesktopNavigation | MobileNavigation
 
 header :: Component Unit
@@ -201,12 +201,12 @@ brand =
     { className: styleProps.headerBrand.className
     , href: "/"
     , target: targetSelf
-    , "aria-label": "Alexandrite home"
+    , "aria-label": "Iris home"
     }
     [ DOM.span styleProps.headerBrandIcon
         (element Icon.pureScript { "aria-hidden": true, focusable: false })
     , DOM.span styleProps.headerBrandCopy
-        [ DOM.span styleProps.headerBrandName "ALEXANDRITE"
+        [ DOM.span styleProps.headerBrandName "IRIS"
         , DOM.span styleProps.headerBrandSubtitle "a modern PureScript compiler"
         ]
     ]
@@ -221,12 +221,12 @@ navigation style layout =
     if isDesktopNavigation layout then
       [ navigationLink layout GitHub
       , navigationLink layout Bluesky
-      , navigationLink layout TryAlexandrite
+      , navigationLink layout TryIris
       , navigationLink layout Documentation
       ]
     else
       [ navigationLink layout Documentation
-      , navigationLink layout TryAlexandrite
+      , navigationLink layout TryIris
       , navigationLink layout GitHub
       , navigationLink layout Bluesky
       ]
@@ -253,7 +253,7 @@ navigationLink layout destination =
         Mobile.brandIconStyle
       else Mobile.navigationIconStyle
     externalIcon =
-      if mobile && destinationName' /= "try-alexandrite" then
+      if mobile && destinationName' /= "try-iris" then
         [ DOM.span Mobile.externalLinkIconStyle
             (element Icon.externalLink { "aria-hidden": true, focusable: false })
         ]
@@ -270,7 +270,7 @@ navigationLink layout destination =
       { className: linkStyle.className
       , href: destinationHref destination
       , hidden: isTemporarilyHiddenDestination destination
-      , target: if destinationName' == "try-alexandrite" then targetSelf else targetBlank
+      , target: if destinationName' == "try-iris" then targetSelf else targetBlank
       , rel: "noopener noreferrer"
       }
       linkChildren
@@ -299,7 +299,7 @@ desktopLinkStyle :: NavigationDestination -> StyleX.Props
 desktopLinkStyle = case _ of
   GitHub -> StyleX.props styles.desktopSocialLink
   Bluesky -> StyleX.props styles.desktopSocialLink
-  TryAlexandrite -> StyleX.props [ styles.desktopTryLink, controlStyles.control ]
+  TryIris -> StyleX.props [ styles.desktopTryLink, controlStyles.control ]
   Documentation -> StyleX.props [ styles.desktopDocumentationLink, controlStyles.control ]
 
 isSocialDestination :: NavigationDestination -> Boolean
@@ -315,28 +315,28 @@ isTemporarilyHiddenDestination = case _ of
 
 destinationName :: NavigationDestination -> String
 destinationName = case _ of
-  TryAlexandrite -> "try-alexandrite"
+  TryIris -> "try-iris"
   GitHub -> "github"
   Bluesky -> "bluesky"
   Documentation -> "documentation"
 
 destinationHref :: NavigationDestination -> String
 destinationHref = case _ of
-  TryAlexandrite -> "/playground"
-  GitHub -> "https://github.com/purefunctor/purescript-alexandrite"
+  TryIris -> "/playground"
+  GitHub -> "https://github.com/purefunctor/purescript-iris"
   Bluesky -> "https://bsky.app/profile/purefunctor.me"
   Documentation -> "/docs"
 
 destinationLabel :: NavigationDestination -> String
 destinationLabel = case _ of
-  TryAlexandrite -> "Try Alexandrite"
+  TryIris -> "Try Iris"
   GitHub -> "GitHub"
   Bluesky -> "Bluesky"
   Documentation -> "Documentation"
 
 destinationIcon :: NavigationDestination -> ReactComponent Icon.IconProps
 destinationIcon = case _ of
-  TryAlexandrite -> Icon.code
+  TryIris -> Icon.code
   GitHub -> Icon.gitHub
   Bluesky -> Icon.bluesky
   Documentation -> Icon.bookOpen

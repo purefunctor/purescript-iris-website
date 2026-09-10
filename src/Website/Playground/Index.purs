@@ -2,7 +2,7 @@ module Website.Playground.Index (component) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Data.Array (elem, length, mapWithIndex, null)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable)

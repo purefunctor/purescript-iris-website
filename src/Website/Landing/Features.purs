@@ -2,7 +2,7 @@ module Website.Landing.Features (featuresSection) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Data.Maybe (Maybe(..), maybe)
 import Website.Landing.Features.JavaScript (javascriptOutputMedia)
 import Website.Landing.Features.Performance (performanceMedia)
@@ -151,7 +151,7 @@ featuresSection =
             , mediaStyle: featureMediaSource
             , title: "A modern PureScript experience"
             , description:
-                "Alexandrite pushes PureScript development towards the frontier. Experience rich editor tooling and instant builds for existing PureScript libraries and projects."
+                "Iris pushes PureScript development towards the frontier. Experience rich editor tooling and instant builds for existing PureScript libraries and projects."
             , details: Nothing
             , vertical: false
             }
@@ -178,7 +178,7 @@ featuresSection =
             , mediaStyle: featureMediaVertical
             , title: "Readable JavaScript output"
             , description:
-                "Alexandrite generates modern JavaScript while optimising PureScript abstractions. Function composition is inlined, newtypes disappear at runtime, Effect abstractions become direct calls, and tail recursion becomes iteration."
+                "Iris generates modern JavaScript while optimising PureScript abstractions. Function composition is inlined, newtypes disappear at runtime, Effect abstractions become direct calls, and tail recursion becomes iteration."
             , details: Just
                 "StyleX and JSX foreign module integration make it easy to build with modern JavaScript toolchains."
             , vertical: true

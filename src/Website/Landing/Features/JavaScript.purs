@@ -2,7 +2,7 @@ module Website.Landing.Features.JavaScript (javascriptOutputMedia) where
 
 import Prelude
 
-import Alexandrite.StyleX as StyleX
+import Iris.StyleX as StyleX
 import Website.Landing.Features.Code as Code
 import React.Basic (JSX)
 import Yoga.React.DOM as DOM
@@ -381,7 +381,7 @@ stylexSource =
   DOM.code {}
     [ DOM.span Code.sourceLine
         [ DOM.span Code.sourceKeyword "import"
-        , DOM.span Code.sourceReference " Alexandrite.StyleX"
+        , DOM.span Code.sourceReference " Iris.StyleX"
         , DOM.span Code.sourceKeyword " as"
         , DOM.span Code.sourceReference " StyleX"
         ]
