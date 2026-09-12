@@ -1,0 +1,58 @@
+name: Website build and tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    env:
+      ALEXANDRITE_REPOSITORY: ${{ github.workspace }}/compiler
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - name: Checkout website
+        uses: actions/checkout@v7
+        with:
+          path: website
+          persist-credentials: false
+
+      - name: Checkout compatible compiler
+        uses: actions/checkout@v7
+        with:
+          repository: purefunctor/purescript-alexandrite
+          ref: 1f8f625651299769e64d99dac51eb128f8e37dc6
+          path: compiler
+          persist-credentials: false
+
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@v2
+        with:
+          version: 12.3.4
+          runtime: node@22
+          install: false
+
+      - name: Install Rust toolchain
+        run: rustup update stable && rustup default stable && rustup target add wasm32-unknown-unknown
+
+      - name: Install WASM bindings generator
+        uses: taiki-e/install-action@v2.87.1
+        with:
+          tool: wasm-bindgen-cli@0.2.127
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test playground
+        run: |
+          pnpm test:playground
+          node scripts/build-playground-wasm.mjs --test-native
+
+      - name: Build production website
+        run: pnpm build
