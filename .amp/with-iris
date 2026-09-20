@@ -15,7 +15,7 @@ cargo build \
   --release \
   --locked \
   --manifest-path "$compiler_manifest" \
-  --package purescript-iris \
+  --package iris-cli \
   --bin iris
 
 export PATH="$compiler_repository/target/release:$PATH"
