@@ -81,6 +81,19 @@ styles = StyleX.create
       , maxWidth: 700
       , textWrap: "balance"
       }
+  , redaction:
+      { "WebkitFilter": "blur(0.14em)"
+      , color: "var(--landing-color-ink)"
+      , display: "inline-block"
+      , filter: "blur(0.14em)"
+      , marginInline: "0.06em"
+      , opacity: 0.78
+      , pointerEvents: "none"
+      , transform: "translateZ(0)"
+      , userSelect: "none"
+      , verticalAlign: "baseline"
+      , whiteSpace: "nowrap"
+      }
   , lead:
       { color: "oklch(from var(--landing-color-muted) calc(l - 0.07) c h)"
       , fontSize: "clamp(1rem, 1.8vw, 1.18rem)"
@@ -113,28 +126,6 @@ styles = StyleX.create
       , paddingInline: 24
       , textDecoration: "none"
       , transition: "background-color 160ms ease"
-      , ":focus-visible":
-          { outlineColor: "var(--landing-color-crystal)"
-          , outlineOffset: 3
-          , outlineStyle: "solid"
-          , outlineWidth: 2
-          }
-      }
-  , secondaryAction:
-      { alignItems: "center"
-      , backgroundColor: "transparent"
-      , color: { default: "var(--landing-color-ink)", ":hover": "var(--landing-color-violet)" }
-      , cursor: "pointer"
-      , display: "inline-flex"
-      , fontSize: 14
-      , fontWeight: 600
-      , justifyContent: "center"
-      , minHeight: 48
-      , paddingInline: 8
-      , textDecorationLine: "underline"
-      , textDecorationThickness: 1
-      , textUnderlineOffset: 5
-      , transition: "color 160ms ease"
       , ":focus-visible":
           { outlineColor: "var(--landing-color-crystal)"
           , outlineOffset: 3
@@ -199,17 +190,19 @@ component = unsafePerformEffect do
                   [ DOM.div (StyleX.props styles.heroContent)
                       [ DOM.h1 (StyleX.props styles.heroTitle) "IRIS"
                       , DOM.p (StyleX.props styles.statement)
-                          "A modern functional programming language with effect tracking."
+                          [ DOM.text "A modern functional programming language with "
+                          , DOM.span
+                              { className: (StyleX.props styles.redaction).className
+                              , role: "img"
+                              , "aria-label": "redacted"
+                              }
+                              "effect tracking."
+                          ]
                       , DOM.p (StyleX.props styles.lead)
-                          "IRIS uses the PureScript package ecosystem and compiles to readable JavaScript. Its effect types show what a program can do before it runs."
+                          "IRIS is an implementation of the PureScript programming language with extra goodies."
                       , DOM.div (StyleX.props styles.actions)
                           [ DOM.a
                               { className: (StyleX.props styles.primaryAction).className
-                              , href: "/playground"
-                              }
-                              "Open playground"
-                          , DOM.a
-                              { className: (StyleX.props styles.secondaryAction).className
                               , href: "#install"
                               }
                               "Install IRIS"

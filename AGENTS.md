@@ -66,7 +66,7 @@ See [README.md](README.md) for installation prerequisites and standard developme
 - `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. Their environment is persisted for login shells without manually linking tool binaries. Setup also installs stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127, installs locked dependencies, and runs `pnpm prepare:dev`. Snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
 - `pnpm prepare:dev` builds the native compiler through `.amp/with-iris`, then prepares playground assets and PureScript in parallel. Use the build tools' incremental caches; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
 - `.amp/with-iris` builds the native release compiler from `IRIS_REPOSITORY` (default: the additional checkout at `../repos/purescript-iris`) and puts it on PATH for the supplied command. Cargo and Iris reuse existing build caches. If memory is constrained, set `CARGO_BUILD_JOBS=2` rather than assuming a default job limit.
-- `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/playground` before reporting ready. It generates Website and Playground links in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
+- `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/` before reporting ready. It generates the Website link in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
 
 ```sh
@@ -96,6 +96,8 @@ amp orb service start production-preview --command 'pnpm preview' --portal
 - When visually reviewing a change with screenshots, capture and inspect representative mobile and desktop viewports so responsive regressions are considered together.
 
 ### Playground checks
+
+The public playground route is disabled for the pre-launch website. The browser checks that target `/playground` apply after its Astro page and sandbox asset are restored; the non-browser checks remain available.
 
 ```sh
 pnpm test:playground

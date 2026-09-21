@@ -153,7 +153,7 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
-data NavigationDestination = TryIris | GitHub | Bluesky | Documentation
+data NavigationDestination = GitHub | Bluesky | Documentation
 data NavigationLayout = DesktopNavigation | MobileNavigation
 
 header :: Component Unit
@@ -216,12 +216,10 @@ navigation style layout =
     if isDesktopNavigation layout then
       [ navigationLink layout GitHub
       , navigationLink layout Bluesky
-      , navigationLink layout TryIris
       , navigationLink layout Documentation
       ]
     else
       [ navigationLink layout Documentation
-      , navigationLink layout TryIris
       , navigationLink layout GitHub
       , navigationLink layout Bluesky
       ]
@@ -245,7 +243,7 @@ navigationLink layout destination =
         Mobile.brandIconStyle
       else Mobile.navigationIconStyle
     externalIcon =
-      if mobile && destinationName' /= "try-iris" then
+      if mobile then
         [ DOM.span Mobile.externalLinkIconStyle
             (element Icon.externalLink { "aria-hidden": true, focusable: false })
         ]
@@ -262,7 +260,7 @@ navigationLink layout destination =
       { className: linkStyle.className
       , href: destinationHref destination
       , hidden: isTemporarilyHiddenDestination destination
-      , target: if destinationName' == "try-iris" then targetSelf else targetBlank
+      , target: targetBlank
       , rel: "noopener noreferrer"
       }
       linkChildren
@@ -291,7 +289,6 @@ desktopLinkStyle :: NavigationDestination -> StyleX.Props
 desktopLinkStyle = case _ of
   GitHub -> StyleX.props styles.desktopSocialLink
   Bluesky -> StyleX.props styles.desktopSocialLink
-  TryIris -> StyleX.props [ controlStyles.control, styles.desktopTryLink ]
   Documentation -> StyleX.props [ controlStyles.control, styles.desktopDocumentationLink ]
 
 isSocialDestination :: NavigationDestination -> Boolean
@@ -307,28 +304,24 @@ isTemporarilyHiddenDestination = case _ of
 
 destinationName :: NavigationDestination -> String
 destinationName = case _ of
-  TryIris -> "try-iris"
   GitHub -> "github"
   Bluesky -> "bluesky"
   Documentation -> "documentation"
 
 destinationHref :: NavigationDestination -> String
 destinationHref = case _ of
-  TryIris -> "/playground"
   GitHub -> "https://github.com/purefunctor/purescript-iris"
   Bluesky -> "https://bsky.app/profile/purefunctor.me"
   Documentation -> "/docs"
 
 destinationLabel :: NavigationDestination -> String
 destinationLabel = case _ of
-  TryIris -> "Playground"
   GitHub -> "GitHub"
   Bluesky -> "Bluesky"
   Documentation -> "Documentation"
 
 destinationIcon :: NavigationDestination -> ReactComponent Icon.IconProps
 destinationIcon = case _ of
-  TryIris -> Icon.code
   GitHub -> Icon.gitHub
   Bluesky -> Icon.bluesky
   Documentation -> Icon.bookOpen

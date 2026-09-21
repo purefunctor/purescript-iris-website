@@ -1,6 +1,6 @@
 # IRIS website
 
-The website for [IRIS](https://github.com/purefunctor/purescript-iris), a modern functional programming language with effect tracking. Built with Astro, React and PureScript.
+The website for [IRIS](https://github.com/purefunctor/purescript-iris), a modern functional programming language. Built with Astro, React and PureScript.
 
 ## Quickstart
 
@@ -10,7 +10,7 @@ You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https:
 
 Use Git checkouts of this website and [the IRIS compiler](https://github.com/purefunctor/purescript-iris). Put the compiler at `../repos/purescript-iris`, or set `IRIS_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate IRIS installation is needed.
 
-**In an Amp orb:** open Website or Playground in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
+**In an Amp orb:** open Website in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
 
 ### First time
 
@@ -48,12 +48,12 @@ pnpm start
 
 ## Playground
 
-Open `/playground` to edit and run PureScript in your browser. Start with an example, change the code, and see the generated JavaScript and running result.
+The playground implementation remains in the repository, but its public route is disabled for the pre-launch website.
 
 <a id="execution-boundary"></a>
 
-Programs run in a sandboxed frame without network access. The compiler worker downloads the pinned PureScript package archives directly from the Registry, verifies their SHA-256 hashes, and caches them in the browser. Package sources are not included in the website build. The compiler and JavaScript runtime are still bundled website assets.
+When enabled, programs run in a sandboxed frame without network access. The compiler worker downloads the pinned PureScript package archives directly from the Registry, verifies their SHA-256 hashes, and caches them in the browser. Package sources are not included in the website build. The playground build bundles the compiler and JavaScript runtime as website assets.
 
-The header shows package-loading progress. The Packages sidebar links to version-specific Pursuit documentation and displays the license and notice files included in each downloaded archive. Archives without those files link to the upstream repository instead.
+The playground header shows package-loading progress. The Packages sidebar links to version-specific Pursuit documentation and displays the license and notice files included in each downloaded archive. Archives without those files link to the upstream repository instead.
 
 Repeat visits reuse verified cached archives. Browser storage can be disabled or evicted; a first visit or a cache miss requires Registry access. This is not a fully offline application. Infinite loops can still freeze the browser tab.

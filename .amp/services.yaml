@@ -1,9 +1,6 @@
 services:
   website:
     command: pnpm dev
-    health: /playground
+    health: /
     portal:
       title: Website
-    portals:
-      - url: /playground
-        title: Playground

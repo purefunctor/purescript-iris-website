@@ -141,7 +141,6 @@ styles = StyleX.create
           , outlineWidth: 2
           }
       }
-  , tryIrisLink: { color: "var(--landing-color-violet)" }
   , githubLink: { color: "var(--landing-color-ink)" }
   , blueskyLink: { color: "var(--landing-color-ink)" }
   , documentationLink: { color: "var(--landing-color-ink)" }
@@ -194,7 +193,6 @@ navigationIconStyle = StyleX.props styles.navigationIcon
 linkStyle destination =
   StyleX.props
     [ styles.mobileLink
-    , StyleX.conditional (destination == "try-iris") styles.tryIrisLink
     , StyleX.conditional (destination == "github") styles.githubLink
     , StyleX.conditional (destination == "bluesky") styles.blueskyLink
     , StyleX.conditional (destination == "documentation") styles.documentationLink

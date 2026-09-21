@@ -5,8 +5,8 @@ import CheckIcon from "~icons/lucide/check";
 import CopyIcon from "~icons/lucide/copy";
 import TerminalIcon from "~icons/lucide/terminal";
 
-const unixCopyCommand = "curl -fsSL https://install.iris-lang.com | sh";
-const windowsCommand = "irm https://install.iris-lang.com | iex";
+const unixCopyCommand = "curl -fsSL https://iris-lang.com/install.sh | sh";
+const windowsCommand = "irm https://iris-lang.com/install.ps1 | iex";
 
 async function copyToClipboard(text) {
   try {
