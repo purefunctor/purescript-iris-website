@@ -1,6 +1,6 @@
 export const examples = [
   {
-    name: "Hello, Iris",
+    name: "Hello, IRIS",
     source: `module Main where
 
 import Prelude
@@ -15,7 +15,7 @@ square n = n * n
 
 main :: Effect Unit
 main = do
-  log (greet "Iris")
+  log (greet "IRIS")
   log (show (square 7))
 `,
   },

@@ -1,6 +1,6 @@
-# Iris website
+# IRIS website
 
-The website for [Iris](https://github.com/purefunctor/purescript-iris), a PureScript compiler. Built with Astro, React and PureScript.
+The website for [IRIS](https://github.com/purefunctor/purescript-iris), a modern functional programming language with effect tracking. Built with Astro, React and PureScript.
 
 ## Quickstart
 
@@ -8,7 +8,7 @@ The website for [Iris](https://github.com/purefunctor/purescript-iris), a PureSc
 
 You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https://pnpm.io/installation), a current stable Rust toolchain, the `wasm32-unknown-unknown` target, and `wasm-bindgen-cli` 0.2.127. fnm reads the Node version from `.node-version`; pnpm manages its own version using the `packageManager` pin. See the playground's [toolchain instructions](playground/compiler/API.md#building) for the Rust commands.
 
-Use Git checkouts of this website and [the Iris compiler](https://github.com/purefunctor/purescript-iris). Put the compiler at `../repos/purescript-iris`, or set `IRIS_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate Iris installation is needed.
+Use Git checkouts of this website and [the IRIS compiler](https://github.com/purefunctor/purescript-iris). Put the compiler at `../repos/purescript-iris`, or set `IRIS_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate IRIS installation is needed.
 
 **In an Amp orb:** open Website or Playground in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
 

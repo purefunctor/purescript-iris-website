@@ -20,29 +20,50 @@ foreign import installationCommandsImpl ::
 
 styles = StyleX.create
   { section:
-      { backgroundColor: "var(--landing-color-paper)"
+      { backgroundColor: "oklch(96.5% 0.026 282)"
+      , backgroundImage:
+          "linear-gradient(90deg, transparent 0 58%, oklch(from var(--landing-color-paper) l c h / 28%) 100%)"
       , color: "var(--landing-color-ink)"
       , width: "100%"
       }
   , content:
       { alignItems: "start"
       , display: "grid"
-      , paddingBlock: "96px 64px"
-      , rowGap: 28
+      , columnGap: "clamp(48px, 9vw, 132px)"
+      , gridTemplateColumns:
+          { default: "minmax(240px, 0.75fr) minmax(0, 1.25fr)"
+          , "@media (max-width: 800px)": "minmax(0, 1fr)"
+          }
+      , paddingBlock: "40px 72px"
+      , rowGap: 40
       , "@media (max-width: 800px)":
-          { paddingBlock: "72px 52px"
+          { paddingBlock: "40px 64px"
           }
       }
+  , introduction: { display: "grid", gap: 20 }
   , title:
-      { fontSize: "clamp(2.5rem, 5vw, 4.5rem)"
-      , fontWeight: 520
+      { fontFamily: "Anybody Variable, sans-serif"
+      , fontSize: "clamp(1.7rem, 3vw, 2.75rem)"
+      , fontStretch: "118%"
+      , fontWeight: 650
       , letterSpacing: "-0.045em"
-      , lineHeight: 0.98
+      , lineHeight: 1.08
+      }
+  , description:
+      { color: "var(--landing-color-muted)"
+      , fontSize: 15
+      , lineHeight: 1.65
+      , maxWidth: 420
       }
   , commands:
-      { display: "grid"
+      { backgroundColor: "transparent"
+      , borderColor: "oklch(from var(--landing-color-ink) l c h / 14%)"
+      , borderStyle: "solid"
+      , borderWidth: "1px 0"
+      , display: "grid"
       , gap: 12
       , minWidth: 0
+      , padding: "28px clamp(20px, 4vw, 36px)"
       }
   , tabList:
       { display: "flex"
@@ -53,24 +74,26 @@ styles = StyleX.create
       , backgroundColor:
           { default: "transparent"
           , ":hover": "oklch(from var(--landing-color-ink) l c h / 7%)"
-          , "[data-selected]": "oklch(from var(--landing-color-ink) l c h / 10%)"
+          , "[data-selected]": "oklch(from var(--landing-color-violet) l c h / 10%)"
           }
       , borderColor:
           { default: "oklch(from var(--landing-color-ink) l c h / 16%)"
           , ":hover": "oklch(from var(--landing-color-ink) l c h / 34%)"
-          , "[data-selected]": "var(--landing-color-ink)"
+          , "[data-selected]": "var(--landing-color-violet)"
           }
-      , borderRadius: 999
+      , borderRadius: 2
       , borderStyle: "solid"
       , borderWidth: 1
       , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "inline-flex"
-      , height: 44
+      , fontSize: 12
+      , fontWeight: 600
+      , gap: 7
+      , height: 38
       , justifyContent: "center"
-      , padding: 0
+      , paddingInline: 12
       , transition: "background-color 160ms ease, border-color 160ms ease"
-      , width: 44
       , ":focus-visible":
           { outlineColor: "var(--landing-color-crystal)"
           , outlineOffset: 3
@@ -83,8 +106,8 @@ styles = StyleX.create
       , display: "grid"
       , gap: 12
       , gridTemplateColumns: "minmax(0, 1fr) 36px"
-      , height: 36
       , maxWidth: "100%"
+      , minHeight: 36
       , minWidth: 0
       , width: "fit-content"
       }
@@ -94,9 +117,10 @@ styles = StyleX.create
       , fontSize: 14
       , lineHeight: "20px"
       , minWidth: 0
+      , overflowWrap: "anywhere"
       , overflowX: "auto"
       , padding: 0
-      , whiteSpace: "pre"
+      , whiteSpace: "pre-wrap"
       , width: "100%"
       , "@media (max-width: 800px)":
           { fontSize: 12
@@ -104,7 +128,7 @@ styles = StyleX.create
           }
       }
   , prompt:
-      { color: "var(--landing-color-mineral)"
+      { color: "var(--landing-color-violet)"
       }
   , copyButton:
       { alignItems: "center"
@@ -141,7 +165,7 @@ styles = StyleX.create
       , transform: "none"
       }
   , tooltip:
-      { backgroundColor: "var(--landing-color-mineral)"
+      { backgroundColor: "var(--landing-color-violet)"
       , borderRadius: 999
       , color: "var(--landing-color-paper)"
       , fontSize: 12
@@ -167,10 +191,14 @@ styles = StyleX.create
 
 installationSection :: JSX
 installationSection =
-  DOM.section (StyleX.props styles.section)
+  DOM.section { className: (StyleX.props styles.section).className, id: "install" }
     [ DOM.div ContentShell.contentShell
         [ DOM.div (StyleX.props styles.content)
-            [ DOM.h2 (StyleX.props styles.title) "Install Iris"
+            [ DOM.div (StyleX.props styles.introduction)
+                [ DOM.h2 (StyleX.props styles.title) "Install IRIS"
+                , DOM.p (StyleX.props styles.description)
+                    "Bring IRIS into a new project or use it with packages from the PureScript ecosystem."
+                ]
             , element installationCommandsImpl
                 { commandClassName: (StyleX.props styles.command).className
                 , copyButtonClassName: (StyleX.props styles.copyButton).className

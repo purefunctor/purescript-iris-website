@@ -14,10 +14,19 @@ import Yoga.React.DOM.Attributes.Target (targetBlank, targetSelf)
 
 styles = StyleX.create
   { headerBackground:
-      { backgroundColor: "var(--landing-color-purescript-charcoal)"
-      , color: "var(--landing-color-paper)"
+      { "--landing-header-color": "var(--landing-color-paper)"
+      , backgroundColor: "var(--landing-color-purescript-charcoal)"
       , flexShrink: 0
       , width: "100%"
+      }
+  , landingHeaderBackground:
+      { "--landing-header-color": "var(--landing-color-ink)"
+      , backgroundColor: "transparent"
+      , insetBlockStart: 0
+      , insetInline: 0
+      , position: "absolute"
+      , width: "100%"
+      , zIndex: 10
       }
   , headerContent:
       { alignItems: "center"
@@ -25,40 +34,31 @@ styles = StyleX.create
       , gap: 24
       , gridTemplateColumns: "minmax(0, 1fr) auto"
       , marginInline: "auto"
-      , maxWidth: 1180
-      , minHeight: 72
-      , paddingBlock: 14
-      , paddingInline: 32
+      , maxWidth: 1280
+      , minHeight: 86
+      , paddingBlock: 20
+      , paddingInline: 40
       , width: "100%"
       , "@media (max-width: 700px)": { gap: 12, minHeight: 68, paddingBlock: 12, paddingInline: 20 }
       }
   , headerBrand:
       { alignItems: "center"
-      , color: "var(--landing-color-paper)"
+      , color: "var(--landing-header-color)"
       , cursor: "default"
       , display: "flex"
-      , gap: 11
       , position: "relative"
       , textDecoration: "none"
       , zIndex: 30
       , ":focus-visible": { outline: "2px solid var(--landing-color-signal)", outlineOffset: 4 }
       }
-  , headerBrandIcon:
-      { alignItems: "center", display: "inline-flex", fontSize: 27, justifyContent: "center" }
-  , headerBrandCopy: { display: "flex", flexDirection: "column", gap: 2 }
+  , headerBrandCopy: { display: "flex" }
   , headerBrandName:
-      { fontFamily: "Oxanium Variable, sans-serif"
-      , fontSize: 18
-      , fontWeight: 200
-      , letterSpacing: "0.055em"
+      { fontFamily: "Anybody Variable, sans-serif"
+      , fontSize: 22
+      , fontStretch: "132%"
+      , fontWeight: 690
+      , letterSpacing: "-0.055em"
       , lineHeight: 1
-      }
-  , headerBrandSubtitle:
-      { color: "var(--landing-color-muted-inverse)"
-      , fontSize: 9
-      , fontWeight: 450
-      , letterSpacing: "0.025em"
-      , lineHeight: 1.2
       }
   , desktopNavigation:
       { alignItems: "center"
@@ -69,9 +69,12 @@ styles = StyleX.create
       }
   , desktopSocialLink:
       { alignItems: "center"
-      , backgroundColor: { default: "transparent", ":hover": "oklch(100% 0 0 / 0.12)" }
-      , borderRadius: 999
-      , color: "var(--landing-color-paper)"
+      , backgroundColor:
+          { default: "transparent"
+          , ":hover": "oklch(from var(--landing-header-color) l c h / 8%)"
+          }
+      , borderRadius: 2
+      , color: "var(--landing-header-color)"
       , cursor: "default"
       , display: "inline-flex"
       , fontFamily: "InterVariable, sans-serif"
@@ -94,10 +97,11 @@ styles = StyleX.create
   , desktopTryLink:
       { alignItems: "center"
       , backgroundColor:
-          { default: "var(--landing-color-powder-rust)"
-          , ":hover": "var(--landing-color-powder-rust-bright)"
+          { default: "var(--landing-color-violet)"
+          , ":hover": "oklch(from var(--landing-color-violet) calc(l + 0.07) c h)"
           }
-      , color: "var(--landing-color-ink)"
+      , color: "var(--landing-color-paper)"
+      , borderRadius: 9999
       , cursor: "default"
       , display: "inline-flex"
       , justifyContent: "center"
@@ -145,15 +149,6 @@ styles = StyleX.create
       { marginInlineStart: 0
       }
   , backLinkSuffix: { "@media (max-width: 380px)": { display: "none" } }
-  , screenReaderOnly:
-      { clip: "rect(0 0 0 0)"
-      , clipPath: "inset(50%)"
-      , height: 1
-      , overflow: "hidden"
-      , position: "absolute"
-      , whiteSpace: "nowrap"
-      , width: 1
-      }
   }
 
 styleProps = StyleX.recordProps styles
@@ -163,7 +158,7 @@ data NavigationLayout = DesktopNavigation | MobileNavigation
 
 header :: Component Unit
 header = Hooks.component "Header" \_ -> Hooks.do
-  pure $ headerFrame
+  pure $ landingHeaderFrame
     [ navigation styleProps.desktopNavigation DesktopNavigation
     , Mobile.navigationDrawer
         (element Icon.menu { "aria-hidden": true, focusable: false })
@@ -180,7 +175,7 @@ playgroundHeader controls = headerFrame
               { href: "/"
               , "aria-label": "Back to website"
               , className:
-                  (StyleX.props [ styles.desktopTryLink, styles.backLink, controlStyles.control ]).className
+                  (StyleX.props [ controlStyles.control, styles.desktopTryLink, styles.backLink ]).className
               }
               ( DOM.span {}
                   [ DOM.text "Back"
@@ -195,20 +190,20 @@ headerFrame :: Array JSX -> JSX
 headerFrame children = DOM.header styleProps.headerBackground
   [ DOM.div styleProps.headerContent ([ brand ] <> children) ]
 
+landingHeaderFrame :: Array JSX -> JSX
+landingHeaderFrame children = DOM.header styleProps.landingHeaderBackground
+  [ DOM.div styleProps.headerContent ([ brand ] <> children) ]
+
 brand :: JSX
 brand =
   DOM.a
     { className: styleProps.headerBrand.className
     , href: "/"
     , target: targetSelf
-    , "aria-label": "Iris home"
+    , "aria-label": "IRIS home"
     }
-    [ DOM.span styleProps.headerBrandIcon
-        (element Icon.pureScript { "aria-hidden": true, focusable: false })
-    , DOM.span styleProps.headerBrandCopy
-        [ DOM.span styleProps.headerBrandName "IRIS"
-        , DOM.span styleProps.headerBrandSubtitle "a modern PureScript compiler"
-        ]
+    [ DOM.span styleProps.headerBrandCopy
+        [ DOM.span styleProps.headerBrandName "IRIS" ]
     ]
 
 navigation :: StyleX.Props -> NavigationLayout -> JSX
@@ -236,7 +231,6 @@ navigationLink layout destination =
   let
     destinationName' = destinationName destination
     mobile = isMobileNavigation layout
-    socialDesktop = isDesktopNavigation layout && isSocialDestination destination
     linkStyle =
       if mobile then Mobile.linkStyle destinationName'
       else desktopLinkStyle destination
@@ -244,9 +238,7 @@ navigationLink layout destination =
       if mobile then Mobile.linkContentStyle
       else styleProps.headerLinkContent
     label = destinationLabel destination
-    destinationText =
-      if socialDesktop then DOM.span styleProps.screenReaderOnly label
-      else DOM.span {} label
+    destinationText = DOM.span {} label
     destinationIconStyle =
       if not mobile then styleProps.headerLinkIcon
       else if isSocialDestination destination then
@@ -299,8 +291,8 @@ desktopLinkStyle :: NavigationDestination -> StyleX.Props
 desktopLinkStyle = case _ of
   GitHub -> StyleX.props styles.desktopSocialLink
   Bluesky -> StyleX.props styles.desktopSocialLink
-  TryIris -> StyleX.props [ styles.desktopTryLink, controlStyles.control ]
-  Documentation -> StyleX.props [ styles.desktopDocumentationLink, controlStyles.control ]
+  TryIris -> StyleX.props [ controlStyles.control, styles.desktopTryLink ]
+  Documentation -> StyleX.props [ controlStyles.control, styles.desktopDocumentationLink ]
 
 isSocialDestination :: NavigationDestination -> Boolean
 isSocialDestination = case _ of
@@ -329,7 +321,7 @@ destinationHref = case _ of
 
 destinationLabel :: NavigationDestination -> String
 destinationLabel = case _ of
-  TryIris -> "Try Iris"
+  TryIris -> "Playground"
   GitHub -> "GitHub"
   Bluesky -> "Bluesky"
   Documentation -> "Documentation"

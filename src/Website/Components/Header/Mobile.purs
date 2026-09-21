@@ -18,17 +18,17 @@ styles = StyleX.create
       { display: "flex"
       , flexDirection: "column"
       , gap: 0
-      , paddingTop: "var(--landing-navigation-shear-offset, 24px)"
+      , padding: "24px 20px"
       , position: "relative"
       }
   , navigationBackground:
-      { height: "100%", inset: 0, pointerEvents: "none", position: "absolute", width: "100%" }
+      { display: "none" }
   , trigger:
       { "WebkitTapHighlightColor": "transparent"
       , alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "oklch(100% 0 0 / 0.12)" }
       , borderRadius: 999
-      , color: "var(--landing-color-paper)"
+      , color: "var(--landing-header-color, var(--landing-color-paper))"
       , cursor: "var(--landing-interactive-cursor, pointer)"
       , display: "none"
       , height: 42
@@ -60,8 +60,12 @@ styles = StyleX.create
   , overlayTransition:
       { opacity: 0 }
   , modal:
-      { backgroundColor: "var(--landing-color-purescript-charcoal)"
-      , color: "var(--landing-color-paper)"
+      { backgroundColor: "var(--landing-color-paper)"
+      , backgroundImage:
+          "linear-gradient(90deg, var(--landing-color-paper) 0%, oklch(from var(--landing-color-paper) l c h / 88%) 58%, transparent 100%), url('/iris-digital-field.webp')"
+      , backgroundPosition: "70% center"
+      , backgroundSize: "auto 100%"
+      , color: "var(--landing-color-ink)"
       , flexShrink: 0
       , height: "100dvh"
       , maxWidth: "none"
@@ -93,7 +97,7 @@ styles = StyleX.create
       , alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "oklch(100% 0 0 / 0.12)" }
       , borderRadius: 999
-      , color: "var(--landing-color-paper)"
+      , color: "var(--landing-color-ink)"
       , cursor: "var(--landing-interactive-cursor, pointer)"
       , display: "inline-flex"
       , height: 42
@@ -107,77 +111,58 @@ styles = StyleX.create
           }
       }
   , mobileLink:
-      { "--landing-navigation-external-offset": "8px"
-      , "--landing-navigation-external-opacity": 0
-      , alignItems: "center"
-      , backgroundColor: { default: "transparent", ":hover": "transparent" }
+      { alignItems: "center"
+      , backgroundColor:
+          { default: "oklch(from var(--landing-color-paper) l c h / 72%)"
+          , ":hover": "oklch(from var(--landing-color-violet) l c h / 9%)"
+          }
+      , borderBottomColor: "oklch(from var(--landing-color-ink) l c h / 14%)"
+      , borderBottomStyle: "solid"
+      , borderBottomWidth: 1
       , borderRadius: 0
-      , clipPath:
-          "polygon(0 var(--landing-navigation-right-top), var(--landing-navigation-terminal-width) var(--landing-navigation-right-top), calc(var(--landing-navigation-terminal-width) + var(--landing-navigation-shear-width)) var(--landing-navigation-left-top), 100% var(--landing-navigation-left-top), 100% calc(70px + var(--landing-navigation-left-top)), calc(var(--landing-navigation-terminal-width) + var(--landing-navigation-shear-width)) calc(70px + var(--landing-navigation-left-top)), var(--landing-navigation-terminal-width) calc(70px + var(--landing-navigation-right-top)), 0 calc(70px + var(--landing-navigation-right-top)))"
+      , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "grid"
-      , fontFamily: "InterVariable, sans-serif"
-      , fontSize: 14
-      , fontWeight: 400
-      , gap: 0
-      , gridTemplateColumns:
-          "var(--landing-navigation-terminal-width) var(--landing-navigation-shear-width) 40px calc(100% - 40px - var(--landing-navigation-shear-width) - var(--landing-navigation-terminal-width))"
-      , height: "calc(70px + var(--landing-navigation-shear-offset))"
-      , justifyContent: "normal"
-      , letterSpacing: "0.025em"
-      , marginTop: "calc(-1 * var(--landing-navigation-shear-offset))"
-      , paddingBlock: 0
-      , paddingInline: 0
+      , fontFamily: "Anybody Variable, sans-serif"
+      , fontSize: 24
+      , fontStretch: "112%"
+      , fontWeight: 620
+      , gap: 16
+      , gridTemplateColumns: "minmax(0, 1fr) auto"
+      , minHeight: 76
+      , paddingInline: 18
       , textDecoration: "none"
       , whiteSpace: "nowrap"
       , width: "100%"
-      , zIndex: 1
-      , ":hover":
-          { "--landing-navigation-external-offset": "0px"
-          , "--landing-navigation-external-opacity": 1
-          }
       , ":focus-visible":
-          { "--landing-navigation-external-offset": "0px"
-          , "--landing-navigation-external-opacity": 1
-          , outlineColor: "var(--landing-color-crystal)"
+          { outlineColor: "var(--landing-color-crystal)"
           , outlineOffset: "-3px"
           , outlineStyle: "solid"
           , outlineWidth: 2
           }
       }
-  , tryIrisLink: { color: "var(--landing-color-action-try-iris-foreground)" }
-  , githubLink: { color: "var(--landing-color-action-github-foreground)" }
-  , blueskyLink: { color: "var(--landing-color-action-bluesky-foreground)" }
-  , documentationLink: { color: "var(--landing-color-action-documentation-foreground)" }
+  , tryIrisLink: { color: "var(--landing-color-violet)" }
+  , githubLink: { color: "var(--landing-color-ink)" }
+  , blueskyLink: { color: "var(--landing-color-ink)" }
+  , documentationLink: { color: "var(--landing-color-ink)" }
   , linkContent:
       { alignItems: "center"
       , display: "inline-flex"
       , gap: 8
-      , gridColumn: "4"
+      , gridColumn: "1"
       , gridRow: 1
-      , justifySelf: "end"
-      , marginLeft: 0
-      , marginRight: 20
-      , transform: "translateY(calc(var(--landing-navigation-shear-height) / 2))"
+      , justifySelf: "start"
       }
   , externalLinkIcon:
       { alignItems: "center"
       , display: "inline-flex"
       , fontSize: 13
-      , gridColumn: "3"
+      , gridColumn: "2"
       , gridRow: 1
       , justifyContent: "center"
-      , justifySelf: "start"
-      , marginLeft: 20
-      , marginRight: 0
-      , opacity: "var(--landing-navigation-external-opacity)"
-      , transform:
-          "translate(var(--landing-navigation-external-offset), calc(var(--landing-navigation-shear-height) / 2))"
-      , transitionDuration: "140ms, 160ms"
-      , transitionProperty: "opacity, transform"
-      , transitionTimingFunction: "ease-out, cubic-bezier(0.22, 1, 0.36, 1)"
+      , justifySelf: "end"
+      , opacity: 0.6
       , width: "auto"
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0ms" }
       }
   , brandIcon:
       { alignItems: "center"
@@ -186,8 +171,8 @@ styles = StyleX.create
       , flexShrink: 0
       , fontSize: 13
       , justifyContent: "center"
-      , opacity: 0.72
-      , width: 39
+      , opacity: 0.6
+      , width: 24
       }
   , navigationIcon:
       { alignItems: "center"
@@ -195,8 +180,8 @@ styles = StyleX.create
       , flexShrink: 0
       , fontSize: 13
       , justifyContent: "center"
-      , opacity: 0.72
-      , width: 39
+      , opacity: 0.6
+      , width: 24
       }
   }
 

@@ -5,8 +5,8 @@ import CheckIcon from "~icons/lucide/check";
 import CopyIcon from "~icons/lucide/copy";
 import TerminalIcon from "~icons/lucide/terminal";
 
-const unixCopyCommand = "curl --proto '=https' --tlsv1.2 -LsSf https://raw.githubusercontent.com/purefunctor/purescript-iris/main/install.sh | sh";
-const windowsCommand = "irm https://raw.githubusercontent.com/purefunctor/purescript-iris/main/install.ps1 | iex";
+const unixCopyCommand = "curl -fsSL https://install.iris-lang.com | sh";
+const windowsCommand = "irm https://install.iris-lang.com | iex";
 
 async function copyToClipboard(text) {
   try {
@@ -62,7 +62,7 @@ function Command({
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
-      <pre className={terminalClassName}><code><span className={promptClassName}>{prompt}</span>{command}</code></pre>
+      <pre className={terminalClassName} tabIndex={0}><code><span className={promptClassName}>{prompt}</span>{command}</code></pre>
       <TooltipTrigger isOpen={copied}>
         <Button
           aria-label="Copy installation command"
@@ -102,8 +102,8 @@ export function installationCommandsImpl({
   return (
     <Tabs className={rootClassName} defaultSelectedKey="unix">
       <TabList aria-label="Installation platform" className={tabListClassName}>
-        <Tab aria-label="Linux and macOS" className={tabClassName} id="unix"><TerminalIcon aria-hidden="true" focusable="false" /></Tab>
-        <Tab aria-label="Windows" className={tabClassName} id="windows"><WindowsIcon aria-hidden="true" focusable="false" /></Tab>
+        <Tab aria-label="Linux and macOS" className={tabClassName} id="unix"><TerminalIcon aria-hidden="true" focusable="false" /><span>macOS / Linux</span></Tab>
+        <Tab aria-label="Windows" className={tabClassName} id="windows"><WindowsIcon aria-hidden="true" focusable="false" /><span>Windows</span></Tab>
       </TabList>
       <TabPanel id="unix"><Command {...commandProps} command={unixCopyCommand} prompt="$ " /></TabPanel>
       <TabPanel id="windows"><Command {...commandProps} command={windowsCommand} prompt="PS> " /></TabPanel>

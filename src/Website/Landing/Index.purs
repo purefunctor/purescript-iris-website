@@ -10,7 +10,6 @@ import Website.Components.ContentShell as ContentShell
 import Website.Components.Header as Header
 import Website.Components.Icon as Icon
 import Website.Landing.Features as Features
-import Website.Landing.HeroRibbons as HeroRibbons
 import Website.Landing.Installation as Installation
 import React.Basic (ReactComponent, element)
 import React.Basic.Hooks as Hooks
@@ -31,58 +30,110 @@ styles = StyleX.create
       }
   , hero:
       { alignItems: "flex-start"
+      , backgroundImage:
+          "linear-gradient(90deg, var(--landing-color-paper) 0%, var(--landing-color-paper) 18%, oklch(from var(--landing-color-paper) l c h / 86%) 34%, transparent 64%), url('/iris-digital-field.webp')"
+      , backgroundPosition: "center right"
+      , backgroundRepeat: "no-repeat"
+      , backgroundSize: "cover"
       , display: "flex"
       , flexDirection: "column"
       , isolation: "isolate"
       , justifyContent: "center"
-      , minHeight:
-          { default: "calc(100svh - 72px)", "@media (max-width: 700px)": "calc(100svh - 68px)" }
-      , paddingBlock: { default: 88, "@media (max-width: 800px)": 60 }
+      , minHeight: "100svh"
+      , paddingBlock:
+          { default: "150px 86px"
+          , "@media (max-width: 800px)": "112px 64px"
+          }
       , position: "relative"
+      , "@media (max-width: 700px)":
+          { backgroundImage:
+              "linear-gradient(90deg, var(--landing-color-paper) 0%, var(--landing-color-paper) 22%, oklch(from var(--landing-color-paper) l c h / 92%) 54%, oklch(from var(--landing-color-paper) l c h / 24%) 100%), url('/iris-digital-field.webp')"
+          , backgroundPosition: "52% center"
+          , backgroundSize: "auto 100%"
+          }
       }
   , heroContent:
       { alignItems: "flex-start"
       , display: "flex"
       , flexDirection: "column"
       , position: "relative"
+      , maxWidth: 720
       , width: "100%"
       , zIndex: 1
       }
   , heroTitle:
-      { fontSize: "clamp(3.5rem, 8vw, 7.5rem)"
-      , fontWeight: 520
-      , letterSpacing: "-0.055em"
-      , lineHeight: 0.94
-      , marginBlock: "22px 28px"
-      , maxWidth: 880
+      { color: "var(--landing-color-ink)"
+      , fontFamily: "Anybody Variable, sans-serif"
+      , fontSize: "clamp(5rem, 12vw, 11rem)"
+      , fontStretch: "138%"
+      , fontWeight: 680
+      , letterSpacing: "-0.065em"
+      , lineHeight: 0.78
+      , marginBlock: 0
       }
-  , heroTitleAccent:
-      { backgroundColor: "var(--landing-color-mineral)"
-      , color: "var(--landing-color-paper)"
-      , display: "block"
-      , marginBlockStart: "0.12em"
-      , marginInlineStart: "clamp(24px, 8vw, 96px)"
-      , paddingInline: "0.08em 0.12em"
-      , width: "fit-content"
-      , "@media (max-width: 800px)": { marginInlineStart: 0 }
+  , statement:
+      { color: "var(--landing-color-ink)"
+      , fontSize: "clamp(2rem, 3.8vw, 3.6rem)"
+      , fontWeight: 540
+      , letterSpacing: "-0.045em"
+      , lineHeight: 1.02
+      , marginBlockStart: "clamp(44px, 6vw, 76px)"
+      , maxWidth: 700
+      , textWrap: "balance"
       }
   , lead:
-      { color: "var(--landing-color-muted)"
-      , fontSize: "clamp(1.05rem, 2vw, 1.35rem)"
-      , lineHeight: 1.55
-      , marginInlineStart: "clamp(12px, 4vw, 48px)"
-      , maxWidth: 900
+      { color: "oklch(from var(--landing-color-muted) calc(l - 0.07) c h)"
+      , fontSize: "clamp(1rem, 1.8vw, 1.18rem)"
+      , lineHeight: 1.6
+      , marginBlockStart: 24
+      , maxWidth: 570
       , textWrap: "balance"
-      , "@media (max-width: 800px)": { marginInlineStart: 0 }
       }
-  , line: { display: "block" }
-  , learnMore:
-      { color: { default: "var(--landing-color-ink)", ":hover": "var(--landing-color-mineral)" }
+  , actions:
+      { alignItems: "center"
+      , display: "flex"
+      , flexWrap: "wrap"
+      , gap: 12
+      , marginBlockStart: 32
+      }
+  , primaryAction:
+      { alignItems: "center"
+      , backgroundColor:
+          { default: "var(--landing-color-violet)"
+          , ":hover": "oklch(from var(--landing-color-violet) calc(l - 0.07) c h)"
+          }
+      , borderRadius: 9999
+      , color: "var(--landing-color-paper)"
+      , cursor: "default"
+      , display: "inline-flex"
+      , fontSize: 14
+      , fontWeight: 650
+      , justifyContent: "center"
+      , minHeight: 48
+      , paddingInline: 24
+      , textDecoration: "none"
+      , transition: "background-color 160ms ease"
+      , ":focus-visible":
+          { outlineColor: "var(--landing-color-crystal)"
+          , outlineOffset: 3
+          , outlineStyle: "solid"
+          , outlineWidth: 2
+          }
+      }
+  , secondaryAction:
+      { alignItems: "center"
+      , backgroundColor: "transparent"
+      , color: { default: "var(--landing-color-ink)", ":hover": "var(--landing-color-violet)" }
       , cursor: "pointer"
-      , fontWeight: 500
+      , display: "inline-flex"
+      , fontSize: 14
+      , fontWeight: 600
+      , justifyContent: "center"
+      , minHeight: 48
+      , paddingInline: 8
       , textDecorationLine: "underline"
       , textDecorationThickness: 1
-      , textUnderlineOffset: 4
+      , textUnderlineOffset: 5
       , transition: "color 160ms ease"
       , ":focus-visible":
           { outlineColor: "var(--landing-color-crystal)"
@@ -91,13 +142,11 @@ styles = StyleX.create
           , outlineWidth: 2
           }
       }
-  , learnMoreRow:
-      { marginInlineStart: "clamp(12px, 4vw, 48px)"
-      , marginTop: 24
-      , "@media (max-width: 800px)": { marginInlineStart: 0 }
-      }
   , footer:
-      { backgroundColor: "var(--landing-color-purescript-charcoal)"
+      { backgroundColor: "var(--landing-color-paper)"
+      , borderTopColor: "var(--landing-color-line)"
+      , borderTopStyle: "solid"
+      , borderTopWidth: 1
       , display: "grid"
       , gap: 8
       , minHeight: 88
@@ -108,14 +157,14 @@ styles = StyleX.create
       , "@media (max-width: 640px)": { minHeight: 72, padding: "24px 20px" }
       }
   , footerCopy:
-      { color: "var(--landing-color-muted-inverse)"
+      { color: "var(--landing-color-muted)"
       , fontSize: 14
       , lineHeight: 1.6
       , marginInline: "auto"
       , maxWidth: 760
       }
   , footerLink:
-      { color: { default: "var(--landing-color-paper)", ":hover": "var(--landing-color-signal)" }
+      { color: { default: "var(--landing-color-ink)", ":hover": "var(--landing-color-violet)" }
       , textDecorationLine: "underline"
       , textDecorationThickness: 1
       , textUnderlineOffset: 3
@@ -148,44 +197,31 @@ component = unsafePerformEffect do
           [ DOM.div (StyleX.props styles.hero)
               [ DOM.div ContentShell.contentShell
                   [ DOM.div (StyleX.props styles.heroContent)
-                      [ DOM.h1 (StyleX.props styles.heroTitle)
-                          [ DOM.span (StyleX.props styles.line) "PureScript"
-                          , DOM.span (StyleX.props styles.heroTitleAccent) "Iris"
-                          ]
+                      [ DOM.h1 (StyleX.props styles.heroTitle) "IRIS"
+                      , DOM.p (StyleX.props styles.statement)
+                          "A modern functional programming language with effect tracking."
                       , DOM.p (StyleX.props styles.lead)
-                          [ DOM.span (StyleX.props styles.line)
-                              "Modern, feature-rich, high-performance compiler for PureScript:"
-                          , DOM.span (StyleX.props styles.line)
-                              "a strongly-typed functional programming language for all stacks"
-                          ]
-                      , DOM.p (StyleX.props styles.learnMoreRow)
+                          "IRIS uses the PureScript package ecosystem and compiles to readable JavaScript. Its effect types show what a program can do before it runs."
+                      , DOM.div (StyleX.props styles.actions)
                           [ DOM.a
-                              { className: (StyleX.props styles.learnMore).className
-                              , href: "#features"
+                              { className: (StyleX.props styles.primaryAction).className
+                              , href: "/playground"
                               }
-                              "Features"
+                              "Open playground"
+                          , DOM.a
+                              { className: (StyleX.props styles.secondaryAction).className
+                              , href: "#install"
+                              }
+                              "Install IRIS"
                           ]
                       ]
                   ]
-              , HeroRibbons.heroRibbons
               ]
           , Installation.installationSection
-          , HeroRibbons.separatorRibbons
           , DOM.div ContentShell.contentShell [ Features.featuresSection ]
           ]
       , DOM.footer (StyleX.props styles.footer)
-          [ DOM.p (StyleX.props styles.footerCopy)
-              [ DOM.span {} "The PureScript logo by Gareth Hughes is used under the terms of the "
-              , DOM.a
-                  { className: (StyleX.props styles.footerLink).className
-                  , href: "https://creativecommons.org/licenses/by/4.0/"
-                  , target: targetBlank
-                  , rel: "noopener noreferrer"
-                  }
-                  "Creative Commons Attribution 4.0 license"
-              , DOM.span {} "."
-              ]
-          , DOM.p (StyleX.props [ styles.footerCopy, styles.footerCopyrights ])
+          [ DOM.p (StyleX.props [ styles.footerCopy, styles.footerCopyrights ])
               [ DOM.span (StyleX.props styles.footerCopyrightItem)
                   [ DOM.span
                       { className: (StyleX.props styles.footerCopyrightIcon).className
@@ -216,7 +252,7 @@ component = unsafePerformEffect do
                       , target: targetBlank
                       , rel: "noopener noreferrer"
                       }
-                      "Iris"
+                      "IRIS"
                   , DOM.span {} " by purefunctor, 2023–2026"
                   ]
               ]
