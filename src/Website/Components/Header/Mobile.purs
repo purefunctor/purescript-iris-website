@@ -62,7 +62,7 @@ styles = StyleX.create
   , modal:
       { backgroundColor: "var(--landing-color-paper)"
       , backgroundImage:
-          "linear-gradient(90deg, var(--landing-color-paper) 0%, oklch(from var(--landing-color-paper) l c h / 88%) 58%, transparent 100%), url('/iris-digital-field.webp')"
+          "linear-gradient(90deg, var(--landing-color-paper) 0%, oklch(from var(--landing-color-paper) l c h / 88%) 58%, transparent 100%), var(--landing-hero-image-mobile)"
       , backgroundPosition: "70% center"
       , backgroundSize: "auto 100%"
       , color: "var(--landing-color-ink)"

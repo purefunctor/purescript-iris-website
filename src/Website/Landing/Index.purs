@@ -30,7 +30,7 @@ styles = StyleX.create
   , hero:
       { alignItems: "flex-start"
       , backgroundImage:
-          "linear-gradient(90deg, var(--landing-color-paper) 0%, var(--landing-color-paper) 18%, oklch(from var(--landing-color-paper) l c h / 86%) 34%, transparent 64%), url('/iris-digital-field.webp')"
+          "linear-gradient(90deg, var(--landing-color-paper) 0%, var(--landing-color-paper) 18%, oklch(from var(--landing-color-paper) l c h / 86%) 34%, transparent 64%), var(--landing-hero-image)"
       , backgroundPosition: "center right"
       , backgroundRepeat: "no-repeat"
       , backgroundSize: "cover"
@@ -46,7 +46,7 @@ styles = StyleX.create
       , position: "relative"
       , "@media (max-width: 700px)":
           { backgroundImage:
-              "linear-gradient(90deg, var(--landing-color-paper) 0%, var(--landing-color-paper) 22%, oklch(from var(--landing-color-paper) l c h / 92%) 54%, oklch(from var(--landing-color-paper) l c h / 24%) 100%), url('/iris-digital-field.webp')"
+              "linear-gradient(90deg, var(--landing-color-paper) 0%, var(--landing-color-paper) 22%, oklch(from var(--landing-color-paper) l c h / 92%) 54%, oklch(from var(--landing-color-paper) l c h / 24%) 100%), var(--landing-hero-image-mobile)"
           , backgroundPosition: "52% center"
           , backgroundSize: "auto 100%"
           }
