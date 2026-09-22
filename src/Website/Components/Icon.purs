@@ -13,6 +13,7 @@ module Website.Components.Icon
   , pureScript
   , shieldCheck
   , x
+  , xSocial
   ) where
 
 import React.Basic (ReactComponent)
@@ -35,3 +36,4 @@ foreign import menu :: ReactComponent IconProps
 foreign import pureScript :: ReactComponent IconProps
 foreign import shieldCheck :: ReactComponent IconProps
 foreign import x :: ReactComponent IconProps
+foreign import xSocial :: ReactComponent IconProps

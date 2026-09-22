@@ -72,20 +72,15 @@ styles = StyleX.create
           { default: "transparent"
           , ":hover": "oklch(from var(--landing-header-color) l c h / 8%)"
           }
-      , borderRadius: 2
+      , borderRadius: 9999
       , color: "var(--landing-header-color)"
       , cursor: "default"
       , display: "inline-flex"
-      , fontFamily: "var(--landing-font-body)"
-      , fontSize: 12
-      , fontWeight: 620
+      , height: 38
       , justifyContent: "center"
-      , letterSpacing: "normal"
       , marginInlineStart: 0
-      , paddingBlock: 9
-      , paddingInline: 10
       , textDecoration: "none"
-      , whiteSpace: "nowrap"
+      , width: 38
       , ":focus-visible":
           { outlineColor: "var(--landing-color-crystal)"
           , outlineOffset: 2
@@ -133,8 +128,16 @@ styles = StyleX.create
           }
       }
   , headerLinkIcon:
-      { alignItems: "center", display: "inline-flex", flexShrink: 0, fontSize: 13, opacity: 0.72 }
+      { alignItems: "center", display: "inline-flex", flexShrink: 0, fontSize: 15, opacity: 0.72 }
   , headerLinkContent: { alignItems: "center", display: "inline-flex", gap: 8 }
+  , visuallyHidden:
+      { clipPath: "inset(50%)"
+      , height: 1
+      , overflow: "hidden"
+      , position: "absolute"
+      , whiteSpace: "nowrap"
+      , width: 1
+      }
   , playgroundActions:
       { display: "flex"
       , alignItems: "center"
@@ -152,7 +155,7 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
-data NavigationDestination = GitHub | Bluesky | Documentation
+data NavigationDestination = GitHub | Bluesky | X | Documentation
 data NavigationLayout = DesktopNavigation | MobileNavigation
 
 header :: Component Unit
@@ -215,12 +218,14 @@ navigation style layout =
     if isDesktopNavigation layout then
       [ navigationLink layout GitHub
       , navigationLink layout Bluesky
+      , navigationLink layout X
       , navigationLink layout Documentation
       ]
     else
       [ navigationLink layout Documentation
       , navigationLink layout GitHub
       , navigationLink layout Bluesky
+      , navigationLink layout X
       ]
 
 navigationLink :: NavigationLayout -> NavigationDestination -> JSX
@@ -235,7 +240,9 @@ navigationLink layout destination =
       if mobile then Mobile.linkContentStyle
       else styleProps.headerLinkContent
     label = destinationLabel destination
-    destinationText = DOM.span {} label
+    destinationText =
+      if mobile || not (isSocialDestination destination) then DOM.span {} label
+      else DOM.span styleProps.visuallyHidden label
     destinationIconStyle =
       if not mobile then styleProps.headerLinkIcon
       else if isSocialDestination destination then
@@ -288,12 +295,14 @@ desktopLinkStyle :: NavigationDestination -> StyleX.Props
 desktopLinkStyle = case _ of
   GitHub -> StyleX.props styles.desktopSocialLink
   Bluesky -> StyleX.props styles.desktopSocialLink
+  X -> StyleX.props styles.desktopSocialLink
   Documentation -> StyleX.props [ controlStyles.control, styles.desktopDocumentationLink ]
 
 isSocialDestination :: NavigationDestination -> Boolean
 isSocialDestination = case _ of
   GitHub -> true
   Bluesky -> true
+  X -> true
   _ -> false
 
 isTemporarilyHiddenDestination :: NavigationDestination -> Boolean
@@ -305,22 +314,26 @@ destinationName :: NavigationDestination -> String
 destinationName = case _ of
   GitHub -> "github"
   Bluesky -> "bluesky"
+  X -> "x"
   Documentation -> "documentation"
 
 destinationHref :: NavigationDestination -> String
 destinationHref = case _ of
   GitHub -> "https://github.com/purefunctor/purescript-iris"
   Bluesky -> "https://bsky.app/profile/purefunctor.me"
+  X -> "https://x.com/purefunctor"
   Documentation -> "/docs"
 
 destinationLabel :: NavigationDestination -> String
 destinationLabel = case _ of
   GitHub -> "GitHub"
   Bluesky -> "Bluesky"
+  X -> "X"
   Documentation -> "Documentation"
 
 destinationIcon :: NavigationDestination -> ReactComponent Icon.IconProps
 destinationIcon = case _ of
   GitHub -> Icon.gitHub
   Bluesky -> Icon.bluesky
+  X -> Icon.xSocial
   Documentation -> Icon.bookOpen

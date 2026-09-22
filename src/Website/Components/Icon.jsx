@@ -11,3 +11,4 @@ export { default as menu } from "~icons/lucide/menu";
 export { default as pureScript } from "~icons/simple-icons/purescript";
 export { default as shieldCheck } from "~icons/lucide/shield-check";
 export { default as x } from "~icons/lucide/x";
+export { default as xSocial } from "~icons/simple-icons/x";
