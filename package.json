@@ -24,9 +24,9 @@
   "dependencies": {
     "@astrojs/node": "11.1.5",
     "@astrojs/react": "6.0.4",
-    "@fontsource-variable/anybody": "5.3.0",
     "@fontsource-variable/jetbrains-mono": "5.3.0",
-    "@fontsource-variable/oxanium": "5.3.0",
+    "@fontsource-variable/jura": "5.3.0",
+    "@fontsource/bruno-ace": "5.3.0",
     "@stylexjs/stylex": "0.19.0",
     "acorn": "8.15.0",
     "astro": "7.2.9",

@@ -12,6 +12,8 @@ foreign import installationCommandsImpl ::
     , copyButtonVisibleClassName :: String
     , promptClassName :: String
     , rootClassName :: String
+    , heading :: JSX
+    , headingRowClassName :: String
     , tabClassName :: String
     , tabListClassName :: String
     , terminalClassName :: String
@@ -27,43 +29,29 @@ styles = StyleX.create
       , width: "100%"
       }
   , content:
-      { alignItems: "start"
-      , display: "grid"
-      , columnGap: "clamp(48px, 9vw, 132px)"
-      , gridTemplateColumns:
-          { default: "minmax(240px, 0.75fr) minmax(0, 1.25fr)"
-          , "@media (max-width: 800px)": "minmax(0, 1fr)"
-          }
-      , paddingBlock: "40px 72px"
-      , rowGap: 40
+      { paddingBlock: "40px 72px"
       , "@media (max-width: 800px)":
           { paddingBlock: "40px 64px"
           }
       }
-  , introduction: { display: "grid", gap: 20 }
   , title:
-      { fontFamily: "Anybody Variable, sans-serif"
-      , fontSize: "clamp(1.7rem, 3vw, 2.75rem)"
-      , fontStretch: "118%"
-      , fontWeight: 650
-      , letterSpacing: "-0.045em"
-      , lineHeight: 1.08
-      }
-  , description:
-      { color: "var(--landing-color-muted)"
-      , fontSize: 15
-      , lineHeight: 1.65
-      , maxWidth: 420
+      { fontFamily: "var(--landing-font-heading)"
+      , fontSize: "clamp(2rem, 3.5vw, 3.25rem)"
+      , fontWeight: 500
+      , letterSpacing: "-0.035em"
+      , lineHeight: 0.98
       }
   , commands:
       { backgroundColor: "transparent"
-      , borderColor: "oklch(from var(--landing-color-ink) l c h / 14%)"
-      , borderStyle: "solid"
-      , borderWidth: "1px 0"
       , display: "grid"
-      , gap: 12
+      , gap: 24
       , minWidth: 0
-      , padding: "28px clamp(20px, 4vw, 36px)"
+      }
+  , headingRow:
+      { alignItems: "flex-start"
+      , display: "flex"
+      , flexDirection: "column"
+      , gap: 20
       }
   , tabList:
       { display: "flex"
@@ -113,7 +101,7 @@ styles = StyleX.create
       }
   , terminal:
       { color: "var(--landing-color-ink)"
-      , fontFamily: "JetBrains Mono Variable, monospace"
+      , fontFamily: "var(--landing-font-code)"
       , fontSize: 14
       , lineHeight: "20px"
       , minWidth: 0
@@ -194,15 +182,12 @@ installationSection =
   DOM.section { className: (StyleX.props styles.section).className, id: "install" }
     [ DOM.div ContentShell.contentShell
         [ DOM.div (StyleX.props styles.content)
-            [ DOM.div (StyleX.props styles.introduction)
-                [ DOM.h2 (StyleX.props styles.title) "Install IRIS"
-                , DOM.p (StyleX.props styles.description)
-                    "Bring IRIS into a new project or use it with packages from the PureScript ecosystem."
-                ]
-            , element installationCommandsImpl
+            [ element installationCommandsImpl
                 { commandClassName: (StyleX.props styles.command).className
                 , copyButtonClassName: (StyleX.props styles.copyButton).className
                 , copyButtonVisibleClassName: (StyleX.props styles.copyButtonVisible).className
+                , heading: DOM.h2 (StyleX.props styles.title) "Install IRIS"
+                , headingRowClassName: (StyleX.props styles.headingRow).className
                 , promptClassName: (StyleX.props styles.prompt).className
                 , rootClassName: (StyleX.props styles.commands).className
                 , tabClassName: (StyleX.props styles.tab).className

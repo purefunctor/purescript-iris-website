@@ -123,9 +123,8 @@ styles = StyleX.create
       , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "grid"
-      , fontFamily: "Anybody Variable, sans-serif"
+      , fontFamily: "var(--landing-font-body)"
       , fontSize: 24
-      , fontStretch: "112%"
       , fontWeight: 620
       , gap: 16
       , gridTemplateColumns: "minmax(0, 1fr) auto"

@@ -5,7 +5,7 @@ import Iris.StyleX as StyleX
 -- Shared by navigation links and the playground's header controls.
 controlStyles = StyleX.create
   { control:
-      { fontFamily: "InterVariable, sans-serif"
+      { fontFamily: "var(--landing-font-body)"
       , fontSize: 12
       , fontWeight: 400
       , letterSpacing: "normal"

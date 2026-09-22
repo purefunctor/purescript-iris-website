@@ -53,12 +53,11 @@ styles = StyleX.create
       }
   , headerBrandCopy: { display: "flex" }
   , headerBrandName:
-      { fontFamily: "Anybody Variable, sans-serif"
-      , fontSize: 22
-      , fontStretch: "132%"
-      , fontWeight: 690
-      , letterSpacing: "-0.055em"
-      , lineHeight: 1
+      { fontFamily: "var(--landing-font-wordmark)"
+      , fontSize: 26
+      , fontWeight: 400
+      , letterSpacing: "-0.045em"
+      , lineHeight: 0.9
       }
   , desktopNavigation:
       { alignItems: "center"
@@ -77,7 +76,7 @@ styles = StyleX.create
       , color: "var(--landing-header-color)"
       , cursor: "default"
       , display: "inline-flex"
-      , fontFamily: "InterVariable, sans-serif"
+      , fontFamily: "var(--landing-font-body)"
       , fontSize: 12
       , fontWeight: 620
       , justifyContent: "center"

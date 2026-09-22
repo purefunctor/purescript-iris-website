@@ -2,7 +2,11 @@
 
 @layer reset {
   :root {
-    --landing-color-ink: oklch(22% 0.045 279);
+    --landing-font-wordmark: "Bruno Ace", sans-serif;
+    --landing-font-heading: "Jura Variable", sans-serif;
+    --landing-font-body: InterVariable, sans-serif;
+    --landing-font-code: "JetBrains Mono Variable", monospace;
+    --landing-color-ink: oklch(30% 0.055 279);
     --landing-color-paper: oklch(98.6% 0.008 280);
     --landing-color-surface: oklch(100% 0 0);
     --landing-color-line: oklch(89% 0.028 280);
@@ -49,7 +53,7 @@
   html {
     background: var(--landing-color-paper);
     color: var(--landing-color-ink);
-    font-family: InterVariable, sans-serif;
+    font-family: var(--landing-font-body);
     font-synthesis: none;
     min-height: 100%;
     overscroll-behavior-x: none;

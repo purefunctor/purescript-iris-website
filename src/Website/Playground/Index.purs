@@ -228,7 +228,7 @@ styles = StyleX.create
       , whiteSpace: "pre-wrap"
       , overflowWrap: "anywhere"
       , wordBreak: "break-word"
-      , fontFamily: "JetBrains Mono Variable, monospace"
+      , fontFamily: "var(--landing-font-code)"
       , fontSize: 12
       }
   , panes:
@@ -293,7 +293,7 @@ styles = StyleX.create
       { whiteSpace: "pre-wrap"
       , overflowWrap: "anywhere"
       , paddingBlock: 4
-      , fontFamily: "JetBrains Mono Variable, monospace"
+      , fontFamily: "var(--landing-font-code)"
       }
   }
 

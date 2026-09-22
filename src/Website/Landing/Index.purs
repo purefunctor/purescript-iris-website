@@ -9,7 +9,6 @@ import Effect.Unsafe (unsafePerformEffect)
 import Website.Components.ContentShell as ContentShell
 import Website.Components.Header as Header
 import Website.Components.Icon as Icon
-import Website.Landing.Features as Features
 import Website.Landing.Installation as Installation
 import React.Basic (ReactComponent, element)
 import React.Basic.Hooks as Hooks
@@ -25,7 +24,7 @@ import Yoga.React.DOM.Attributes.Target (targetBlank)
 styles = StyleX.create
   { page:
       { backgroundColor: "var(--landing-color-paper)"
-      , fontFamily: "InterVariable, sans-serif"
+      , fontFamily: "var(--landing-font-body)"
       , minHeight: "100vh"
       }
   , hero:
@@ -63,43 +62,44 @@ styles = StyleX.create
       }
   , heroTitle:
       { color: "var(--landing-color-ink)"
-      , fontFamily: "Anybody Variable, sans-serif"
-      , fontSize: "clamp(5rem, 12vw, 11rem)"
-      , fontStretch: "138%"
-      , fontWeight: 680
-      , letterSpacing: "-0.065em"
-      , lineHeight: 0.78
-      , marginBlock: 0
+      , fontFamily: "var(--landing-font-wordmark)"
+      , fontSize: "var(--landing-hero-size, clamp(6rem, 18vw, 15rem))"
+      , fontWeight: 400
+      , letterSpacing: "var(--landing-wordmark-tracking, -0.06em)"
+      , lineHeight: 0.72
+      , marginBlockEnd: "var(--landing-hero-leading-offset, 0.28em)"
+      , marginBlockStart: 0
+      , overflow: "visible"
+      , position: "relative"
+      , width: "fit-content"
+      }
+  , heroTitleReflection:
+      { "WebkitMaskImage": "linear-gradient(to top, black 0%, transparent 72%)"
+      , color: "inherit"
+      , filter: "blur(0.012em)"
+      , insetBlockStart: "0.78em"
+      , insetInlineStart: "-0.04em"
+      , lineHeight: 0.72
+      , maskImage: "linear-gradient(to top, black 0%, transparent 72%)"
+      , opacity: 0.22
+      , overflow: "visible"
+      , paddingInline: "0.04em"
+      , pointerEvents: "none"
+      , position: "absolute"
+      , transform: "scaleY(-1)"
+      , transformOrigin: "center"
+      , userSelect: "none"
+      , whiteSpace: "nowrap"
       }
   , statement:
       { color: "var(--landing-color-ink)"
-      , fontSize: "clamp(2rem, 3.8vw, 3.6rem)"
-      , fontWeight: 540
+      , fontFamily: "var(--landing-font-heading)"
+      , fontSize: "clamp(2rem, 3.4vw, 3.25rem)"
+      , fontWeight: 520
       , letterSpacing: "-0.045em"
       , lineHeight: 1.02
       , marginBlockStart: "clamp(44px, 6vw, 76px)"
       , maxWidth: 700
-      , textWrap: "balance"
-      }
-  , redaction:
-      { "WebkitFilter": "blur(0.14em)"
-      , color: "var(--landing-color-ink)"
-      , display: "inline-block"
-      , filter: "blur(0.14em)"
-      , marginInline: "0.06em"
-      , opacity: 0.78
-      , pointerEvents: "none"
-      , transform: "translateZ(0)"
-      , userSelect: "none"
-      , verticalAlign: "baseline"
-      , whiteSpace: "nowrap"
-      }
-  , lead:
-      { color: "oklch(from var(--landing-color-muted) calc(l - 0.07) c h)"
-      , fontSize: "clamp(1rem, 1.8vw, 1.18rem)"
-      , lineHeight: 1.6
-      , marginBlockStart: 24
-      , maxWidth: 570
       , textWrap: "balance"
       }
   , actions:
@@ -112,11 +112,11 @@ styles = StyleX.create
   , primaryAction:
       { alignItems: "center"
       , backgroundColor:
-          { default: "var(--landing-color-violet)"
-          , ":hover": "oklch(from var(--landing-color-violet) calc(l - 0.07) c h)"
+          { default: "oklch(from var(--landing-color-ink) l c h / 4%)"
+          , ":hover": "oklch(from var(--landing-color-ink) l c h / 10%)"
           }
       , borderRadius: 9999
-      , color: "var(--landing-color-paper)"
+      , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "inline-flex"
       , fontSize: 14
@@ -188,18 +188,17 @@ component = unsafePerformEffect do
           [ DOM.div (StyleX.props styles.hero)
               [ DOM.div ContentShell.contentShell
                   [ DOM.div (StyleX.props styles.heroContent)
-                      [ DOM.h1 (StyleX.props styles.heroTitle) "IRIS"
-                      , DOM.p (StyleX.props styles.statement)
-                          [ DOM.text "A modern functional programming language with "
+                      [ DOM.h1
+                          { className: (StyleX.props styles.heroTitle).className }
+                          [ DOM.span {} "IRIS"
                           , DOM.span
-                              { className: (StyleX.props styles.redaction).className
-                              , role: "img"
-                              , "aria-label": "redacted"
+                              { className: (StyleX.props styles.heroTitleReflection).className
+                              , "aria-hidden": true
                               }
-                              "effect tracking."
+                              "IRIS"
                           ]
-                      , DOM.p (StyleX.props styles.lead)
-                          "IRIS is an implementation of the PureScript programming language with extra goodies."
+                      , DOM.p (StyleX.props styles.statement)
+                          "Functional programming for the browser, the server, and everywhere in between."
                       , DOM.div (StyleX.props styles.actions)
                           [ DOM.a
                               { className: (StyleX.props styles.primaryAction).className
@@ -211,7 +210,6 @@ component = unsafePerformEffect do
                   ]
               ]
           , Installation.installationSection
-          , DOM.div ContentShell.contentShell [ Features.featuresSection ]
           ]
       , DOM.footer (StyleX.props styles.footer)
           [ DOM.p (StyleX.props [ styles.footerCopy, styles.footerCopyrights ])

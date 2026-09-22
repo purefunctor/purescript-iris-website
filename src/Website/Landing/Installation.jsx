@@ -83,6 +83,8 @@ export function installationCommandsImpl({
   commandClassName,
   copyButtonClassName,
   copyButtonVisibleClassName,
+  heading,
+  headingRowClassName,
   promptClassName,
   rootClassName,
   tabClassName,
@@ -101,10 +103,13 @@ export function installationCommandsImpl({
 
   return (
     <Tabs className={rootClassName} defaultSelectedKey="unix">
-      <TabList aria-label="Installation platform" className={tabListClassName}>
-        <Tab aria-label="Linux and macOS" className={tabClassName} id="unix"><TerminalIcon aria-hidden="true" focusable="false" /><span>macOS / Linux</span></Tab>
-        <Tab aria-label="Windows" className={tabClassName} id="windows"><WindowsIcon aria-hidden="true" focusable="false" /><span>Windows</span></Tab>
-      </TabList>
+      <div className={headingRowClassName}>
+        {heading}
+        <TabList aria-label="Installation platform" className={tabListClassName}>
+          <Tab aria-label="Linux and macOS" className={tabClassName} id="unix"><TerminalIcon aria-hidden="true" focusable="false" /><span>macOS / Linux</span></Tab>
+          <Tab aria-label="Windows" className={tabClassName} id="windows"><WindowsIcon aria-hidden="true" focusable="false" /><span>Windows</span></Tab>
+        </TabList>
+      </div>
       <TabPanel id="unix"><Command {...commandProps} command={unixCopyCommand} prompt="$ " /></TabPanel>
       <TabPanel id="windows"><Command {...commandProps} command={windowsCommand} prompt="PS> " /></TabPanel>
     </Tabs>
