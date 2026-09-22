@@ -41,10 +41,6 @@ styles = StyleX.create
       , letterSpacing: "-0.035em"
       , lineHeight: 0.98
       }
-  , titleBrand:
-      { fontFamily: "var(--landing-font-wordmark)"
-      , fontWeight: 400
-      }
   , commands:
       { backgroundColor: "transparent"
       , display: "grid"
@@ -190,10 +186,7 @@ installationSection =
                 { commandClassName: (StyleX.props styles.command).className
                 , copyButtonClassName: (StyleX.props styles.copyButton).className
                 , copyButtonVisibleClassName: (StyleX.props styles.copyButtonVisible).className
-                , heading: DOM.h2 (StyleX.props styles.title)
-                    [ DOM.text "Install "
-                    , DOM.span (StyleX.props styles.titleBrand) "IRIS"
-                    ]
+                , heading: DOM.h2 (StyleX.props styles.title) "Install"
                 , headingRowClassName: (StyleX.props styles.headingRow).className
                 , promptClassName: (StyleX.props styles.prompt).className
                 , rootClassName: (StyleX.props styles.commands).className
