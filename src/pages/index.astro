@@ -1,6 +1,6 @@
 ---
-import "#src/global.css";
 import { getImage } from "astro:assets";
+import SiteLayout from "#src/layouts/SiteLayout.astro";
 import * as Index from "#output/Website.Landing.Index/index.js";
 import brunoAceFont from "@fontsource/bruno-ace/files/bruno-ace-latin-400-normal.woff2?url";
 import interFont from "inter-ui/variable-latin/InterVariable-subset.woff2?url";
@@ -18,21 +18,12 @@ const [desktopHeroImage, mobileHeroImage] = import.meta.env.DEV
 const heroImageType = import.meta.env.DEV ? "image/webp" : "image/avif";
 ---
 
-<!doctype html>
-<html
-  lang="en"
-  style={`--landing-hero-image: url("${desktopHeroImage.src}"); --landing-hero-image-mobile: url("${mobileHeroImage.src}");`}
+<SiteLayout
+  title="IRIS — Functional programming for browser and server"
+  description="Functional programming for the browser, the server, and everywhere in between."
+  imageAlt="IRIS wordmark and functional programming tagline over a colorful digital field"
 >
-  <head>
-    <meta charset="UTF-8" />
-    <style is:inline>@layer reset, priority1, priority2, priority3, priority4;</style>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Functional programming for the browser, the server, and everywhere in between."
-    />
-    <meta name="theme-color" content="oklch(98.6% 0.008 280)" />
-    <title>IRIS — Functional programming for browser and server</title>
+  <Fragment slot="head">
     <link rel="preload" href={desktopHeroImage.src} as="image" type={heroImageType} media="(min-width: 701px)" fetchpriority="high" />
     <link rel="preload" href={mobileHeroImage.src} as="image" type={heroImageType} media="(max-width: 700px)" fetchpriority="high" />
     <link rel="preload" href={brunoAceFont} as="font" type="font/woff2" crossorigin="anonymous" />
@@ -48,8 +39,8 @@ const heroImageType = import.meta.env.DEV ? "image/webp" : "image/avif";
         <link rel="stylesheet" href="/assets/stylex.css" />
       )
     }
-  </head>
-  <body>
+  </Fragment>
+  <div style={`--landing-hero-image: url("${desktopHeroImage.src}"); --landing-hero-image-mobile: url("${mobileHeroImage.src}");`}>
     <Index.component client:load />
-  </body>
-</html>
+  </div>
+</SiteLayout>

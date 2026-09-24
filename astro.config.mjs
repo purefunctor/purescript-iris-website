@@ -7,6 +7,7 @@ import { defineConfig } from "astro/config";
 const development = process.env.NODE_ENV === "development";
 
 export default defineConfig({
+  site: "https://iris-lang.com",
   integrations: [react()],
   output: "static",
   session: false,

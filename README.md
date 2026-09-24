@@ -39,6 +39,8 @@ This prepares PureScript output, then starts the compiler watcher and Astro with
 
 The site is prerendered at build time and served as [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/) without a Worker script or Node server. Static asset requests have no per-request Worker invocation charge. The playground route is disabled, and its compiler assets are not built or published with the site.
 
+Pages use `src/layouts/SiteLayout.astro` for canonical, OpenGraph, and Twitter metadata. Set `title` and `description` on each page; pass `image` (a root-relative 1200 × 630 image URL) and `imageAlt` to override the default social image. The default `/og.png` is prerendered by `src/pages/og.png.ts` using Satori and Sharp. To make a distinct image for another page, add a prerendered PNG endpoint that calls `renderOpenGraphImage(headline)` from `src/lib/openGraphImage.ts` (use newlines to balance longer copy), then pass its URL to the layout. No image-rendering service runs in production.
+
 Local builds need `iris` on PATH (or run `pnpm prepare:dev` first to build it from the sibling checkout), plus Node/pnpm. Build and inspect the production output locally:
 
 ```sh
