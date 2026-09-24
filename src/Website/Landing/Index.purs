@@ -9,6 +9,7 @@ import Effect.Unsafe (unsafePerformEffect)
 import Website.Components.ContentShell as ContentShell
 import Website.Components.Header as Header
 import Website.Components.Icon as Icon
+import Website.Landing.Demos as Demos
 import Website.Landing.Installation as Installation
 import React.Basic (ReactComponent, element)
 import React.Basic.Hooks as Hooks
@@ -210,6 +211,7 @@ component = unsafePerformEffect do
                   ]
               ]
           , Installation.installationSection
+          , element Demos.component {}
           ]
       , DOM.footer (StyleX.props styles.footer)
           [ DOM.p (StyleX.props [ styles.footerCopy, styles.footerCopyrights ])

@@ -24,6 +24,7 @@ export default defineConfig({
         "connect-src 'self' https://packages.registry.purescript.org",
         "worker-src 'self'",
         "img-src 'self' data:",
+        "media-src 'self' blob:",
       ],
       scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
       // Monaco generates theme styles and positions editor elements inline.

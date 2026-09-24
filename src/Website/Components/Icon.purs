@@ -10,6 +10,7 @@ module Website.Components.Icon
   , externalLink
   , gitHub
   , menu
+  , play
   , pureScript
   , shieldCheck
   , x
@@ -33,6 +34,7 @@ foreign import database :: ReactComponent IconProps
 foreign import externalLink :: ReactComponent IconProps
 foreign import gitHub :: ReactComponent IconProps
 foreign import menu :: ReactComponent IconProps
+foreign import play :: ReactComponent IconProps
 foreign import pureScript :: ReactComponent IconProps
 foreign import shieldCheck :: ReactComponent IconProps
 foreign import x :: ReactComponent IconProps

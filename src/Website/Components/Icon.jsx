@@ -8,6 +8,7 @@ export { default as database } from "~icons/lucide/database";
 export { default as externalLink } from "~icons/lucide/external-link";
 export { default as gitHub } from "~icons/simple-icons/github";
 export { default as menu } from "~icons/lucide/menu";
+export { default as play } from "~icons/lucide/play";
 export { default as pureScript } from "~icons/simple-icons/purescript";
 export { default as shieldCheck } from "~icons/lucide/shield-check";
 export { default as x } from "~icons/lucide/x";
