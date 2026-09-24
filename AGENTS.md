@@ -63,8 +63,8 @@ See [README.md](README.md) for installation prerequisites and standard developme
 
 ### Orb setup and preview
 
-- `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. Their environment is persisted for login shells without manually linking tool binaries. Setup also installs stable Rust, the WASM target, and `wasm-bindgen-cli` 0.2.127, installs locked dependencies, and runs `pnpm prepare:dev`. Snapshots contain the native compiler, WASM, playground assets, and PureScript output. Do not build production Astro output or start a persistent server during setup.
-- `pnpm prepare:dev` builds the native compiler through `.amp/with-iris`, then prepares playground assets and PureScript in parallel. Use the build tools' incremental caches; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
+- `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. Their environment is persisted for login shells without manually linking tool binaries. Setup also installs stable Rust, locked dependencies, and runs `pnpm prepare:dev`. Snapshots contain the native compiler and PureScript output. Do not build production Astro output or start a persistent server during setup.
+- `pnpm prepare:dev` builds the native compiler through `.amp/with-iris`, then prepares PureScript. The playground build is separate and does not run during site development or publishing. Use the build tools' incremental caches; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
 - `.amp/with-iris` builds the native release compiler from `IRIS_REPOSITORY` (default: the additional checkout at `../repos/purescript-iris`) and puts it on PATH for the supplied command. Cargo and Iris reuse existing build caches. If memory is constrained, set `CARGO_BUILD_JOBS=2` rather than assuming a default job limit.
 - `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/` before reporting ready. It generates the Website link in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
@@ -76,7 +76,7 @@ amp orb services ensure
 ```
 
 - Share the returned portal URL, not localhost. Inspect with `amp orb service status website` or `amp orb service logs website`; stop with `amp orb service stop website`. Rerun locked dependency installation after changing dependencies; do not install them from resume.
-- `pnpm dev` runs `prepare:dev` before starting the compiler watcher and Astro with live updates. Both processes stop if either exits. Keep dependencies discovered through generated modules and the lazy playground editor in Astro's Vite prebundle list to avoid reloads on first navigation. Keep production/sync and development Vite caches separate: a build must not replace prebundles used by the running server. Restart after changes to playground compiler sources or service configuration with:
+- `pnpm dev` runs `prepare:dev` before starting the compiler watcher and Astro with live updates. Both processes stop if either exits. Keep dependencies discovered through generated modules in Astro's Vite prebundle list to avoid reloads on first navigation. Keep production/sync and development Vite caches separate: a build must not replace prebundles used by the running server. Restart after service configuration changes with:
 
 ```sh
 amp orb service restart website
@@ -97,7 +97,7 @@ amp orb service start production-preview --command 'pnpm preview' --portal
 
 ### Playground checks
 
-The public playground route is disabled for the pre-launch website. The browser checks that target `/playground` apply after its Astro page and sandbox asset are restored; the non-browser checks remain available.
+The public playground route and assets are excluded from the website build. The browser checks that target `/playground` apply after its Astro page, sandbox asset, and playground build are restored; the non-browser checks require the separate playground toolchain.
 
 ```sh
 pnpm test:playground

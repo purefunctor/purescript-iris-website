@@ -61,20 +61,9 @@ if ! rustup run stable rustc --version >/dev/null 2>&1; then
   step 'Installing Rust stable' rustup toolchain install stable --profile minimal
 fi
 rustup default stable
-if ! rustup target list --installed | grep -qx wasm32-unknown-unknown; then
-  step 'Installing WASM target' rustup target add wasm32-unknown-unknown
-fi
-
-if [[ $(wasm-bindgen --version 2>/dev/null || true) != "wasm-bindgen 0.2.127" ]]; then
-  if ! command -v cargo-binstall >/dev/null 2>&1; then
-    curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
-      | bash
-  fi
-  step 'Installing wasm-bindgen' cargo binstall wasm-bindgen-cli --version 0.2.127 --locked --no-confirm
-fi
 
 # Snapshot the expensive inputs to development, not a production Astro build.
 # Cargo and Iris reuse their caches when setup runs on a stale snapshot.
 step 'Installing project dependencies' pnpm install --frozen-lockfile
-step 'Preparing native compiler, WASM and PureScript' pnpm prepare:dev
+step 'Preparing native compiler and PureScript' pnpm prepare:dev
 printf 'Development inputs ready in %ss. Resume starts the website portal.\n' "$SECONDS"

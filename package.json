@@ -12,8 +12,8 @@
   "scripts": {
     "build:purescript": "iris build",
     "build:playground": "node scripts/build-playground-packages.mjs && node scripts/build-playground-runtime.mjs && node scripts/build-playground-wasm.mjs && node scripts/build-playground-assets.mjs",
-    "prepare:dev": ".amp/with-iris pnpm exec concurrently --kill-others-on-fail --names playground,purescript \"pnpm build:playground\" \"pnpm build:purescript\"",
-    "build": "pnpm prepare:dev && astro build",
+    "prepare:dev": ".amp/with-iris pnpm build:purescript",
+    "build": "rm -rf public/playground && pnpm build:purescript && astro build",
     "dev": "pnpm prepare:dev && PATH=\"${IRIS_REPOSITORY:-../repos/purescript-iris}/target/release:$PATH\" concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"iris watch --output output\" \"astro dev\"",
     "test:playground": "node --test src/Website/Playground/*.test.js playground/packages/*.test.mjs",
     "preview": "wrangler dev",

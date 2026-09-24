@@ -19,14 +19,11 @@ export default defineConfig({
         "frame-src 'self'",
         "frame-ancestors 'none'",
         "form-action 'none'",
-        "connect-src 'self' https://packages.registry.purescript.org",
-        "worker-src 'self'",
+        "connect-src 'self'",
         "img-src 'self' data:",
         "media-src 'self' blob:",
       ],
-      scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
-      // Monaco generates theme styles and positions editor elements inline.
-      styleDirective: { resources: ["'self'", "'unsafe-inline'"] },
+      scriptDirective: { resources: ["'self'"] },
     },
   },
   server: {
@@ -39,21 +36,15 @@ export default defineConfig({
     cacheDir: development
       ? "node_modules/.vite-dev"
       : "node_modules/.vite-build",
-    // Generated PureScript and the lazy editor are not all visible to the
-    // initial dependency scan. Prebundle before serving the first request.
+    // Generated PureScript is not all visible to the initial dependency scan.
     optimizeDeps: {
       include: [
         "@stylexjs/stylex",
-        "acorn",
-        "motion/mini",
         "react-aria-components",
         "react-aria-components/Modal",
-        "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution.js",
-        "monaco-editor/esm/vs/editor/editor.api.js",
       ],
     },
-    // StyleX aggregates all rules into one CSS asset. Keep it shared between
-    // routes rather than attaching it to Monaco's lazy editor stylesheet.
+    // StyleX aggregates all rules into one CSS asset.
     build: { cssCodeSplit: false },
     plugins: [
       icons({ compiler: "jsx", jsx: "react" }),

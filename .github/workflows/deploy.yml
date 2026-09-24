@@ -14,22 +14,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: website
     steps:
       - name: Check out website
         uses: actions/checkout@v4
         with:
-          path: website
-          persist-credentials: false
-
-      - name: Check out Iris compiler
-        uses: actions/checkout@v4
-        with:
-          repository: purefunctor/purescript-iris
-          ref: b394e039da11c7fb7efbab8e12c0462bfef86c62
-          path: repos/purescript-iris
           persist-credentials: false
 
       - name: Install pnpm
@@ -40,21 +28,25 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: website/.node-version
+          node-version-file: .node-version
           cache: pnpm
-          cache-dependency-path: website/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install Rust and WASM target
+      - name: Install pinned Iris release
         run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-          rustup target add wasm32-unknown-unknown
-          cargo install wasm-bindgen-cli --version 0.2.127 --locked
+          archive="$RUNNER_TEMP/iris.tar.gz"
+          curl --proto '=https' --tlsv1.2 -fLsS --retry 3 \
+            -o "$archive" \
+            https://github.com/purefunctor/purescript-iris/releases/download/v0.1.0-dev.b394e039da11/iris-x86_64-unknown-linux-musl.tar.gz
+          echo "1ed3a72908e9fe8eb6ace57fff2b4b61df63e113eb5dbd89ab2dbe9731c26959  $archive" | sha256sum --check -
+          tar -xzf "$archive" -C "$RUNNER_TEMP" iris-x86_64-unknown-linux-musl/iris
+          echo "$RUNNER_TEMP/iris-x86_64-unknown-linux-musl" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/iris-x86_64-unknown-linux-musl/iris" --version
 
       - name: Build static assets
         run: |
           pnpm install --frozen-lockfile
-          IRIS_REPOSITORY=../repos/purescript-iris pnpm build
+          pnpm build
 
       - name: Deploy static assets
         run: pnpm exec wrangler deploy
