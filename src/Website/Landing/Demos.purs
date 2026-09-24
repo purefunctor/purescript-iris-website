@@ -4,24 +4,17 @@ import Prelude
 
 import Iris.StyleX as StyleX
 import Data.Array (mapWithIndex)
-import Data.Maybe (maybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
-import Data.Nullable (Nullable, null, notNull, toMaybe)
 import Website.Components.ContentShell as ContentShell
 import Website.Components.Icon as Icon
 import Yoga.React.DOM as DOM
 
 type Demo = { slug :: String, title :: String, description :: String }
-
-foreign import data VideoPreloader :: Type
-foreign import createVideoPreloader :: Array String -> Effect VideoPreloader
-foreign import videoSource :: VideoPreloader -> String -> Effect String
-foreign import disposeVideoPreloader :: VideoPreloader -> Effect Unit
 
 mediaPath :: String -> String
 mediaPath slug = "/editor-demos/" <> slug <> ".mp4"
@@ -213,21 +206,10 @@ styles = StyleX.create
 
 component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks.do
-  preloader <- Hooks.useRef (null :: Nullable VideoPreloader)
   selected /\ setSelected <- Hooks.useState'
-    { demo: inferredTypes, source: mediaPath inferredTypes.slug, sequence: 0, autoplay: false }
-  Hooks.useEffectOnce do
-    videos <- createVideoPreloader $ map _.slug (typeIntelligence <> workflows)
-    Hooks.writeRef preloader (notNull videos)
-    pure do
-      disposeVideoPreloader videos
-      Hooks.writeRef preloader null
+    { demo: inferredTypes, sequence: 0, autoplay: false }
   let
-    select demo = do
-      videos <- Hooks.readRef preloader
-      source <- maybe (pure $ mediaPath demo.slug) (\loaded -> videoSource loaded demo.slug)
-        (toMaybe videos)
-      setSelected { demo, source, sequence: selected.sequence + 1, autoplay: true }
+    select demo = setSelected { demo, sequence: selected.sequence + 1, autoplay: true }
   pure $ DOM.section
     { className: (StyleX.props styles.section).className
     , id: "editor-demos"
@@ -251,8 +233,9 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
                     , autoPlay: selected.autoplay
                     , controls: true
                     , playsInline: true
-                    , preload: "auto"
-                    , src: selected.source
+                    , poster: if selected.autoplay then "" else "/editor-demos/inferred-types.webp"
+                    , preload: "none"
+                    , src: mediaPath selected.demo.slug
                     , "aria-label": selected.demo.title <> " demo"
                     }
                     []
