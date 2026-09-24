@@ -17,7 +17,7 @@ This repository is the Iris website: Astro handles routing and server rendering 
 ### PureScript and JavaScript boundaries
 
 - Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing` or `Website.Playground`. Keep FFI companions alongside their PureScript modules.
-- Use the package import aliases `#src/*`, `#output/*`, `#build/*` and `#playground/*` for cross-directory imports; `#dist/*` is for the production server's built entrypoint. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
+- Use the package import aliases `#src/*`, `#output/*`, `#build/*` and `#playground/*` for cross-directory imports. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
 - Keep playground UI and React hooks in `src/Website/Playground/Index.purs` and `src/Website/Playground/Result.purs`. Their JavaScript FFI companions implement browser effects: Monaco and compiler workers, focus, runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
 - Playground dialog animations use only `motion/mini` through `dialog.js`. PureScript owns visibility and controller lifetime; browser controllers own interruption, native modal closing and focus. Cancel backdrop effects explicitly (Mini's `stop()` does not), restore owned inline styles, and keep trivial CSS transitions and React Aria presence unchanged.
 - Author component StyleX declarations in PureScript using `Iris.StyleX`. Iris emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
@@ -32,7 +32,7 @@ This repository is the Iris website: Astro handles routing and server rendering 
 ### Playground security
 
 - Before adding network access, persistence, sharing or arbitrary npm dependencies, revisit the playground isolation policy described in [README.md](README.md#execution-boundary). The absence of accounts does not remove XSS risk; hostile public execution warrants a separate origin and stronger resource isolation.
-- `server.mjs` serves the production build through the Node adapter's middleware mode so static files retain sandbox security headers and immutable asset caching. Standalone adapter mode does not support arbitrary public-file headers. Preserve the sandbox headers for encoded and extensionless URLs as well as the canonical URL.
+- Production is a static Astro build deployed as Cloudflare Workers Static Assets without a Worker script. `public/_headers` owns the static security and cache headers. When restoring the playground sandbox, verify its policy on canonical, extensionless, and encoded URLs on Cloudflare before enabling the route.
 
 ## Design constraints
 
@@ -82,7 +82,7 @@ amp orb services ensure
 amp orb service restart website
 ```
 
-- Development and production both use Node.js. Validate production behavior with the actual server, not just Astro dev. `pnpm preview` and `pnpm start` both run `server.mjs`; do not substitute `astro preview`, which bypasses the static-file header policy:
+- Development uses Astro on Node.js; production is served as static assets. Validate production behavior with Wrangler's static asset server, not just Astro dev (`astro preview` does not exercise Cloudflare's `_headers` rules):
 
 ```sh
 pnpm build

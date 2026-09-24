@@ -1,4 +1,3 @@
-import node from "@astrojs/node";
 import react from "@astrojs/react";
 import stylex from "@stylexjs/unplugin";
 import icons from "unplugin-icons/vite";
@@ -8,9 +7,8 @@ import { defineConfig } from "astro/config";
 const development = process.env.NODE_ENV === "development";
 
 export default defineConfig({
-  adapter: node({ mode: "middleware" }),
   integrations: [react()],
-  output: "server",
+  output: "static",
   session: false,
   security: {
     csp: {

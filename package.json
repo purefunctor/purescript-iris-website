@@ -7,7 +7,6 @@
     "#src/*": "./src/*",
     "#output/*": "./output/*",
     "#build/*": "./build/*",
-    "#dist/*": "./dist/*",
     "#playground/*": "./playground/*"
   },
   "scripts": {
@@ -17,12 +16,10 @@
     "build": "pnpm prepare:dev && astro build",
     "dev": "pnpm prepare:dev && PATH=\"${IRIS_REPOSITORY:-../repos/purescript-iris}/target/release:$PATH\" concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"iris watch --output output\" \"astro dev\"",
     "test:playground": "node --test src/Website/Playground/*.test.js playground/packages/*.test.mjs",
-    "preview": "node server.mjs",
-    "start": "node server.mjs",
+    "preview": "wrangler dev",
     "sources": "spago sources"
   },
   "dependencies": {
-    "@astrojs/node": "11.1.5",
     "@astrojs/react": "6.0.4",
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@fontsource-variable/jura": "5.3.0",
@@ -36,8 +33,7 @@
     "react": "18.3.1",
     "react-aria-components": "1.20.0",
     "react-dom": "18.3.1",
-    "sharp": "0.35.4",
-    "sirv": "3.0.2"
+    "sharp": "0.35.4"
   },
   "devDependencies": {
     "@iconify-json/lucide": "1.2.126",
@@ -51,7 +47,8 @@
     "purs-tidy": "0.11.1",
     "spago": "1.0.4",
     "unplugin-icons": "23.0.1",
-    "vite": "8.2.2"
+    "vite": "8.2.2",
+    "wrangler": "4.136.1"
   },
   "packageManager": "pnpm@12.3.4"
 }

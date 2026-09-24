@@ -35,16 +35,21 @@ pnpm dev
 
 This prepares the playground and PureScript output, then starts the compiler watcher and Astro with live updates. You don't need to repeat dependency installation unless dependencies change. For agent-specific orb startup commands, see [the agent guide](AGENTS.md#orb-setup-and-preview).
 
-### Production
+### Publishing
 
-Development and production both run on Node.js:
+The site is prerendered at build time and served as [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/) without a Worker script or Node server. Static asset requests have no per-request Worker invocation charge. The playground route is disabled; its compiler assets are still built, but no package archives are hosted here (the browser downloads them from the PureScript Registry when the playground is enabled).
+
+Builds need the native IRIS compiler checkout at `../repos/purescript-iris` (or `IRIS_REPOSITORY`), Node/pnpm and the Rust/WASM prerequisites above. Build and inspect the production output locally:
 
 ```sh
+pnpm install --frozen-lockfile
 pnpm build
-pnpm start
+pnpm preview
 ```
 
-`pnpm preview` runs the same production server. Set `HOST` and `PORT` to choose its listening address (defaults: `0.0.0.0:4321`). Keep `dist/`, `server.mjs`, `package.json`, and installed production dependencies together. No hosting provider or deployment command is configured.
+`pnpm preview` serves `dist/` using Wrangler's local static asset server, including `public/_headers`. Before publishing, confirm that `/` loads, unknown routes return 404, and the response headers match the policy in `_headers`. The Astro CSP in the generated HTML is a meta policy; the separate `frame-ancestors` header protects the landing page from embedding. When restoring the playground, test sandbox headers on canonical, extensionless, and encoded URLs on an actual Cloudflare deployment before enabling the route.
+
+After configuring a Cloudflare account with Wrangler (`pnpm exec wrangler login` locally, or a scoped API token in CI), publish the build with `pnpm exec wrangler deploy`. Do not commit credentials. Set a custom domain in the Workers dashboard after reviewing the preview deployment; this repository intentionally does not include an account-specific route or automatically deploy on push. Rebuild when the compiler changes; deploy the generated `dist/` from the same source revision. Static assets are limited to [25 MiB per file and 20,000 files on Free / 100,000 on Paid](https://developers.cloudflare.com/workers/platform/limits/#static-assets); check the build output before publishing. Avoid adding `assets.run_worker_first` or a Worker script for static content: these can introduce billable invocations. If the playground becomes public, reassess its isolation boundary and traffic separately.
 
 ## Playground
 
