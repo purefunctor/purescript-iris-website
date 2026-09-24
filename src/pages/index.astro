@@ -1,21 +1,11 @@
 ---
-import { getImage } from "astro:assets";
 import SiteLayout from "#src/layouts/SiteLayout.astro";
 import * as Index from "#output/Website.Landing.Index/index.js";
 import brunoAceFont from "@fontsource/bruno-ace/files/bruno-ace-latin-400-normal.woff2?url";
 import interFont from "inter-ui/variable-latin/InterVariable-subset.woff2?url";
 import juraFont from "@fontsource-variable/jura/files/jura-latin-wght-normal.woff2?url";
-import heroImage from "#src/assets/iris-digital-field.webp";
 
 export const prerender = true;
-
-const [desktopHeroImage, mobileHeroImage] = import.meta.env.DEV
-  ? [heroImage, heroImage]
-  : await Promise.all([
-      getImage({ src: heroImage, width: 1672, format: "avif", quality: 45 }),
-      getImage({ src: heroImage, width: 1200, format: "avif", quality: 50 }),
-    ]);
-const heroImageType = import.meta.env.DEV ? "image/webp" : "image/avif";
 ---
 
 <SiteLayout
@@ -24,8 +14,6 @@ const heroImageType = import.meta.env.DEV ? "image/webp" : "image/avif";
   imageAlt="IRIS wordmark and functional programming tagline over a colorful digital field"
 >
   <Fragment slot="head">
-    <link rel="preload" href={desktopHeroImage.src} as="image" type={heroImageType} media="(min-width: 701px)" fetchpriority="high" />
-    <link rel="preload" href={mobileHeroImage.src} as="image" type={heroImageType} media="(max-width: 700px)" fetchpriority="high" />
     <link rel="preload" href={brunoAceFont} as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href={juraFont} as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href={interFont} as="font" type="font/woff2" crossorigin="anonymous" />
@@ -40,7 +28,5 @@ const heroImageType = import.meta.env.DEV ? "image/webp" : "image/avif";
       )
     }
   </Fragment>
-  <div style={`--landing-hero-image: url("${desktopHeroImage.src}"); --landing-hero-image-mobile: url("${mobileHeroImage.src}");`}>
-    <Index.component client:load />
-  </div>
+  <Index.component client:load />
 </SiteLayout>
