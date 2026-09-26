@@ -12,6 +12,7 @@ import Website.Components.ContentShell as ContentShell
 import Website.Components.Header as Header
 import Website.Components.Icon as Icon
 import Website.Landing.Demos as Demos
+import Website.Landing.Features as Features
 import Website.Landing.Installation as Installation
 import React.Basic (ReactComponent, Ref, element)
 import React.Basic.Hooks ((/\))
@@ -113,10 +114,10 @@ styles = StyleX.create
   , statement:
       { color: "var(--landing-color-ink)"
       , fontFamily: "var(--landing-font-heading)"
-      , fontSize: "clamp(2rem, 3.4vw, 3.25rem)"
+      , fontSize: "var(--landing-type-statement)"
       , fontWeight: 520
-      , letterSpacing: "-0.045em"
-      , lineHeight: 1.02
+      , letterSpacing: "-0.03em"
+      , lineHeight: 1.1
       , marginBlockStart:
           { default: "clamp(44px, 6vw, 76px)"
           , "@media (max-width: 700px) and (max-height: 650px)": "16px"
@@ -144,7 +145,7 @@ styles = StyleX.create
       , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "inline-flex"
-      , fontSize: 14
+      , fontSize: "var(--landing-type-small)"
       , fontWeight: 650
       , justifyContent: "center"
       , minHeight: 48
@@ -174,7 +175,7 @@ styles = StyleX.create
       }
   , footerCopy:
       { color: "var(--landing-color-muted)"
-      , fontSize: 14
+      , fontSize: "var(--landing-type-small)"
       , lineHeight: 1.6
       , marginInline: "auto"
       , maxWidth: 760
@@ -243,6 +244,7 @@ component = unsafePerformEffect do
                   ]
               ]
           , Installation.installationSection
+          , Features.featuresSection
           , element Demos.component {}
           ]
       , DOM.footer (StyleX.props styles.footer)

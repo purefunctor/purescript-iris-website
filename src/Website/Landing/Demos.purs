@@ -84,16 +84,18 @@ styles = StyleX.create
       }
   , heading:
       { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "clamp(2.5rem, 5vw, 4.5rem)"
+      , fontSize: "var(--landing-type-chapter)"
       , fontWeight: 520
-      , letterSpacing: "-0.045em"
-      , lineHeight: 1
+      , letterSpacing: "-0.035em"
+      , lineHeight: 1.05
+      , textWrap: "balance"
       }
   , intro:
       { color: "var(--landing-color-muted)"
-      , fontSize: 17
-      , lineHeight: 1.6
+      , fontSize: "var(--landing-type-body)"
+      , lineHeight: 1.65
       , marginBlock: "16px 32px"
+      , maxWidth: "65ch"
       }
   , layout:
       { alignItems: "start"
@@ -121,14 +123,14 @@ styles = StyleX.create
       }
   , captionTitle:
       { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "clamp(1.5rem, 3vw, 2.25rem)"
+      , fontSize: "var(--landing-type-title)"
       , fontWeight: 600
-      , lineHeight: 1.1
+      , lineHeight: 1.2
       }
   , captionDescription:
       { color: "var(--landing-color-muted)"
-      , fontSize: 15
-      , lineHeight: 1.5
+      , fontSize: "var(--landing-type-body)"
+      , lineHeight: 1.65
       }
   , groups:
       { display: "grid"
@@ -149,9 +151,9 @@ styles = StyleX.create
   , group: { minWidth: 0 }
   , groupTitle:
       { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "clamp(1.2rem, 1.7vw, 1.5rem)"
+      , fontSize: "var(--landing-type-group)"
       , fontWeight: 600
-      , lineHeight: 1.15
+      , lineHeight: 1.25
       , marginBottom: 8
       }
   , list:
@@ -171,7 +173,7 @@ styles = StyleX.create
       , color: "var(--landing-color-ink)"
       , cursor: "var(--landing-interactive-cursor, pointer)"
       , display: "grid"
-      , fontSize: 14
+      , fontSize: "var(--landing-type-small)"
       , gap: 8
       , gridTemplateColumns: "24px minmax(0, 1fr) 14px"
       , minHeight: 38
@@ -188,7 +190,7 @@ styles = StyleX.create
   , number:
       { color: "var(--landing-color-muted)"
       , fontFamily: "var(--landing-font-code)"
-      , fontSize: 12
+      , fontSize: "var(--landing-type-meta)"
       }
   , play:
       { color: "var(--landing-color-violet)"

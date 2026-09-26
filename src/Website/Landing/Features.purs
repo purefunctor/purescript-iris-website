@@ -1,215 +1,342 @@
 module Website.Landing.Features (featuresSection) where
 
-import Prelude
-
 import Iris.StyleX as StyleX
-import Data.Maybe (Maybe(..), maybe)
-import Website.Landing.Features.JavaScript (javascriptOutputMedia)
-import Website.Landing.Features.Performance (performanceMedia)
-import Website.Landing.Features.Source (editorIntelligenceMedia, landingPageSource)
-import React.Basic (JSX, empty)
+import React.Basic (JSX)
+import Website.Components.ContentShell as ContentShell
+import Website.Landing.Features.Code as Code
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
-  { features:
-      { paddingBlock: "96px 128px"
-      , "@media (max-width: 800px)":
-          { paddingBlock: "72px 96px"
-          }
-      }
-  , featuresTitle:
-      { fontSize: "clamp(2.5rem, 5vw, 4.5rem)"
-      , fontWeight: 520
-      , letterSpacing: "-0.045em"
-      , lineHeight: 0.98
-      , marginBottom: "clamp(72px, 8vw, 96px)"
-      }
-  , featureList:
-      { display: "flex"
-      , flexDirection: "column"
-      , gap: "clamp(72px, 8vw, 96px)"
-      , listStyle: "none"
-      , padding: 0
-      , "@media (max-width: 800px)":
-          { gap: 56
-          }
-      }
-  , featureCopyGroup:
-      { display: "grid"
-      , gap: 12
-      }
-  , featureTitle:
-      { cursor: "text"
-      , fontSize: "clamp(1.4rem, 2.5vw, 2rem)"
-      , fontWeight: 580
-      , letterSpacing: "-0.025em"
-      , lineHeight: 1.1
-      , ":focus-visible":
-          { outlineColor: "var(--landing-color-mineral)"
-          , outlineOffset: 4
-          , outlineStyle: "solid"
-          , outlineWidth: 2
-          }
-      }
-  , featureCopy:
-      { color: "var(--landing-color-muted)"
-      , cursor: "text"
-      , fontSize: 16
-      , lineHeight: 1.65
-      , ":focus-visible":
-          { outlineColor: "var(--landing-color-mineral)"
-          , outlineOffset: 4
-          , outlineStyle: "solid"
-          , outlineWidth: 2
-          }
-      }
-  , featureItem:
-      { alignItems: "start"
-      , columnGap: "clamp(40px, 7vw, 88px)"
-      , display: "grid"
-      , gridTemplateColumns:
-          { default: "repeat(2, minmax(0, 1fr))"
-          , "@media (max-width: 800px)": "minmax(0, 1fr)"
-          }
-      , rowGap: 28
-      }
-  , featureItemVertical:
-      { rowGap:
-          { default: 48
-          , "@media (max-width: 800px)": 28
-          }
-      }
-  , featureMedia:
-      { backgroundColor: "var(--landing-color-white-translucent)"
-      , display: "grid"
-      , minWidth: 0
-      , placeItems: "stretch"
-      , width: "100%"
-      }
-  , featureMediaFramed:
-      { aspectRatio:
-          { default: "16 / 9"
-          , "@media (max-width: 800px)": "auto"
-          }
-      }
-  , featureMediaClipped:
-      { overflow: "hidden"
-      }
-  , featureMediaEditor:
-      { overflow: "visible"
-      , position: "relative"
-      }
-  , featureMediaVertical:
-      { gridColumn: "1 / -1"
+  { section:
+      { backgroundColor: "var(--landing-color-paper)"
+      , color: "var(--landing-color-ink)"
       , overflow: "hidden"
+      , paddingBlock: "clamp(88px, 10vw, 152px) clamp(80px, 9vw, 128px)"
       }
-  , featureContent:
-      { display: "grid"
-      , gap: 20
+  , stage:
+      { alignItems: "center"
+      , display: "grid"
+      , gap: "clamp(48px, 5vw, 80px)"
+      , gridTemplateColumns: "minmax(0, 0.85fr) minmax(0, 1.15fr)"
+      , isolation: "isolate"
+      , marginBlockEnd: "clamp(72px, 9vw, 120px)"
+      , position: "relative"
+      , "@media (max-width: 1279px)": { gridTemplateColumns: "minmax(0, 1fr)" }
+      }
+  , introduction:
+      { gridColumn: 1
+      , gridRow: 1
+      }
+  , heading:
+      { fontFamily: "var(--landing-font-heading)"
+      , fontSize: "var(--landing-type-chapter)"
+      , fontWeight: 520
+      , letterSpacing: "-0.035em"
+      , lineHeight: 1.05
+      , marginBlockEnd: "clamp(32px, 4vw, 56px)"
+      , textWrap: "balance"
+      }
+  , lead:
+      { fontFamily: "var(--landing-font-heading)"
+      , fontSize: "var(--landing-type-lead)"
+      , fontWeight: 530
+      , letterSpacing: "-0.02em"
+      , lineHeight: 1.25
+      , maxWidth: 580
+      , textWrap: "balance"
+      }
+  , explanation:
+      { color: "var(--landing-color-muted)"
+      , fontSize: "var(--landing-type-body)"
+      , lineHeight: 1.65
+      , marginBlockStart: 24
+      , maxWidth: 520
+      }
+  , diagram:
+      { alignItems: "center"
+      , display: "grid"
+      , gap: 72
+      , gridColumn: 2
+      , gridRow: 1
+      , gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.3fr)"
+      , justifySelf: "center"
+      , maxWidth: 645
+      , minHeight: 400
+      , paddingBlock: 48
+      , position: "relative"
+      , width: "100%"
+      , "@media (max-width: 1279px)":
+          { gap: 52
+          , gridColumn: 1
+          , gridRow: 2
+          , gridTemplateColumns: "minmax(0, 1fr)"
+          , minHeight: 0
+          , paddingBlock: 32
+          }
+      , "@media (max-width: 600px)":
+          { paddingBlock: 28 }
+      }
+  , diagramBackdrop:
+      { alignSelf: "stretch"
+      , backgroundImage: "var(--landing-compiler-image)"
+      , backgroundPosition: "center"
+      , backgroundSize: "cover"
+      , gridColumn: "1 / -1"
+      , gridRow: 1
+      , marginInline: "calc(50% - 50vw)"
+      , pointerEvents: "none"
+      , position: "relative"
+      , width: "100vw"
+      , zIndex: "-1"
+      , "@media (max-width: 1279px)": { gridRow: 2 }
+      }
+  , node:
+      { backgroundColor: "oklch(from var(--landing-color-paper) l c h / 87%)"
+      , boxShadow: "0 0 0 1px oklch(from var(--landing-color-violet) l c h / 14%)"
+      , display: "grid"
+      , minHeight: 124
       , minWidth: 0
+      , padding: "30px 16px 18px"
+      , position: "relative"
+      , width: "100%"
+      , "@media (max-width: 600px)": { minHeight: 0 }
+      }
+  , sourceNode:
+      { justifySelf:
+          { default: "stretch"
+          , "@media (max-width: 1279px)": "start"
+          }
+      , maxWidth:
+          { default: "none"
+          , "@media (max-width: 1279px)": 340
+          , "@media (max-width: 800px)": "calc(100% / 3)"
+          , "@media (max-width: 700px)": 280
+          }
+      }
+  , outputs:
+      { display: "grid"
+      , gap: 28
+      , minWidth: 0
+      , width: "100%"
+      , "@media (max-width: 1279px)": { gap: 52 }
+      }
+  , outputNode:
+      { minHeight: 120
+      }
+  , semanticNode:
+      { justifySelf: "end"
+      , maxWidth: 280
+      , minHeight: 88
+      }
+  , nodeLabel:
+      { backgroundColor: "var(--landing-color-ink)"
+      , color: "var(--landing-color-paper)"
+      , fontFamily: "var(--landing-font-body)"
+      , fontSize: "var(--landing-type-meta)"
+      , fontWeight: 650
+      , insetBlockStart: "-14px"
+      , insetInlineStart: 0
+      , lineHeight: 1.4
+      , padding: "5px 9px"
+      , position: "absolute"
+      }
+  , nodeValue:
+      { fontFamily: "var(--landing-font-code)"
+      , fontSize: 13
+      , fontVariantLigatures: "none"
+      , lineHeight: 1.5
+      , minWidth: 0
+      , overflowX: "auto"
+      , whiteSpace: "pre"
+      , ":focus-visible": { outline: "2px solid var(--landing-color-violet)", outlineOffset: 2 }
+      }
+  , scrollHint:
+      { backgroundColor: "var(--landing-color-paper)"
+      , color: "var(--landing-color-violet)"
+      , fontFamily: "var(--landing-font-code)"
+      , fontSize: 11
+      , insetBlockEnd: 8
+      , insetInlineEnd: 12
+      , pointerEvents: "none"
+      , position: "absolute"
+      , "@media (min-width: 495px) and (max-width: 1279px)": { display: "none" }
+      }
+  , points:
+      { display: "grid"
+      , gap: "clamp(32px, 4vw, 64px)"
+      , gridTemplateColumns: "repeat(3, minmax(0, 1fr))"
+      , "@media (max-width: 800px)": { gridTemplateColumns: "minmax(0, 1fr)" }
+      }
+  , point:
+      { borderTopColor: "var(--landing-color-line)"
+      , borderTopStyle: "solid"
+      , borderTopWidth: 1
+      , paddingBlockStart: 24
+      }
+  , pointTitle:
+      { fontFamily: "var(--landing-font-heading)"
+      , fontSize: "var(--landing-type-title)"
+      , fontWeight: 600
+      , lineHeight: 1.2
+      , marginBlockEnd: 12
+      }
+  , pointCopy:
+      { color: "var(--landing-color-muted)"
+      , fontSize: "var(--landing-type-body)"
+      , lineHeight: 1.65
+      , maxWidth: 460
       }
   }
 
-features = StyleX.props styles.features
-featuresTitle = StyleX.props styles.featuresTitle
-featureList = StyleX.props styles.featureList
-featureCopyGroup = StyleX.props styles.featureCopyGroup
-featureTitle = StyleX.props styles.featureTitle
-featureCopy = StyleX.props styles.featureCopy
-
-featureItemStyle vertical = StyleX.props
-  [ styles.featureItem
-  , StyleX.conditional vertical styles.featureItemVertical
-  ]
-
-featureMediaLight = StyleX.props [ styles.featureMedia, styles.featureMediaClipped ]
-featureMediaSource = StyleX.props
-  [ styles.featureMedia, styles.featureMediaFramed, styles.featureMediaClipped ]
-
-featureMediaEditor = StyleX.props
-  [ styles.featureMedia, styles.featureMediaFramed, styles.featureMediaEditor ]
-
-featureMediaVertical = StyleX.props [ styles.featureMedia, styles.featureMediaVertical ]
-featureContent = StyleX.props styles.featureContent
-
-type Feature =
-  { media :: JSX
-  , mediaStyle :: StyleX.Props
-  , title :: String
-  , description :: String
-  , details :: Maybe String
-  , vertical :: Boolean
-  }
+styleProps = StyleX.recordProps styles
 
 featuresSection :: JSX
 featuresSection =
-  DOM.div { className: features.className, id: "features" }
-    [ DOM.h2 featuresTitle "Features"
-    , DOM.ul featureList
-        [ feature
-            { media: landingPageSource
-            , mediaStyle: featureMediaSource
-            , title: "A modern PureScript experience"
-            , description:
-                "Iris pushes PureScript development towards the frontier. Experience rich editor tooling and instant builds for existing PureScript libraries and projects."
-            , details: Nothing
-            , vertical: false
-            }
-        , feature
-            { media: editorIntelligenceMedia
-            , mediaStyle: featureMediaEditor
-            , title: "Rich editor intelligence"
-            , description:
-                "Completion, go to definition, hover information, find references, symbol search, conflict-aware renaming, and diagnostics for editors that support the Language Server Protocol."
-            , details: Nothing
-            , vertical: false
-            }
-        , feature
-            { media: performanceMedia
-            , mediaStyle: featureMediaLight
-            , title: "Performance that scales"
-            , description:
-                "The compiler processes thousands of modules in seconds, keeping builds fast as your project and its dependencies grow. This is made possible by the embarrassingly parallel query computation engine."
-            , details: Nothing
-            , vertical: false
-            }
-        , feature
-            { media: javascriptOutputMedia
-            , mediaStyle: featureMediaVertical
-            , title: "Readable JavaScript output"
-            , description:
-                "Iris generates modern JavaScript while optimising PureScript abstractions. Function composition is inlined, newtypes disappear at runtime, Effect abstractions become direct calls, and tail recursion becomes iteration."
-            , details: Just
-                "StyleX and JSX foreign module integration make it easy to build with modern JavaScript toolchains."
-            , vertical: true
-            }
-        ]
-    ]
-
-feature :: Feature -> JSX
-feature spec =
-  DOM.li (featureItemStyle spec.vertical)
-    [ DOM.div featureContent
-        [ DOM.h3
-            { className: featureTitle.className
-            , contentEditable: true
-            , suppressContentEditableWarning: true
-            }
-            spec.title
-        , DOM.div featureCopyGroup
-            [ featureParagraph spec.description
-            , maybe empty featureParagraph spec.details
+  DOM.section
+    { className: styleProps.section.className
+    , id: "about"
+    , "aria-labelledby": "about-heading"
+    }
+    [ DOM.div ContentShell.contentShell
+        [ DOM.div styleProps.stage
+            [ DOM.div styleProps.introduction
+                [ DOM.h2 { className: styleProps.heading.className, id: "about-heading" }
+                    "What is Iris?"
+                , DOM.p styleProps.lead
+                    "Iris is a superset of PureScript, written in Rust."
+                , DOM.p styleProps.explanation
+                    "Iris compiles PureScript projects managed by Spago and provides code intelligence via its language server implementation. It is designed with incremental compilation from the ground up, making it fast and responsive once the build server is primed."
+                ]
+            , DOM.div { className: styleProps.diagramBackdrop.className, "aria-hidden": true }
+                []
+            , DOM.div
+                { className: styleProps.diagram.className
+                , "aria-label":
+                    "PureScript source is checked by Iris and becomes JavaScript; the same analysis serves the editor"
+                }
+                [ DOM.div (StyleX.props [ styles.node, styles.sourceNode ])
+                    [ DOM.span styleProps.nodeLabel "PureScript"
+                    , DOM.pre styleProps.nodeValue
+                        ( DOM.code {}
+                            [ DOM.span Code.sourceLine
+                                [ DOM.span Code.sourceDeclaration "greet"
+                                , DOM.span Code.sourceVariable " name"
+                                , DOM.span Code.sourceAccent " ="
+                                , DOM.span Code.sourceKeyword " do"
+                                ]
+                            , DOM.span Code.sourceLine
+                                [ DOM.span Code.sourceReference "  log"
+                                , DOM.span Code.sourceVariable " name"
+                                ]
+                            , DOM.span Code.sourceLine
+                                [ DOM.span Code.sourceReference "  log"
+                                , DOM.span Code.sourceString " \"Iris is ready.\""
+                                ]
+                            , DOM.span Code.sourceLine " "
+                            , DOM.span Code.sourceLine
+                                [ DOM.span Code.sourceDeclaration "main"
+                                , DOM.span Code.sourceAccent " ="
+                                ]
+                            , DOM.span Code.sourceLine
+                                [ DOM.span Code.sourceReference "  greet"
+                                , DOM.span Code.sourceString " \"Hello, world!\""
+                                ]
+                            ]
+                        )
+                    ]
+                , DOM.div styleProps.outputs
+                    [ DOM.div (StyleX.props [ styles.node, styles.outputNode ])
+                        [ DOM.span styleProps.nodeLabel "JavaScript"
+                        , DOM.pre
+                            { className: styleProps.nodeValue.className
+                            , tabIndex: 0
+                            , "aria-label": "Generated JavaScript"
+                            }
+                            ( DOM.code {}
+                                [ DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "export function"
+                                    , DOM.span Code.sourceDeclaration " greet"
+                                    , DOM.span {} "("
+                                    , DOM.span Code.sourceVariable "name"
+                                    , DOM.span {} ") {"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "  const"
+                                    , DOM.span Code.sourceVariable " $action"
+                                    , DOM.span Code.sourceAccent " ="
+                                    , DOM.span Code.sourceReference " Effect_Console.log("
+                                    , DOM.span Code.sourceVariable "name"
+                                    , DOM.span {} ");"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "  return"
+                                    , DOM.span {} " () => {"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "    const"
+                                    , DOM.span Code.sourceVariable " $unit"
+                                    , DOM.span Code.sourceAccent " ="
+                                    , DOM.span Code.sourceVariable " $action"
+                                    , DOM.span {} "();"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "    return"
+                                    , DOM.span Code.sourceReference " Effect_Console.log("
+                                    , DOM.span Code.sourceString "\"Iris is ready.\""
+                                    , DOM.span {} ")();"
+                                    ]
+                                , DOM.span Code.sourceLine "  };"
+                                , DOM.span Code.sourceLine "}"
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "export const"
+                                    , DOM.span Code.sourceDeclaration " main"
+                                    , DOM.span Code.sourceAccent " ="
+                                    , DOM.span Code.sourceReference " greet("
+                                    , DOM.span Code.sourceString "\"Hello, world!\""
+                                    , DOM.span {} ");"
+                                    ]
+                                ]
+                            )
+                        , DOM.span
+                            { className: styleProps.scrollHint.className, "aria-hidden": true }
+                            "SCROLL ↔"
+                        ]
+                    , DOM.div (StyleX.props [ styles.node, styles.outputNode, styles.semanticNode ])
+                        [ DOM.span styleProps.nodeLabel "Semantic"
+                        , DOM.pre styleProps.nodeValue
+                            ( DOM.code {}
+                                [ DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceDeclaration "greet"
+                                    , DOM.span Code.sourceSyntax " :: "
+                                    , DOM.span Code.sourceType "String"
+                                    , DOM.span Code.sourceSyntax " -> "
+                                    , DOM.span Code.sourceType "Effect Unit"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceDeclaration "main"
+                                    , DOM.span Code.sourceSyntax " :: "
+                                    , DOM.span Code.sourceType "Effect Unit"
+                                    ]
+                                ]
+                            )
+                        ]
+                    ]
+                ]
+            ]
+        , DOM.div styleProps.points
+            [ point "Write the idea. See the types."
+                "Leave signatures off small functions without giving up type checking. Iris infers the types of values and effects as it checks your program—annotations are there when you want them, not required on every binding."
+            , point "Answers beside your code"
+                "Complete names, inspect inferred types, jump to definitions and rename within scope. Diagnostics run on open and save; on-change checks are there when you opt in."
+            , point "Your project comes along"
+                "Start with a Spago workspace and the JavaScript foreign modules you already use. Iris tests compatibility against curated Registry packages, so support is earned rather than simply assumed."
             ]
         ]
-    , DOM.div spec.mediaStyle
-        [ spec.media ]
     ]
 
-featureParagraph :: String -> JSX
-featureParagraph copy =
-  DOM.p
-    { className: featureCopy.className
-    , contentEditable: true
-    , suppressContentEditableWarning: true
-    }
-    copy
+point :: String -> String -> JSX
+point title copy =
+  DOM.div styleProps.point
+    [ DOM.h3 styleProps.pointTitle title
+    , DOM.p styleProps.pointCopy copy
+    ]

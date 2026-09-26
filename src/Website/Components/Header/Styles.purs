@@ -6,7 +6,7 @@ import Iris.StyleX as StyleX
 controlStyles = StyleX.create
   { control:
       { fontFamily: "var(--landing-font-body)"
-      , fontSize: 12
+      , fontSize: "var(--landing-type-small)"
       , fontWeight: 400
       , letterSpacing: "normal"
       , minHeight: 32

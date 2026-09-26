@@ -37,10 +37,10 @@ styles = StyleX.create
       }
   , title:
       { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "clamp(2rem, 3.5vw, 3.25rem)"
+      , fontSize: "var(--landing-type-statement)"
       , fontWeight: 500
       , letterSpacing: "-0.035em"
-      , lineHeight: 0.98
+      , lineHeight: 1.1
       }
   , commands:
       { backgroundColor: "transparent"
@@ -76,10 +76,10 @@ styles = StyleX.create
       , color: "var(--landing-color-ink)"
       , cursor: "default"
       , display: "inline-flex"
-      , fontSize: 12
+      , fontSize: "var(--landing-type-small)"
       , fontWeight: 600
       , gap: 7
-      , height: 38
+      , minHeight: 38
       , justifyContent: "center"
       , paddingInline: 12
       , transition: "background-color 160ms ease, border-color 160ms ease"
@@ -104,17 +104,13 @@ styles = StyleX.create
       { color: "var(--landing-color-ink)"
       , fontFamily: "var(--landing-font-code)"
       , fontSize: 14
-      , lineHeight: "20px"
+      , lineHeight: 1.5
       , minWidth: 0
       , overflowWrap: "anywhere"
       , overflowX: "auto"
       , padding: 0
       , whiteSpace: "pre-wrap"
       , width: "100%"
-      , "@media (max-width: 800px)":
-          { fontSize: 12
-          , lineHeight: "18px"
-          }
       }
   , prompt:
       { color: "var(--landing-color-violet)"
@@ -157,7 +153,7 @@ styles = StyleX.create
       { backgroundColor: "var(--landing-color-violet)"
       , borderRadius: 999
       , color: "var(--landing-color-paper)"
-      , fontSize: 12
+      , fontSize: "var(--landing-type-meta)"
       , fontWeight: 600
       , opacity:
           { default: 1

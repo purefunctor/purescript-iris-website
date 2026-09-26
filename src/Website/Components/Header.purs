@@ -138,8 +138,8 @@ styles = StyleX.create
       , maxWidth: 740
       , padding: "14px 40px 14px 10px"
       , "@media (max-width: 700px)":
-          { fontSize: 13
-          , lineHeight: 1.35
+          { fontSize: "var(--landing-type-small)"
+          , lineHeight: 1.45
           , padding: "12px 16px 12px 8px"
           }
       }

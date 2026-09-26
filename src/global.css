@@ -46,9 +46,18 @@
     --landing-font-heading: "Jura Variable", sans-serif;
     --landing-font-body: InterVariable, sans-serif;
     --landing-font-code: "JetBrains Mono Variable", monospace;
+    --landing-type-chapter: clamp(2.5rem, 1.75rem + 3vw, 4.5rem);
+    --landing-type-statement: clamp(2rem, 1.5rem + 2vw, 3.25rem);
+    --landing-type-lead: clamp(1.625rem, 1.375rem + 0.9vw, 2.25rem);
+    --landing-type-title: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+    --landing-type-group: 1.25rem;
+    --landing-type-body: 1rem;
+    --landing-type-small: 0.875rem;
+    --landing-type-meta: 0.8125rem;
     --landing-hero-image: url("./assets/iris-digital-field.webp");
     --landing-hero-image-mobile: url("./assets/iris-digital-field.webp");
     --landing-alpha-image: url("./assets/iris-alpha-field.webp");
+    --landing-compiler-image: url("./assets/iris-compiler-field.webp");
     --landing-color-ink: oklch(30% 0.055 279);
     --landing-color-paper: oklch(98.6% 0.008 280);
     --landing-color-surface: oklch(100% 0 0);
