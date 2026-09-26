@@ -4,6 +4,8 @@ import Prelude
 
 import Iris.StyleX as StyleX
 import Data.Foldable (for_)
+import Data.Nullable (Nullable)
+import Data.Nullable as Nullable
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Website.Components.ContentShell as ContentShell
@@ -11,7 +13,8 @@ import Website.Components.Header as Header
 import Website.Components.Icon as Icon
 import Website.Landing.Demos as Demos
 import Website.Landing.Installation as Installation
-import React.Basic (ReactComponent, element)
+import React.Basic (ReactComponent, Ref, element)
+import React.Basic.Hooks ((/\))
 import React.Basic.Hooks as Hooks
 import Web.DOM.Element as Element
 import Web.HTML (window)
@@ -22,11 +25,25 @@ import Web.HTML.Window as Window
 import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank)
 
+foreign import observeAlphaDock ::
+  { banner :: Ref (Nullable Element.Element)
+  , header :: Ref (Nullable Element.Element)
+  , onDock :: Boolean -> Effect Unit
+  } ->
+  Effect (Effect Unit)
+
 styles = StyleX.create
   { page:
-      { backgroundColor: "var(--landing-color-paper)"
+      { "--landing-header-height": "86px"
+      , backgroundColor: "var(--landing-color-paper)"
       , fontFamily: "var(--landing-font-body)"
       , minHeight: "100vh"
+      , "@media (max-width: 700px)": { "--landing-header-height": "68px" }
+      }
+  , firstScreen:
+      { display: "flex"
+      , flexDirection: "column"
+      , minHeight: "calc(100svh - var(--landing-header-height))"
       }
   , hero:
       { alignItems: "flex-start"
@@ -37,12 +54,13 @@ styles = StyleX.create
       , backgroundSize: "cover"
       , display: "flex"
       , flexDirection: "column"
+      , flexGrow: 1
       , isolation: "isolate"
       , justifyContent: "center"
-      , minHeight: "100svh"
       , paddingBlock:
-          { default: "150px 86px"
-          , "@media (max-width: 800px)": "112px 64px"
+          { default: "64px 58px"
+          , "@media (max-width: 800px)": "44px 64px"
+          , "@media (max-width: 700px) and (max-height: 650px)": "16px"
           }
       , position: "relative"
       , "@media (max-width: 700px)":
@@ -99,7 +117,10 @@ styles = StyleX.create
       , fontWeight: 520
       , letterSpacing: "-0.045em"
       , lineHeight: 1.02
-      , marginBlockStart: "clamp(44px, 6vw, 76px)"
+      , marginBlockStart:
+          { default: "clamp(44px, 6vw, 76px)"
+          , "@media (max-width: 700px) and (max-height: 650px)": "16px"
+          }
       , maxWidth: 700
       , textWrap: "balance"
       }
@@ -108,7 +129,10 @@ styles = StyleX.create
       , display: "flex"
       , flexWrap: "wrap"
       , gap: 12
-      , marginBlockStart: 32
+      , marginBlockStart:
+          { default: 32
+          , "@media (max-width: 700px) and (max-height: 650px)": 12
+          }
       }
   , primaryAction:
       { alignItems: "center"
@@ -182,30 +206,38 @@ component :: ReactComponent {}
 component = unsafePerformEffect do
   headerComponent <- Header.header
   Hooks.reactComponent "LandingPage" \_ -> Hooks.do
+    bannerRef <- Hooks.useRef Nullable.null
+    headerRef <- Hooks.useRef Nullable.null
+    alphaDocked /\ setAlphaDocked <- Hooks.useState' false
     Hooks.useEffectOnce configurePlatformStyles
+    Hooks.useEffectOnce $ observeAlphaDock
+      { banner: bannerRef, header: headerRef, onDock: setAlphaDocked }
     pure $ DOM.div (StyleX.props styles.page)
-      [ headerComponent unit
+      [ headerComponent { alphaDocked, headerRef }
       , DOM.main {}
-          [ DOM.div (StyleX.props styles.hero)
-              [ DOM.div ContentShell.contentShell
-                  [ DOM.div (StyleX.props styles.heroContent)
-                      [ DOM.h1
-                          { className: (StyleX.props styles.heroTitle).className }
-                          [ DOM.span {} "IRIS"
-                          , DOM.span
-                              { className: (StyleX.props styles.heroTitleReflection).className
-                              , "aria-hidden": true
-                              }
-                              "IRIS"
-                          ]
-                      , DOM.p (StyleX.props styles.statement)
-                          "Functional programming for the browser, the server, and everywhere in between."
-                      , DOM.div (StyleX.props styles.actions)
-                          [ DOM.a
-                              { className: (StyleX.props styles.primaryAction).className
-                              , href: "#install"
-                              }
-                              "Install IRIS"
+          [ DOM.div (StyleX.props styles.firstScreen)
+              [ Header.alphaBanner bannerRef
+              , DOM.div (StyleX.props styles.hero)
+                  [ DOM.div ContentShell.contentShell
+                      [ DOM.div (StyleX.props styles.heroContent)
+                          [ DOM.h1
+                              { className: (StyleX.props styles.heroTitle).className }
+                              [ DOM.span {} "IRIS"
+                              , DOM.span
+                                  { className: (StyleX.props styles.heroTitleReflection).className
+                                  , "aria-hidden": true
+                                  }
+                                  "IRIS"
+                              ]
+                          , DOM.p (StyleX.props styles.statement)
+                              "Functional programming for the browser, the server, and everywhere in between."
+                          , DOM.div (StyleX.props styles.actions)
+                              [ DOM.a
+                                  { className: (StyleX.props styles.primaryAction).className
+                                  , href: "#install"
+                                  }
+                                  "Install IRIS"
+                              ]
                           ]
                       ]
                   ]

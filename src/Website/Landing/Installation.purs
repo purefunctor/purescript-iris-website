@@ -26,6 +26,7 @@ styles = StyleX.create
       , backgroundImage:
           "linear-gradient(90deg, transparent 0 58%, oklch(from var(--landing-color-paper) l c h / 28%) 100%)"
       , color: "var(--landing-color-ink)"
+      , scrollMarginTop: "var(--landing-header-height)"
       , width: "100%"
       }
   , content:

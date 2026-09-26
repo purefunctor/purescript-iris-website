@@ -26,7 +26,8 @@ styles = StyleX.create
   , trigger:
       { "WebkitTapHighlightColor": "transparent"
       , alignItems: "center"
-      , backgroundColor: { default: "transparent", ":hover": "oklch(100% 0 0 / 0.12)" }
+      , backgroundColor:
+          { default: "transparent", ":hover": "oklch(from var(--landing-header-color) l c h / 8%)" }
       , borderRadius: 999
       , color: "var(--landing-header-color, var(--landing-color-paper))"
       , cursor: "var(--landing-interactive-cursor, pointer)"
@@ -35,7 +36,7 @@ styles = StyleX.create
       , justifyContent: "center"
       , width: 42
       , ":focus-visible":
-          { outlineColor: "var(--landing-color-signal)"
+          { outlineColor: "var(--landing-header-focus, var(--landing-color-signal))"
           , outlineOffset: 2
           , outlineStyle: "solid"
           , outlineWidth: 2

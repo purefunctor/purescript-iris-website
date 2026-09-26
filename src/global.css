@@ -48,6 +48,7 @@
     --landing-font-code: "JetBrains Mono Variable", monospace;
     --landing-hero-image: url("./assets/iris-digital-field.webp");
     --landing-hero-image-mobile: url("./assets/iris-digital-field.webp");
+    --landing-alpha-image: url("./assets/iris-alpha-field.webp");
     --landing-color-ink: oklch(30% 0.055 279);
     --landing-color-paper: oklch(98.6% 0.008 280);
     --landing-color-surface: oklch(100% 0 0);
