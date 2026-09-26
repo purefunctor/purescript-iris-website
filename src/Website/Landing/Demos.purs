@@ -108,7 +108,6 @@ styles = StyleX.create
       { gridColumn: 1
       , gridRow: 1
       , minWidth: 0
-      , "@media (max-width: 800px)": { gridRow: 2 }
       }
   , player:
       { aspectRatio: "16 / 9"
@@ -143,6 +142,7 @@ styles = StyleX.create
           { borderLeft: "none"
           , gap: 16
           , gridColumn: 1
+          , gridRow: 2
           , paddingInlineStart: 0
           }
       }
@@ -161,12 +161,6 @@ styles = StyleX.create
       , minWidth: 0
       , padding: 0
       , width: "100%"
-      , "@media (max-width: 800px)":
-          { display: "flex"
-          , overflowX: "auto"
-          , paddingBlockEnd: 8
-          , scrollbarWidth: "thin"
-          }
       }
   , choice:
       { alignItems: "center"
@@ -185,7 +179,7 @@ styles = StyleX.create
       , textAlign: "left"
       , width: "100%"
       , ":focus-visible": { outline: "2px solid var(--landing-color-crystal)", outlineOffset: 2 }
-      , "@media (max-width: 800px)": { minHeight: 48, minWidth: 190 }
+      , "@media (max-width: 800px)": { minHeight: 48 }
       }
   , selected:
       { backgroundColor: "oklch(from var(--landing-color-violet) l c h / 10%)"
@@ -221,12 +215,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
         , DOM.p (StyleX.props styles.intro)
             "Twelve short recordings of the Iris VS Code extension working in this website’s PureScript source. Choose a workflow to watch."
         , DOM.div (StyleX.props styles.layout)
-            [ DOM.div (StyleX.props styles.groups)
-                [ group "Type intelligence while editing" 1 typeIntelligence selected.demo.slug
-                    select
-                , group "Everyday editor workflows" 6 workflows selected.demo.slug select
-                ]
-            , DOM.div (StyleX.props styles.playerPane)
+            [ DOM.div (StyleX.props styles.playerPane)
                 [ DOM.createBuiltinElement "video"
                     { key: show selected.sequence
                     , className: (StyleX.props styles.player).className
@@ -243,6 +232,11 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
                     [ DOM.h3 (StyleX.props styles.captionTitle) selected.demo.title
                     , DOM.p (StyleX.props styles.captionDescription) selected.demo.description
                     ]
+                ]
+            , DOM.div (StyleX.props styles.groups)
+                [ group "Type intelligence while editing" 1 typeIntelligence selected.demo.slug
+                    select
+                , group "Everyday editor workflows" 6 workflows selected.demo.slug select
                 ]
             ]
         ]
