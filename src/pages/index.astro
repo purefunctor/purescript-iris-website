@@ -3,7 +3,6 @@ import SiteLayout from "#src/layouts/SiteLayout.astro";
 import * as Index from "#output/Website.Landing.Index/index.js";
 import brunoAceFont from "@fontsource/bruno-ace/files/bruno-ace-latin-400-normal.woff2?url";
 import interFont from "inter-ui/variable-latin/InterVariable-subset.woff2?url";
-import juraFont from "@fontsource-variable/jura/files/jura-latin-wght-normal.woff2?url";
 
 export const prerender = true;
 ---
@@ -15,7 +14,6 @@ export const prerender = true;
 >
   <Fragment slot="head">
     <link rel="preload" href={brunoAceFont} as="font" type="font/woff2" crossorigin="anonymous" />
-    <link rel="preload" href={juraFont} as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href={interFont} as="font" type="font/woff2" crossorigin="anonymous" />
     {
       import.meta.env.DEV ? (

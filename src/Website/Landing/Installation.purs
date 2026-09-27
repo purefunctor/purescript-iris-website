@@ -38,8 +38,8 @@ styles = StyleX.create
   , title:
       { fontFamily: "var(--landing-font-heading)"
       , fontSize: "var(--landing-type-statement)"
-      , fontWeight: 500
-      , letterSpacing: "-0.035em"
+      , fontWeight: 580
+      , letterSpacing: "-0.02em"
       , lineHeight: 1.1
       }
   , commands:

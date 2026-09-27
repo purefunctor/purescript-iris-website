@@ -31,8 +31,8 @@ styles = StyleX.create
   , heading:
       { fontFamily: "var(--landing-font-heading)"
       , fontSize: "var(--landing-type-chapter)"
-      , fontWeight: 520
-      , letterSpacing: "-0.035em"
+      , fontWeight: 580
+      , letterSpacing: "-0.02em"
       , lineHeight: 1.05
       , marginBlockEnd: "clamp(32px, 4vw, 56px)"
       , textWrap: "balance"
@@ -40,8 +40,8 @@ styles = StyleX.create
   , lead:
       { fontFamily: "var(--landing-font-heading)"
       , fontSize: "var(--landing-type-lead)"
-      , fontWeight: 530
-      , letterSpacing: "-0.02em"
+      , fontWeight: 550
+      , letterSpacing: "-0.01em"
       , lineHeight: 1.25
       , textWrap: "balance"
       }

@@ -112,11 +112,11 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , statement:
-      { color: "var(--landing-color-ink)"
+      { color: "oklch(from var(--landing-color-ink) calc(l + 0.08) c h)"
       , fontFamily: "var(--landing-font-heading)"
       , fontSize: "var(--landing-type-statement)"
-      , fontWeight: 520
-      , letterSpacing: "-0.03em"
+      , fontWeight: 550
+      , letterSpacing: "-0.02em"
       , lineHeight: 1.1
       , marginBlockStart:
           { default: "clamp(44px, 6vw, 76px)"
