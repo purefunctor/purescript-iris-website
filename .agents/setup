@@ -12,7 +12,7 @@ step() {
 }
 
 printf 'Installing Node.js and pnpm…\n'
-export PATH="$HOME/.local/share/fnm:$PATH"
+export PATH="$HOME/.local/share/fnm:$HOME/.local/bin:$PATH"
 
 if ! command -v fnm >/dev/null 2>&1; then
   curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
@@ -35,7 +35,7 @@ if [[ ! -x "$PNPM_HOME/bin/pnpm" ]]; then
 fi
 
 # Service processes use login shells, not the environment of this setup process.
-if ! grep -Fqx 'export PATH="$HOME/.local/share/fnm:$PATH"' "$HOME/.bash_profile" 2>/dev/null; then
+if ! grep -Fqx 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bash_profile" 2>/dev/null; then
   cat >> "$HOME/.bash_profile" <<'EOF'
 
 # Iris tool managers
@@ -43,27 +43,34 @@ export PATH="$HOME/.local/share/fnm:$PATH"
 eval "$(fnm env --shell bash)"
 export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
 export PATH="$PNPM_HOME/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 EOF
 fi
 hash -r
 printf 'Node.js and pnpm ready (%ss total).\n' "$SECONDS"
 
-export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-export RUSTUP_TOOLCHAIN=stable
-printf 'Preparing release compiler toolchains (%ss elapsed)…\n' "$SECONDS"
+install_iris() {
+  local version
+  version=$(curl -fsSL --retry 3 'https://api.github.com/repos/purefunctor/purescript-iris/releases?per_page=100' \
+    | node -e '
+      let json = "";
+      process.stdin.on("data", chunk => json += chunk);
+      process.stdin.on("end", () => {
+        const releases = JSON.parse(json);
+        if (!Array.isArray(releases)) throw new Error("Could not list Iris releases");
+        const prerelease = releases.filter(release => release.prerelease && !release.draft)
+          .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))[0];
+        if (!prerelease) throw new Error("No published Iris prerelease found");
+        process.stdout.write(prerelease.tag_name);
+      });
+    ')
+  curl --proto '=https' --tlsv1.2 -fsSL --retry 3 \
+    https://raw.githubusercontent.com/purefunctor/purescript-iris/main/install.sh \
+    | env IRIS_VERSION="$version" IRIS_SKIP_ATTESTATION=1 sh
+}
 
-if ! command -v rustup >/dev/null 2>&1; then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-    | sh -s -- -y --profile minimal --default-toolchain stable
-fi
-
-if ! rustup run stable rustc --version >/dev/null 2>&1; then
-  step 'Installing Rust stable' rustup toolchain install stable --profile minimal
-fi
-rustup default stable
-
-# Snapshot the expensive inputs to development, not a production Astro build.
-# Cargo and Iris reuse their caches when setup runs on a stale snapshot.
+step 'Installing latest Iris prerelease' install_iris
+# Snapshot the development inputs, not a production Astro build.
 step 'Installing project dependencies' pnpm install --frozen-lockfile
-step 'Preparing native compiler and PureScript' pnpm prepare:dev
+step 'Preparing PureScript' pnpm prepare:dev
 printf 'Development inputs ready in %ss. Resume starts the website portal.\n' "$SECONDS"

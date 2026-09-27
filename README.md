@@ -6,24 +6,21 @@ The website for [IRIS](https://github.com/purefunctor/purescript-iris), a modern
 
 ### Prerequisites
 
-You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https://pnpm.io/installation), and a current stable Rust toolchain to build the native compiler locally. fnm reads the Node version from `.node-version`; pnpm manages its own version using the `packageManager` pin. Building the optional playground separately also requires the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2.127; see its [toolchain instructions](playground/compiler/API.md#building).
+You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https://pnpm.io/installation), and Iris on PATH. fnm reads the Node version from `.node-version`; pnpm manages its own version using the `packageManager` pin. `.agents/setup` bootstraps these tools and installs the newest published Iris prerelease using the [official installer](https://github.com/purefunctor/purescript-iris#installation), with GitHub attestation checks explicitly skipped. Building the optional playground separately also requires Rust, the `wasm32-unknown-unknown` target, and `wasm-bindgen-cli` 0.2.127; see its [toolchain instructions](playground/compiler/API.md#building).
 
-Use Git checkouts of this website and [the IRIS compiler](https://github.com/purefunctor/purescript-iris). Put the compiler at `../repos/purescript-iris`, or set `IRIS_REPOSITORY` to its path. The commands below build the native compiler from that checkout; no separate IRIS installation is needed.
+The optional playground build still needs a checkout of [the Iris compiler](https://github.com/purefunctor/purescript-iris) at `../repos/purescript-iris`, or `IRIS_REPOSITORY` set to its path. Normal website development does not.
 
 **In an Amp orb:** open Website in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
 
 ### First time
 
-On your machine, run these from the website directory:
+On Linux or macOS, run these from the website directory:
 
 ```sh
-fnm install
-fnm use
-pnpm install --frozen-lockfile
-pnpm dev
+.agents/setup
 ```
 
-This builds the native compiler and website components, then starts the dev server. The first build can take a while; later starts reuse caches. A production build is not required for development.
+Setup installs the latest Iris prerelease and prepares website components. Open a new Bash login shell to pick up the installed tools, then run `pnpm dev` to start the dev server. Later starts reuse caches. A production build is not required for development.
 
 ### Start developing
 
@@ -41,7 +38,7 @@ The site is prerendered at build time and served as [Cloudflare Workers Static A
 
 Pages use `src/layouts/SiteLayout.astro` for canonical, OpenGraph, and Twitter metadata. Set `title` and `description` on each page; pass `image` (a root-relative 1200 × 630 image URL) and `imageAlt` to override the default social image. The default `/og.png` is prerendered by `src/pages/og.png.ts` using Satori and Sharp. To make a distinct image for another page, add a prerendered PNG endpoint that calls `renderOpenGraphImage(headline)` from `src/lib/openGraphImage.ts` (use newlines to balance longer copy), then pass its URL to the layout. No image-rendering service runs in production.
 
-Local builds need `iris` on PATH (or run `pnpm prepare:dev` first to build it from the sibling checkout), plus Node/pnpm. Build and inspect the production output locally:
+Local builds need the installed `iris` on PATH, plus Node/pnpm. Build and inspect the production output locally:
 
 ```sh
 pnpm install --frozen-lockfile
