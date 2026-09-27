@@ -198,11 +198,11 @@ featuresSection =
                                     ]
                                 , DOM.span Code.sourceLine
                                     [ DOM.span Code.sourceReference "  log"
-                                    , DOM.span Code.sourceVariable " name"
+                                    , DOM.span Code.sourceString " \"Hello!\""
                                     ]
                                 , DOM.span Code.sourceLine
                                     [ DOM.span Code.sourceReference "  log"
-                                    , DOM.span Code.sourceString " \"Iris is ready.\""
+                                    , DOM.span Code.sourceVariable " name"
                                     ]
                                 , DOM.span Code.sourceLine " "
                                 , DOM.span Code.sourceLine
@@ -212,11 +212,11 @@ featuresSection =
                                     ]
                                 , DOM.span Code.sourceLine
                                     [ DOM.span Code.sourceReference "  greet"
-                                    , DOM.span Code.sourceString " \"Hello, world!\""
+                                    , DOM.span Code.sourceString " \"Alice\""
                                     ]
                                 , DOM.span Code.sourceLine
                                     [ DOM.span Code.sourceReference "  greet"
-                                    , DOM.span Code.sourceString " \"Hello again!\""
+                                    , DOM.span Code.sourceString " \"Bob\""
                                     ]
                                 ]
                             )
@@ -261,7 +261,7 @@ featuresSection =
                                     , DOM.span Code.sourceVariable " $action"
                                     , DOM.span Code.sourceAccent " ="
                                     , DOM.span Code.sourceReference " Effect_Console.log("
-                                    , DOM.span Code.sourceVariable "name"
+                                    , DOM.span Code.sourceString "\"Hello!\""
                                     , DOM.span {} ");"
                                     ]
                                 , DOM.span Code.sourceLine
@@ -278,7 +278,7 @@ featuresSection =
                                 , DOM.span Code.sourceLine
                                     [ DOM.span Code.sourceKeyword "    return"
                                     , DOM.span Code.sourceReference " Effect_Console.log("
-                                    , DOM.span Code.sourceString "\"Iris is ready.\""
+                                    , DOM.span Code.sourceVariable "name"
                                     , DOM.span {} ")();"
                                     ]
                                 , DOM.span Code.sourceLine "  };"
@@ -295,7 +295,7 @@ featuresSection =
                                     , DOM.span Code.sourceVariable " $action"
                                     , DOM.span Code.sourceAccent " ="
                                     , DOM.span Code.sourceReference " greet("
-                                    , DOM.span Code.sourceString "\"Hello, world!\""
+                                    , DOM.span Code.sourceString "\"Alice\""
                                     , DOM.span {} ");"
                                     ]
                                 , DOM.span Code.sourceLine
@@ -312,7 +312,7 @@ featuresSection =
                                 , DOM.span Code.sourceLine
                                     [ DOM.span Code.sourceKeyword "    return"
                                     , DOM.span Code.sourceReference " greet("
-                                    , DOM.span Code.sourceString "\"Hello again!\""
+                                    , DOM.span Code.sourceString "\"Bob\""
                                     , DOM.span {} ")();"
                                     ]
                                 , DOM.span Code.sourceLine "  };"
