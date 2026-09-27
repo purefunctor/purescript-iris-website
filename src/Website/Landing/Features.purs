@@ -11,21 +11,22 @@ styles = StyleX.create
       { backgroundColor: "var(--landing-color-paper)"
       , color: "var(--landing-color-ink)"
       , overflow: "hidden"
-      , paddingBlock: "clamp(88px, 10vw, 152px) clamp(80px, 9vw, 128px)"
       }
   , stage:
-      { alignItems: "center"
-      , display: "grid"
-      , gap: "clamp(48px, 5vw, 80px)"
-      , gridTemplateColumns: "minmax(0, 0.85fr) minmax(0, 1.15fr)"
+      { display: "grid"
+      , gap: "clamp(56px, 7vw, 96px)"
       , isolation: "isolate"
-      , marginBlockEnd: "clamp(72px, 9vw, 120px)"
       , position: "relative"
-      , "@media (max-width: 1279px)": { gridTemplateColumns: "minmax(0, 1fr)" }
+      , "@media (max-width: 1279px)": { gap: "clamp(48px, 5vw, 80px)" }
       }
   , introduction:
       { gridColumn: 1
       , gridRow: 1
+      , paddingBlockStart: "clamp(88px, 10vw, 152px)"
+      }
+  , introductionCopy:
+      { backgroundColor: "oklch(from var(--landing-color-paper) l c h / 60%)"
+      , padding: "clamp(20px, 2vw, 28px)"
       }
   , heading:
       { fontFamily: "var(--landing-font-heading)"
@@ -42,7 +43,6 @@ styles = StyleX.create
       , fontWeight: 530
       , letterSpacing: "-0.02em"
       , lineHeight: 1.25
-      , maxWidth: 580
       , textWrap: "balance"
       }
   , explanation:
@@ -50,31 +50,28 @@ styles = StyleX.create
       , fontSize: "var(--landing-type-body)"
       , lineHeight: 1.65
       , marginBlockStart: 24
-      , maxWidth: 520
       }
   , diagram:
-      { alignItems: "center"
+      { alignItems: "start"
       , display: "grid"
-      , gap: 72
-      , gridColumn: 2
-      , gridRow: 1
-      , gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.3fr)"
+      , columnGap: 24
+      , gridColumn: 1
+      , gridRow: 2
+      , gridTemplateColumns: "340px minmax(0, 1fr) 280px"
       , justifySelf: "center"
-      , maxWidth: 645
-      , minHeight: 400
-      , paddingBlock: 48
+      , maxWidth: 1100
+      , paddingBlock: "32px clamp(80px, 9vw, 128px)"
       , position: "relative"
+      , rowGap: 28
       , width: "100%"
       , "@media (max-width: 1279px)":
-          { gap: 52
-          , gridColumn: 1
-          , gridRow: 2
-          , gridTemplateColumns: "minmax(0, 1fr)"
-          , minHeight: 0
-          , paddingBlock: 32
+          { gridTemplateColumns: "340px 280px"
+          , maxWidth: 645
+          , rowGap: 52
           }
+      , "@media (max-width: 800px)": { gridTemplateColumns: "minmax(0, 1fr)" }
       , "@media (max-width: 600px)":
-          { paddingBlock: 28 }
+          { paddingBlockStart: 28 }
       }
   , diagramBackdrop:
       { alignSelf: "stretch"
@@ -82,13 +79,12 @@ styles = StyleX.create
       , backgroundPosition: "center"
       , backgroundSize: "cover"
       , gridColumn: "1 / -1"
-      , gridRow: 1
+      , gridRow: "1 / 3"
       , marginInline: "calc(50% - 50vw)"
       , pointerEvents: "none"
       , position: "relative"
       , width: "100vw"
       , zIndex: "-1"
-      , "@media (max-width: 1279px)": { gridRow: 2 }
       }
   , node:
       { backgroundColor: "oklch(from var(--landing-color-paper) l c h / 87%)"
@@ -105,20 +101,18 @@ styles = StyleX.create
       { justifySelf:
           { default: "stretch"
           , "@media (max-width: 1279px)": "start"
+          , "@media (max-width: 800px)": "stretch"
           }
-      , maxWidth:
-          { default: "none"
-          , "@media (max-width: 1279px)": 340
-          , "@media (max-width: 800px)": "calc(100% / 3)"
-          , "@media (max-width: 700px)": 280
-          }
+      , "@media (min-width: 801px)": { gridColumn: 1, gridRow: 1 }
+      , "@media (max-width: 800px)": { gridRow: 1 }
       }
   , outputs:
-      { display: "grid"
-      , gap: 28
-      , minWidth: 0
-      , width: "100%"
-      , "@media (max-width: 1279px)": { gap: 52 }
+      { display: "contents" }
+  , javascriptNode:
+      { "@media (min-width: 1280px)": { gridColumn: 2, gridRow: 1 }
+      , "@media (min-width: 801px) and (max-width: 1279px)":
+          { gridColumn: "1 / -1", gridRow: 2 }
+      , "@media (max-width: 800px)": { gridRow: 3 }
       }
   , outputNode:
       { minHeight: 120
@@ -127,6 +121,11 @@ styles = StyleX.create
       { justifySelf: "end"
       , maxWidth: 280
       , minHeight: 88
+      , "@media (min-width: 1280px)": { gridColumn: 3, gridRow: 1 }
+      , "@media (min-width: 801px) and (max-width: 1279px)":
+          { alignSelf: "center", gridColumn: 2, gridRow: 1 }
+      , "@media (max-width: 800px)":
+          { gridRow: 2, justifySelf: "stretch", maxWidth: "none" }
       }
   , nodeLabel:
       { backgroundColor: "var(--landing-color-ink)"
@@ -150,41 +149,11 @@ styles = StyleX.create
       , whiteSpace: "pre"
       , ":focus-visible": { outline: "2px solid var(--landing-color-violet)", outlineOffset: 2 }
       }
-  , scrollHint:
-      { backgroundColor: "var(--landing-color-paper)"
-      , color: "var(--landing-color-violet)"
-      , fontFamily: "var(--landing-font-code)"
-      , fontSize: 11
-      , insetBlockEnd: 8
-      , insetInlineEnd: 12
-      , pointerEvents: "none"
-      , position: "absolute"
-      , "@media (min-width: 495px) and (max-width: 1279px)": { display: "none" }
-      }
-  , points:
-      { display: "grid"
-      , gap: "clamp(32px, 4vw, 64px)"
-      , gridTemplateColumns: "repeat(3, minmax(0, 1fr))"
-      , "@media (max-width: 800px)": { gridTemplateColumns: "minmax(0, 1fr)" }
-      }
-  , point:
-      { borderTopColor: "var(--landing-color-line)"
-      , borderTopStyle: "solid"
-      , borderTopWidth: 1
-      , paddingBlockStart: 24
-      }
-  , pointTitle:
-      { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "var(--landing-type-title)"
-      , fontWeight: 600
-      , lineHeight: 1.2
-      , marginBlockEnd: 12
-      }
-  , pointCopy:
-      { color: "var(--landing-color-muted)"
-      , fontSize: "var(--landing-type-body)"
-      , lineHeight: 1.65
-      , maxWidth: 460
+  , javascriptValue:
+      { "@media (max-width: 600px)":
+          { overflowWrap: "anywhere"
+          , whiteSpace: "pre-wrap"
+          }
       }
   }
 
@@ -200,12 +169,14 @@ featuresSection =
     [ DOM.div ContentShell.contentShell
         [ DOM.div styleProps.stage
             [ DOM.div styleProps.introduction
-                [ DOM.h2 { className: styleProps.heading.className, id: "about-heading" }
-                    "What is Iris?"
-                , DOM.p styleProps.lead
-                    "Iris is a superset of PureScript, written in Rust."
-                , DOM.p styleProps.explanation
-                    "Iris compiles PureScript projects managed by Spago and provides code intelligence via its language server implementation. It is designed with incremental compilation from the ground up, making it fast and responsive once the build server is primed."
+                [ DOM.div styleProps.introductionCopy
+                    [ DOM.h2 { className: styleProps.heading.className, id: "about-heading" }
+                        "What is Iris?"
+                    , DOM.p styleProps.lead
+                        "Iris is a superset of PureScript, written in Rust."
+                    , DOM.p styleProps.explanation
+                        "Iris compiles PureScript projects managed by Spago and provides code intelligence via its language server implementation. It is designed with incremental compilation from the ground up, making it fast and responsive once the build server is primed."
+                    ]
                 ]
             , DOM.div { className: styleProps.diagramBackdrop.className, "aria-hidden": true }
                 []
@@ -214,42 +185,67 @@ featuresSection =
                 , "aria-label":
                     "PureScript source is checked by Iris and becomes JavaScript; the same analysis serves the editor"
                 }
-                [ DOM.div (StyleX.props [ styles.node, styles.sourceNode ])
-                    [ DOM.span styleProps.nodeLabel "PureScript"
-                    , DOM.pre styleProps.nodeValue
-                        ( DOM.code {}
-                            [ DOM.span Code.sourceLine
-                                [ DOM.span Code.sourceDeclaration "greet"
-                                , DOM.span Code.sourceVariable " name"
-                                , DOM.span Code.sourceAccent " ="
-                                , DOM.span Code.sourceKeyword " do"
+                [ DOM.div styleProps.outputs
+                    [ DOM.div (StyleX.props [ styles.node, styles.sourceNode ])
+                        [ DOM.span styleProps.nodeLabel "PureScript"
+                        , DOM.pre styleProps.nodeValue
+                            ( DOM.code {}
+                                [ DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceDeclaration "greet"
+                                    , DOM.span Code.sourceVariable " name"
+                                    , DOM.span Code.sourceAccent " ="
+                                    , DOM.span Code.sourceKeyword " do"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceReference "  log"
+                                    , DOM.span Code.sourceVariable " name"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceReference "  log"
+                                    , DOM.span Code.sourceString " \"Iris is ready.\""
+                                    ]
+                                , DOM.span Code.sourceLine " "
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceDeclaration "main"
+                                    , DOM.span Code.sourceAccent " ="
+                                    , DOM.span Code.sourceKeyword " do"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceReference "  greet"
+                                    , DOM.span Code.sourceString " \"Hello, world!\""
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceReference "  greet"
+                                    , DOM.span Code.sourceString " \"Hello again!\""
+                                    ]
                                 ]
-                            , DOM.span Code.sourceLine
-                                [ DOM.span Code.sourceReference "  log"
-                                , DOM.span Code.sourceVariable " name"
+                            )
+                        ]
+                    , DOM.div (StyleX.props [ styles.node, styles.outputNode, styles.semanticNode ])
+                        [ DOM.span styleProps.nodeLabel "Semantic"
+                        , DOM.pre styleProps.nodeValue
+                            ( DOM.code {}
+                                [ DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceDeclaration "greet"
+                                    , DOM.span Code.sourceSyntax " :: "
+                                    , DOM.span Code.sourceType "String"
+                                    , DOM.span Code.sourceSyntax " -> "
+                                    , DOM.span Code.sourceType "Effect Unit"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceDeclaration "main"
+                                    , DOM.span Code.sourceSyntax " :: "
+                                    , DOM.span Code.sourceType "Effect Unit"
+                                    ]
                                 ]
-                            , DOM.span Code.sourceLine
-                                [ DOM.span Code.sourceReference "  log"
-                                , DOM.span Code.sourceString " \"Iris is ready.\""
-                                ]
-                            , DOM.span Code.sourceLine " "
-                            , DOM.span Code.sourceLine
-                                [ DOM.span Code.sourceDeclaration "main"
-                                , DOM.span Code.sourceAccent " ="
-                                ]
-                            , DOM.span Code.sourceLine
-                                [ DOM.span Code.sourceReference "  greet"
-                                , DOM.span Code.sourceString " \"Hello, world!\""
-                                ]
-                            ]
-                        )
-                    ]
-                , DOM.div styleProps.outputs
-                    [ DOM.div (StyleX.props [ styles.node, styles.outputNode ])
+                            )
+                        ]
+                    , DOM.div
+                        (StyleX.props [ styles.node, styles.outputNode, styles.javascriptNode ])
                         [ DOM.span styleProps.nodeLabel "JavaScript"
                         , DOM.pre
-                            { className: styleProps.nodeValue.className
-                            , tabIndex: 0
+                            { className:
+                                (StyleX.props [ styles.nodeValue, styles.javascriptValue ]).className
                             , "aria-label": "Generated JavaScript"
                             }
                             ( DOM.code {}
@@ -291,52 +287,41 @@ featuresSection =
                                     [ DOM.span Code.sourceKeyword "export const"
                                     , DOM.span Code.sourceDeclaration " main"
                                     , DOM.span Code.sourceAccent " ="
+                                    , DOM.span Code.sourceComment " /* @__PURE__ */"
+                                    , DOM.span {} " (() => {"
+                                    ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "  const"
+                                    , DOM.span Code.sourceVariable " $action"
+                                    , DOM.span Code.sourceAccent " ="
                                     , DOM.span Code.sourceReference " greet("
                                     , DOM.span Code.sourceString "\"Hello, world!\""
                                     , DOM.span {} ");"
                                     ]
-                                ]
-                            )
-                        , DOM.span
-                            { className: styleProps.scrollHint.className, "aria-hidden": true }
-                            "SCROLL ↔"
-                        ]
-                    , DOM.div (StyleX.props [ styles.node, styles.outputNode, styles.semanticNode ])
-                        [ DOM.span styleProps.nodeLabel "Semantic"
-                        , DOM.pre styleProps.nodeValue
-                            ( DOM.code {}
-                                [ DOM.span Code.sourceLine
-                                    [ DOM.span Code.sourceDeclaration "greet"
-                                    , DOM.span Code.sourceSyntax " :: "
-                                    , DOM.span Code.sourceType "String"
-                                    , DOM.span Code.sourceSyntax " -> "
-                                    , DOM.span Code.sourceType "Effect Unit"
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "  return"
+                                    , DOM.span {} " () => {"
                                     ]
                                 , DOM.span Code.sourceLine
-                                    [ DOM.span Code.sourceDeclaration "main"
-                                    , DOM.span Code.sourceSyntax " :: "
-                                    , DOM.span Code.sourceType "Effect Unit"
+                                    [ DOM.span Code.sourceKeyword "    const"
+                                    , DOM.span Code.sourceVariable " $unit"
+                                    , DOM.span Code.sourceAccent " ="
+                                    , DOM.span Code.sourceVariable " $action"
+                                    , DOM.span {} "();"
                                     ]
+                                , DOM.span Code.sourceLine
+                                    [ DOM.span Code.sourceKeyword "    return"
+                                    , DOM.span Code.sourceReference " greet("
+                                    , DOM.span Code.sourceString "\"Hello again!\""
+                                    , DOM.span {} ")();"
+                                    ]
+                                , DOM.span Code.sourceLine "  };"
+                                , DOM.span Code.sourceLine "})();"
                                 ]
                             )
                         ]
                     ]
                 ]
             ]
-        , DOM.div styleProps.points
-            [ point "Write the idea. See the types."
-                "Leave signatures off small functions without giving up type checking. Iris infers the types of values and effects as it checks your program—annotations are there when you want them, not required on every binding."
-            , point "Answers beside your code"
-                "Complete names, inspect inferred types, jump to definitions and rename within scope. Diagnostics run on open and save; on-change checks are there when you opt in."
-            , point "Your project comes along"
-                "Start with a Spago workspace and the JavaScript foreign modules you already use. Iris tests compatibility against curated Registry packages, so support is earned rather than simply assumed."
-            ]
         ]
-    ]
-
-point :: String -> String -> JSX
-point title copy =
-  DOM.div styleProps.point
-    [ DOM.h3 styleProps.pointTitle title
-    , DOM.p styleProps.pointCopy copy
     ]
