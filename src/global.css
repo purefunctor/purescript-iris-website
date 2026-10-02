@@ -216,11 +216,6 @@
     }
   }
 
-  html:has([data-navigation-drawer]) {
-    background: var(--landing-color-paper);
-    scrollbar-color: var(--landing-color-paper) var(--landing-color-paper);
-  }
-
   ::selection {
     background: oklch(from var(--ochre-400) l c h / 32%);
   }
