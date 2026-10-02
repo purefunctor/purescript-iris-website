@@ -4,6 +4,7 @@ import Prelude
 
 import Iris.StyleX as StyleX
 import React.Basic (JSX, element)
+import Website.Components.ExternalLink as ExternalLink
 import Website.Components.Icon as Icon
 import Yoga.React.DOM as DOM
 
@@ -137,7 +138,9 @@ footer =
       , DOM.ul styleProps.links
           ( map
               ( \{ label, href } -> DOM.li {}
-                  (DOM.a { className: styleProps.link.className, href } label)
+                  ( ExternalLink.externalLink { className: styleProps.link.className, href }
+                      [ DOM.text label ]
+                  )
               )
               links
           )
@@ -148,6 +151,6 @@ footer =
       [ DOM.span
           { className: styleProps.copyright.className, role: "img", "aria-label": "Copyright" }
           (element Icon.copyright { "aria-hidden": true, focusable: false })
-      , DOM.a { className: styleProps.link.className, href } name
+      , ExternalLink.externalLink { className: styleProps.link.className, href } [ DOM.text name ]
       , DOM.span {} suffix
       ]

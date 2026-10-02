@@ -8,8 +8,10 @@ import Iris.StyleX as StyleX
 import React.Basic (JSX, element)
 import React.Basic.Events (EventHandler)
 import Website.Components.Button as Button
+import Website.Components.ExternalLink as ExternalLink
 import Website.Components.Icon as Icon
 import Yoga.React.DOM as DOM
+import Yoga.React.DOM.Attributes.Target (targetBlank)
 
 foreign import scrollToTop :: EventHandler
 
@@ -129,7 +131,9 @@ siteNav { onInstall } =
             [ DOM.a
                 { className: styleProps.iconLink.className
                 , href: "https://github.com/purefunctor/purescript-iris"
-                , "aria-label": "Iris on GitHub"
+                , rel: "noopener noreferrer"
+                , target: targetBlank
+                , "aria-label": "Iris on GitHub" <> ExternalLink.newTabLabel
                 }
                 (element Icon.gitHub { "aria-hidden": true, focusable: false })
             , Button.buttonAction

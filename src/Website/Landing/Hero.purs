@@ -7,6 +7,7 @@ import React.Basic (JSX, Ref, element)
 import Web.DOM.Element (Element)
 import Website.Components.Backdrop as Backdrop
 import Website.Components.CodeBlock as CodeBlock
+import Website.Components.ExternalLink as ExternalLink
 import Website.Components.Icon as Icon
 import Website.Landing.Example as Example
 import Website.Landing.Installation as Installation
@@ -100,7 +101,7 @@ hero { install, ripples } = element Backdrop.component
   , content:
       [ DOM.section { className: styleProps.section.className, "aria-labelledby": "hero-title" }
           [ DOM.div styleProps.copy
-              [ DOM.a
+              [ ExternalLink.externalLink
                   { className: styleProps.release.className
                   , href: "https://github.com/purefunctor/purescript-iris/releases"
                   }
