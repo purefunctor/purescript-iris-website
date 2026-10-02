@@ -28,61 +28,79 @@ export const toggleFullscreen = ({ frame: frameRef, video: videoRef }) => () => 
 };
 
 // Media events, fullscreen changes, visibility and the seek bar's pointer and keyboard input.
-// The progress fill is written directly to avoid re-rendering on every frame of seeking.
+// Positions are written as CSS variables on the seek bar so seeking does not re-render.
 export const observePlayer = ({
+  bubble: bubbleRef,
   frame: frameRef,
   onEnded,
   onFullscreen,
   onTime,
   onToggle,
   onVisible,
-  progress: progressRef,
   slider: sliderRef,
   video: videoRef,
 }) => () => {
+  const bubble = bubbleRef.current;
   const frame = frameRef.current;
-  const progress = progressRef.current;
   const slider = sliderRef.current;
   const video = videoRef.current;
-  if (!frame || !progress || !slider || !video) return () => {};
+  if (!bubble || !frame || !slider || !video) return () => {};
 
+  const duration = () => (Number.isFinite(video.duration) ? video.duration : 0);
+  const point = fraction => {
+    slider.style.setProperty("--seek-pointer", fraction);
+    bubble.textContent = formatTime(fraction * duration());
+  };
   const update = () => {
-    const duration = Number.isFinite(video.duration) ? video.duration : 0;
-    progress.style.transform = `scaleX(${duration ? video.currentTime / duration : 0})`;
-    onTime(video.currentTime)(duration)();
+    const total = duration();
+    const fraction = total ? video.currentTime / total : 0;
+    slider.style.setProperty("--seek-progress", fraction);
+    if (slider.hasAttribute("data-seeking") || document.activeElement === slider) point(fraction);
+    onTime(video.currentTime)(total)();
   };
   const ended = () => onEnded();
   const fullscreenChange = () => onFullscreen(document.fullscreenElement === frame)();
-  const seekTo = event => {
-    if (!video.duration) return;
+  const fractionAt = event => {
     const bounds = slider.getBoundingClientRect();
-    const fraction = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
-    video.currentTime = fraction * video.duration;
+    return Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
+  };
+  const seekTo = event => {
+    const fraction = fractionAt(event);
+    point(fraction);
+    if (!duration()) return;
+    video.currentTime = fraction * duration();
     update();
   };
   const pointerDown = event => {
     slider.setPointerCapture(event.pointerId);
+    slider.setAttribute("data-seeking", "");
     seekTo(event);
   };
   const pointerMove = event => {
-    if (event.buttons & 1) seekTo(event);
+    if (slider.hasAttribute("data-seeking")) seekTo(event);
+    else point(fractionAt(event));
   };
-  const pointerUp = event => slider.releasePointerCapture(event.pointerId);
+  const pointerUp = event => {
+    slider.releasePointerCapture(event.pointerId);
+    slider.removeAttribute("data-seeking");
+  };
+  const lostCapture = () => slider.removeAttribute("data-seeking");
   const keyDown = event => {
     if (event.key === " " || event.key === "k") {
       event.preventDefault();
       onToggle();
       return;
     }
-    if (!video.duration) return;
+    if (!duration()) return;
     const step = { ArrowRight: seekStep, ArrowUp: seekStep, ArrowLeft: -seekStep, ArrowDown: -seekStep }[event.key];
     if (event.key === "Home") video.currentTime = 0;
-    else if (event.key === "End") video.currentTime = video.duration;
-    else if (step) video.currentTime = Math.min(video.duration, Math.max(0, video.currentTime + step));
+    else if (event.key === "End") video.currentTime = duration();
+    else if (step) video.currentTime = Math.min(duration(), Math.max(0, video.currentTime + step));
     else return;
     event.preventDefault();
     update();
   };
+  const focus = () => update();
   const visibility = new IntersectionObserver(([entry]) => onVisible(entry.isIntersecting)(), { threshold: 0.25 });
 
   for (const name of ["timeupdate", "loadedmetadata", "durationchange", "emptied"]) video.addEventListener(name, update);
@@ -91,7 +109,10 @@ export const observePlayer = ({
   slider.addEventListener("pointerdown", pointerDown);
   slider.addEventListener("pointermove", pointerMove);
   slider.addEventListener("pointerup", pointerUp);
+  slider.addEventListener("pointercancel", pointerUp);
+  slider.addEventListener("lostpointercapture", lostCapture);
   slider.addEventListener("keydown", keyDown);
+  slider.addEventListener("focus", focus);
   visibility.observe(frame);
 
   return () => {
@@ -101,7 +122,10 @@ export const observePlayer = ({
     slider.removeEventListener("pointerdown", pointerDown);
     slider.removeEventListener("pointermove", pointerMove);
     slider.removeEventListener("pointerup", pointerUp);
+    slider.removeEventListener("pointercancel", pointerUp);
+  slider.removeEventListener("lostpointercapture", lostCapture);
     slider.removeEventListener("keydown", keyDown);
+    slider.removeEventListener("focus", focus);
     visibility.disconnect();
   };
 };
