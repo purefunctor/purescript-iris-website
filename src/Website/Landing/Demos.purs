@@ -2,16 +2,18 @@ module Website.Landing.Demos (component) where
 
 import Prelude
 
-import Iris.StyleX as StyleX
-import Data.Array (mapWithIndex)
+import Data.Array (index, length, mapWithIndex)
+import Data.Maybe (fromMaybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
+import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import Website.Components.ContentShell as ContentShell
-import Website.Components.Icon as Icon
+import Website.Components.VideoPlayer as VideoPlayer
+import Website.Landing.Section as Section
 import Yoga.React.DOM as DOM
 
 type Demo = { slug :: String, title :: String, description :: String }
@@ -77,196 +79,174 @@ workflows =
     }
   ]
 
+demos :: Array Demo
+demos = typeIntelligence <> workflows
+
 styles = StyleX.create
-  { section:
-      { backgroundColor: "var(--landing-color-paper)"
-      , paddingBlock: "clamp(72px, 8vw, 120px)"
-      }
-  , heading:
-      { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "var(--landing-type-chapter)"
-      , fontWeight: 580
-      , letterSpacing: "-0.02em"
-      , lineHeight: 1.05
-      , textWrap: "balance"
-      }
-  , intro:
-      { color: "var(--landing-color-muted)"
-      , fontSize: "var(--landing-type-body)"
-      , lineHeight: 1.65
-      , marginBlock: "16px 32px"
-      , maxWidth: "65ch"
+  { section: { paddingBlock: "64px 96px", scrollMarginTop: "var(--nav-height)" }
+  , introduction:
+      { display: "flex"
+      , flexDirection: "column"
+      , gap: 14
+      , marginBlockEnd: 40
+      , maxWidth: 640
       }
   , layout:
-      { alignItems: "start"
-      , display: "grid"
-      , gap: "clamp(28px, 4vw, 56px)"
-      , gridTemplateColumns:
-          { default: "minmax(0, 1.7fr) minmax(0, 1fr)"
-          , "@media (max-width: 800px)": "minmax(0, 1fr)"
-          }
+      { alignItems: "flex-start"
+      , display: "flex"
+      , flexWrap: "wrap"
+      , gap: "40px 56px"
       }
-  , playerPane:
-      { gridColumn: 1
-      , gridRow: 1
+  , playerColumn:
+      { display: "flex"
+      , flexBasis: 560
+      , flexDirection: "column"
+      , flexGrow: 1
+      , flexShrink: 1
+      , gap: 20
       , minWidth: 0
-      }
-  , player:
-      { aspectRatio: "16 / 9"
-      , backgroundColor: "var(--landing-color-purescript-charcoal)"
-      , width: "100%"
       }
   , caption:
-      { display: "grid"
+      { display: "flex"
+      , flexDirection: "column"
       , gap: 6
-      , marginBlockStart: 18
+      , maxWidth: "68ch"
       }
   , captionTitle:
-      { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "var(--landing-type-title)"
-      , fontWeight: 600
-      , lineHeight: 1.2
+      { fontSize: 20
+      , fontWeight: 500
+      , letterSpacing: "-0.015em"
+      , lineHeight: 1.25
       }
   , captionDescription:
-      { color: "var(--landing-color-muted)"
-      , fontSize: "var(--landing-type-body)"
+      { color: "var(--text-secondary)"
+      , fontSize: 15
       , lineHeight: 1.65
+      , textWrap: "pretty"
       }
   , groups:
-      { display: "grid"
-      , gap: 22
-      , gridColumn: 2
-      , gridRow: 1
+      { display: "flex"
+      , flexBasis: 300
+      , flexDirection: "column"
+      , flexGrow: 1
+      , flexShrink: 1
+      , gap: 28
       , minWidth: 0
-      , paddingInlineStart: 24
-      , borderLeft: "1px solid var(--landing-color-line)"
-      , "@media (max-width: 800px)":
-          { borderLeft: "none"
-          , gap: 16
-          , gridColumn: 1
-          , gridRow: 2
-          , paddingInlineStart: 0
-          }
       }
-  , group: { minWidth: 0 }
   , groupTitle:
-      { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "var(--landing-type-group)"
-      , fontWeight: 600
-      , lineHeight: 1.25
-      , marginBottom: 8
+      { color: "var(--text-tertiary)"
+      , fontSize: 13
+      , fontWeight: 500
+      , lineHeight: 1.3
+      , paddingBlockEnd: 8
+      , paddingInline: 12
       }
   , list:
-      { display: "grid"
+      { display: "flex"
+      , flexDirection: "column"
       , gap: 2
       , listStyle: "none"
-      , minWidth: 0
       , padding: 0
-      , width: "100%"
       }
   , choice:
       { alignItems: "center"
-      , backgroundColor:
-          { default: "transparent"
-          , ":hover": "oklch(from var(--landing-color-violet) l c h / 7%)"
-          }
-      , color: "var(--landing-color-ink)"
+      , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
+      , borderRadius: 8
+      , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
       , cursor: "var(--landing-interactive-cursor, pointer)"
       , display: "grid"
-      , fontSize: "var(--landing-type-small)"
-      , gap: 8
-      , gridTemplateColumns: "24px minmax(0, 1fr) 14px"
-      , minHeight: 38
-      , padding: "7px 8px"
-      , textAlign: "left"
+      , fontSize: 15
+      , gap: 12
+      , gridTemplateColumns: "24px minmax(0, 1fr)"
+      , lineHeight: 1.65
+      , padding: "10px 12px"
+      , textAlign: "start"
+      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
       , width: "100%"
-      , ":focus-visible": { outline: "2px solid var(--landing-color-crystal)", outlineOffset: 2 }
-      , "@media (max-width: 800px)": { minHeight: 48 }
+      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   , selected:
-      { backgroundColor: "oklch(from var(--landing-color-violet) l c h / 10%)"
-      , color: "var(--landing-color-violet)"
+      { backgroundColor: { default: "var(--surface-2)", ":hover": "var(--surface-2)" }
+      , color: { default: "var(--text-primary)", ":hover": "var(--text-primary)" }
       }
   , number:
-      { color: "var(--landing-color-muted)"
-      , fontFamily: "var(--landing-font-code)"
-      , fontSize: "var(--landing-type-meta)"
+      { color: "var(--text-tertiary)"
+      , fontFamily: "var(--font-mono)"
+      , fontSize: 12
+      , fontVariantNumeric: "tabular-nums"
       }
-  , play:
-      { color: "var(--landing-color-violet)"
-      , display: "inline-flex"
-      , fontSize: 15
-      , justifyContent: "flex-end"
-      }
+  , title: { overflowWrap: "break-word" }
   }
+
+styleProps = StyleX.recordProps styles
 
 component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks.do
-  selected /\ setSelected <- Hooks.useState'
-    { demo: inferredTypes, sequence: 0, autoplay: false }
+  selected /\ setSelected <- Hooks.useState 0
+  playing /\ setPlaying <- Hooks.useState true
   let
-    select demo = setSelected { demo, sequence: selected.sequence + 1, autoplay: true }
+    demo = fromMaybe inferredTypes (index demos selected)
+    select number = do
+      setSelected (const number)
+      setPlaying (const true)
   pure $ DOM.section
-    { className: (StyleX.props styles.section).className
-    , id: "editor-demos"
-    , "aria-labelledby": "editor-demos-heading"
+    { className: styleProps.section.className
+    , id: "editor"
+    , "aria-labelledby": "editor-heading"
     }
     [ DOM.div ContentShell.contentShell
-        [ DOM.h2 { className: (StyleX.props styles.heading).className, id: "editor-demos-heading" }
-            "Iris in the editor"
-        , DOM.p (StyleX.props styles.intro)
-            "Twelve short recordings of the Iris VS Code extension working in this website’s PureScript source. Choose a workflow to watch."
-        , DOM.div (StyleX.props styles.layout)
-            [ DOM.div (StyleX.props styles.playerPane)
-                [ DOM.createBuiltinElement "video"
-                    { key: show selected.sequence
-                    , className: (StyleX.props styles.player).className
-                    , autoPlay: selected.autoplay
-                    , controls: true
-                    , playsInline: true
-                    , poster: if selected.autoplay then "" else "/editor-demos/inferred-types.webp"
-                    , preload: "none"
-                    , src: mediaPath selected.demo.slug
-                    , "aria-label": selected.demo.title <> " demo"
+        [ DOM.div styleProps.introduction
+            [ Section.heading
+                { id: "editor-heading", text: "Iris in ", emphasis: "your editor." }
+            , Section.lead
+                "Twelve short recordings of the Iris VS Code extension working in this website’s PureScript source. Choose a workflow to watch."
+            ]
+        , DOM.div styleProps.layout
+            [ DOM.div styleProps.playerColumn
+                [ element VideoPlayer.component
+                    { label: demo.title <> " recording"
+                    , onEnded: setSelected \current -> (current + 1) `mod` length demos
+                    , playing
+                    , poster: if selected == 0 then "/editor-demos/inferred-types.webp" else ""
+                    , setPlaying
+                    , src: mediaPath demo.slug
                     }
-                    []
-                , DOM.div (StyleX.props styles.caption)
-                    [ DOM.h3 (StyleX.props styles.captionTitle) selected.demo.title
-                    , DOM.p (StyleX.props styles.captionDescription) selected.demo.description
+                , DOM.div styleProps.caption
+                    [ DOM.h3 styleProps.captionTitle demo.title
+                    , DOM.p styleProps.captionDescription demo.description
                     ]
                 ]
-            , DOM.div (StyleX.props styles.groups)
-                [ group "Type intelligence while editing" 1 typeIntelligence selected.demo.slug
+            , DOM.div styleProps.groups
+                [ group "Type intelligence while editing" 0 typeIntelligence selected select
+                , group "Everyday editor workflows" (length typeIntelligence) workflows selected
                     select
-                , group "Everyday editor workflows" 6 workflows selected.demo.slug select
                 ]
             ]
         ]
     ]
 
-group :: String -> Int -> Array Demo -> String -> (Demo -> Effect Unit) -> JSX
-group title start demos selectedSlug setSelected =
-  DOM.div (StyleX.props styles.group)
-    [ DOM.h3 (StyleX.props styles.groupTitle) title
-    , DOM.ol (StyleX.props styles.list) $ mapWithIndex
-        ( \index demo -> DOM.li {}
-            [ DOM.button
-                { type: "button"
-                , className:
-                    ( StyleX.props
-                        [ styles.choice
-                        , StyleX.conditional (selectedSlug == demo.slug) styles.selected
-                        ]
-                    ).className
-                , "aria-pressed": selectedSlug == demo.slug
-                , onClick: handler_ (setSelected demo)
-                }
-                [ DOM.span (StyleX.props styles.number) (show (start + index))
-                , DOM.span {} demo.title
-                , DOM.span (StyleX.props styles.play)
-                    (element Icon.play { "aria-hidden": true, focusable: false })
+group :: String -> Int -> Array Demo -> Int -> (Int -> Effect Unit) -> JSX
+group title offset items selected select =
+  DOM.div {}
+    [ DOM.h3 styleProps.groupTitle title
+    , DOM.ol styleProps.list $ mapWithIndex
+        ( \position demo ->
+            let
+              number = offset + position
+              current = number == selected
+            in
+              DOM.li {}
+                [ DOM.button
+                    { type: "button"
+                    , className:
+                        (StyleX.props [ styles.choice, StyleX.conditional current styles.selected ]).className
+                    , "aria-current": if current then "true" else "false"
+                    , onClick: handler_ (select number)
+                    }
+                    [ DOM.span styleProps.number (show (number + 1))
+                    , DOM.span styleProps.title demo.title
+                    ]
                 ]
-            ]
         )
-        demos
+        items
     ]

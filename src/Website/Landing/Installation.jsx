@@ -1,117 +1,58 @@
-import { useEffect, useState } from "react";
-import { Button, Tab, TabList, TabPanel, Tabs, Tooltip, TooltipTrigger } from "react-aria-components";
+import { Fragment } from "react";
+import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
+import AppleIcon from "~icons/simple-icons/apple";
+import LinuxIcon from "~icons/simple-icons/linux";
 import WindowsIcon from "~icons/simple-icons/windows";
-import CheckIcon from "~icons/lucide/check";
-import CopyIcon from "~icons/lucide/copy";
-import TerminalIcon from "~icons/lucide/terminal";
 
-const unixCopyCommand = "curl -fsSL https://iris-lang.com/install.sh | sh";
-const windowsCommand = "irm https://iris-lang.com/install.ps1 | iex";
+const platforms = [
+  {
+    id: "unix",
+    systems: [{ Icon: AppleIcon, name: "macOS" }, { Icon: LinuxIcon, name: "Linux" }],
+    prompt: "$",
+    command: "curl -fsSL https://iris-lang.com/install.sh | sh",
+  },
+  {
+    id: "windows",
+    systems: [{ Icon: WindowsIcon, name: "Windows" }],
+    prompt: "PS>",
+    command: "irm https://iris-lang.com/install.ps1 | iex",
+  },
+];
 
-async function copyToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.readOnly = true;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.append(textarea);
-    textarea.select();
-    const copied = document.execCommand("copy");
-    textarea.remove();
-    return copied;
-  }
-}
-
-function Command({
-  command,
+export function installationImpl({
   commandClassName,
-  copyButtonClassName,
-  copyButtonVisibleClassName,
-  copyCommand = command,
-  prompt,
-  promptClassName,
-  terminalClassName,
-  tooltipClassName,
-}) {
-  const [copied, setCopied] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return undefined;
-    const timeout = window.setTimeout(() => setCopied(false), 1600);
-    return () => window.clearTimeout(timeout);
-  }, [copied]);
-
-  const copy = async () => {
-    if (await copyToClipboard(copyCommand)) setCopied(true);
-  };
-
-  const copyButtonClasses = [
-    copyButtonClassName,
-    hovered || focused || copied ? copyButtonVisibleClassName : "",
-  ].filter(Boolean).join(" ");
-
-  return (
-    <div
-      className={commandClassName}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-    >
-      <pre className={terminalClassName} tabIndex={0}><code><span className={promptClassName}>{prompt}</span>{command}</code></pre>
-      <TooltipTrigger isOpen={copied}>
-        <Button
-          aria-label="Copy installation command"
-          className={copyButtonClasses}
-          onBlur={() => setFocused(false)}
-          onFocus={() => setFocused(true)}
-          onPress={copy}
-        >
-          {copied ? <CheckIcon aria-hidden="true" focusable="false" /> : <CopyIcon aria-hidden="true" focusable="false" />}
-        </Button>
-        <Tooltip className={tooltipClassName} offset={10} placement="top">Copied</Tooltip>
-      </TooltipTrigger>
-    </div>
-  );
-}
-
-export function installationCommandsImpl({
-  commandClassName,
-  copyButtonClassName,
-  copyButtonVisibleClassName,
-  heading,
-  headingRowClassName,
+  copyButton,
+  iconClassName,
+  systemClassName,
+  panelClassName,
   promptClassName,
   rootClassName,
   tabClassName,
   tabListClassName,
-  terminalClassName,
-  tooltipClassName,
 }) {
-  const commandProps = {
-    commandClassName,
-    copyButtonClassName,
-    copyButtonVisibleClassName,
-    promptClassName,
-    terminalClassName,
-    tooltipClassName,
-  };
-
   return (
     <Tabs className={rootClassName} defaultSelectedKey="unix">
-      <div className={headingRowClassName}>
-        {heading}
-        <TabList aria-label="Installation platform" className={tabListClassName}>
-          <Tab aria-label="Linux and macOS" className={tabClassName} id="unix"><TerminalIcon aria-hidden="true" focusable="false" /><span>macOS / Linux</span></Tab>
-          <Tab aria-label="Windows" className={tabClassName} id="windows"><WindowsIcon aria-hidden="true" focusable="false" /><span>Windows</span></Tab>
-        </TabList>
-      </div>
-      <TabPanel id="unix"><Command {...commandProps} command={unixCopyCommand} prompt="$ " /></TabPanel>
-      <TabPanel id="windows"><Command {...commandProps} command={windowsCommand} prompt="PS> " /></TabPanel>
+      <TabList aria-label="Installation platform" className={tabListClassName}>
+        {platforms.map(({ id, systems }) => (
+          <Tab className={tabClassName} id={id} key={id}>
+            {systems.map(({ Icon, name }, index) => (
+              <Fragment key={name}>
+                {index > 0 && " / "}
+                <span className={systemClassName}>
+                  <Icon aria-hidden="true" className={iconClassName} focusable="false" />
+                  {name}
+                </span>
+              </Fragment>
+            ))}
+          </Tab>
+        ))}
+      </TabList>
+      {platforms.map(({ id, prompt, command }) => (
+        <TabPanel className={panelClassName} id={id} key={id}>
+          <code className={commandClassName}><span aria-hidden="true" className={promptClassName}>{prompt} </span>{command}</code>
+          {copyButton(command)}
+        </TabPanel>
+      ))}
     </Tabs>
   );
 }

@@ -1,197 +1,104 @@
-module Website.Landing.Installation (installationSection) where
+module Website.Landing.Installation (installation) where
 
 import Iris.StyleX as StyleX
-import Website.Components.ContentShell as ContentShell
 import React.Basic (JSX, ReactComponent, element)
-import Yoga.React.DOM as DOM
+import Website.Components.CopyButton as CopyButton
 
-foreign import installationCommandsImpl ::
+foreign import installationImpl ::
   ReactComponent
     { commandClassName :: String
-    , copyButtonClassName :: String
-    , copyButtonVisibleClassName :: String
+    , copyButton :: String -> JSX
+    , iconClassName :: String
+    , panelClassName :: String
     , promptClassName :: String
     , rootClassName :: String
-    , heading :: JSX
-    , headingRowClassName :: String
+    , systemClassName :: String
     , tabClassName :: String
     , tabListClassName :: String
-    , terminalClassName :: String
-    , tooltipClassName :: String
     }
 
 styles = StyleX.create
-  { section:
-      { backgroundColor: "oklch(96.5% 0.026 282)"
-      , backgroundImage:
-          "linear-gradient(90deg, transparent 0 58%, oklch(from var(--landing-color-paper) l c h / 28%) 100%)"
-      , color: "var(--landing-color-ink)"
-      , scrollMarginTop: "var(--landing-header-height)"
-      , width: "100%"
-      }
-  , content:
-      { paddingBlock: "40px 72px"
-      , "@media (max-width: 800px)":
-          { paddingBlock: "40px 64px"
-          }
-      }
-  , title:
-      { fontFamily: "var(--landing-font-heading)"
-      , fontSize: "var(--landing-type-statement)"
-      , fontWeight: 580
-      , letterSpacing: "-0.02em"
-      , lineHeight: 1.1
-      }
-  , commands:
-      { backgroundColor: "transparent"
-      , display: "grid"
-      , gap: 24
-      , minWidth: 0
-      }
-  , headingRow:
-      { alignItems: "flex-start"
-      , display: "flex"
-      , flexDirection: "column"
-      , gap: 20
-      }
-  , tabList:
+  { root:
       { display: "flex"
+      , flexDirection: "column"
       , gap: 8
+      , maxWidth: "100%"
       }
+  , tabList: { display: "flex", gap: 2 }
   , tab:
       { alignItems: "center"
+      , borderRadius: 5
+      , color:
+          { default: "var(--text-tertiary)"
+          , ":hover": "var(--text-primary)"
+          , "[data-selected]": "var(--text-primary)"
+          }
       , backgroundColor:
           { default: "transparent"
-          , ":hover": "oklch(from var(--landing-color-ink) l c h / 7%)"
-          , "[data-selected]": "oklch(from var(--landing-color-violet) l c h / 10%)"
+          , ":hover": "var(--glass-fill)"
+          , "[data-selected]": "var(--glass-fill-strong)"
           }
-      , borderColor:
-          { default: "oklch(from var(--landing-color-ink) l c h / 16%)"
-          , ":hover": "oklch(from var(--landing-color-ink) l c h / 34%)"
-          , "[data-selected]": "var(--landing-color-violet)"
-          }
-      , borderRadius: 2
+      , cursor: "var(--landing-interactive-cursor, pointer)"
+      , display: "inline-flex"
+      , fontSize: 13
+      , gap: 5
+      , fontWeight: 500
+      , lineHeight: 1
+      , padding: "7px 10px"
+      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
+      , whiteSpace: "nowrap"
+      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
+      }
+  , system: { alignItems: "center", display: "inline-flex", gap: 6 }
+  -- Simple Icons render at 1.2em; 11px keeps each logo near the label's cap height.
+  , icon: { flexShrink: 0, fontSize: 11 }
+  , panel:
+      { "WebkitBackdropFilter": "blur(12px)"
+      , alignItems: "center"
+      , backdropFilter: "blur(12px)"
+      , backgroundColor: "var(--glass-fill)"
+      , borderColor: "var(--glass-border)"
+      , borderRadius: 8
       , borderStyle: "solid"
       , borderWidth: 1
-      , color: "var(--landing-color-ink)"
-      , cursor: "default"
-      , display: "inline-flex"
-      , fontSize: "var(--landing-type-small)"
-      , fontWeight: 600
-      , gap: 7
-      , minHeight: 38
-      , justifyContent: "center"
-      , paddingInline: 12
-      , transition: "background-color 160ms ease, border-color 160ms ease"
-      , ":focus-visible":
-          { outlineColor: "var(--landing-color-crystal)"
-          , outlineOffset: 3
-          , outlineStyle: "solid"
-          , outlineWidth: 2
-          }
+      , display: "flex"
+      -- Fits the longer command (51 characters with its prompt) plus padding, gap, copy button
+      -- and borders, so switching platforms keeps the copy button in place.
+      , fontFamily: "var(--font-mono)"
+      , fontSize: 14
+      , gap: 12
+      , maxWidth: "100%"
+      , minHeight: 44
+      , paddingBlock: 3
+      , paddingInline: "16px 3px"
+      , width: "calc(51ch + 69px)"
+      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   , command:
-      { alignItems: "center"
-      , display: "grid"
-      , gap: 12
-      , gridTemplateColumns: "minmax(0, 1fr) 36px"
-      , maxWidth: "100%"
-      , minHeight: 36
-      , minWidth: 0
-      , width: "fit-content"
-      }
-  , terminal:
-      { color: "var(--landing-color-ink)"
-      , fontFamily: "var(--landing-font-code)"
+      { color: "var(--text-primary)"
+      , flexGrow: 1
+      , fontFamily: "var(--font-mono)"
       , fontSize: 14
-      , lineHeight: 1.5
+      , lineHeight: 1.45
       , minWidth: 0
       , overflowWrap: "anywhere"
-      , overflowX: "auto"
-      , padding: 0
-      , whiteSpace: "pre-wrap"
-      , width: "100%"
       }
-  , prompt:
-      { color: "var(--landing-color-violet)"
-      }
-  , copyButton:
-      { alignItems: "center"
-      , backgroundColor:
-          { default: "oklch(from var(--landing-color-ink) l c h / 7%)"
-          , ":hover": "oklch(from var(--landing-color-ink) l c h / 13%)"
-          }
-      , borderRadius: 999
-      , color: "var(--landing-color-ink)"
-      , display: "inline-flex"
-      , height: 36
-      , justifyContent: "center"
-      , opacity: 0
-      , transform: "translateY(3px)"
-      , transition: "background-color 160ms ease, opacity 160ms ease, transform 160ms ease"
-      , width: 36
-      , "@media (pointer: coarse)":
-          { opacity: 1
-          , transform: "none"
-          }
-      , "@media (max-width: 800px)":
-          { opacity: 1
-          , transform: "none"
-          }
-      , ":focus-visible":
-          { outlineColor: "var(--landing-color-crystal)"
-          , outlineOffset: 3
-          , outlineStyle: "solid"
-          , outlineWidth: 2
-          }
-      }
-  , copyButtonVisible:
-      { opacity: 1
-      , transform: "none"
-      }
-  , tooltip:
-      { backgroundColor: "var(--landing-color-violet)"
-      , borderRadius: 999
-      , color: "var(--landing-color-paper)"
-      , fontSize: "var(--landing-type-meta)"
-      , fontWeight: 600
-      , opacity:
-          { default: 1
-          , "[data-entering]": 0
-          , "[data-exiting]": 0
-          }
-      , padding: "6px 10px"
-      , transform:
-          { default: "none"
-          , "[data-entering]": "translateY(4px) scale(0.92)"
-          , "[data-exiting]": "translateY(2px) scale(0.96)"
-          }
-      , transformOrigin: "bottom center"
-      , transition: "opacity 160ms ease, transform 180ms cubic-bezier(0.16, 1, 0.3, 1)"
-      , "@media (prefers-reduced-motion: reduce)":
-          { transitionDuration: "0ms"
-          }
-      }
+  , prompt: { color: "var(--text-tertiary)", userSelect: "none" }
   }
 
-installationSection :: JSX
-installationSection =
-  DOM.section { className: (StyleX.props styles.section).className, id: "install" }
-    [ DOM.div ContentShell.contentShell
-        [ DOM.div (StyleX.props styles.content)
-            [ element installationCommandsImpl
-                { commandClassName: (StyleX.props styles.command).className
-                , copyButtonClassName: (StyleX.props styles.copyButton).className
-                , copyButtonVisibleClassName: (StyleX.props styles.copyButtonVisible).className
-                , heading: DOM.h2 (StyleX.props styles.title) "Install"
-                , headingRowClassName: (StyleX.props styles.headingRow).className
-                , promptClassName: (StyleX.props styles.prompt).className
-                , rootClassName: (StyleX.props styles.commands).className
-                , tabClassName: (StyleX.props styles.tab).className
-                , tabListClassName: (StyleX.props styles.tabList).className
-                , terminalClassName: (StyleX.props styles.terminal).className
-                , tooltipClassName: (StyleX.props styles.tooltip).className
-                }
-            ]
-        ]
-    ]
+styleProps = StyleX.recordProps styles
+
+installation :: JSX
+installation = element installationImpl
+  { commandClassName: styleProps.command.className
+  , copyButton: \text ->
+      CopyButton.copyButton
+        { label: "Copy installation command", size: CopyButton.Medium, text }
+  , iconClassName: styleProps.icon.className
+  , panelClassName: styleProps.panel.className
+  , promptClassName: styleProps.prompt.className
+  , rootClassName: styleProps.root.className
+  , systemClassName: styleProps.system.className
+  , tabClassName: styleProps.tab.className
+  , tabListClassName: styleProps.tabList.className
+  }
