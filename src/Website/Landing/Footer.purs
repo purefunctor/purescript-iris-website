@@ -75,7 +75,7 @@ styles = StyleX.create
   , heading:
       { color: "var(--text-tertiary)"
       , fontSize: 13
-      , fontWeight: 500
+      , fontWeight: 600
       , lineHeight: 1.3
       }
   , links: { display: "flex", flexDirection: "column", gap: 10, listStyle: "none", padding: 0 }
