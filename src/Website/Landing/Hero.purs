@@ -1,12 +1,11 @@
 module Website.Landing.Hero (hero) where
 
-import Data.Maybe (Maybe(..))
 import Iris.StyleX as StyleX
+import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable)
 import React.Basic (JSX, Ref, element)
 import Web.DOM.Element (Element)
 import Website.Components.Backdrop as Backdrop
-import Website.Components.Button as Button
 import Website.Components.CodeBlock as CodeBlock
 import Website.Components.Icon as Icon
 import Website.Landing.Example as Example
@@ -14,15 +13,18 @@ import Website.Landing.Installation as Installation
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
+  -- The hero fills the first screen below the navigation and grows when its content is taller.
   { section:
-      { alignItems: "center"
+      { alignContent: "center"
+      , alignItems: "center"
+      , boxSizing: "border-box"
       , display: "grid"
       , gap: 56
       , gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 460px), 1fr))"
       , marginInline: "auto"
       , maxWidth: "var(--container-wide)"
-      , minHeight: 560
-      , paddingBlock: "clamp(56px, 8vw, 96px) clamp(64px, 9vw, 112px)"
+      , minHeight: "calc(100svh - var(--nav-height))"
+      , paddingBlock: "clamp(32px, 5vw, 64px)"
       , paddingInline: "var(--gutter)"
       }
   , copy:
@@ -84,13 +86,7 @@ styles = StyleX.create
       , maxWidth: "52ch"
       , textWrap: "pretty"
       }
-  , actions:
-      { display: "flex"
-      , flexDirection: "column"
-      , gap: 16
-      , maxWidth: "100%"
-      }
-  , buttons: { display: "flex", flexWrap: "wrap", gap: 10 }
+  , install: { maxWidth: "100%" }
   , code: { minWidth: 0 }
   }
 
@@ -119,26 +115,12 @@ hero { install, ripples } = element Backdrop.component
                   ]
               , DOM.p styleProps.lead
                   "Iris is a superset of PureScript, written in Rust. It compiles Spago projects to JavaScript for the browser and the server, and brings the same incremental analysis to your editor."
-              , DOM.div styleProps.actions
-                  [ DOM.div styleProps.buttons
-                      [ Button.buttonLink
-                          { href: "https://github.com/purefunctor/purescript-iris"
-                          , icon: Just Icon.arrowRight
-                          , label: "View on GitHub"
-                          , size: Button.Large
-                          , variant: Button.Primary
-                          }
-                      , Button.buttonLink
-                          { href: "#editor"
-                          , icon: Just Icon.play
-                          , label: "Watch the editor"
-                          , size: Button.Large
-                          , variant: Button.Glass
-                          }
-                      ]
-                  , DOM.div { id: "install", ref: DOM.reactRef install }
-                      Installation.installation
-                  ]
+              , DOM.div
+                  { className: styleProps.install.className
+                  , id: "install"
+                  , ref: DOM.reactRef install
+                  }
+                  Installation.installation
               ]
           , DOM.div styleProps.code
               ( CodeBlock.codeBlock
