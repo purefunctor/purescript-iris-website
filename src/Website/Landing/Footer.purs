@@ -34,7 +34,7 @@ columns =
   , { heading: "Follow"
     , links:
         [ { label: "Bluesky", href: "https://bsky.app/profile/purefunctor.me" }
-        , { label: "X", href: "https://x.com/purefunctor" }
+        , { label: "X / Twitter", href: "https://x.com/purefunctor" }
         ]
     }
   ]
