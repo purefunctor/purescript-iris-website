@@ -183,7 +183,8 @@ styleProps = StyleX.recordProps styles
 component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks.do
   selected /\ setSelected <- Hooks.useState 0
-  playing /\ setPlaying <- Hooks.useState true
+  -- Recordings wait for the visitor's first play or selection.
+  playing /\ setPlaying <- Hooks.useState false
   let
     demo = fromMaybe inferredTypes (index demos selected)
     select number = do
