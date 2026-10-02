@@ -29,8 +29,106 @@
     U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+@font-face {
+  font-family: "Geist Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Geist Mono Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2")
+    format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @layer reset {
   :root {
+    /* Site design tokens: warm "loam" neutrals, one dusty iris accent, earth-toned status colors. */
+    --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --loam-950: oklch(17.4% 0.007 78);
+    --loam-900: oklch(20.7% 0.009 75);
+    --loam-850: oklch(23.4% 0.011 73);
+    --loam-800: oklch(26.4% 0.013 72);
+    --loam-700: oklch(31.4% 0.017 71);
+    --loam-500: oklch(49.5% 0.024 74);
+    --loam-400: oklch(61.5% 0.027 77);
+    --loam-300: oklch(73.6% 0.028 80);
+    --loam-100: oklch(91.1% 0.02 85);
+    --loam-50: oklch(95.4% 0.013 82);
+    --iris-500: oklch(57.9% 0.075 300);
+    --iris-400: oklch(67.2% 0.065 300);
+    --iris-300: oklch(76.9% 0.05 300);
+    --iris-200: oklch(86.5% 0.031 300);
+    --moss-400: oklch(67% 0.076 118);
+    --moss-300: oklch(77.3% 0.063 118);
+    --ochre-400: oklch(76.9% 0.117 85);
+    --ochre-300: oklch(84.2% 0.093 85);
+    --lichen-300: oklch(79.1% 0.028 176);
+    --rust-300: oklch(72.3% 0.101 34);
+    /* Pastel spectrum for the hero backdrop only; never for UI or text. */
+    --spectrum-red: oklch(78.6% 0.072 25);
+    --spectrum-orange: oklch(83% 0.072 60);
+    --spectrum-yellow: oklch(88.3% 0.072 93);
+    --spectrum-green: oklch(82.9% 0.065 134);
+    --spectrum-blue: oklch(80.6% 0.047 242);
+    --spectrum-indigo: oklch(76.5% 0.059 280);
+    --spectrum-violet: oklch(78.5% 0.062 313);
+
+    --bg-canvas: var(--loam-950);
+    --surface-1: var(--loam-850);
+    --surface-2: var(--loam-800);
+    --surface-3: var(--loam-700);
+    --glass-fill: oklch(from var(--loam-800) l c h / 52%);
+    --glass-fill-strong: oklch(from var(--loam-900) calc(l + 0.017) c h / 74%);
+    --glass-border: oklch(from var(--loam-100) l c h / 11%);
+    --glass-highlight: oklch(from var(--loam-50) calc(l + 0.03) c h / 7%);
+    --border-subtle: oklch(from var(--loam-100) l c h / 8%);
+    --border-default: oklch(from var(--loam-100) l c h / 14%);
+    --border-strong: oklch(from var(--loam-100) l c h / 26%);
+    --text-primary: var(--loam-50);
+    --text-secondary: var(--loam-300);
+    --text-tertiary: oklch(from var(--loam-400) calc(l + 0.04) c h);
+    --text-emphasis: oklch(from var(--iris-200) calc(l - 0.045) calc(c + 0.012) h);
+    --accent: var(--iris-400);
+    --accent-hover: var(--iris-300);
+    --accent-press: var(--iris-500);
+    --accent-soft: oklch(from var(--iris-400) l c h / 16%);
+    --accent-text: var(--iris-300);
+    --text-on-accent: var(--loam-950);
+    --focus-ring: var(--ochre-400);
+    --success: var(--moss-400);
+    --grid-line: oklch(from var(--loam-100) l c h / 5.5%);
+    --syn-bg: oklch(from var(--loam-950) l c h / 55%);
+    --syn-text: var(--loam-100);
+    --syn-keyword: var(--iris-300);
+    --syn-type: var(--ochre-300);
+    --syn-string: var(--moss-300);
+    --syn-number: var(--rust-300);
+    --syn-comment: var(--loam-400);
+    --syn-function: var(--lichen-300);
+    --syn-operator: var(--loam-300);
+    --syn-punct: var(--loam-400);
+    --syn-line-number: var(--loam-500);
+    --syn-highlight: oklch(from var(--ochre-400) l c h / 8%);
+    --shadow-glass: inset 0 1px 0 var(--glass-highlight), 0 14px 40px -14px oklch(0% 0 0 / 55%);
+    --shadow-focus: 0 0 0 2px var(--loam-900), 0 0 0 4px var(--focus-ring);
+    --texture-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --container-wide: 1360px;
+    --gutter: 24px;
+    --nav-height: 60px;
+
+    /* Legacy tokens used by the playground. */
     --landing-font-wordmark: "Bruno Ace", sans-serif;
     --landing-font-heading: InterVariable, sans-serif;
     --landing-font-body: InterVariable, sans-serif;
@@ -88,13 +186,16 @@
   }
 
   html {
-    background: var(--landing-color-paper);
-    color: var(--landing-color-ink);
-    font-family: var(--landing-font-body);
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    color-scheme: dark;
+    font-family: var(--font-sans);
     font-synthesis: none;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
     min-height: 100%;
-    overscroll-behavior-x: none;
     scrollbar-gutter: stable;
+    scroll-padding-top: var(--nav-height);
     text-size-adjust: none;
     text-rendering: optimizeLegibility;
   }
@@ -118,6 +219,10 @@
   html:has([data-navigation-drawer]) {
     background: var(--landing-color-paper);
     scrollbar-color: var(--landing-color-paper) var(--landing-color-paper);
+  }
+
+  ::selection {
+    background: oklch(from var(--ochre-400) l c h / 32%);
   }
 
   body {
