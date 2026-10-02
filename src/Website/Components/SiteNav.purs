@@ -3,6 +3,7 @@ module Website.Components.SiteNav (siteNav) where
 import Prelude
 
 import Data.Maybe (Maybe(..))
+import Effect (Effect)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, element)
 import Website.Components.Button as Button
@@ -103,8 +104,9 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
-siteNav :: JSX
-siteNav =
+-- | `onInstall` runs when the Install action is pressed.
+siteNav :: { onInstall :: Effect Unit } -> JSX
+siteNav { onInstall } =
   DOM.header styleProps.header
     [ DOM.div styleProps.content
         [ DOM.a { className: styleProps.brand.className, href: "/", "aria-label": "Iris home" }
@@ -122,10 +124,10 @@ siteNav =
                 , "aria-label": "Iris on GitHub"
                 }
                 (element Icon.gitHub { "aria-hidden": true, focusable: false })
-            , Button.buttonLink
-                { href: "#install"
-                , icon: Nothing
+            , Button.buttonAction
+                { icon: Nothing
                 , label: "Install"
+                , onPress: onInstall
                 , size: Button.Small
                 , variant: Button.Primary
                 }

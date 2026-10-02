@@ -1,11 +1,17 @@
 module Website.Components.Button
-  ( ButtonLink
+  ( ButtonAction
+  , ButtonLink
   , Size(..)
   , Variant(..)
+  , buttonAction
   , buttonLink
   ) where
 
+import Prelude
+
 import Data.Maybe (Maybe(..))
+import Effect (Effect)
+import React.Basic.Events (handler_)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 import Website.Components.Icon as Icon
@@ -19,6 +25,14 @@ type ButtonLink =
   { href :: String
   , label :: String
   , icon :: Maybe (ReactComponent Icon.IconProps)
+  , size :: Size
+  , variant :: Variant
+  }
+
+type ButtonAction =
+  { label :: String
+  , icon :: Maybe (ReactComponent Icon.IconProps)
+  , onPress :: Effect Unit
   , size :: Size
   , variant :: Variant
   }
@@ -46,6 +60,8 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
+  -- Buttons keep the platform's control cursor; macOS uses the regular arrow.
+  , action: { cursor: "var(--landing-interactive-cursor, pointer)" }
   , small: { borderRadius: 5, fontSize: 13, gap: 6, height: 28, paddingInline: 10 }
   , medium: { fontSize: 14, gap: 8, height: 36, paddingInline: 14 }
   , large: { fontSize: 15, gap: 8, height: 44, paddingInline: 20 }
@@ -95,6 +111,7 @@ variantStyle = case _ of
   Secondary -> styles.secondary
   Glass -> styles.glass
 
+-- | An action styled as a button.
 -- | A navigation link styled as a button. It keeps the regular arrow cursor on every platform.
 buttonLink :: ButtonLink -> JSX
 buttonLink { href, label, icon, size, variant } =
@@ -103,10 +120,26 @@ buttonLink { href, label, icon, size, variant } =
         (StyleX.props [ styles.button, sizeStyle size, variantStyle variant ]).className
     , href
     }
-    case icon of
-      Nothing -> [ DOM.text label ]
-      Just component ->
-        [ DOM.text label
-        , DOM.span (StyleX.props [ styles.icon, iconSizeStyle size ])
-            (element component { "aria-hidden": true, focusable: false })
-        ]
+    (buttonContent label icon size)
+
+-- | An action styled as a button.
+buttonAction :: ButtonAction -> JSX
+buttonAction { label, icon, onPress, size, variant } =
+  DOM.button
+    { className:
+        ( StyleX.props
+            [ styles.button, styles.action, sizeStyle size, variantStyle variant ]
+        ).className
+    , onClick: handler_ onPress
+    , type: "button"
+    }
+    (buttonContent label icon size)
+
+buttonContent :: String -> Maybe (ReactComponent Icon.IconProps) -> Size -> Array JSX
+buttonContent label icon size = case icon of
+  Nothing -> [ DOM.text label ]
+  Just component ->
+    [ DOM.text label
+    , DOM.span (StyleX.props [ styles.icon, iconSizeStyle size ])
+        (element component { "aria-hidden": true, focusable: false })
+    ]

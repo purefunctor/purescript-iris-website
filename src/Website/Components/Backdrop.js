@@ -4,6 +4,9 @@ const seed = 5139;
 const spacing = 22;
 const clearRadius = 0.62;
 const morphMilliseconds = 2600;
+// Ripples travel in pixels per millisecond and fade out before reaching the far corner.
+const rippleSpeed = 0.9;
+const rippleWidth = 90;
 const palette = [
   "--spectrum-red",
   "--spectrum-orange",
@@ -87,7 +90,7 @@ function makeOcean(oceanSeed) {
 export const startField = canvasRef => () => {
   const canvas = canvasRef.current;
   const context = canvas?.getContext("2d");
-  if (!context) return () => {};
+  if (!context) return { ripple: () => {}, stop: () => {} };
 
   const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const ocean = makeOcean(seed);
@@ -103,6 +106,7 @@ export const startField = canvasRef => () => {
   let frame = 0;
   let visible = true;
   let colors = [];
+  let ripples = [];
   const noise = (x, y) => (blend ? from.noise(x, y) * (1 - blend) + to.noise(x, y) * blend : from.noise(x, y));
   const hue = (x, y) => (blend ? from.hue(x, y) * (1 - blend) + to.hue(x, y) * blend : from.hue(x, y));
 
@@ -132,6 +136,26 @@ export const startField = canvasRef => () => {
     context.clearRect(0, 0, width, height);
     if (!width || !height) return;
 
+    // Ripples start on the first frame drawn after they are requested.
+    for (const ripple of ripples) if (ripple.start == null) ripple.start = time;
+    ripples = ripples.filter(ripple => (time - ripple.start) * rippleSpeed < ripple.reach + rippleWidth);
+    const ring = (x, y) => {
+      let strength = 0;
+      let dx = 0;
+      let dy = 0;
+      for (const ripple of ripples) {
+        const radius = (time - ripple.start) * rippleSpeed;
+        const distance = Math.hypot(x - ripple.x, y - ripple.y) || 1;
+        const wave = Math.exp(-(((distance - radius) / rippleWidth) ** 2)) * Math.sqrt(Math.max(0, 1 - radius / ripple.reach));
+        if (wave > strength) {
+          strength = wave;
+          dx = (x - ripple.x) / distance;
+          dy = (y - ripple.y) / distance;
+        }
+      }
+      return [strength, dx, dy];
+    };
+
     const narrow = width < 1100;
     const rowHeight = spacing * 0.866;
     const scale = 1 / Math.max(90, Math.min(260, Math.max(width, height) * 0.3));
@@ -142,10 +166,13 @@ export const startField = canvasRef => () => {
         const x = x0 + (row & 1 ? spacing / 2 : 0);
         const y = y0;
         const distance = Math.hypot(x, y) / Math.hypot(width, height);
-        const mask = smoothstep(clearRadius * 0.58, clearRadius, distance) * (narrow ? 0.55 : 1);
+        const [wave, dx, dy] = ripples.length ? ring(x, y) : [0, 0, 0];
+        // A passing ripple reveals marks even inside the clearing behind the copy.
+        const mask = Math.max(smoothstep(clearRadius * 0.58, clearRadius, distance) * (narrow ? 0.55 : 1), wave);
         if (mask < 0.02) continue;
-        const [px, py, z] = ocean(x, y, time / 1000);
-        points.push([px, py, mask, noise(x * scale, y * scale), hue(x * hueScale + 3, y * hueScale + 3), z]);
+        const [ox, oy, z] = ocean(x, y, time / 1000);
+        const push = wave * spacing * 0.6;
+        points.push([ox + dx * push, oy + dy * push, mask, noise(x * scale, y * scale), hue(x * hueScale + 3, y * hueScale + 3), z, wave]);
       }
     }
     if (!points.length) return;
@@ -166,15 +193,15 @@ export const startField = canvasRef => () => {
     };
     const low = noises[Math.floor(noises.length * 0.5)];
     const high = Math.max(low + 0.02, noises[Math.floor(noises.length * 0.95)]);
-    for (const [x, y, mask, n, h, z] of points) {
+    for (const [x, y, mask, n, h, z, wave] of points) {
       const edge = smoothstep(0.02, 0.55, mask);
       if (edge < 0.02) continue;
-      const lift = 1 + z * 0.45;
+      const lift = (1 + z * 0.45) * (1 + wave * 0.8);
       const value = smoothstep(low, high, n) * mask;
       context.fillStyle = colors[Math.min(colors.length - 1, Math.floor(rank(h) * colors.length))];
-      context.globalAlpha = Math.min(1, (0.45 + value * 0.55) * edge * (0.82 + z * 0.22));
+      context.globalAlpha = Math.min(1, (0.45 + value * 0.55) * edge * (0.82 + z * 0.22) + wave * 0.5);
       context.beginPath();
-      context.arc(x, y, spacing * (0.03 * (0.4 + 0.6 * edge) + value * 0.045) * lift, 0, Math.PI * 2);
+      context.arc(x, y, spacing * (0.03 * (0.4 + 0.6 * edge) + value * 0.045 + wave * 0.06) * lift, 0, Math.PI * 2);
       context.fill();
     }
     context.globalAlpha = 1;
@@ -205,10 +232,23 @@ export const startField = canvasRef => () => {
   intersectionObserver.observe(canvas);
   motion.addEventListener("change", update);
 
-  return () => {
-    cancelAnimationFrame(frame);
-    resizeObserver.disconnect();
-    intersectionObserver.disconnect();
-    motion.removeEventListener("change", update);
+  return {
+    // Starts a ripple at the centre of an element. Motion-reduced fields stay still.
+    ripple: originRef => () => {
+      const origin = originRef.current;
+      if (!origin || motion.matches) return;
+      const bounds = canvas.getBoundingClientRect();
+      const target = origin.getBoundingClientRect();
+      const x = target.left + target.width / 2 - bounds.left;
+      const y = target.top + target.height / 2 - bounds.top;
+      const reach = Math.max(Math.hypot(x, y), Math.hypot(width - x, y), Math.hypot(x, height - y), Math.hypot(width - x, height - y));
+      ripples.push({ x, y, reach, start: null });
+    },
+    stop: () => {
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      intersectionObserver.disconnect();
+      motion.removeEventListener("change", update);
+    },
   };
 };

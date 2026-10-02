@@ -3,11 +3,15 @@ module Website.Landing.Index (component) where
 import Prelude
 
 import Data.Foldable (for_)
+import Data.Nullable (Nullable)
+import Data.Nullable as Nullable
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Iris.StyleX as StyleX
-import React.Basic (ReactComponent, element)
+import React.Basic (ReactComponent, Ref, element)
 import React.Basic.Hooks as Hooks
+import Web.DOM.Element (Element)
 import Web.DOM.Element as Element
 import Web.HTML (window)
 import Web.HTML.HTMLDocument as HTMLDocument
@@ -22,6 +26,8 @@ import Website.Landing.Hero (hero)
 import Website.Landing.Places (places)
 import Yoga.React.DOM as DOM
 
+foreign import revealInstall :: Ref (Nullable Element) -> Effect Unit -> Effect Unit
+
 styles = StyleX.create
   { page:
       { backgroundColor: "var(--bg-canvas)"
@@ -35,11 +41,13 @@ styles = StyleX.create
 
 component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "LandingPage" \_ -> Hooks.do
+  install <- Hooks.useRef Nullable.null
+  ripples /\ setRipples <- Hooks.useState 0
   Hooks.useEffectOnce configurePlatformStyles
   pure $ DOM.div (StyleX.props styles.page)
-    [ siteNav
+    [ siteNav { onInstall: revealInstall install (setRipples (_ + 1)) }
     , DOM.main {}
-        [ hero
+        [ hero { install, ripples }
         , places
         , features
         , element Demos.component {}

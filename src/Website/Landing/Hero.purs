@@ -2,7 +2,9 @@ module Website.Landing.Hero (hero) where
 
 import Data.Maybe (Maybe(..))
 import Iris.StyleX as StyleX
-import React.Basic (JSX, element)
+import Data.Nullable (Nullable)
+import React.Basic (JSX, Ref, element)
+import Web.DOM.Element (Element)
 import Website.Components.Backdrop as Backdrop
 import Website.Components.Button as Button
 import Website.Components.CodeBlock as CodeBlock
@@ -94,9 +96,12 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
-hero :: JSX
-hero = element Backdrop.component
-  { content:
+-- | `install` marks the installation commands, where the header's Install action starts a ripple.
+hero :: { install :: Ref (Nullable Element), ripples :: Int } -> JSX
+hero { install, ripples } = element Backdrop.component
+  { rippleOrigin: install
+  , ripples
+  , content:
       [ DOM.section { className: styleProps.section.className, "aria-labelledby": "hero-title" }
           [ DOM.div styleProps.copy
               [ DOM.a
@@ -131,7 +136,8 @@ hero = element Backdrop.component
                           , variant: Button.Glass
                           }
                       ]
-                  , DOM.div { id: "install" } Installation.installation
+                  , DOM.div { id: "install", ref: DOM.reactRef install }
+                      Installation.installation
                   ]
               ]
           , DOM.div styleProps.code

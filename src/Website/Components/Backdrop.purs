@@ -2,6 +2,8 @@ module Website.Components.Backdrop (component) where
 
 import Prelude
 
+import Data.Foldable (for_)
+import Data.Maybe (Maybe(..))
 import Data.Nullable (Nullable)
 import Data.Nullable as Nullable
 import Effect (Effect)
@@ -12,8 +14,12 @@ import React.Basic.Hooks as Hooks
 import Web.DOM.Element (Element)
 import Yoga.React.DOM as DOM
 
-foreign import startField ::
-  Ref (Nullable Element) -> Effect (Effect Unit)
+type Field =
+  { ripple :: Ref (Nullable Element) -> Effect Unit
+  , stop :: Effect Unit
+  }
+
+foreign import startField :: Ref (Nullable Element) -> Effect Field
 
 styles = StyleX.create
   { root:
@@ -45,10 +51,27 @@ styles = StyleX.create
 styleProps = StyleX.recordProps styles
 
 -- | The brand's animated dot field, with a clearing in the top-left corner behind the copy.
-component :: ReactComponent { content :: Array JSX }
-component = unsafePerformEffect $ Hooks.reactComponent "Backdrop" \{ content } -> Hooks.do
+-- | Incrementing `ripples` sends a ripple through the field from the centre of `rippleOrigin`.
+component ::
+  ReactComponent
+    { content :: Array JSX
+    , rippleOrigin :: Ref (Nullable Element)
+    , ripples :: Int
+    }
+component = unsafePerformEffect $ Hooks.reactComponent "Backdrop" \props -> Hooks.do
   canvas <- Hooks.useRef Nullable.null
-  Hooks.useEffectOnce $ startField canvas
+  field <- Hooks.useRef Nothing
+  Hooks.useEffectOnce do
+    started <- startField canvas
+    Hooks.writeRef field (Just started)
+    pure do
+      Hooks.writeRef field Nothing
+      started.stop
+  Hooks.useEffect props.ripples do
+    when (props.ripples > 0) do
+      current <- Hooks.readRef field
+      for_ current \started -> started.ripple props.rippleOrigin
+    pure (pure unit)
   pure $ DOM.div styleProps.root
     [ DOM.div { className: styleProps.layer.className, "aria-hidden": true }
         [ DOM.createBuiltinElement "canvas"
@@ -57,5 +80,5 @@ component = unsafePerformEffect $ Hooks.reactComponent "Backdrop" \{ content } -
         , DOM.div styleProps.fade []
         , DOM.div styleProps.grain []
         ]
-    , DOM.div styleProps.content content
+    , DOM.div styleProps.content props.content
     ]
