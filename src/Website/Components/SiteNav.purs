@@ -6,9 +6,12 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, element)
+import React.Basic.Events (EventHandler)
 import Website.Components.Button as Button
 import Website.Components.Icon as Icon
 import Yoga.React.DOM as DOM
+
+foreign import scrollToTop :: EventHandler
 
 styles = StyleX.create
   { header:
@@ -109,7 +112,12 @@ siteNav :: { onInstall :: Effect Unit } -> JSX
 siteNav { onInstall } =
   DOM.header styleProps.header
     [ DOM.div styleProps.content
-        [ DOM.a { className: styleProps.brand.className, href: "/", "aria-label": "Iris home" }
+        [ DOM.a
+            { className: styleProps.brand.className
+            , href: "/"
+            , onClick: scrollToTop
+            , "aria-label": "Iris home"
+            }
             [ DOM.span styleProps.wordmark "Iris"
             , DOM.span { className: styleProps.stage.className, "aria-hidden": true } "alpha"
             ]
