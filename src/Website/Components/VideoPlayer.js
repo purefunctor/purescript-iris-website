@@ -16,6 +16,11 @@ export const setPlayback = videoRef => shouldPlay => () => {
   else video.pause();
 };
 
+export const after = delay => action => () => {
+  const timer = setTimeout(action, delay);
+  return () => clearTimeout(timer);
+};
+
 // iPhone Safari only supports native fullscreen on the video element itself.
 export const toggleFullscreen = ({ frame: frameRef, video: videoRef }) => () => {
   if (document.fullscreenElement) {
@@ -34,6 +39,7 @@ export const observePlayer = ({
   frame: frameRef,
   onEnded,
   onFullscreen,
+  onLoaded,
   onTime,
   onToggle,
   onVisible,
@@ -59,6 +65,7 @@ export const observePlayer = ({
     onTime(video.currentTime)(total)();
   };
   const ended = () => onEnded();
+  const loaded = () => onLoaded();
   const fullscreenChange = () => onFullscreen(document.fullscreenElement === frame)();
   const fractionAt = event => {
     const bounds = slider.getBoundingClientRect();
@@ -105,6 +112,7 @@ export const observePlayer = ({
 
   for (const name of ["timeupdate", "loadedmetadata", "durationchange", "emptied"]) video.addEventListener(name, update);
   video.addEventListener("ended", ended);
+  video.addEventListener("loadeddata", loaded);
   document.addEventListener("fullscreenchange", fullscreenChange);
   slider.addEventListener("pointerdown", pointerDown);
   slider.addEventListener("pointermove", pointerMove);
@@ -118,12 +126,13 @@ export const observePlayer = ({
   return () => {
     for (const name of ["timeupdate", "loadedmetadata", "durationchange", "emptied"]) video.removeEventListener(name, update);
     video.removeEventListener("ended", ended);
+    video.removeEventListener("loadeddata", loaded);
     document.removeEventListener("fullscreenchange", fullscreenChange);
     slider.removeEventListener("pointerdown", pointerDown);
     slider.removeEventListener("pointermove", pointerMove);
     slider.removeEventListener("pointerup", pointerUp);
     slider.removeEventListener("pointercancel", pointerUp);
-  slider.removeEventListener("lostpointercapture", lostCapture);
+    slider.removeEventListener("lostpointercapture", lostCapture);
     slider.removeEventListener("keydown", keyDown);
     slider.removeEventListener("focus", focus);
     visibility.disconnect();

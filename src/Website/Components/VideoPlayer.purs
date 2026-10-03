@@ -23,6 +23,7 @@ foreign import canHover :: Effect Boolean
 foreign import formatTime :: Number -> String
 foreign import wholeSeconds :: Number -> Int
 foreign import setPlayback :: Ref (Nullable Element) -> Boolean -> Effect Unit
+foreign import after :: Int -> Effect Unit -> Effect (Effect Unit)
 foreign import toggleFullscreen ::
   { frame :: Ref (Nullable Element), video :: Ref (Nullable Element) } -> Effect Unit
 
@@ -31,6 +32,7 @@ foreign import observePlayer ::
   , frame :: Ref (Nullable Element)
   , onEnded :: Effect Unit
   , onFullscreen :: Boolean -> Effect Unit
+  , onLoaded :: Effect Unit
   , onTime :: Number -> Number -> Effect Unit
   , onToggle :: Effect Unit
   , onVisible :: Boolean -> Effect Unit
@@ -49,6 +51,10 @@ type VideoPlayer =
   , setPlaying :: (Boolean -> Boolean) -> Effect Unit
   , src :: String
   }
+
+-- | How long the outgoing recording blurs before its source is replaced; matches `blurred`.
+blurOut :: Int
+blurOut = 160
 
 styles = StyleX.create
   -- Recordings are letterboxed with plain black bars, on the page and in full screen.
@@ -69,7 +75,27 @@ styles = StyleX.create
       , inset: 0
       , objectFit: "contain"
       , position: "absolute"
+      , transition: "opacity 260ms var(--ease-out)"
       , width: "100%"
+      }
+  , videoBlurred: { opacity: 0.5, transition: "opacity 160ms var(--ease-out)" }
+  -- Switching recordings blurs the outgoing frame, then the incoming recording unblurs once its
+  -- first frame has loaded. A backdrop filter extends the frame's edges rather than fading them
+  -- into the letterbox as a filter on the video would.
+  , blur:
+      { "WebkitBackdropFilter": "blur(0px)"
+      , backdropFilter: "blur(0px)"
+      , inset: 0
+      , pointerEvents: "none"
+      , position: "absolute"
+      , transition:
+          "backdrop-filter 260ms var(--ease-out), -webkit-backdrop-filter 260ms var(--ease-out)"
+      }
+  , blurred:
+      { "WebkitBackdropFilter": "blur(12px)"
+      , backdropFilter: "blur(12px)"
+      , transition:
+          "backdrop-filter 160ms var(--ease-out), -webkit-backdrop-filter 160ms var(--ease-out)"
       }
   -- Controls fade out during playback unless the player is hovered or holds keyboard focus;
   -- focus left behind by a mouse click does not keep them visible.
@@ -197,8 +223,12 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
   fullscreen /\ setFullscreen <- Hooks.useState' false
   visible /\ setVisible <- Hooks.useState' false
   hoverable /\ setHoverable <- Hooks.useState' true
+  -- The source on the element trails props.src while the outgoing recording blurs.
+  shown /\ setShown <- Hooks.useState' props.src
+  blurred /\ setBlurred <- Hooks.useState' false
   let
     active = props.playing && visible
+    current = shown == props.src
     toggle = props.setPlaying not
     controls =
       StyleX.props
@@ -215,6 +245,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
       , frame
       , onEnded: props.onEnded
       , onFullscreen: setFullscreen
+      , onLoaded: setBlurred false
       , onTime: \current duration -> setTime { current, duration }
       , onToggle: toggle
       , onVisible: setVisible
@@ -222,8 +253,22 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
       , video
       }
 
-  Hooks.useEffect (props.src /\ active) do
-    setPlayback video active
+  -- Returning to the shown recording mid-blur, or reducing motion, skips the transition.
+  Hooks.useEffect props.src do
+    reduced <- prefersReducedMotion
+    if current || reduced then do
+      setBlurred false
+      setShown props.src
+      pure (pure unit)
+    else do
+      setBlurred true
+      after blurOut (setShown props.src)
+
+  -- The outgoing recording holds its frame while it blurs. An incoming recording that will not
+  -- load until played unblurs straight away.
+  Hooks.useEffect (shown /\ props.src /\ active) do
+    setPlayback video (active && current)
+    when (current && not active) (setBlurred false)
     pure (pure unit)
 
   pure $ DOM.div
@@ -231,17 +276,19 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
     , ref: DOM.reactRef frame
     }
     [ createBuiltinElement "video"
-        { className: styleProps.video.className
+        { className:
+            (StyleX.props [ styles.video, StyleX.conditional blurred styles.videoBlurred ]).className
         , ref: DOM.reactRef video
         , muted: true
         , playsInline: true
         , poster: props.poster
         , preload: "none"
-        , src: props.src
+        , src: shown
         , "aria-label": props.label
         , onClick: handler_ toggle
         }
         []
+    , DOM.div (StyleX.props [ styles.blur, StyleX.conditional blurred styles.blurred ]) []
     , DOM.div controls
         [ mediaButton (if active then "Pause" else "Play")
             (if active then Icon.pause else Icon.play)
