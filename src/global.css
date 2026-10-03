@@ -1,16 +1,6 @@
 @layer reset, priority1, priority2, priority3, priority4;
 
 @font-face {
-  font-family: "Bruno Ace";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 400;
-  src: url("../node_modules/@fontsource/bruno-ace/files/bruno-ace-latin-400-normal.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
-    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
   font-family: InterVariable;
   font-style: normal;
   font-display: swap;
@@ -128,37 +118,12 @@
     --gutter: 24px;
     --nav-height: 60px;
 
-    /* Legacy tokens used by the playground. */
-    --landing-font-wordmark: "Bruno Ace", sans-serif;
-    --landing-font-heading: InterVariable, sans-serif;
-    --landing-font-body: InterVariable, sans-serif;
-    --landing-font-code: "JetBrains Mono Variable", monospace;
-    --landing-type-chapter: clamp(2.5rem, 1.75rem + 3vw, 4.5rem);
-    --landing-type-statement: clamp(2rem, 1.5rem + 2vw, 3.25rem);
-    --landing-type-lead: clamp(1.625rem, 1.375rem + 0.9vw, 2.25rem);
-    --landing-type-title: clamp(1.5rem, 1.25rem + 1vw, 2rem);
-    --landing-type-group: 1.25rem;
-    --landing-type-body: 1rem;
-    --landing-type-small: 0.875rem;
-    --landing-type-meta: 0.8125rem;
-    --landing-hero-image: url("./assets/iris-digital-field.webp");
-    --landing-hero-image-mobile: url("./assets/iris-digital-field.webp");
-    --landing-alpha-image: url("./assets/iris-alpha-field.webp");
-    --landing-compiler-image: url("./assets/iris-compiler-field.webp");
+    /* Colors for the code samples in the feature sections. */
     --landing-color-ink: oklch(30% 0.055 279);
-    --landing-color-paper: oklch(98.6% 0.008 280);
     --landing-color-surface: oklch(100% 0 0);
     --landing-color-line: oklch(89% 0.028 280);
     --landing-color-muted: oklch(48% 0.035 276);
-    --landing-color-muted-inverse: oklch(79% 0.036 278);
-    --landing-color-mineral: oklch(48% 0.15 277);
-    --landing-color-violet: oklch(47% 0.22 286);
-    --landing-color-cyan: oklch(77% 0.13 214);
-    --landing-color-rose: oklch(76% 0.14 338);
-    --landing-color-signal: oklch(86% 0.11 207);
-    --landing-color-signal-bright: oklch(from var(--landing-color-signal) calc(l + 0.04) calc(c - 0.013) h);
     --landing-color-crystal: oklch(54.66% 0.1932 286.5);
-    --landing-color-purescript-charcoal: oklch(19% 0.052 278);
     --landing-color-latte-text: oklch(43.55% 0.043 279.3);
     --landing-color-latte-subtext-1: oklch(43% 0.0385 279.3);
     --landing-color-latte-mauve: oklch(46% 0.21 295.7);
@@ -167,8 +132,6 @@
     --landing-color-latte-green: oklch(44% 0.14 140.4);
     --landing-color-latte-teal: oklch(44% 0.09 201.1);
     --landing-color-latte-blue: oklch(45% 0.19 262.7);
-    --landing-color-white: oklch(100% 0 0);
-    --landing-color-white-translucent: oklch(from var(--landing-color-white) l c h / 10%);
   }
 
   *,
