@@ -11,29 +11,25 @@ const browser = (...args) => execFileSync("agent-browser", ["--session", session
   maxBuffer: 5 * 1024 * 1024,
 });
 const metadata = () => readFile("node_modules/.vite-dev/deps/_metadata.json", "utf8");
-const checkPages = async () => {
-  for (const path of ["/", "/playground"]) {
-    const response = await fetch(new URL(path, base));
-    assert.equal(response.status, 200, `${path} HTTP status`);
-    await response.text();
-    browser("open", new URL(path, base).href);
-    browser("wait", "--fn", path === "/playground"
-      ? 'document.getElementById("compile-status")?.textContent.startsWith("Compiled in")'
-      : '!!document.querySelector("astro-island:not([ssr])")');
-    assert.equal(browser("eval", '!!document.querySelector("astro-error-overlay, vite-error-overlay")').trim(), "false");
-  }
+const checkPage = async () => {
+  const response = await fetch(base);
+  assert.equal(response.status, 200, "HTTP status");
+  await response.text();
+  browser("open", base);
+  browser("wait", "--fn", '!!document.querySelector("astro-island:not([ssr])")');
+  assert.equal(browser("eval", '!!document.querySelector("astro-error-overlay, vite-error-overlay")').trim(), "false");
 };
 
 try {
-  await checkPages();
+  await checkPage();
   const before = await metadata();
   execFileSync("pnpm", ["exec", "astro", "build"], { stdio: "inherit" });
   assert.deepEqual(await metadata(), before, "production build must preserve live dev prebundles");
-  await checkPages();
-  assert.deepEqual(await metadata(), before, "route navigation must not discover new dependencies");
+  await checkPage();
+  assert.deepEqual(await metadata(), before, "reloading must not discover new dependencies");
   const errors = browser("errors").trim();
   assert.ok(!errors || errors === "No errors", errors);
-  console.log("Dev cache regression passed: build preserves prebundles; both routes hydrate and playground compiles.");
+  console.log("Dev cache regression passed: build preserves prebundles and the landing page hydrates.");
 } finally {
   browser("close");
 }

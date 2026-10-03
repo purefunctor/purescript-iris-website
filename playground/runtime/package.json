@@ -1,9 +1,0 @@
-{
-  "name": "iris-playground-runtime",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
-  }
-}

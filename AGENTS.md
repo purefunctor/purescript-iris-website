@@ -16,12 +16,10 @@ This repository is the Iris website: Astro handles routing and server rendering 
 
 ### PureScript and JavaScript boundaries
 
-- Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing` or `Website.Playground`. Keep FFI companions alongside their PureScript modules.
-- Use the package import aliases `#src/*`, `#output/*`, `#build/*` and `#playground/*` for cross-directory imports. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
-- Keep playground UI and React hooks in `src/Website/Playground/Index.purs` and `src/Website/Playground/Result.purs`. Their JavaScript FFI companions implement browser effects: Monaco and compiler workers, focus, runtime loading and sandbox messaging. PureScript hooks own state and cleanup.
-- Playground dialog animations use only `motion/mini` through `dialog.js`. PureScript owns visibility and controller lifetime; browser controllers own interruption, native modal closing and focus. Cancel backdrop effects explicitly (Mini's `stop()` does not), restore owned inline styles, and keep trivial CSS transitions and React Aria presence unchanged.
+- Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing`. Keep FFI companions alongside their PureScript modules.
+- Use the package import aliases `#src/*` and `#output/*` for cross-directory imports. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
 - Author component StyleX declarations in PureScript using `Iris.StyleX`. Iris emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
-- Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.Header.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
+- Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.IconButton.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
 
 ### Component exports
 
@@ -29,10 +27,9 @@ This repository is the Iris website: Astro handles routing and server rendering 
 - Use a descriptive component name, such as `header`, for an effectful `Component props` constructor that callers must instantiate during component construction.
 - When a module exports multiple peer `ReactComponent` values and none is the canonical module component, give each value a descriptive name rather than using `component`.
 
-### Playground security
+### Deployment
 
-- Before adding network access, persistence, sharing or arbitrary npm dependencies, revisit the playground isolation policy described in [README.md](README.md#execution-boundary). The absence of accounts does not remove XSS risk; hostile public execution warrants a separate origin and stronger resource isolation.
-- Production is a static Astro build deployed as Cloudflare Workers Static Assets without a Worker script. `public/_headers` owns the static security and cache headers. When restoring the playground sandbox, verify its policy on canonical, extensionless, and encoded URLs on Cloudflare before enabling the route.
+- Production is a static Astro build deployed as Cloudflare Workers Static Assets without a Worker script. `public/_headers` owns the static security and cache headers.
 
 ## Design constraints
 
@@ -64,7 +61,7 @@ See [README.md](README.md) for installation prerequisites and standard developme
 ### Orb setup and preview
 
 - `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. It installs the newest published Iris prerelease with the official installer and `IRIS_SKIP_ATTESTATION=1`, then installs locked dependencies and runs `pnpm prepare:dev`. The tool paths are persisted for login shells. Snapshots contain the installed compiler and PureScript output. Do not build production Astro output or start a persistent server during setup.
-- `pnpm prepare:dev` compiles the site's PureScript with the installed `iris` on PATH. The playground build is separate and does not run during site development or publishing. Use Iris's incremental cache; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
+- `pnpm prepare:dev` compiles the site's PureScript with the installed `iris` on PATH. Use Iris's incremental cache; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
 - `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/` before reporting ready. It generates the Website link in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
 
@@ -104,24 +101,12 @@ bun scripts/benchmark-builds.ts --purs node_modules/purescript/purs.bin --iris "
 
 Update the figures, versions and bar widths in `src/Website/Landing/Benchmarks.purs` from its output.
 
-### Playground checks
+### Development cache
 
-The public playground route and assets are excluded from the website build. The browser checks that target `/playground` apply after its Astro page, sandbox asset, and playground build are restored; the non-browser checks require the separate playground toolchain.
+Production builds must not replace the prebundles of a running dev server. With agent-browser installed and a dev server running, this builds production concurrently and checks that the landing page still hydrates without reoptimization:
 
 ```sh
-pnpm test:playground
-node scripts/build-playground-wasm.mjs --test-native
-node scripts/build-playground-packages.mjs --fixture
-PLAYGROUND_PACKAGES="$PWD/build/playground-packages.json" node scripts/build-playground-wasm.mjs --test-wasm
-# Requires installed agent-browser; starts and closes its own React/WAAPI fixture server:
-node scripts/test-dialog-animations-browser.mjs
-# Requires installed agent-browser and a running dev/preview server:
-node scripts/test-playground-browser.mjs http://localhost:4321/playground
-# Requires installed agent-browser and a running dev server; builds production
-# concurrently and checks that both routes still hydrate without reoptimization:
 node scripts/test-dev-cache.mjs http://localhost:4321
-# Requires a production preview (pnpm build, then pnpm preview) for HTTP cache checks:
-node scripts/test-playground-packages-browser.mjs http://localhost:4321/playground
 ```
 
 ## Maintaining this guide

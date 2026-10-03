@@ -2,8 +2,6 @@
 .astro/
 .wrangler/
 .amp/portals/
-build/
 dist/
 node_modules/
 output/
-public/playground/

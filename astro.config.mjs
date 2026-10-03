@@ -42,7 +42,6 @@ export default defineConfig({
       include: [
         "@stylexjs/stylex",
         "react-aria-components",
-        "react-aria-components/Modal",
       ],
     },
     // StyleX aggregates all rules into one CSS asset.

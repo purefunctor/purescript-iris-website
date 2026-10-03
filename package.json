@@ -5,17 +5,13 @@
   "type": "module",
   "imports": {
     "#src/*": "./src/*",
-    "#output/*": "./output/*",
-    "#build/*": "./build/*",
-    "#playground/*": "./playground/*"
+    "#output/*": "./output/*"
   },
   "scripts": {
     "build:purescript": "iris build",
-    "build:playground": "node scripts/build-playground-packages.mjs && node scripts/build-playground-runtime.mjs && node scripts/build-playground-wasm.mjs && node scripts/build-playground-assets.mjs",
     "prepare:dev": "pnpm build:purescript",
-    "build": "rm -rf public/playground && pnpm build:purescript && astro build",
+    "build": "pnpm build:purescript && astro build",
     "dev": "pnpm prepare:dev && concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"iris watch --output output\" \"astro dev\"",
-    "test:playground": "node --test src/Website/Playground/*.test.js playground/packages/*.test.mjs",
     "preview": "wrangler dev",
     "sources": "spago sources"
   },
@@ -28,11 +24,8 @@
     "@fontsource/geist": "5.3.0",
     "@fontsource/geist-mono": "5.3.0",
     "@stylexjs/stylex": "0.19.0",
-    "acorn": "8.15.0",
     "astro": "7.2.9",
     "inter-ui": "4.1.1",
-    "monaco-editor": "0.55.1",
-    "motion": "13.2.0",
     "react": "18.3.1",
     "react-aria-components": "1.20.0",
     "react-dom": "18.3.1",
@@ -46,7 +39,6 @@
     "@svgr/core": "8.1.0",
     "@svgr/plugin-jsx": "8.1.0",
     "concurrently": "10.0.5",
-    "esbuild": "0.28.2",
     "purescript": "0.15.16",
     "purs-tidy": "0.11.1",
     "spago": "1.0.4",
