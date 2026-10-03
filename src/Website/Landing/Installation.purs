@@ -3,15 +3,19 @@ module Website.Landing.Installation (installation) where
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 import Website.Components.CopyButton as CopyButton
+import Website.Components.Tabs.Styles (tabStyles)
 
 foreign import installationImpl ::
   ReactComponent
     { commandClassName :: String
     , copyButton :: String -> JSX
+    , headerClassName :: String
     , iconClassName :: String
     , panelClassName :: String
     , promptClassName :: String
     , rootClassName :: String
+    , sourceClassName :: String
+    , sourceIconClassName :: String
     , systemClassName :: String
     , tabClassName :: String
     , tabListClassName :: String
@@ -24,31 +28,34 @@ styles = StyleX.create
       , gap: 8
       , maxWidth: "100%"
       }
-  , tabList: { display: "flex", gap: 2 }
-  , tab:
+  , header:
       { alignItems: "center"
+      , display: "flex"
+      , flexWrap: "wrap"
+      , gap: 8
+      , justifyContent: "space-between"
+      }
+  -- Opens the selected platform's installation script.
+  , source:
+      { alignItems: "center"
+      , backgroundColor: { default: "transparent", ":hover": "var(--glass-fill)" }
       , borderRadius: 5
-      , color:
-          { default: "var(--text-tertiary)"
-          , ":hover": "var(--text-primary)"
-          , "[data-selected]": "var(--text-primary)"
-          }
-      , backgroundColor:
-          { default: "transparent"
-          , ":hover": "var(--glass-fill)"
-          , "[data-selected]": "var(--glass-fill-strong)"
-          }
-      , cursor: "var(--landing-interactive-cursor, pointer)"
+      , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
       , display: "inline-flex"
       , fontSize: 13
-      , gap: 5
       , fontWeight: 500
+      , gap: 6
       , lineHeight: 1
+      -- Stays right-aligned when it wraps below the platform tabs on narrow screens.
+      , marginInlineStart: "auto"
       , padding: "7px 10px"
+      , textDecoration: "none"
       , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
       , whiteSpace: "nowrap"
       , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
+  -- Lucide icons render at 1.2em.
+  , sourceIcon: { flexShrink: 0, fontSize: 11 }
   , system: { alignItems: "center", display: "inline-flex", gap: 6 }
   -- Simple Icons render at 1.2em; 11px keeps each logo near the label's cap height.
   , icon: { flexShrink: 0, fontSize: 11 }
@@ -94,11 +101,14 @@ installation = element installationImpl
   , copyButton: \text ->
       CopyButton.copyButton
         { label: "Copy installation command", size: CopyButton.Medium, text }
+  , headerClassName: styleProps.header.className
   , iconClassName: styleProps.icon.className
   , panelClassName: styleProps.panel.className
   , promptClassName: styleProps.prompt.className
   , rootClassName: styleProps.root.className
+  , sourceClassName: styleProps.source.className
+  , sourceIconClassName: styleProps.sourceIcon.className
   , systemClassName: styleProps.system.className
-  , tabClassName: styleProps.tab.className
-  , tabListClassName: styleProps.tabList.className
+  , tabClassName: (StyleX.props tabStyles.tab).className
+  , tabListClassName: (StyleX.props tabStyles.tabList).className
   }
