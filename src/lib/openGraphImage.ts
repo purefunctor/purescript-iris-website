@@ -3,93 +3,75 @@ import { resolve } from "node:path";
 import React from "react";
 import satori from "satori";
 import sharp from "sharp";
+import { readColorTokens } from "#src/lib/colorTokens";
+import { renderFavicon } from "#src/lib/favicon";
+import { palette, stillField } from "#src/Website/Components/Backdrop.js";
 
 const width = 1200;
 const height = 630;
+const markSize = 272;
+// Social previews are shown at a fraction of full size, so the field's dots are drawn larger.
+const dotScale = 1.8;
 
-/** Render a page-specific, build-time social image; newlines balance longer headlines. */
-export async function renderOpenGraphImage(headline: string): Promise<Uint8Array> {
-  const [wordmarkFont, bodyFont, background] = await Promise.all([
-    readFile(resolve("node_modules/@fontsource/bruno-ace/files/bruno-ace-latin-400-normal.woff")),
-    readFile(resolve("node_modules/@fontsource/inter/files/inter-latin-400-normal.woff")),
-    sharp(resolve("src/assets/iris-digital-field.webp"))
-      .resize(width, height, { fit: "cover" })
-      .jpeg({ quality: 85 })
-      .toBuffer(),
+/** Render the build-time social image: the site icon and wordmark centred on the hero's still dot field. */
+export async function renderOpenGraphImage({ seed }: { seed?: number } = {}): Promise<Uint8Array> {
+  const [color, black, mark] = await Promise.all([
+    readColorTokens(),
+    readFile(resolve("node_modules/@fontsource/geist/files/geist-latin-900-normal.woff")),
+    renderFavicon({ disc: false }).then((svg) =>
+      sharp(Buffer.from(svg), { density: (markSize / 32) * 72 * 2 }).resize(markSize * 2).png().toBuffer(),
+    ),
   ]);
+  const background = await renderField(color, seed);
 
   const svg = await satori(
     React.createElement("div", {
       style: {
         display: "flex",
-        flexDirection: "column",
+        alignItems: "center",
         justifyContent: "center",
+        gap: 8,
         width,
         height,
-        position: "relative",
-        overflow: "hidden",
-        backgroundColor: "#faf9ff",
-        color: "#33314b",
+        backgroundColor: color["bg-canvas"],
+        backgroundImage: `url(data:image/png;base64,${background.toString("base64")})`,
+        color: color["text-primary"],
+        fontFamily: "Geist",
       },
     },
       React.createElement("img", {
-        src: `data:image/jpeg;base64,${background.toString("base64")}`,
-        style: { position: "absolute", width, height, top: 0, left: 0 },
+        src: `data:image/png;base64,${mark.toString("base64")}`,
+        width: markSize,
+        height: markSize,
       }),
-      React.createElement("div", {
-        style: {
-          display: "flex",
-          flexDirection: "column",
-          width: 950,
-          paddingLeft: 82,
-          position: "relative",
-        },
-      },
-        React.createElement("div", {
-          style: {
-            fontFamily: "Bruno Ace",
-            fontSize: 180,
-            letterSpacing: -10,
-            lineHeight: 1,
-          },
-        }, "IRIS"),
-        React.createElement("div", {
-          style: {
-            display: "flex",
-            flexDirection: "column",
-            fontFamily: "Inter",
-            fontSize: 44,
-            fontWeight: 400,
-            lineHeight: 1.18,
-            maxWidth: 860,
-            marginTop: 24,
-          },
-        }, ...headline.split("\n").map((line) =>
-          React.createElement("div", { key: line, style: { display: "flex" } }, line),
-        )),
-      ),
-      React.createElement("div", {
-        style: {
-          position: "absolute",
-          display: "flex",
-          bottom: 48,
-          left: 84,
-          fontFamily: "Inter",
-          fontSize: 23,
-          letterSpacing: 1,
-          color: "#595077",
-        },
-      }, "iris-lang.com"),
+      React.createElement("div", { style: { fontSize: 288, fontWeight: 900, letterSpacing: -11.5, lineHeight: 1 } }, "IRIS"),
     ),
-    {
-      width,
-      height,
-      fonts: [
-        { name: "Bruno Ace", data: wordmarkFont, weight: 400, style: "normal" },
-        { name: "Inter", data: bodyFont, weight: 400, style: "normal" },
-      ],
-    },
+    { width, height, fonts: [{ name: "Geist", data: black, weight: 900, style: "normal" }] },
   );
 
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/** The hero's dot field without its clearing, dimmed behind the lockup, plus grain, rasterised so Satori embeds a single image. */
+function renderField(color: Record<string, string>, seed?: number): Promise<Buffer> {
+  const fills = palette.map((token) => color[token.slice(2)]);
+  const dots = stillField(width, height, { clearing: false, seed })
+    .map(({ x, y, radius, alpha, color: index }) =>
+      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(radius * dotScale).toFixed(2)}" fill="${fills[index]}" fill-opacity="${alpha.toFixed(3)}"/>`,
+    )
+    .join("");
+  const canvas = color["bg-canvas"];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+    <defs>
+      <filter id="grain" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/>
+        <feColorMatrix type="saturate" values="0"/>
+      </filter>
+    </defs>
+    <rect width="100%" height="100%" fill="${canvas}"/>
+    ${dots}
+    <rect width="100%" height="100%" fill="${canvas}" opacity="0.35"/>
+    <rect width="100%" height="100%" filter="url(#grain)" opacity="0.09" style="mix-blend-mode:overlay"/>
+  </svg>`;
   return sharp(Buffer.from(svg)).png().toBuffer();
 }

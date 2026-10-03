@@ -8,7 +8,7 @@ interface Props {
   imageAlt?: string;
 }
 
-const { title, description, image = "/og.png", imageAlt = "IRIS — functional programming for the browser, the server, and everywhere in between" } = Astro.props;
+const { title, description, image = "/og.png", imageAlt = "The IRIS logo and wordmark over a field of spectrum-colored dots" } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site!);
 const imageUrl = new URL(image, Astro.site!);
 ---
