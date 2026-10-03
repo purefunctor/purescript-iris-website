@@ -79,7 +79,6 @@ styles = StyleX.create
       , overflowWrap: "break-word"
       , textWrap: "balance"
       }
-  , emphasis: { color: "var(--text-emphasis)" }
   , lead:
       { color: "var(--text-secondary)"
       , fontSize: 17
@@ -111,11 +110,9 @@ hero { install, ripples } = element Backdrop.component
                       (element Icon.arrowRight { "aria-hidden": true, focusable: false })
                   ]
               , DOM.h1 { className: styleProps.title.className, id: "hero-title" }
-                  [ DOM.text "Functional programming, "
-                  , DOM.span styleProps.emphasis "everywhere in between."
-                  ]
+                  "IRIS, a superset of PureScript."
               , DOM.p styleProps.lead
-                  "Iris is a superset of PureScript, written in Rust. It compiles Spago projects to JavaScript for the browser and the server, and brings the same incremental analysis to your editor."
+                  "Iris is a superset of the PureScript programming language, written in Rust. Tooling is vertically integrated into a single binary, such as feature-rich language analysis, a queryable build server, and skills for agents."
               , DOM.div
                   { className: styleProps.install.className
                   , id: "install"
