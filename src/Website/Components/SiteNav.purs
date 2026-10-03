@@ -10,6 +10,7 @@ import React.Basic.Events (EventHandler)
 import Website.Components.Button as Button
 import Website.Components.ExternalLink as ExternalLink
 import Website.Components.Icon as Icon
+import Website.Components.Logo (logo)
 import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank)
 
@@ -42,20 +43,22 @@ styles = StyleX.create
       , paddingInline: "var(--gutter)"
       }
   , brand:
-      { alignItems: "baseline"
+      { alignItems: "center"
       , borderRadius: 5
       , color: "var(--text-primary)"
       , cursor: "default"
       , display: "inline-flex"
-      , gap: 6
+      , gap: 7
       , lineHeight: 1
       , textDecoration: "none"
       , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
+  , logo: { flexShrink: 0, height: 26, width: 26 }
+  , name: { alignItems: "baseline", display: "inline-flex", gap: 6 }
   , wordmark:
       { fontSize: 21
-      , fontWeight: 600
-      , letterSpacing: "-0.03em"
+      , fontWeight: 900
+      , letterSpacing: "-0.04em"
       }
   , stage:
       { color: "var(--text-tertiary)"
@@ -120,8 +123,11 @@ siteNav { onInstall } =
             , onClick: scrollToTop
             , "aria-label": "Iris home"
             }
-            [ DOM.span styleProps.wordmark "IRIS"
-            , DOM.span { className: styleProps.stage.className, "aria-hidden": true } "alpha"
+            [ logo { className: styleProps.logo.className }
+            , DOM.span styleProps.name
+                [ DOM.span styleProps.wordmark "IRIS"
+                , DOM.span { className: styleProps.stage.className, "aria-hidden": true } "alpha"
+                ]
             ]
         , DOM.nav { className: styleProps.links.className, "aria-label": "Sections" }
             [ link "#benchmarks" "Benchmarks"

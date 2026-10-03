@@ -6,6 +6,7 @@ import Iris.StyleX as StyleX
 import React.Basic (JSX, element)
 import Website.Components.ExternalLink as ExternalLink
 import Website.Components.Icon as Icon
+import Website.Components.Logo (logo)
 import Yoga.React.DOM as DOM
 
 type Column = { heading :: String, links :: Array { label :: String, href :: String } }
@@ -63,10 +64,12 @@ styles = StyleX.create
       , gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))"
       }
   , brand: { display: "flex", flexDirection: "column", gap: 12 }
+  , lockup: { alignItems: "center", display: "flex", gap: 10 }
+  , logo: { flexShrink: 0, height: 38, width: 38 }
   , wordmark:
       { fontSize: 32
-      , fontWeight: 600
-      , letterSpacing: "-0.03em"
+      , fontWeight: 900
+      , letterSpacing: "-0.04em"
       , lineHeight: 1
       }
   , tagline:
@@ -121,7 +124,10 @@ footer =
     [ DOM.div styleProps.content
         [ DOM.div styleProps.columns
             ( [ DOM.div styleProps.brand
-                  [ DOM.span styleProps.wordmark "IRIS"
+                  [ DOM.div styleProps.lockup
+                      [ logo { className: styleProps.logo.className }
+                      , DOM.span styleProps.wordmark "IRIS"
+                      ]
                   , DOM.p styleProps.tagline
                       "A superset of PureScript, written in Rust."
                   ]
