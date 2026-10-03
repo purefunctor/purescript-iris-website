@@ -54,3 +54,14 @@ export const revealInstall = installRef => onRevealed => () => {
   window.addEventListener("scrollend", settle);
   frame = requestAnimationFrame(watch);
 };
+
+// Development only: visiting with `?edit` makes all copy editable in place for drafting and
+// screenshots. Production builds remove this branch.
+export const enableCopyEditing = () => {
+  if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("edit")) return () => {};
+  document.designMode = "on";
+  document.documentElement.spellcheck = false;
+  return () => {
+    document.designMode = "off";
+  };
+};

@@ -27,6 +27,7 @@ import Website.Landing.Places (places)
 import Yoga.React.DOM as DOM
 
 foreign import revealInstall :: Ref (Nullable Element) -> Effect Unit -> Effect Unit
+foreign import enableCopyEditing :: Effect (Effect Unit)
 
 styles = StyleX.create
   { page:
@@ -44,6 +45,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "LandingPage" \_ -> Hooks
   install <- Hooks.useRef Nullable.null
   ripples /\ setRipples <- Hooks.useState 0
   Hooks.useEffectOnce configurePlatformStyles
+  Hooks.useEffectOnce enableCopyEditing
   pure $ DOM.div (StyleX.props styles.page)
     [ siteNav { onInstall: revealInstall install (setRipples (_ + 1)) }
     , DOM.main {}
