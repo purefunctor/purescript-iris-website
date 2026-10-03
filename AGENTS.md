@@ -5,7 +5,7 @@ This repository is the Iris website: Astro handles routing and server rendering 
 ## Sources of truth
 
 - Treat `purefunctor/purescript-iris` as the source of truth for compiler behaviour, architecture, compatibility, and performance claims. In Amp, inspect the additional checkout at `../repos/purescript-iris`; if it is unavailable, use Librarian to research that repository instead of inferring from website-local code.
-- Substantiate product copy before weakening it. Benchmark this website with the release compiler when evaluating build-speed claims, and separate compiler time from Spago and Vite overhead.
+- Substantiate product copy before weakening it. Evaluate build-speed claims with the release compiler against an official `purs` release, using the [build benchmark](#build-benchmarks); this website cannot be compiled by `purs` because it uses Iris StyleX. Separate compiler time from Spago and Vite overhead.
 - References to existing PureScript libraries and projects describe Iris's compatibility testing against the PureScript Registry package set. Consult `tests-compatibility` and its CI workflows in the compiler repository for the current scope and evidence.
 
 ## Implementation conventions
@@ -93,6 +93,16 @@ amp orb service start production-preview --command 'pnpm preview' --portal
 ### Visual changes
 
 - When visually reviewing a change with screenshots, capture and inspect representative mobile and desktop viewports so responsive regressions are considered together.
+
+### Build benchmarks
+
+The landing page's build times come from `scripts/benchmark-builds.ts`, which needs Bun, Spago and network access for the first setup. It creates acme, a project depending on every package in a pinned Registry package set, then compares `spago build`, `purs compile` and `iris build`, plus `iris watch` rebuilds. Pass an official `purs` release, not a locally modified build, and the Iris release being described:
+
+```sh
+bun scripts/benchmark-builds.ts --purs node_modules/purescript/purs.bin --iris "$(command -v iris)"
+```
+
+Update the figures, versions and bar widths in `src/Website/Landing/Benchmarks.purs` from its output.
 
 ### Playground checks
 
