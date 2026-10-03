@@ -3,6 +3,7 @@ module Website.Components.Icon
   , arrowRight
   , bluesky
   , bookOpen
+  , bot
   , check
   , checkCircle
   , code
@@ -37,6 +38,7 @@ type IconProps =
 foreign import arrowRight :: ReactComponent IconProps
 foreign import bluesky :: ReactComponent IconProps
 foreign import bookOpen :: ReactComponent IconProps
+foreign import bot :: ReactComponent IconProps
 foreign import check :: ReactComponent IconProps
 foreign import checkCircle :: ReactComponent IconProps
 foreign import code :: ReactComponent IconProps

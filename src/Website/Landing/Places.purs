@@ -12,35 +12,45 @@ import Yoga.React.DOM as DOM
 type Place =
   { icon :: ReactComponent Icon.IconProps
   , title :: String
-  , body :: String
+  , body :: Array JSX
   , command :: String
   }
 
+-- The tools the hero names, each backed by an `iris` subcommand.
 placeList :: Array Place
 placeList =
-  [ { icon: Icon.server
-    , title: "On the server"
+  [ { icon: Icon.codeXml
+    , title: "Language analysis"
     , body:
-        "Build a Spago package and run it on Node.js. Test suites run the same way with iris test."
-    , command: "iris run"
-    }
-  , { icon: Icon.globe
-    , title: "In the browser"
-    , body:
-        "Emit ES modules for Vite and other bundlers. This website’s React components are written in PureScript and compiled by Iris."
-    , command: "iris build"
-    }
-  , { icon: Icon.codeXml
-    , title: "In your editor"
-    , body:
-        "The language server answers completion, hover, references and diagnostics from the same incremental queries as the build."
+        [ DOM.text
+            "Completion, hover, scope-aware rename, references and typed-hole suggestions, served to your editor by the language server."
+        ]
     , command: "iris lsp --stdio"
+    }
+  , { icon: Icon.server
+    , title: "Queryable build server"
+    , body:
+        [ inlineCode "iris watch"
+        , DOM.text
+            " keeps the project compiled in memory and answers queries for signatures, definitions, references and generated JavaScript."
+        ]
+    , command: "iris watch query search foldl"
+    }
+  , { icon: Icon.bot
+    , title: "Skills for agents"
+    , body:
+        [ inlineCode "iris skills"
+        , DOM.text
+            " prints guides for coding agents that match the installed version of Iris, starting with querying "
+        , inlineCode "iris watch"
+        , DOM.text "."
+        ]
+    , command: "iris skills get watch"
     }
   ]
 
 styles = StyleX.create
-  { section: { paddingBlock: "96px 40px" }
-  , heading: { marginBlockEnd: 40, maxWidth: 640 }
+  { heading: { marginBlockEnd: 40, maxWidth: 640 }
   , grid:
       { display: "grid"
       , gap: 16
@@ -80,6 +90,18 @@ styles = StyleX.create
       , lineHeight: 1.65
       , textWrap: "pretty"
       }
+  , inlineCode:
+      { backgroundColor: "var(--surface-2)"
+      , borderColor: "var(--border-subtle)"
+      , borderRadius: 3
+      , borderStyle: "solid"
+      , borderWidth: 1
+      , color: "var(--text-primary)"
+      , fontFamily: "var(--font-mono)"
+      , fontSize: "0.92em"
+      , padding: "1px 5px"
+      , whiteSpace: "nowrap"
+      }
   , command:
       { color: "var(--text-tertiary)"
       , fontFamily: "var(--font-mono)"
@@ -92,13 +114,16 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
+inlineCode :: String -> JSX
+inlineCode = DOM.code styleProps.inlineCode
+
 places :: JSX
 places =
-  DOM.section { className: styleProps.section.className, "aria-labelledby": "places-heading" }
+  DOM.section { className: Section.section.className, "aria-labelledby": "places-heading" }
     [ DOM.div ContentShell.contentShell
         [ DOM.div styleProps.heading
             [ Section.heading
-                { id: "places-heading", text: "One language, ", emphasis: "three places." }
+                { id: "places-heading", text: "Vertically integrated tooling.", emphasis: "" }
             ]
         , DOM.ul styleProps.grid (map place placeList)
         ]

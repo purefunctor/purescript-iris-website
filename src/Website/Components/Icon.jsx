@@ -1,6 +1,7 @@
 export { default as arrowRight } from "~icons/lucide/arrow-right";
 export { default as bluesky } from "~icons/simple-icons/bluesky";
 export { default as bookOpen } from "~icons/lucide/book-open";
+export { default as bot } from "~icons/lucide/bot";
 export { default as check } from "~icons/lucide/check";
 export { default as checkCircle } from "~icons/lucide/circle-check";
 export { default as code } from "~icons/lucide/code-2";

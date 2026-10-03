@@ -1,11 +1,18 @@
-module Website.Landing.Section (heading, lead) where
+module Website.Landing.Section (heading, lead, section) where
+
+import Prelude
 
 import Iris.StyleX as StyleX
 import React.Basic (JSX)
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
-  { heading:
+  -- Every section shares this padding, so consecutive sections sit the same distance apart.
+  { section:
+      { paddingBlock: "clamp(40px, 5vw, 64px)"
+      , scrollMarginTop: "var(--nav-height)"
+      }
+  , heading:
       { fontSize: "clamp(32px, 4.4vw, 44px)"
       , fontWeight: 500
       , letterSpacing: "-0.03em"
@@ -22,11 +29,16 @@ styles = StyleX.create
       }
   }
 
--- | A section heading whose second beat shifts to the emphasis color.
+-- | A section heading whose second beat, when given, shifts to the emphasis color.
 heading :: { id :: String, text :: String, emphasis :: String } -> JSX
 heading { id, text, emphasis } =
   DOM.h2 { className: (StyleX.props styles.heading).className, id }
-    [ DOM.text text, DOM.span (StyleX.props styles.emphasis) emphasis ]
+    if emphasis == "" then [ DOM.text text ]
+    else [ DOM.text text, DOM.span (StyleX.props styles.emphasis) emphasis ]
 
 lead :: String -> JSX
 lead = DOM.p (StyleX.props styles.lead)
+
+-- | Shared spacing for the landing page's content sections.
+section :: StyleX.Props
+section = StyleX.props styles.section
