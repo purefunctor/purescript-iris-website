@@ -94,21 +94,15 @@ styles = StyleX.create
       , marginBlockEnd: 40
       , maxWidth: 640
       }
+  -- The playlist keeps a narrow column beside the player and moves below it on smaller screens.
   , layout:
-      { alignItems: "flex-start"
-      , display: "flex"
-      , flexWrap: "wrap"
-      , gap: "40px 56px"
+      { alignItems: "start"
+      , display: "grid"
+      , gap: 40
+      , gridTemplateColumns:
+          { default: "minmax(0, 1fr)", "@media (min-width: 960px)": "minmax(0, 1fr) 260px" }
       }
-  , playerColumn:
-      { display: "flex"
-      , flexBasis: 560
-      , flexDirection: "column"
-      , flexGrow: 1
-      , flexShrink: 1
-      , gap: 20
-      , minWidth: 0
-      }
+  , playerColumn: { display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }
   , caption:
       { display: "flex"
       , flexDirection: "column"
@@ -127,15 +121,7 @@ styles = StyleX.create
       , lineHeight: 1.65
       , textWrap: "pretty"
       }
-  , groups:
-      { display: "flex"
-      , flexBasis: 300
-      , flexDirection: "column"
-      , flexGrow: 1
-      , flexShrink: 1
-      , gap: 28
-      , minWidth: 0
-      }
+  , groups: { display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }
   , groupTitle:
       { color: "var(--text-tertiary)"
       , fontSize: 13
