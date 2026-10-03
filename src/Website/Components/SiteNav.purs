@@ -124,7 +124,7 @@ siteNav { onInstall } =
             , DOM.span { className: styleProps.stage.className, "aria-hidden": true } "alpha"
             ]
         , DOM.nav { className: styleProps.links.className, "aria-label": "Sections" }
-            [ link "#features" "Features"
+            [ link "#benchmarks" "Benchmarks"
             , link "#editor" "Editor"
             ]
         , DOM.div styleProps.actions

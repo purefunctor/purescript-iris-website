@@ -13,6 +13,7 @@ module Website.Components.Icon
   , database
   , externalLink
   , fileCode
+  , flame
   , gitHub
   , globe
   , maximize
@@ -23,6 +24,7 @@ module Website.Components.Icon
   , pureScript
   , server
   , shieldCheck
+  , snowflake
   , squareTerminal
   , x
   , xSocial
@@ -48,6 +50,7 @@ foreign import copyright :: ReactComponent IconProps
 foreign import database :: ReactComponent IconProps
 foreign import externalLink :: ReactComponent IconProps
 foreign import fileCode :: ReactComponent IconProps
+foreign import flame :: ReactComponent IconProps
 foreign import gitHub :: ReactComponent IconProps
 foreign import globe :: ReactComponent IconProps
 foreign import maximize :: ReactComponent IconProps
@@ -58,6 +61,7 @@ foreign import play :: ReactComponent IconProps
 foreign import pureScript :: ReactComponent IconProps
 foreign import server :: ReactComponent IconProps
 foreign import shieldCheck :: ReactComponent IconProps
+foreign import snowflake :: ReactComponent IconProps
 foreign import squareTerminal :: ReactComponent IconProps
 foreign import x :: ReactComponent IconProps
 foreign import xSocial :: ReactComponent IconProps

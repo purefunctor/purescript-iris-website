@@ -20,7 +20,7 @@ import Web.HTML.Navigator as Navigator
 import Web.HTML.Window as Window
 import Website.Components.SiteNav (siteNav)
 import Website.Landing.Demos as Demos
-import Website.Landing.Features (features)
+import Website.Landing.Benchmarks (benchmarks)
 import Website.Landing.Footer (footer)
 import Website.Landing.Hero (hero)
 import Website.Landing.Places (places)
@@ -51,7 +51,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "LandingPage" \_ -> Hooks
     , DOM.main {}
         [ hero { install, ripples }
         , places
-        , features
+        , benchmarks
         , element Demos.component {}
         ]
     , footer
