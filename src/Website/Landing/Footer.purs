@@ -14,9 +14,13 @@ columns :: Array Column
 columns =
   [ { heading: "Project"
     , links:
-        [ { label: "GitHub", href: "https://github.com/purefunctor/purescript-iris" }
-        , { label: "Releases", href: "https://github.com/purefunctor/purescript-iris/releases" }
-        , { label: "VS Code extension"
+        [ { label: "Releases"
+          , href: "https://github.com/purefunctor/purescript-iris/releases"
+          }
+        , { label: "Compiler source"
+          , href: "https://github.com/purefunctor/purescript-iris"
+          }
+        , { label: "Extension source"
           , href: "https://github.com/purefunctor/purescript-iris-vscode"
           }
         , { label: "Website source"
@@ -117,16 +121,16 @@ footer =
     [ DOM.div styleProps.content
         [ DOM.div styleProps.columns
             ( [ DOM.div styleProps.brand
-                  [ DOM.span styleProps.wordmark "Iris"
+                  [ DOM.span styleProps.wordmark "IRIS"
                   , DOM.p styleProps.tagline
-                      "Functional programming for the browser, the server, and everywhere in between."
+                      "A superset of PureScript, written in Rust."
                   ]
               ] <> map column columns
             )
         , DOM.p styleProps.legal
             [ notice "PureScript" "https://github.com/purescript/purescript/blob/master/LICENSE"
                 " 2017–2025"
-            , notice "Iris" "https://github.com/purefunctor/purescript-iris/blob/main/LICENSE"
+            , notice "IRIS" "https://github.com/purefunctor/purescript-iris/blob/main/LICENSE"
                 " by purefunctor, 2023–2026"
             ]
         ]

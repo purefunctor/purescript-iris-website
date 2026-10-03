@@ -120,7 +120,7 @@ siteNav { onInstall } =
             , onClick: scrollToTop
             , "aria-label": "Iris home"
             }
-            [ DOM.span styleProps.wordmark "Iris"
+            [ DOM.span styleProps.wordmark "IRIS"
             , DOM.span { className: styleProps.stage.className, "aria-hidden": true } "alpha"
             ]
         , DOM.nav { className: styleProps.links.className, "aria-label": "Sections" }
