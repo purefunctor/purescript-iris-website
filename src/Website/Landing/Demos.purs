@@ -25,7 +25,7 @@ inferredTypes :: Demo
 inferredTypes =
   { slug: "inferred-types"
   , title: "Inferred local types"
-  , description: "Inspect the types of local values without adding annotations."
+  , description: "Hover shows the inferred types of local values, with no annotations required."
   }
 
 typeIntelligence :: Array Demo
@@ -33,49 +33,53 @@ typeIntelligence =
   [ inferredTypes
   , { slug: "rename"
     , title: "Scope-aware rename"
-    , description: "Rename a binding without changing a similarly named style field."
+    , description: "Renames follow scope, leaving a similarly named style field untouched."
     }
   , { slug: "live-diagnostics"
     , title: "Live diagnostics"
     , description:
-        "Find and clear a type error on an unsaved edit. On-change diagnostics are optional."
+        "Type errors appear and clear on unsaved edits; on-change diagnostics are opt-in."
     }
   , { slug: "document-highlights"
     , title: "Document highlights"
-    , description: "See references to a local binding in the current file."
+    , description: "Every reference to a local binding is highlighted in the current file."
     }
   , { slug: "semantic-highlighting"
     , title: "Semantic highlighting"
-    , description: "See semantic colors in a PureScript source file."
+    , description:
+        "Names are coloured by their role: parameters, functions, constructors, types and classes."
     }
   ]
 
 workflows :: Array Demo
 workflows =
-  [ { slug: "completion", title: "Completion", description: "Complete a locally bound setter." }
+  [ { slug: "completion"
+    , title: "Completion"
+    , description: "Completion offers names in scope, including locally bound setters."
+    }
   , { slug: "typed-hole-suggestions"
     , title: "Typed-hole suggestions"
-    , description: "Replace a typed hole with a suggested expression."
+    , description: "A typed hole is replaced with a suggested expression that fits its type."
     }
   , { slug: "automatic-import"
     , title: "Automatic imports"
-    , description: "Import a completed name."
+    , description: "Completing a name from another module adds its import."
     }
   , { slug: "go-to-definition"
     , title: "Go to definition"
-    , description: "Jump from a name to its definition."
+    , description: "Names jump to their declarations, in the project or its dependencies."
     }
   , { slug: "find-references"
     , title: "Find references"
-    , description: "Find uses of a name across the workspace."
+    , description: "Every use of a name is found across the workspace."
     }
   , { slug: "document-symbols"
     , title: "Document symbols"
-    , description: "Search symbols in the current file."
+    , description: "Declarations in the current file are searchable by name."
     }
   , { slug: "workspace-symbols"
     , title: "Workspace symbols"
-    , description: "Search symbols across the project."
+    , description: "Declarations across the whole project are searchable by name."
     }
   ]
 
@@ -83,8 +87,7 @@ demos :: Array Demo
 demos = typeIntelligence <> workflows
 
 styles = StyleX.create
-  { section: { paddingBlock: "64px 96px", scrollMarginTop: "var(--nav-height)" }
-  , introduction:
+  { introduction:
       { display: "flex"
       , flexDirection: "column"
       , gap: 14
@@ -191,16 +194,16 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
       setSelected (const number)
       setPlaying (const true)
   pure $ DOM.section
-    { className: styleProps.section.className
+    { className: Section.section.className
     , id: "editor"
     , "aria-labelledby": "editor-heading"
     }
     [ DOM.div ContentShell.contentShell
         [ DOM.div styleProps.introduction
             [ Section.heading
-                { id: "editor-heading", text: "Iris in ", emphasis: "your editor." }
+                { id: "editor-heading", text: "Language analysis in the editor.", emphasis: "" }
             , Section.lead
-                "Twelve short recordings of the Iris VS Code extension working in this website’s PureScript source. Choose a workflow to watch."
+                "The IRIS language server provides completion, navigation, diagnostics and code actions via the Language Server Protocol. See the demo on Visual Studio Code:"
             ]
         , DOM.div styleProps.layout
             [ DOM.div styleProps.playerColumn
@@ -218,8 +221,8 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
                     ]
                 ]
             , DOM.div styleProps.groups
-                [ group "Type intelligence while editing" 0 typeIntelligence selected select
-                , group "Everyday editor workflows" (length typeIntelligence) workflows selected
+                [ group "Type intelligence" 0 typeIntelligence selected select
+                , group "Navigation and editing" (length typeIntelligence) workflows selected
                     select
                 ]
             ]
