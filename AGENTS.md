@@ -82,12 +82,15 @@ amp orb services ensure
 amp orb service restart website
 ```
 
-- Development uses Astro on Node.js; production is served as static assets. Validate production behavior with Wrangler's static asset server, not just Astro dev (`astro preview` does not exercise Cloudflare's `_headers` rules):
+- Use the Website portal for routine feature development and visual verification. Do not start `website-production` for every feature or add it to the automatically started services.
+- Start `website-production`, titled Website (Production) in the portal, only when verification needs the actual production build, such as generated assets or Cloudflare's `_headers` behavior. Development uses Astro on Node.js; production is served as static assets. For these production-specific checks, use Wrangler's static asset server (`astro preview` does not exercise Cloudflare's `_headers` rules):
 
 ```sh
 pnpm build
-amp orb service start production-preview --command 'pnpm preview' --port 8787 --portal
+amp orb service start website-production --command 'pnpm preview' --port 8787 --portal --title 'Website (Production)'
 ```
+
+- Stop the opt-in preview after verification with `amp orb service stop website-production`.
 
 ### Editor demo recordings
 
