@@ -50,26 +50,12 @@ hash -r
 printf 'Node.js and pnpm ready (%ss total).\n' "$SECONDS"
 
 install_iris() {
-  local version
-  version=$(curl -fsSL --retry 3 'https://api.github.com/repos/purefunctor/purescript-iris/releases?per_page=100' \
-    | node -e '
-      let json = "";
-      process.stdin.on("data", chunk => json += chunk);
-      process.stdin.on("end", () => {
-        const releases = JSON.parse(json);
-        if (!Array.isArray(releases)) throw new Error("Could not list Iris releases");
-        const prerelease = releases.filter(release => release.prerelease && !release.draft)
-          .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))[0];
-        if (!prerelease) throw new Error("No published Iris prerelease found");
-        process.stdout.write(prerelease.tag_name);
-      });
-    ')
   curl --proto '=https' --tlsv1.2 -fsSL --retry 3 \
-    https://raw.githubusercontent.com/purefunctor/purescript-iris/main/install.sh \
-    | env IRIS_VERSION="$version" IRIS_SKIP_ATTESTATION=1 sh
+    https://raw.githubusercontent.com/purefunctor/purescript-iris/v0.1.3/install.sh \
+    | env IRIS_VERSION=v0.1.3 IRIS_SKIP_ATTESTATION=1 sh
 }
 
-step 'Installing latest Iris prerelease' install_iris
+step 'Installing Iris 0.1.3' install_iris
 # Snapshot the development inputs, not a production Astro build.
 step 'Installing project dependencies' pnpm install --frozen-lockfile
 step 'Preparing PureScript' pnpm prepare:dev
