@@ -35,6 +35,8 @@ This repository is the Iris website: Astro handles routing and server rendering 
 
 ## Design constraints
 
+Apply design feedback to what it names. When it points to an existing treatment, inspect that treatment and match it rather than changing the reference. Do not carry a correction over to other components or states, and drop superseded ideas when the direction changes.
+
 ### Visual direction and composition
 
 - Treat 2000s web and graphic design as the primary visual direction, rebuilt with contemporary responsiveness and accessibility. Lean into expressive asymmetry, compressed editorial lockups, stark contrast, hard flat color, and controlled tension rather than merely quoting the period through nostalgic effects.
@@ -82,7 +84,7 @@ amp orb services ensure
 amp orb service restart website
 ```
 
-- Use the Website portal for routine feature development and visual verification. Do not start `website-production` for every feature or add it to the automatically started services.
+- Use the running Website watch-mode portal for routine feature development and visual verification; do not run `pnpm build` for UI iterations or as a default completion check. Do not start `website-production` for every feature or add it to the automatically started services.
 - Start `website-production`, titled Website (Production) in the portal, only when verification needs the actual production build, such as generated assets or Cloudflare's `_headers` behavior. Development uses Astro on Node.js; production is served as static assets. For these production-specific checks, use Wrangler's static asset server (`astro preview` does not exercise Cloudflare's `_headers` rules):
 
 ```sh
@@ -119,6 +121,7 @@ node scripts/editor-demos/record.mjs all
 ### Visual changes
 
 - When visually reviewing a change with screenshots, capture and inspect representative mobile and desktop viewports so responsive regressions are considered together.
+- Do not write bespoke browser test scripts to verify transient design choices; check them in the running preview and reserve new automated checks for durable behaviour.
 
 ### Build benchmarks
 
