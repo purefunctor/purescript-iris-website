@@ -68,7 +68,7 @@ Use `iris format` to format the workspace's PureScript sources and `iris format 
 
 - `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. It installs Iris 0.1.4 with the release-tagged official installer and `IRIS_SKIP_ATTESTATION=1`, then installs locked dependencies and runs `pnpm prepare:dev`. Keep its Iris version aligned with the SHA-256-pinned release in `.github/workflows/deploy.yml`. The tool paths are persisted for login shells. Snapshots contain the installed compiler and PureScript output. Do not build production Astro output or start a persistent server during setup.
 - `pnpm prepare:dev` compiles the site's PureScript with the installed `iris` on PATH. Use Iris's incremental cache; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
-- `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/` before reporting ready. It generates the Website link in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
+- `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/` before reporting ready. It generates Website and Documentation shortcuts in the gitignored `.amp/portals/website.json`; both use the same watch-mode server. Never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
 
 ```sh

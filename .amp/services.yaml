@@ -4,3 +4,6 @@ services:
     health: /
     portal:
       title: Website
+    portals:
+      - url: /docs/getting-started
+        title: Documentation
