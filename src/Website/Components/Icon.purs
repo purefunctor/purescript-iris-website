@@ -1,41 +1,40 @@
 module Website.Components.Icon
-  ( IconProps
-  , arrowRight
-  , bluesky
-  , bookOpen
-  , bot
-  , check
-  , checkCircle
-  , code
-  , codeXml
-  , copy
-  , copyright
-  , database
-  , externalLink
-  , fileCode
-  , flame
-  , gitHub
-  , globe
-  , maximize
-  , menu
-  , minimize
-  , pause
-  , play
-  , pureScript
-  , server
-  , shieldCheck
-  , snowflake
-  , squareTerminal
-  , x
-  , xSocial
-  ) where
+  (
+    IconProps
+    , arrowRight
+    , bluesky
+    , bookOpen
+    , bot
+    , check
+    , checkCircle
+    , code
+    , codeXml
+    , copy
+    , copyright
+    , database
+    , externalLink
+    , fileCode
+    , flame
+    , gitHub
+    , globe
+    , maximize
+    , menu
+    , minimize
+    , pause
+    , play
+    , pureScript
+    , server
+    , shieldCheck
+    , snowflake
+    , squareTerminal
+    , x
+    , xSocial
+  )
+  where
 
 import React.Basic (ReactComponent)
 
-type IconProps =
-  { "aria-hidden" :: Boolean
-  , focusable :: Boolean
-  }
+type IconProps = { "aria-hidden" :: Boolean, focusable :: Boolean }
 
 foreign import arrowRight :: ReactComponent IconProps
 foreign import bluesky :: ReactComponent IconProps

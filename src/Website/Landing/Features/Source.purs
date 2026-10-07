@@ -1,67 +1,71 @@
-module Website.Landing.Features.Source (landingPageSource, editorIntelligenceMedia) where
+module Website.Landing.Features.Source
+  (landingPageSource, editorIntelligenceMedia)
+  where
 
 import Prelude
 
 import Iris.StyleX as StyleX
-import Website.Landing.Features.Code as Code
 import React.Basic (JSX, ReactComponent, element)
+import Website.Landing.Features.Code as Code
 import Yoga.React.DOM as DOM
 
-styles = StyleX.create
-  { editorBinding:
-      { appearance: "none"
-      , backgroundColor: "transparent"
-      , borderWidth: 0
-      , color: "inherit"
-      , cursor: "help"
-      , display: "inline-block"
-      , font: "inherit"
-      , lineHeight: "inherit"
-      , margin: 0
-      , outlineColor: { default: "currentColor", ":focus-visible": "var(--landing-color-crystal)" }
-      , outlineOffset: { default: 0, ":focus-visible": 3 }
-      , outlineStyle: { default: "none", ":focus-visible": "solid" }
-      , outlineWidth: { default: "medium", ":focus-visible": "2px" }
-      , padding: 0
-      , position: "relative"
-      , verticalAlign: "baseline"
-      }
-  , editorTooltip:
-      { backgroundColor: "var(--landing-color-surface)"
-      , borderColor: "var(--landing-color-line)"
-      , borderLeftColor: "var(--landing-color-crystal)"
-      , borderStyle: "solid"
-      , borderWidth: 1
-      , borderLeftWidth: 3
-      , boxShadow: "0 12px 28px oklch(22.29% 0.0049 173.9 / 16%)"
-      , columnGap: 5
-      , display: "grid"
-      , fontFamily: "JetBrains Mono Variable, monospace"
-      , fontSize: "clamp(0.5rem, 0.9vw, 0.6875rem)"
-      , gridTemplateColumns: "auto 1fr"
-      , lineHeight: 1.35
-      , maxWidth: "min(560px, calc(100vw - 32px))"
-      , minWidth: "clamp(100px, 13vw, 148px)"
-      , paddingBlock: "clamp(5px, 0.8vw, 8px)"
-      , paddingInline: "clamp(7px, 1vw, 10px)"
-      , whiteSpace: "pre-wrap"
-      , width: "max-content"
-      , zIndex: 20
-      }
-  , editorTooltipKind:
-      { color: "var(--landing-color-latte-subtext-1)"
-      }
-  , editorTooltipSymbol:
-      { color: "var(--landing-color-latte-blue)"
-      , fontStyle: "italic"
-      , fontWeight: 650
-      }
-  , editorTooltipType:
-      { color: "var(--landing-color-latte-text)"
-      , gridColumnStart: 1
-      , gridColumnEnd: -1
-      }
-  }
+styles =
+  StyleX.create
+    { editorBinding:
+        { appearance: "none"
+        , backgroundColor: "transparent"
+        , borderWidth: 0
+        , color: "inherit"
+        , cursor: "help"
+        , display: "inline-block"
+        , font: "inherit"
+        , lineHeight: "inherit"
+        , margin: 0
+        , outlineColor:
+            { default: "currentColor"
+            , ":focus-visible": "var(--landing-color-crystal)"
+            }
+        , outlineOffset: { default: 0, ":focus-visible": 3 }
+        , outlineStyle: { default: "none", ":focus-visible": "solid" }
+        , outlineWidth: { default: "medium", ":focus-visible": "2px" }
+        , padding: 0
+        , position: "relative"
+        , verticalAlign: "baseline"
+        }
+    , editorTooltip:
+        { backgroundColor: "var(--landing-color-surface)"
+        , borderColor: "var(--landing-color-line)"
+        , borderLeftColor: "var(--landing-color-crystal)"
+        , borderStyle: "solid"
+        , borderWidth: 1
+        , borderLeftWidth: 3
+        , boxShadow: "0 12px 28px oklch(22.29% 0.0049 173.9 / 16%)"
+        , columnGap: 5
+        , display: "grid"
+        , fontFamily: "JetBrains Mono Variable, monospace"
+        , fontSize: "clamp(0.5rem, 0.9vw, 0.6875rem)"
+        , gridTemplateColumns: "auto 1fr"
+        , lineHeight: 1.35
+        , maxWidth: "min(560px, calc(100vw - 32px))"
+        , minWidth: "clamp(100px, 13vw, 148px)"
+        , paddingBlock: "clamp(5px, 0.8vw, 8px)"
+        , paddingInline: "clamp(7px, 1vw, 10px)"
+        , whiteSpace: "pre-wrap"
+        , width: "max-content"
+        , zIndex: 20
+        }
+    , editorTooltipKind: { color: "var(--landing-color-latte-subtext-1)" }
+    , editorTooltipSymbol:
+        { color: "var(--landing-color-latte-blue)"
+        , fontStyle: "italic"
+        , fontWeight: 650
+        }
+    , editorTooltipType:
+        { color: "var(--landing-color-latte-text)"
+        , gridColumnStart: 1
+        , gridColumnEnd: -1
+        }
+    }
 
 styleProps = StyleX.recordProps styles
 
@@ -80,34 +84,41 @@ foreign import editorHoverBinding ::
 
 landingPageSource :: JSX
 landingPageSource =
-  DOM.pre Code.sourcePreview
-    [ DOM.code {}
-        [ DOM.span Code.sourceLine
+  DOM.pre
+    Code.sourcePreview
+    [ DOM.code
+        {}
+        [ DOM.span
+            Code.sourceLine
             [ DOM.span Code.sourceKeyword "import"
             , DOM.span Code.sourceReference " Yoga.React.DOM"
             , DOM.span Code.sourceKeyword " as"
             , DOM.span Code.sourceReference " DOM"
             ]
         , DOM.span Code.sourceLine " "
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span Code.sourceDeclaration "component"
             , DOM.span Code.sourceSyntax " :: "
             , DOM.span Code.sourceType "ReactComponent {}"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span Code.sourceDeclaration "component"
             , DOM.span Code.sourceAccent " = "
             , DOM.span Code.sourceReference "unsafePerformEffect "
             , DOM.span Code.sourceKeyword "do"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "  "
             , DOM.span Code.sourceVariable "headerComponent"
             , DOM.span Code.sourceSyntax " <- "
             , DOM.span Code.sourceReference "Header"
             , DOM.span {} ".header"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "  "
             , DOM.span Code.sourceReference "Hooks"
             , DOM.span {} ".reactComponent"
@@ -118,35 +129,41 @@ landingPageSource =
             , DOM.span {} "."
             , DOM.span Code.sourceKeyword "do"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "    pure "
             , DOM.span Code.sourceAccent "$ "
             , DOM.span Code.sourceReference "DOM"
             , DOM.span {} ".div page"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "      "
             , DOM.span Code.sourceBracket "["
             , DOM.span {} " headerComponent unit"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "      , "
             , DOM.span Code.sourceReference "DOM"
             , DOM.span {} ".main shell"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "          "
             , DOM.span Code.sourceBracket "["
             , DOM.span Code.sourceReference " DOM"
             , DOM.span {} ".div hero"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "              "
             , DOM.span Code.sourceString "["
             , DOM.span Code.sourceReference " DOM"
             , DOM.span {} ".div heroContent"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "                  "
             , DOM.span Code.sourceAccent "["
             , DOM.span Code.sourceReference " DOM"
@@ -157,20 +174,34 @@ landingPageSource =
 
 editorIntelligenceMedia :: JSX
 editorIntelligenceMedia =
-  DOM.pre Code.editorPreview
-    [ DOM.code {}
-        [ DOM.span Code.sourceLine
-            [ DOM.span Code.sourceComment "-- Inspect the source code with your cursor" ]
-        , DOM.span Code.sourceLine
+  DOM.pre
+    Code.editorPreview
+    [ DOM.code
+        {}
+        [ DOM.span
+            Code.sourceLine
+            [ DOM.span
+                Code.sourceComment
+                "-- Inspect the source code with your cursor"
+            ]
+        , DOM.span
+            Code.sourceLine
             [ DOM.span Code.sourceKeyword "newtype"
             , DOM.span {} " "
-            , editorBinding Code.sourceType "type" "Routine" "Routine :: Type -> Type -> Type"
+            , editorBinding
+                Code.sourceType
+                "type"
+                "Routine"
+                "Routine :: Type -> Type -> Type"
             , DOM.span {} " "
             , editorBinding Code.sourceType "type variable" "r" "Type"
             , DOM.span {} " "
             , editorBinding Code.sourceType "type variable" "a" "Type"
             , DOM.span Code.sourceAccent " = "
-            , editorBinding Code.sourceAccent "constructor" "Routine"
+            , editorBinding
+                Code.sourceAccent
+                "constructor"
+                "Routine"
                 "Routine :: forall @r @a. ((a -> r) -> r) -> Routine r a"
             , DOM.span Code.sourceBracket " (("
             , editorBinding Code.sourceText "type variable" "a" "Type"
@@ -182,23 +213,37 @@ editorIntelligenceMedia =
             , DOM.span Code.sourceBracket ")"
             ]
         , DOM.span Code.sourceLine " "
-        , DOM.span Code.sourceLine
-            [ editorBinding Code.sourceKeyword "instance" "instance"
+        , DOM.span
+            Code.sourceLine
+            [ editorBinding
+                Code.sourceKeyword
+                "instance"
+                "instance"
                 "functorRoutine :: forall r. Functor (Routine r)"
             , DOM.span {} " "
-            , editorBinding Code.sourceType "class" "Functor"
+            , editorBinding
+                Code.sourceType
+                "class"
+                "Functor"
                 "Functor :: (Type -> Type) -> Constraint"
             , DOM.span Code.sourceBracket " ("
-            , editorBinding Code.sourceType "type" "Routine"
+            , editorBinding
+                Code.sourceType
+                "type"
+                "Routine"
                 "Routine :: Type -> Type -> Type"
             , DOM.span {} " "
             , editorBinding Code.sourceType "type variable" "r" "Type"
             , DOM.span Code.sourceBracket ")"
             , DOM.span Code.sourceKeyword " where"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "  "
-            , editorBinding Code.sourceDeclaration "class member" "map"
+            , editorBinding
+                Code.sourceDeclaration
+                "class member"
+                "map"
                 """map ::
   forall (@f :: Type -> Type).
     Functor (f :: Type -> Type) =>
@@ -206,29 +251,42 @@ editorIntelligenceMedia =
             , DOM.span {} " "
             , editorBinding Code.sourceVariable "parameter" "transform" "a -> b"
             , DOM.span Code.sourceBracket " ("
-            , editorBinding Code.sourceAccent "constructor" "Routine"
+            , editorBinding
+                Code.sourceAccent
+                "constructor"
+                "Routine"
                 "Routine :: forall @r @a. ((a -> r) -> r) -> Routine r a"
             , DOM.span {} " "
-            , editorBinding Code.sourceVariable "variable" "routine" "(a -> r) -> r"
+            , editorBinding
+                Code.sourceVariable
+                "variable"
+                "routine"
+                "(a -> r) -> r"
             , DOM.span Code.sourceBracket ")"
             , DOM.span Code.sourceAccent " ="
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "    "
-            , editorBinding Code.sourceAccent "constructor" "Routine"
+            , editorBinding
+                Code.sourceAccent
+                "constructor"
+                "Routine"
                 "Routine :: forall @r @a. ((a -> r) -> r) -> Routine r a"
             , DOM.span Code.sourceAccent """ \"""
             , editorBinding Code.sourceVariable "parameter" "return" "b -> r"
             , DOM.span Code.sourceSyntax " ->"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "      "
             , editorBinding Code.sourceText "variable" "routine" "(a -> r) -> r"
             , DOM.span Code.sourceAccent """ \"""
             , editorBinding Code.sourceVariable "parameter" "value" "a"
             , DOM.span Code.sourceSyntax " ->"
             ]
-        , DOM.span Code.sourceLine
+        , DOM.span
+            Code.sourceLine
             [ DOM.span {} "        "
             , editorBinding Code.sourceText "parameter" "return" "b -> r"
             , DOM.span Code.sourceBracket " ("
@@ -242,7 +300,8 @@ editorIntelligenceMedia =
 
 editorBinding :: StyleX.Props -> String -> String -> String -> JSX
 editorBinding tokenStyle kind symbol inferredType =
-  element editorHoverBinding
+  element
+    editorHoverBinding
     { bindingClassName: styleProps.editorBinding.className
     , tokenClassName: tokenStyle.className
     , tooltipClassName: styleProps.editorTooltip.className
