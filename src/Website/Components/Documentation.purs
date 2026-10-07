@@ -15,6 +15,7 @@ foreign import navigationLinkImpl ::
   ReactComponent
     { href :: String
     , className :: String
+    , canvasClassName :: String
     , contentClassName :: String
     , current :: Boolean
     , content :: Array JSX
@@ -233,6 +234,15 @@ styles =
         , color: "var(--iris-200)"
         , fontWeight: 600
         }
+    , navigationCanvas:
+        { position: "absolute"
+        , inset: 0
+        , width: "100%"
+        , height: "100%"
+        , zIndex: 0
+        , pointerEvents: "none"
+        , opacity: { default: 0.0, "[data-ocean]": 1.0 }
+        }
     , linkContent:
         { position: "relative"
         , zIndex: 1
@@ -424,6 +434,7 @@ documentation { title, intro, sections } =
             StyleX.props
               [ styles.link, StyleX.conditional current styles.current ]
           ).className
+      , canvasClassName: styleProps.navigationCanvas.className
       , contentClassName: styleProps.linkContent.className
       , current
       , content

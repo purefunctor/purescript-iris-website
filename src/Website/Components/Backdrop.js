@@ -56,7 +56,7 @@ const smoothstep = (a, b, x) => {
   return t * t * (3 - 2 * t);
 };
 
-function makeOcean(oceanSeed) {
+export function makeOcean(oceanSeed) {
   const next = random(((oceanSeed + 29) * 2246822519) >>> 0 || 1);
   const base = next() * Math.PI * 2;
   const waves = Array.from({ length: 4 }, (_, index) => {
@@ -87,12 +87,12 @@ function makeOcean(oceanSeed) {
   };
 }
 
-const makeField = fieldSeed => ({ noise: makeNoise(fieldSeed), hue: makeNoise(fieldSeed + 7) });
+export const makeField = fieldSeed => ({ noise: makeNoise(fieldSeed), hue: makeNoise(fieldSeed + 7) });
 
 // Lays out one frame: each mark's position, radius, opacity and palette index. `ring` reports the
 // strongest ripple at a point, or is null when no ripples are travelling. Without `clearing`, marks
 // cover the whole frame instead of leaving the top-left corner open for copy.
-function layoutField(width, height, time, { noise, hue, ocean }, ring, clearing = true) {
+export function layoutField(width, height, time, { noise, hue, ocean }, ring, clearing = true) {
   const narrow = width < 1100;
   const rowHeight = spacing * 0.866;
   const scale = 1 / Math.max(90, Math.min(260, Math.max(width, height) * 0.3));

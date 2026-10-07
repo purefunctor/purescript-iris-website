@@ -2,14 +2,40 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Dialog, Modal, ModalOverlay } from "react-aria-components";
 import MenuIcon from "~icons/lucide/menu";
 import CloseIcon from "~icons/lucide/x";
+import { createNavigationOcean } from "#src/Website/Components/NavigationOcean.js";
 
-export function navigationLinkImpl({ href, className, contentClassName, current, content }) {
+export function navigationLinkImpl({ href, className, canvasClassName, contentClassName, current, content }) {
+  const canvas = useRef(null);
+  const field = useRef(null);
+  const interaction = useRef({ hovered: false, focused: false });
+
+  useEffect(() => () => { field.current?.stop(); field.current = null; }, []);
+
+  const setInteraction = (name, value) => {
+    interaction.current[name] = value;
+    if (value) field.current ??= createNavigationOcean(canvas.current);
+    field.current?.setActive(interaction.current.hovered || interaction.current.focused);
+  };
+  const pulse = () => {
+    field.current ??= createNavigationOcean(canvas.current);
+    field.current.pulse();
+  };
+
   return (
     <a
       href={href}
       className={className}
       aria-current={current ? "page" : undefined}
+      onPointerEnter={event => {
+        if (event.pointerType !== "touch") setInteraction("hovered", true);
+      }}
+      onPointerLeave={() => setInteraction("hovered", false)}
+      onPointerDown={pulse}
+      onFocus={event => setInteraction("focused", event.currentTarget.matches(":focus-visible"))}
+      onBlur={() => setInteraction("focused", false)}
+      onClick={event => { if (event.detail === 0) pulse(); }}
     >
+      <canvas ref={canvas} aria-hidden="true" className={canvasClassName} />
       <span className={contentClassName}>{content}</span>
     </a>
   );
