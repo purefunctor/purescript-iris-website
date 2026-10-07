@@ -1,4 +1,4 @@
-module Website.Components.SiteNav (siteNav) where
+module Website.Components.SiteNav (siteHeader, siteNav) where
 
 import Prelude
 
@@ -131,51 +131,60 @@ styles =
 
 styleProps = StyleX.recordProps styles
 
--- | `onInstall` runs when the Install action is pressed.
-siteNav :: { onInstall :: Effect Unit } -> JSX
-siteNav { onInstall } =
+-- | Shared site chrome and home link; each area supplies its own navigation.
+siteHeader :: Array JSX -> JSX
+siteHeader navigation =
   DOM.header
     styleProps.header
     [ DOM.div
         styleProps.content
+        (
+          [ DOM.a
+              { className: styleProps.brand.className
+              , href: "/"
+              , onClick: scrollToTop
+              , "aria-label": "Iris home"
+              }
+              [ logo { className: styleProps.logo.className }
+              , DOM.span
+                  styleProps.name
+                  [ DOM.span styleProps.wordmark "IRIS"
+                  , DOM.span
+                      { className: styleProps.stage.className
+                      , "aria-hidden": true
+                      }
+                      "alpha"
+                  ]
+              ]
+          ]
+            <> navigation
+        )
+    ]
+
+-- | `onInstall` runs when the Install action is pressed.
+siteNav :: { onInstall :: Effect Unit } -> JSX
+siteNav { onInstall } =
+  siteHeader
+    [ DOM.nav
+        { className: styleProps.links.className, "aria-label": "Sections" }
+        [ link "#benchmarks" "Benchmarks", link "#editor" "Editor" ]
+    , DOM.div
+        styleProps.actions
         [ DOM.a
-            { className: styleProps.brand.className
-            , href: "/"
-            , onClick: scrollToTop
-            , "aria-label": "Iris home"
+            { className: styleProps.iconLink.className
+            , href: "https://github.com/purefunctor/purescript-iris"
+            , rel: "noopener noreferrer"
+            , target: targetBlank
+            , "aria-label": "Iris on GitHub" <> ExternalLink.newTabLabel
             }
-            [ logo { className: styleProps.logo.className }
-            , DOM.span
-                styleProps.name
-                [ DOM.span styleProps.wordmark "IRIS"
-                , DOM.span
-                    { className: styleProps.stage.className
-                    , "aria-hidden": true
-                    }
-                    "alpha"
-                ]
-            ]
-        , DOM.nav
-            { className: styleProps.links.className, "aria-label": "Sections" }
-            [ link "#benchmarks" "Benchmarks", link "#editor" "Editor" ]
-        , DOM.div
-            styleProps.actions
-            [ DOM.a
-                { className: styleProps.iconLink.className
-                , href: "https://github.com/purefunctor/purescript-iris"
-                , rel: "noopener noreferrer"
-                , target: targetBlank
-                , "aria-label": "Iris on GitHub" <> ExternalLink.newTabLabel
-                }
-                (element Icon.gitHub { "aria-hidden": true, focusable: false })
-            , Button.buttonAction
-                { icon: Nothing
-                , label: "Install"
-                , onPress: onInstall
-                , size: Button.Small
-                , variant: Button.Primary
-                }
-            ]
+            (element Icon.gitHub { "aria-hidden": true, focusable: false })
+        , Button.buttonAction
+            { icon: Nothing
+            , label: "Install"
+            , onPress: onInstall
+            , size: Button.Small
+            , variant: Button.Primary
+            }
         ]
     ]
   where

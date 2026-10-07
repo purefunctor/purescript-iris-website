@@ -9,8 +9,8 @@ import Website.Components.Backdrop as Backdrop
 import Website.Components.CodeBlock as CodeBlock
 import Website.Components.ExternalLink as ExternalLink
 import Website.Components.Icon as Icon
+import Website.Components.Installation as Installation
 import Website.Landing.Example as Example
-import Website.Landing.Installation as Installation
 import Yoga.React.DOM as DOM
 
 styles =

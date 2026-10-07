@@ -1,4 +1,4 @@
-module Website.Landing.Installation (installation) where
+module Website.Components.Installation (installation) where
 
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
