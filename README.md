@@ -38,6 +38,8 @@ The site is prerendered at build time and served as [Cloudflare Workers Static A
 
 Pages use `src/layouts/SiteLayout.astro` for canonical, OpenGraph, and Twitter metadata. Set `title` and `description` on each page; pass `image` (a root-relative 1200 × 630 image URL) and `imageAlt` to override the default social image. The default `/og.png` is prerendered by `src/pages/og.png.ts` using Satori and Sharp. It centres the site icon and a Geist Black wordmark over the still frame of the hero's dot field, without the hero's clearing, with colors read from the OKLCH tokens in `src/global.css`. For a distinct image on another page, add a prerendered PNG endpoint and pass its URL to the layout. The favicon (`/favicon.svg`) and Apple touch icon (`/apple-touch-icon.png`) are prerendered from `src/lib/favicon.ts` in the same way. No image-rendering service runs in production.
 
+Generate the compiler repository's 1200 × 320 README banner from the same renderer with `node scripts/render-readme-banner.mjs /path/to/iris-readme-banner.webp`, run from this website's root after installing dependencies. It renders the dot field at banner dimensions and exports lossless WebP; no running server or production build is needed. The compiler README uses the asset at `.github/assets/iris-readme-banner.webp`.
+
 Local builds need the installed `iris` on PATH, plus Node/pnpm. Build and inspect the production output locally:
 
 ```sh

@@ -8,13 +8,12 @@ import { renderFavicon } from "#src/lib/favicon";
 import { palette, stillField } from "#src/Website/Components/Backdrop.js";
 
 const width = 1200;
-const height = 630;
 const markSize = 272;
 // Social previews are shown at a fraction of full size, so the field's dots are drawn larger.
 const dotScale = 1.8;
 
 /** Render the build-time social image: the site icon and wordmark centred on the hero's still dot field. */
-export async function renderOpenGraphImage({ seed }: { seed?: number } = {}): Promise<Uint8Array> {
+export async function renderOpenGraphImage({ seed, height = 630 }: { seed?: number; height?: number } = {}): Promise<Uint8Array> {
   const [color, black, mark] = await Promise.all([
     readColorTokens(),
     readFile(resolve("node_modules/@fontsource/geist/files/geist-latin-900-normal.woff")),
@@ -22,7 +21,7 @@ export async function renderOpenGraphImage({ seed }: { seed?: number } = {}): Pr
       sharp(Buffer.from(svg), { density: (markSize / 32) * 72 * 2 }).resize(markSize * 2).png().toBuffer(),
     ),
   ]);
-  const background = await renderField(color, seed);
+  const background = await renderField(color, height, seed);
 
   const svg = await satori(
     React.createElement("div", {
@@ -53,7 +52,7 @@ export async function renderOpenGraphImage({ seed }: { seed?: number } = {}): Pr
 }
 
 /** The hero's dot field without its clearing, dimmed behind the lockup, plus grain, rasterised so Satori embeds a single image. */
-function renderField(color: Record<string, string>, seed?: number): Promise<Buffer> {
+function renderField(color: Record<string, string>, height: number, seed?: number): Promise<Buffer> {
   const fills = palette.map((token) => color[token.slice(2)]);
   const dots = stillField(width, height, { clearing: false, seed })
     .map(({ x, y, radius, alpha, color: index }) =>
