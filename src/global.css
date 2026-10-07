@@ -86,7 +86,7 @@
     --border-default: oklch(from var(--loam-100) l c h / 14%);
     --border-strong: oklch(from var(--loam-100) l c h / 26%);
     --text-primary: var(--loam-50);
-    --text-secondary: var(--loam-300);
+    --text-secondary: var(--loam-100);
     --text-tertiary: oklch(from var(--loam-400) calc(l + 0.04) c h);
     --text-emphasis: oklch(from var(--iris-200) calc(l - 0.045) calc(c + 0.012) h);
     --accent: var(--iris-400);
