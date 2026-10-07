@@ -18,22 +18,21 @@ styles = StyleX.create
       , font: "inherit"
       , lineHeight: "inherit"
       , margin: 0
+      , outlineColor: { default: "currentColor", ":focus-visible": "var(--landing-color-crystal)" }
+      , outlineOffset: { default: 0, ":focus-visible": 3 }
+      , outlineStyle: { default: "none", ":focus-visible": "solid" }
+      , outlineWidth: { default: "medium", ":focus-visible": "2px" }
       , padding: 0
       , position: "relative"
       , verticalAlign: "baseline"
-      , ":focus-visible":
-          { outlineColor: "var(--landing-color-crystal)"
-          , outlineOffset: 3
-          , outlineStyle: "solid"
-          , outlineWidth: 2
-          }
       }
   , editorTooltip:
       { backgroundColor: "var(--landing-color-surface)"
       , borderColor: "var(--landing-color-line)"
       , borderLeftColor: "var(--landing-color-crystal)"
       , borderStyle: "solid"
-      , borderWidth: "1px 1px 1px 3px"
+      , borderWidth: 1
+      , borderLeftWidth: 3
       , boxShadow: "0 12px 28px oklch(22.29% 0.0049 173.9 / 16%)"
       , columnGap: 5
       , display: "grid"
@@ -43,7 +42,8 @@ styles = StyleX.create
       , lineHeight: 1.35
       , maxWidth: "min(560px, calc(100vw - 32px))"
       , minWidth: "clamp(100px, 13vw, 148px)"
-      , padding: "clamp(5px, 0.8vw, 8px) clamp(7px, 1vw, 10px)"
+      , paddingBlock: "clamp(5px, 0.8vw, 8px)"
+      , paddingInline: "clamp(7px, 1vw, 10px)"
       , whiteSpace: "pre-wrap"
       , width: "max-content"
       , zIndex: 20
@@ -58,15 +58,12 @@ styles = StyleX.create
       }
   , editorTooltipType:
       { color: "var(--landing-color-latte-text)"
-      , gridColumn: "1 / -1"
+      , gridColumnStart: 1
+      , gridColumnEnd: -1
       }
   }
 
-editorBindingStyle = StyleX.props styles.editorBinding
-editorTooltipStyle = StyleX.props styles.editorTooltip
-editorTooltipKind = StyleX.props styles.editorTooltipKind
-editorTooltipSymbol = StyleX.props styles.editorTooltipSymbol
-editorTooltipType = StyleX.props styles.editorTooltipType
+styleProps = StyleX.recordProps styles
 
 foreign import editorHoverBinding ::
   ReactComponent
@@ -246,12 +243,12 @@ editorIntelligenceMedia =
 editorBinding :: StyleX.Props -> String -> String -> String -> JSX
 editorBinding tokenStyle kind symbol inferredType =
   element editorHoverBinding
-    { bindingClassName: editorBindingStyle.className
+    { bindingClassName: styleProps.editorBinding.className
     , tokenClassName: tokenStyle.className
-    , tooltipClassName: editorTooltipStyle.className
-    , kindClassName: editorTooltipKind.className
-    , symbolClassName: editorTooltipSymbol.className
-    , typeClassName: editorTooltipType.className
+    , tooltipClassName: styleProps.editorTooltip.className
+    , kindClassName: styleProps.editorTooltipKind.className
+    , symbolClassName: styleProps.editorTooltipSymbol.className
+    , typeClassName: styleProps.editorTooltipType.className
     , kind
     , symbol
     , inferredType

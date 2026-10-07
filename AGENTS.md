@@ -20,6 +20,8 @@ This repository is the Iris website: Astro handles routing and server rendering 
 - Use the package import aliases `#src/*` and `#output/*` for cross-directory imports. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
 - Author component StyleX declarations in PureScript using `Iris.StyleX`. Iris emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
 - Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.IconButton.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
+- Before changing StyleX, read `iris skills get stylex` and the upstream authoring and installation guides it links for the installed StyleX version. Nest media queries and pseudo-classes inside property values with explicit defaults, and prefer longhands or single-value shorthands. Keep static styles in StyleX rather than FFI DOM style assignments. Dynamic styles return inline CSS variables and must not be server-rendered under the site's current CSP.
+- Define shared viewport queries with `StyleX.defineConsts` in `Website.Breakpoints` and consume them through `StyleX.conditionalValue` / `StyleX.conditionalCase`. Preserve exact bounds when refactoring; preference queries are not viewport breakpoints. The Vite StyleX plugin treats Iris's `index.js` output as theme files so cross-module constants resolve at build time. `Website.SiteLayout` supplies the document's responsive styles to Astro.
 
 ### Component exports
 
@@ -58,9 +60,11 @@ This repository is the Iris website: Astro handles routing and server rendering 
 
 See [README.md](README.md) for installation prerequisites and standard development commands.
 
+Use `iris format` to format the workspace's PureScript sources and `iris format --check` to verify them. Keep workspace-wide formatting separate from refactoring commits.
+
 ### Orb setup and preview
 
-- `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. It installs Iris 0.1.3 with the release-tagged official installer and `IRIS_SKIP_ATTESTATION=1`, then installs locked dependencies and runs `pnpm prepare:dev`. Keep its Iris version aligned with the SHA-256-pinned release in `.github/workflows/deploy.yml`. The tool paths are persisted for login shells. Snapshots contain the installed compiler and PureScript output. Do not build production Astro output or start a persistent server during setup.
+- `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. It installs Iris 0.1.4 with the release-tagged official installer and `IRIS_SKIP_ATTESTATION=1`, then installs locked dependencies and runs `pnpm prepare:dev`. Keep its Iris version aligned with the SHA-256-pinned release in `.github/workflows/deploy.yml`. The tool paths are persisted for login shells. Snapshots contain the installed compiler and PureScript output. Do not build production Astro output or start a persistent server during setup.
 - `pnpm prepare:dev` compiles the site's PureScript with the installed `iris` on PATH. Use Iris's incremental cache; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
 - `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/` before reporting ready. It generates the Website link in the gitignored `.amp/portals/website.json`; never commit orb-specific URLs.
 - To recover an orb whose setup did not finish, run these from the website root before starting the service:
@@ -82,7 +86,7 @@ amp orb service restart website
 
 ```sh
 pnpm build
-amp orb service start production-preview --command 'pnpm preview' --portal
+amp orb service start production-preview --command 'pnpm preview' --port 8787 --portal
 ```
 
 ### Editor demo recordings

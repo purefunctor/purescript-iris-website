@@ -3,7 +3,7 @@ import { Button, Tooltip, TooltipTrigger } from "react-aria-components";
 import CheckIcon from "~icons/lucide/check";
 import CopyIcon from "~icons/lucide/copy";
 
-async function copyToClipboard(text) {
+async function copyToClipboard(text, fallbackClassName) {
   try {
     await navigator.clipboard.writeText(text);
     return true;
@@ -11,8 +11,7 @@ async function copyToClipboard(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.readOnly = true;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
+    textarea.className = fallbackClassName;
     document.body.append(textarea);
     textarea.select();
     const copied = document.execCommand("copy");
@@ -21,7 +20,7 @@ async function copyToClipboard(text) {
   }
 }
 
-export function copyButtonImpl({ className, copiedClassName, label, text, tooltipClassName }) {
+export function copyButtonImpl({ className, copiedClassName, fallbackClassName, label, text, tooltipClassName }) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -31,7 +30,7 @@ export function copyButtonImpl({ className, copiedClassName, label, text, toolti
   }, [copied]);
 
   const copy = async () => {
-    if (await copyToClipboard(text)) setCopied(true);
+    if (await copyToClipboard(text, fallbackClassName)) setCopied(true);
   };
 
   return (

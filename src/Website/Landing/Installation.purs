@@ -48,11 +48,15 @@ styles = StyleX.create
       , lineHeight: 1
       -- Stays right-aligned when it wraps below the platform tabs on narrow screens.
       , marginInlineStart: "auto"
-      , padding: "7px 10px"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , paddingBlock: 7
+      , paddingInline: 10
       , textDecoration: "none"
-      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   -- Lucide icons render at 1.2em.
   , sourceIcon: { flexShrink: 0, fontSize: 11 }
@@ -76,10 +80,12 @@ styles = StyleX.create
       , gap: 12
       , maxWidth: "100%"
       , minHeight: 44
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
       , paddingBlock: 3
-      , paddingInline: "16px 3px"
+      , paddingInlineStart: 16
+      , paddingInlineEnd: 3
       , width: "calc(51ch + 69px)"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   , command:
       { color: "var(--text-primary)"

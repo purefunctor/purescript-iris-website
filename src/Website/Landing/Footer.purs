@@ -55,7 +55,8 @@ styles = StyleX.create
   , content:
       { marginInline: "auto"
       , maxWidth: "var(--container-wide)"
-      , paddingBlock: "56px 40px"
+      , paddingBlockStart: 56
+      , paddingBlockEnd: 40
       , paddingInline: "var(--gutter)"
       }
   , columns:
@@ -92,11 +93,14 @@ styles = StyleX.create
       , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
       , fontSize: 13
       , lineHeight: 1.5
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
       , textDecorationColor: { default: "transparent", ":hover": "currentColor" }
       , textDecorationLine: "underline"
       , textUnderlineOffset: 3
-      , transition: "color 140ms var(--ease-out), text-decoration-color 140ms var(--ease-out)"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
+      , transitionDuration: "140ms"
+      , transitionProperty: "color, text-decoration-color"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   , legal:
       { alignItems: "center"
@@ -107,7 +111,8 @@ styles = StyleX.create
       , display: "flex"
       , flexWrap: "wrap"
       , fontSize: 13
-      , gap: "8px 24px"
+      , rowGap: 8
+      , columnGap: 24
       , lineHeight: 1.5
       , marginBlockStart: 48
       , paddingBlockStart: 24

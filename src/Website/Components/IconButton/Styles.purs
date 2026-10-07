@@ -13,10 +13,12 @@ iconButtonStyles = StyleX.create
       , display: "inline-flex"
       , flexShrink: 0
       , justifyContent: "center"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
       , transform: { default: "none", ":active": "scale(0.94)" }
-      , transition:
-          "background-color 140ms var(--ease-out), color 140ms var(--ease-out), transform 80ms var(--ease-out)"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
+      , transitionDuration: "140ms, 140ms, 80ms"
+      , transitionProperty: "background-color, color, transform"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   -- Lucide icons render at 1.2em.
   , small: { borderRadius: 5, fontSize: 12, height: 28, width: 28 }
@@ -33,13 +35,15 @@ iconButtonStyles = StyleX.create
       , fontWeight: 500
       , whiteSpace: "nowrap"
       , opacity: { default: 1, "[data-entering]": 0, "[data-exiting]": 0 }
-      , padding: "5px 8px"
+      , paddingBlock: 5
+      , paddingInline: 8
       , transform:
           { default: "none"
           , "[data-entering]": "translateY(3px)"
           , "[data-exiting]": "translateY(3px)"
           }
-      , transition: "opacity 140ms var(--ease-out), transform 140ms var(--ease-out)"
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0ms" }
+      , transitionDuration: { default: "140ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "opacity, transform"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   }

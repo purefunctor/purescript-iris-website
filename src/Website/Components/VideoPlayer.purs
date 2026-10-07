@@ -75,10 +75,12 @@ styles = StyleX.create
       , inset: 0
       , objectFit: "contain"
       , position: "absolute"
-      , transition: "opacity 260ms var(--ease-out)"
+      , transitionDuration: "260ms"
+      , transitionProperty: "opacity"
+      , transitionTimingFunction: "var(--ease-out)"
       , width: "100%"
       }
-  , videoBlurred: { opacity: 0.5, transition: "opacity 160ms var(--ease-out)" }
+  , videoBlurred: { opacity: 0.5, transitionDuration: "160ms" }
   -- Switching recordings blurs the outgoing frame, then the incoming recording unblurs once its
   -- first frame has loaded. A backdrop filter extends the frame's edges rather than fading them
   -- into the letterbox as a filter on the video would.
@@ -88,14 +90,14 @@ styles = StyleX.create
       , inset: 0
       , pointerEvents: "none"
       , position: "absolute"
-      , transition:
-          "backdrop-filter 260ms var(--ease-out), -webkit-backdrop-filter 260ms var(--ease-out)"
+      , transitionDuration: "260ms"
+      , transitionProperty: "backdrop-filter, -webkit-backdrop-filter"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   , blurred:
       { "WebkitBackdropFilter": "blur(12px)"
       , backdropFilter: "blur(12px)"
-      , transition:
-          "backdrop-filter 160ms var(--ease-out), -webkit-backdrop-filter 160ms var(--ease-out)"
+      , transitionDuration: "160ms"
       }
   -- Controls fade out during playback unless the player is hovered or holds keyboard focus;
   -- focus left behind by a mouse click does not keep them visible.
@@ -116,8 +118,9 @@ styles = StyleX.create
           [ When.ancestor ":hover" 1, When.ancestor ":has(:focus-visible)" 1 ]
       , padding: 3
       , position: "absolute"
-      , transition: "opacity 200ms var(--ease-out)"
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0ms" }
+      , transitionDuration: { default: "200ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "opacity"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   , controlsShown: { opacity: 1 }
   , mediaButton:
@@ -148,9 +151,9 @@ styles = StyleX.create
       , marginInline: 6
       , minWidth: 48
       , outline: "none"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
       , position: "relative"
       , touchAction: "none"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)" }
       }
   , track:
       { backgroundColor: "var(--border-default)"
@@ -161,7 +164,9 @@ styles = StyleX.create
       , position: "absolute"
       , top: "50%"
       , transform: "translateY(-50%)"
-      , transition: "height 140ms var(--ease-out)"
+      , transitionDuration: "140ms"
+      , transitionProperty: "height"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   , fill: { inset: 0, position: "absolute", transformOrigin: "left" }
   , preview:
@@ -183,7 +188,9 @@ styles = StyleX.create
       , position: "absolute"
       , top: "50%"
       , transform: "translate(-50%, -50%) scale(var(--seek-thumb))"
-      , transition: "transform 140ms var(--ease-out)"
+      , transitionDuration: "140ms"
+      , transitionProperty: "transform"
+      , transitionTimingFunction: "var(--ease-out)"
       , width: 12
       }
   , bubble:
@@ -202,11 +209,14 @@ styles = StyleX.create
       , left: "clamp(20px, calc(var(--seek-pointer, 0) * 100%), calc(100% - 20px))"
       , lineHeight: 1.3
       , opacity: "var(--seek-bubble)"
-      , padding: "3px 6px"
+      , paddingBlock: 3
+      , paddingInline: 6
       , pointerEvents: "none"
       , position: "absolute"
       , transform: "translateX(-50%)"
-      , transition: "opacity 140ms var(--ease-out)"
+      , transitionDuration: "140ms"
+      , transitionProperty: "opacity"
+      , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
       }
   }

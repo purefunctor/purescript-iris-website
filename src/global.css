@@ -157,7 +157,6 @@
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     min-height: 100%;
-    scrollbar-gutter: stable;
     scroll-padding-top: var(--nav-height);
     text-size-adjust: none;
     text-rendering: optimizeLegibility;
@@ -165,12 +164,6 @@
 
   html[data-landing-macos] {
     --landing-interactive-cursor: default;
-  }
-
-  @media (max-width: 800px) {
-    html {
-      scrollbar-gutter: auto;
-    }
   }
 
   @media (prefers-reduced-motion: no-preference) {

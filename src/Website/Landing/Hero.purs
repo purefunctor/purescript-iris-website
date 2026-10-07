@@ -51,11 +51,15 @@ styles = StyleX.create
       , gap: 10
       , lineHeight: 1.3
       , maxWidth: "100%"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
       , paddingBlock: 5
-      , paddingInline: "5px 12px"
+      , paddingInlineStart: 5
+      , paddingInlineEnd: 12
       , textDecoration: "none"
-      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   , badge:
       { alignItems: "center"

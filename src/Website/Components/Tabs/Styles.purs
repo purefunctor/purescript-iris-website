@@ -24,9 +24,13 @@ tabStyles = StyleX.create
       , fontWeight: 500
       , gap: 5
       , lineHeight: 1
-      , padding: "7px 10px"
-      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , paddingBlock: 7
+      , paddingInline: 10
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   }

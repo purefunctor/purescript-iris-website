@@ -99,7 +99,8 @@ styles = StyleX.create
       , color: "var(--text-primary)"
       , fontFamily: "var(--font-mono)"
       , fontSize: "0.92em"
-      , padding: "1px 5px"
+      , paddingBlock: 1
+      , paddingInline: 5
       , whiteSpace: "nowrap"
       }
   , command:

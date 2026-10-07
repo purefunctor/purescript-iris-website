@@ -11,6 +11,7 @@ import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
+import Website.Breakpoints (breakpoints)
 import Website.Components.ContentShell as ContentShell
 import Website.Components.VideoPlayer as VideoPlayer
 import Website.Landing.Section as Section
@@ -99,8 +100,8 @@ styles = StyleX.create
       { alignItems: "start"
       , display: "grid"
       , gap: 40
-      , gridTemplateColumns:
-          { default: "minmax(0, 1fr)", "@media (min-width: 960px)": "minmax(0, 1fr) 260px" }
+      , gridTemplateColumns: StyleX.conditionalValue "minmax(0, 1fr)"
+          [ StyleX.conditionalCase breakpoints.from960 "minmax(0, 1fr) 260px" ]
       }
   , playerColumn: { display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }
   , caption:
@@ -148,11 +149,15 @@ styles = StyleX.create
       , gap: 12
       , gridTemplateColumns: "24px minmax(0, 1fr)"
       , lineHeight: 1.65
-      , padding: "10px 12px"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , paddingBlock: 10
+      , paddingInline: 12
       , textAlign: "start"
-      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
       , width: "100%"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   , selected:
       { backgroundColor: { default: "var(--surface-2)", ":hover": "var(--surface-2)" }

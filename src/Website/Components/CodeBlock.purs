@@ -12,6 +12,7 @@ import Data.Foldable (foldMap)
 import Data.Maybe (Maybe)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, element)
+import Website.Breakpoints (breakpoints)
 import Website.Components.CopyButton as CopyButton
 import Website.Components.Icon as Icon
 import Website.Components.InfoButton as InfoButton
@@ -63,7 +64,8 @@ styles = StyleX.create
       , display: "flex"
       , gap: 8
       , height: 38
-      , paddingInline: "14px 8px"
+      , paddingInlineStart: 14
+      , paddingInlineEnd: 8
       }
   , fileIcon: { color: "var(--text-tertiary)", display: "inline-flex", fontSize: 12 }
   , filename:
@@ -95,11 +97,10 @@ styles = StyleX.create
   , lineNumber:
       { color: "var(--syn-line-number)"
       , flexShrink: 0
-      , marginInlineEnd: 16
+      , marginInlineEnd: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo480 12 ]
       , textAlign: "right"
       , userSelect: "none"
-      , width: 28
-      , "@media (max-width: 480px)": { marginInlineEnd: 12, width: 18 }
+      , width: StyleX.conditionalValue 28 [ StyleX.conditionalCase breakpoints.upTo480 18 ]
       }
   , content: { minWidth: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
   , keyword: { color: "var(--syn-keyword)" }

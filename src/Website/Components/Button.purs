@@ -43,13 +43,15 @@ styles = StyleX.create
       , justifyContent: "center"
       , letterSpacing: "-0.005em"
       , lineHeight: 1
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
       , textDecoration: "none"
       , transform: { default: "none", ":active": "scale(0.98)" }
-      , transition:
-          "background-color 140ms var(--ease-out), border-color 140ms var(--ease-out), color 140ms var(--ease-out), transform 80ms var(--ease-out)"
+      , transitionDuration: "140ms, 140ms, 140ms, 80ms"
+      , transitionProperty: "background-color, border-color, color, transform"
+      , transitionTimingFunction: "var(--ease-out)"
       , userSelect: "none"
       , whiteSpace: "nowrap"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   , small: { borderRadius: 5, fontSize: 13, gap: 6, height: 28, paddingInline: 10 }
   , medium: { fontSize: 14, gap: 8, height: 36, paddingInline: 14 }
@@ -72,7 +74,10 @@ styles = StyleX.create
       , backdropFilter: "blur(12px)"
       , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
       , borderColor: { default: "var(--glass-border)", ":hover": "var(--border-strong)" }
-      , boxShadow: "inset 0 1px 0 var(--glass-highlight)"
+      , boxShadow:
+          { default: "inset 0 1px 0 var(--glass-highlight)"
+          , ":focus-visible": "var(--shadow-focus)"
+          }
       , color: "var(--text-primary)"
       }
   -- Lucide icons render at 1.2em.

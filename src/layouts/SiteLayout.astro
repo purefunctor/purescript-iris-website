@@ -1,5 +1,6 @@
 ---
 import "#src/global.css";
+import * as Layout from "#output/Website.SiteLayout/index.js";
 
 interface Props {
   title: string;
@@ -14,7 +15,7 @@ const imageUrl = new URL(image, Astro.site!);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" {...Layout.html}>
   <head>
     <meta charset="UTF-8" />
     <style is:inline>@layer reset, priority1, priority2, priority3, priority4;</style>

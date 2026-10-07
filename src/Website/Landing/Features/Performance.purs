@@ -4,24 +4,23 @@ import Prelude
 
 import Iris.StyleX as StyleX
 import React.Basic (JSX)
+import Website.Breakpoints (breakpoints)
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
   { performanceOutput:
       { color: "var(--landing-color-latte-text)"
       , fontFamily: "JetBrains Mono Variable, monospace"
-      , fontSize: 16
+      , fontSize: StyleX.conditionalValue "16px"
+          [ StyleX.conditionalCase breakpoints.upTo800 "clamp(11.5px, 3.1vw, 12.5px)" ]
       , fontVariantNumeric: "tabular-nums"
       , lineHeight: 1.25
       , margin: 0
       , maxWidth: "100%"
       , overflowX: "auto"
-      , padding: 0
+      , paddingBlock: StyleX.conditionalValue 0 [ StyleX.conditionalCase breakpoints.upTo800 12 ]
+      , paddingInline: 0
       , width: "100%"
-      , "@media (max-width: 800px)":
-          { fontSize: "clamp(11.5px, 3.1vw, 12.5px)"
-          , padding: "12px 0"
-          }
       }
   , performanceLine:
       { display: "block"
@@ -37,29 +36,24 @@ styles = StyleX.create
       , fontWeight: 650
       }
   , performanceBarTail:
-      { "@media (max-width: 800px)":
-          { display: "none"
-          }
+      { display: StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo800 "none" ]
       }
   }
 
-performanceOutput = StyleX.props styles.performanceOutput
-performanceLine = StyleX.props styles.performanceLine
-performancePhase = StyleX.props styles.performancePhase
-performanceBar = StyleX.props styles.performanceBar
-performanceFinished = StyleX.props styles.performanceFinished
+styleProps = StyleX.recordProps styles
+
 performanceBarTail = StyleX.props [ styles.performanceBar, styles.performanceBarTail ]
 
 performanceMedia :: JSX
 performanceMedia =
-  DOM.pre performanceOutput
+  DOM.pre styleProps.performanceOutput
     [ DOM.code {}
         [ performanceProgressLine "  Analyse"
         , performanceProgressLine "Elaborate"
         , performanceProgressLine "  Codegen"
         , performanceProgressLine "   Output"
-        , DOM.span performanceLine
-            [ DOM.span performanceFinished " Finished"
+        , DOM.span styleProps.performanceLine
+            [ DOM.span styleProps.performanceFinished " Finished"
             , DOM.span {} " in 3.08s via 12 jobs"
             ]
         ]
@@ -67,10 +61,10 @@ performanceMedia =
 
 performanceProgressLine :: String -> JSX
 performanceProgressLine label =
-  DOM.span performanceLine
-    [ DOM.span performancePhase label
+  DOM.span styleProps.performanceLine
+    [ DOM.span styleProps.performancePhase label
     , DOM.span {} " ["
-    , DOM.span performanceBar "==================="
+    , DOM.span styleProps.performanceBar "==================="
     , DOM.span performanceBarTail "===="
     , DOM.span {} "] 7355/7355"
     ]

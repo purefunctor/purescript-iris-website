@@ -8,6 +8,7 @@ foreign import copyButtonImpl ::
   ReactComponent
     { className :: String
     , copiedClassName :: String
+    , fallbackClassName :: String
     , label :: String
     , text :: String
     , tooltipClassName :: String
@@ -17,6 +18,7 @@ data Size = Small | Medium
 
 styles = StyleX.create
   { copied: { color: "var(--success)" }
+  , fallback: { opacity: 0, position: "fixed" }
   }
 
 sizeStyle :: Size -> StyleX.Style
@@ -29,6 +31,7 @@ copyButton { label, size, text } = element copyButtonImpl
   { className: (StyleX.props [ iconButtonStyles.button, sizeStyle size ]).className
   , copiedClassName:
       (StyleX.props [ iconButtonStyles.button, sizeStyle size, styles.copied ]).className
+  , fallbackClassName: (StyleX.props styles.fallback).className
   , label
   , text
   , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className

@@ -7,6 +7,7 @@ import Effect (Effect)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, element)
 import React.Basic.Events (EventHandler)
+import Website.Breakpoints (breakpoints)
 import Website.Components.Button as Button
 import Website.Components.ExternalLink as ExternalLink
 import Website.Components.Icon as Icon
@@ -50,8 +51,9 @@ styles = StyleX.create
       , display: "inline-flex"
       , gap: 7
       , lineHeight: 1
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
       , textDecoration: "none"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   , logo: { flexShrink: 0, height: 26, width: 26 }
   , name: { alignItems: "baseline", display: "inline-flex", gap: 6 }
@@ -68,10 +70,9 @@ styles = StyleX.create
       , transform: "translateY(-2px)"
       }
   , links:
-      { display: "flex"
+      { display: StyleX.conditionalValue "flex" [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       , gap: 4
       , minWidth: 0
-      , "@media (max-width: 720px)": { display: "none" }
       }
   , link:
       { backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
@@ -81,11 +82,15 @@ styles = StyleX.create
       , fontSize: 14
       , fontWeight: 500
       , lineHeight: 1
-      , padding: "7px 10px"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , paddingBlock: 7
+      , paddingInline: 10
       , textDecoration: "none"
-      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   , actions:
       { alignItems: "center"
@@ -104,9 +109,12 @@ styles = StyleX.create
       , fontSize: 13
       , height: 36
       , justifyContent: "center"
-      , transition: "background-color 140ms var(--ease-out), color 140ms var(--ease-out)"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
       , width: 36
-      , ":focus-visible": { boxShadow: "var(--shadow-focus)", outline: "none" }
       }
   }
 

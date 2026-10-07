@@ -3,6 +3,7 @@ module Website.Landing.Features.JavaScript (javascriptOutputMedia) where
 import Prelude
 
 import Iris.StyleX as StyleX
+import Website.Breakpoints (breakpoints)
 import Website.Landing.Features.Code as Code
 import React.Basic (JSX)
 import Yoga.React.DOM as DOM
@@ -20,29 +21,26 @@ javascriptExamplesStyles = StyleX.create
       { color: "var(--landing-color-latte-text)"
       , display: "grid"
       , fontFamily: "JetBrains Mono Variable, monospace"
-      , fontSize: 13.5
+      , fontSize: StyleX.conditionalValue "13.5px"
+          [ StyleX.conditionalCase breakpoints.upTo800 "clamp(11.5px, 3.1vw, 12.5px)" ]
       , fontVariantLigatures: "none"
-      , gap: 40
-      , gridTemplateColumns: "repeat(2, minmax(0, 1fr))"
+      , gap: StyleX.conditionalValue 40
+          [ StyleX.conditionalCase breakpoints.above800To1160 28
+          , StyleX.conditionalCase breakpoints.upTo800 24
+          ]
+      , gridTemplateColumns: StyleX.conditionalValue "repeat(2, minmax(0, 1fr))"
+          [ StyleX.conditionalCase breakpoints.upTo1160 "minmax(0, 1fr)" ]
       , lineHeight: 1.25
-      , paddingBlockEnd: 20
+      , paddingBlockEnd: StyleX.conditionalValue 20 [ StyleX.conditionalCase breakpoints.upTo800 12 ]
       , width: "100%"
-      , "@media (max-width: 1160px)":
-          { gap: 28
-          , gridTemplateColumns: "minmax(0, 1fr)"
-          }
-      , "@media (max-width: 800px)":
-          { fontSize: "clamp(11.5px, 3.1vw, 12.5px)"
-          , gap: 24
-          , paddingBlockEnd: 12
-          }
       }
   , exampleTitle:
       { color: "var(--landing-color-ink)"
       , fontFamily: "InterVariable, sans-serif"
       , fontSize: 18
       , fontWeight: 580
-      , gridColumn: "1 / -1"
+      , gridColumnStart: 1
+      , gridColumnEnd: -1
       , letterSpacing: "-0.015em"
       , lineHeight: 1.2
       , margin: 0
@@ -52,9 +50,7 @@ javascriptExamplesStyles = StyleX.create
       , gap: 12
       , gridTemplateRows: "auto 1fr"
       , minWidth: 0
-      , "@media (min-width: 641px) and (max-width: 800px)":
-          { paddingInline: 4
-          }
+      , paddingInline: StyleX.conditionalValue 0 [ StyleX.conditionalCase breakpoints.from641To800 4 ]
       }
   , paneLabel:
       { color: "var(--landing-color-muted)"
@@ -74,9 +70,11 @@ javascriptExamplesStyles = StyleX.create
       }
   }
 
+styleProps = StyleX.recordProps javascriptExamplesStyles
+
 javascriptOutputMedia :: JSX
 javascriptOutputMedia =
-  DOM.div (StyleX.props javascriptExamplesStyles.root)
+  DOM.div styleProps.root
     [ javascriptExample "Tail-call optimisation" factorialSource factorialOutput
     , javascriptExample "Effect inlining" effectSource effectOutput
     , javascriptExample "Native StyleX" stylexSource stylexOutput
@@ -84,17 +82,17 @@ javascriptOutputMedia =
 
 javascriptExample :: String -> JSX -> JSX -> JSX
 javascriptExample title source output =
-  DOM.div (StyleX.props javascriptExamplesStyles.example)
-    [ DOM.h4 (StyleX.props javascriptExamplesStyles.exampleTitle) title
+  DOM.div styleProps.example
+    [ DOM.h4 styleProps.exampleTitle title
     , javascriptPane "PureScript" source
     , javascriptPane "JavaScript" output
     ]
 
 javascriptPane :: String -> JSX -> JSX
 javascriptPane label code =
-  DOM.div (StyleX.props javascriptExamplesStyles.pane)
-    [ DOM.span (StyleX.props javascriptExamplesStyles.paneLabel) label
-    , DOM.pre (StyleX.props javascriptExamplesStyles.code) code
+  DOM.div styleProps.pane
+    [ DOM.span styleProps.paneLabel label
+    , DOM.pre styleProps.code code
     ]
 
 factorialSource :: JSX
@@ -401,23 +399,21 @@ stylexSource =
         [ DOM.span Code.sourceBracket "      {"
         , DOM.span Code.sourceVariable " color"
         , DOM.span {} ": "
-        , DOM.span Code.sourceString (quoted "red")
+        , DOM.span Code.sourceBracket "{"
+        , DOM.span Code.sourceVariable " default"
+        , DOM.span {} ": "
+        , DOM.span Code.sourceString "\"red\""
+        , DOM.span {} ", "
+        , DOM.span Code.sourceString "\":hover\""
+        , DOM.span {} ": "
+        , DOM.span Code.sourceString "\"blue\""
+        , DOM.span Code.sourceBracket " }"
         ]
     , DOM.span Code.sourceLine
         [ DOM.span {} "      , "
         , DOM.span Code.sourceVariable "padding"
         , DOM.span {} ": "
         , DOM.span Code.sourceAccent "8"
-        ]
-    , DOM.span Code.sourceLine
-        [ DOM.span {} "      , "
-        , DOM.span Code.sourceString (quoted ":hover")
-        , DOM.span {} ": "
-        , DOM.span Code.sourceBracket "{"
-        , DOM.span Code.sourceVariable " color"
-        , DOM.span {} ": "
-        , DOM.span Code.sourceString (quoted "blue")
-        , DOM.span Code.sourceBracket " }"
         ]
     , DOM.span Code.sourceLine
         [ DOM.span Code.sourceBracket "      }" ]
@@ -453,23 +449,22 @@ stylexOutput =
     , DOM.span Code.sourceLine
         [ DOM.span Code.sourceVariable "    color"
         , DOM.span {} ": "
+        , DOM.span Code.sourceBracket "{"
+        , DOM.span Code.sourceVariable " default"
+        , DOM.span {} ": "
         , DOM.span Code.sourceString (quoted "red")
+        , DOM.span {} ", "
+        , DOM.span Code.sourceString (quoted ":hover")
+        , DOM.span {} ": "
+        , DOM.span Code.sourceString (quoted "blue")
+        , DOM.span Code.sourceBracket " }"
         , DOM.span {} ","
         ]
     , DOM.span Code.sourceLine
         [ DOM.span Code.sourceVariable "    padding"
         , DOM.span {} ": "
         , DOM.span Code.sourceAccent "8"
-        , DOM.span {} " | 0,"
-        ]
-    , DOM.span Code.sourceLine
-        [ DOM.span Code.sourceString ("    " <> quoted ":hover")
-        , DOM.span {} ": "
-        , DOM.span Code.sourceBracket "{"
-        , DOM.span Code.sourceVariable " color"
-        , DOM.span {} ": "
-        , DOM.span Code.sourceString (quoted "blue")
-        , DOM.span Code.sourceBracket " }"
+        , DOM.span {} " | 0"
         ]
     , DOM.span Code.sourceLine
         [ DOM.span Code.sourceBracket "  }" ]

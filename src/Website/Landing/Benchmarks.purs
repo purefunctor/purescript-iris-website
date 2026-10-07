@@ -4,6 +4,7 @@ import Prelude
 
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element, fragment)
+import Website.Breakpoints (breakpoints)
 import Website.Components.ContentShell as ContentShell
 import Website.Components.Icon as Icon
 import Website.Components.Tabs.Styles (tabStyles)
@@ -55,19 +56,13 @@ grow = StyleX.keyframes
 
 styles = StyleX.create
   { root: { display: "flex", flexDirection: "column", gap: 32 }
-  -- Column widths shared by the bar rows, the gridline overlay and the axis.
-  , panel:
-      { "--chart-gap": { default: "24px", "@media (max-width: 600px)": "10px" }
-      , "--chart-label": { default: "168px", "@media (max-width: 600px)": "92px" }
-      , "--chart-value": { default: "96px", "@media (max-width: 600px)": "64px" }
-      , display: "flex"
-      , flexDirection: "column"
-      }
+  , panel: { display: "flex", flexDirection: "column" }
   , header:
       { alignItems: "flex-end"
       , display: "flex"
       , flexWrap: "wrap"
-      , gap: "24px 40px"
+      , rowGap: 24
+      , columnGap: 40
       , justifyContent: "space-between"
       }
   , introduction: { display: "flex", flexDirection: "column", gap: 14 }
@@ -75,17 +70,23 @@ styles = StyleX.create
   -- Lucide icons render at 1.2em.
   , tabIcon: { flexShrink: 0, fontSize: 11 }
   , chart: { position: "relative" }
+  -- Use responsive properties directly: StyleX's unlayered custom-property defaults
+  -- otherwise outrank the layered overrides generated from imported conditions.
   , grid:
-      { columnGap: "var(--chart-gap)"
+      { columnGap: StyleX.conditionalValue 24 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
       , display: "grid"
-      , gridTemplateColumns: "var(--chart-label) minmax(0, 1fr) var(--chart-value)"
+      , gridTemplateColumns: StyleX.conditionalValue "168px minmax(0, 1fr) 96px"
+          [ StyleX.conditionalCase breakpoints.upTo600 "92px minmax(0, 1fr) 64px" ]
       }
   -- Gridlines and the Iris marker sit behind the bars, across the plot column. Ticks that are off
   -- the current axis wait far beyond it, so the overlay and the axis clip just past its end.
+  -- Match the grid's label/value widths and gaps, leaving 16px past the plot's end.
   , overlay:
       { insetBlock: 0
-      , insetInlineEnd: "calc(var(--chart-value) + var(--chart-gap) - 16px)"
-      , insetInlineStart: "calc(var(--chart-label) + var(--chart-gap))"
+      , insetInlineEnd: StyleX.conditionalValue "calc(96px + 24px - 16px)"
+          [ StyleX.conditionalCase breakpoints.upTo600 "calc(64px + 10px - 16px)" ]
+      , insetInlineStart: StyleX.conditionalValue "calc(168px + 24px)"
+          [ StyleX.conditionalCase breakpoints.upTo600 "calc(92px + 10px)" ]
       , overflow: "hidden"
       , pointerEvents: "none"
       , position: "absolute"
@@ -95,28 +96,29 @@ styles = StyleX.create
       { backgroundColor: "var(--border-subtle)"
       , insetBlock: 0
       , position: "absolute"
-      , transition:
-          "left 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionProperty: "left, opacity"
+      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
       , width: 1
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0s" }
       }
   , marker:
       { backgroundColor: "var(--accent)"
       , insetBlock: 0
       , position: "absolute"
-      , transition: "left 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionProperty: "left"
+      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
       , width: 1
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0s" }
       }
   , rows: { listStyle: "none", padding: 0, position: "relative" }
   , row:
       { alignItems: "center"
-      , minHeight: { default: 88, "@media (max-width: 600px)": 64 }
+      , minHeight: StyleX.conditionalValue 88 [ StyleX.conditionalCase breakpoints.upTo600 64 ]
       }
   , tool:
       { color: "var(--text-secondary)"
       , fontFamily: "var(--font-mono)"
-      , fontSize: { default: 15, "@media (max-width: 600px)": 12 }
+      , fontSize: StyleX.conditionalValue 15 [ StyleX.conditionalCase breakpoints.upTo600 12 ]
       , whiteSpace: "nowrap"
       }
   , irisTool: { color: "var(--text-primary)" }
@@ -124,43 +126,45 @@ styles = StyleX.create
   , bar:
       { backgroundColor: "var(--surface-3)"
       , display: "block"
-      , height: { default: 32, "@media (max-width: 600px)": 24 }
+      , height: StyleX.conditionalValue 32 [ StyleX.conditionalCase breakpoints.upTo600 24 ]
       , transformOrigin: "left"
-      , transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0s" }
+      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionProperty: "width"
+      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
       }
   , irisBar: { backgroundColor: "var(--accent)" }
   , waiting:
-      { transform: "scaleX(0)"
-      , "@media (prefers-reduced-motion: reduce)": { transform: "none" }
+      { transform: { default: "scaleX(0)", "@media (prefers-reduced-motion: reduce)": "none" }
       }
   , racing:
       { animationDuration: "1.5s"
       , animationFillMode: "both"
-      , animationName: grow
+      , animationName: { default: grow, "@media (prefers-reduced-motion: reduce)": "none" }
       -- A strong ease-out: bars shoot out and settle on their result without overshooting it.
       , animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
-      , "@media (prefers-reduced-motion: reduce)": { animationName: "none" }
       }
   , badge:
       { backgroundColor: "var(--surface-2)"
       , borderRadius: 5
       , color: "var(--text-secondary)"
       , fontFamily: "var(--font-mono)"
-      , fontSize: { default: 13, "@media (max-width: 600px)": 11 }
-      , padding: "4px 8px"
+      , fontSize: StyleX.conditionalValue 13 [ StyleX.conditionalCase breakpoints.upTo600 11 ]
+      , paddingBlock: 4
+      , paddingInline: 8
       , position: "absolute"
-      , transition: "left 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionProperty: "left"
+      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
       , whiteSpace: "nowrap"
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0s" }
       }
-  , badgeComparison: { "@media (max-width: 600px)": { display: "none" } }
+  , badgeComparison:
+      { display: StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ] }
   , value:
       { alignItems: "center"
       , color: "var(--text-secondary)"
       , display: "flex"
       , fontFamily: "var(--font-mono)"
-      , fontSize: { default: 16, "@media (max-width: 600px)": 12 }
+      , fontSize: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 12 ]
       , fontVariantNumeric: "tabular-nums"
       , justifyContent: "flex-end"
       }
@@ -168,7 +172,8 @@ styles = StyleX.create
   -- Both figures share one grid cell; the outgoing one fades before the incoming one appears.
   , swap: { display: "inline-grid", justifyItems: "center" }
   , variant:
-      { gridArea: "1 / 1"
+      { gridRowStart: 1
+      , gridColumnStart: 1
       , transitionDelay: { default: "0.1s", "@media (prefers-reduced-motion: reduce)": "0s" }
       , transitionDuration: { default: "0.25s", "@media (prefers-reduced-motion: reduce)": "0s" }
       , transitionProperty: "opacity, filter"
@@ -187,9 +192,9 @@ styles = StyleX.create
       , fontFamily: "var(--font-mono)"
       , fontSize: 12
       , position: "absolute"
-      , transition:
-          "left 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
-      , "@media (prefers-reduced-motion: reduce)": { transitionDuration: "0s" }
+      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionProperty: "left, opacity"
+      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
       }
   , methodology:
       { color: "var(--text-tertiary)"
