@@ -167,10 +167,11 @@ siteNav { onInstall } =
   siteHeader
     [ DOM.nav
         { className: styleProps.links.className, "aria-label": "Sections" }
-        [ link "#benchmarks" "Benchmarks", link "#editor" "Editor" ]
+        [ link "/#benchmarks" "Benchmarks", link "/#editor" "Editor" ]
     , DOM.div
         styleProps.actions
-        [ DOM.a
+        [ link "/docs/getting-started" "Docs"
+        , DOM.a
             { className: styleProps.iconLink.className
             , href: "https://github.com/purefunctor/purescript-iris"
             , rel: "noopener noreferrer"

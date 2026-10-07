@@ -16,7 +16,7 @@ This repository is the Iris website: Astro handles routing and server rendering 
 
 ### PureScript and JavaScript boundaries
 
-- Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing`. Keep FFI companions alongside their PureScript modules.
+- Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing` or `Website.Documentation`. Keep FFI companions alongside their PureScript modules.
 - Use the package import aliases `#src/*` and `#output/*` for cross-directory imports. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
 - Author component StyleX declarations in PureScript using `Iris.StyleX`. Iris emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
 - Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.IconButton.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
@@ -117,6 +117,10 @@ node scripts/editor-demos/record.mjs all
 - Review all exported MP4s in `/tmp/iris-editor-tools/recordings`, then copy them to `public/editor-demos/`. Refresh the first poster with `ffmpeg -y -ss 3.5 -i public/editor-demos/inferred-types.mp4 -frames:v 1 -c:v libwebp -quality 85 public/editor-demos/inferred-types.webp`. Check each video's dimensions, frame rate and decode with ffprobe/FFmpeg, and inspect playback on the landing page at desktop and mobile widths. Keep raw takes and diagnostic snapshots out of Git.
 
 ## Verification
+
+### Documentation
+
+Use the running watch-mode preview for documentation UI iterations, with targeted browser checks and visual inspection. Do not run production builds or add a documentation-specific test harness for visual tweaks. Verify changes to onboarding commands in a disposable workspace.
 
 ### Visual changes
 
