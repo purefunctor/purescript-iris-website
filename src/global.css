@@ -80,6 +80,7 @@
     --surface-3: var(--loam-700);
     --glass-fill: oklch(from var(--loam-800) l c h / 52%);
     --glass-fill-strong: oklch(from var(--loam-900) calc(l + 0.017) c h / 74%);
+    --overlay-scrim: oklch(from var(--loam-950) l c h / 72%);
     --glass-border: oklch(from var(--loam-100) l c h / 11%);
     --glass-highlight: oklch(from var(--loam-50) calc(l + 0.03) c h / 7%);
     --border-subtle: oklch(from var(--loam-100) l c h / 8%);
