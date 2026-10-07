@@ -85,6 +85,28 @@ pnpm build
 amp orb service start production-preview --command 'pnpm preview' --portal
 ```
 
+### Editor demo recordings
+
+`scripts/editor-demos/` reproduces the native VS Code workflow from the [original recording thread](https://ampcode.com/threads/T-01a0cf38-55ca-765a-a413-2e7de30fe101). It seeds a disposable `iris-website` workspace from this checkout's `src`, `spago.yaml`, and `spago.lock`, using its installed dependencies and Iris on PATH. Never perform recording edits in the website checkout itself.
+
+The Linux recording environment needs `agent-browser`, FFmpeg, curl, unzip, fontconfig, Xvfb, Openbox, xdotool and the native Electron libraries. On Debian:
+
+```sh
+sudo apt-get install -y xvfb openbox xdotool bibata-cursor-theme \
+  libnss3 libxss1 libasound2 libgtk-3-0 libgbm1 libxkbfile1 libsecret-1-0 xauth
+bash scripts/editor-demos/setup.sh
+amp orb service start iris-demo-code --command 'bash scripts/editor-demos/launch.sh'
+agent-browser --session iriscode --cdp 9223 press F11
+node scripts/editor-demos/record.mjs all
+```
+
+- Setup pins VS Code 1.139.0, Iris extension 0.1.0, PureScript syntax extension 0.2.10, Catppuccin 3.19.0 and Geist 1.7.2. The current takes use Iris 0.1.3. It selects Catppuccin Macchiato, Geist for the workbench and Geist Mono for code, and enables opt-in on-change diagnostics.
+- Capture is native 1920×1080 at 60 fps with the real pointer, encoded as H.264/yuv420p MP4 with fast start and no audio. Electron's scale factor is 150% by default; this scales the whole application, not just the editor font. Use VS Code's F11 fullscreen, not the window manager's fullscreen, to avoid window borders. Do not apply browser viewport emulation to the Electron session.
+- The export runs at 75% of captured speed and adds a one-second final-frame hold: `setpts=(PTS-STARTPTS)/0.75,fps=60,tpad=stop_mode=clone:stop_duration=1`. Apply this once to a normal-speed take, never to an already slowed export.
+- For a quick 200% comparison, stop the service and start it with `--command 'IRIS_DEMO_SCALE=200 bash scripts/editor-demos/launch.sh'`, enter F11 fullscreen again, then run `IRIS_DEMO_OUTPUT=/tmp/iris-editor-tools/recordings-200 node scripts/editor-demos/record.mjs inferred-types`. Return to the default launch command for production takes. Text targets are resolved from the live DOM at either scale.
+- `record.mjs` accepts one or more clip slugs instead of `all`. It asserts actual editor results before exporting each take. Source locations follow the current seed; update the scenarios when those components move. Setup and capture use `/tmp/iris-editor-tools` by default (`IRIS_DEMO_HOME` can override it). Setup resets only that disposable workspace and profile; stop VS Code before rerunning setup.
+- Review all exported MP4s in `/tmp/iris-editor-tools/recordings`, then copy them to `public/editor-demos/`. Refresh the first poster with `ffmpeg -y -ss 3.5 -i public/editor-demos/inferred-types.mp4 -frames:v 1 -c:v libwebp -quality 85 public/editor-demos/inferred-types.webp`. Check each video's dimensions, frame rate and decode with ffprobe/FFmpeg, and inspect playback on the landing page at desktop and mobile widths. Keep raw takes and diagnostic snapshots out of Git.
+
 ## Verification
 
 ### Visual changes
