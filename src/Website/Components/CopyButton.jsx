@@ -38,6 +38,7 @@ export function copyButtonImpl({ className, copiedClassName, fallbackClassName, 
       <Button
         aria-label={label}
         className={copied ? copiedClassName : className}
+        onBlur={() => setCopied(false)}
         onPress={copy}
       >
         {copied ? <CheckIcon aria-hidden="true" focusable="false" /> : <CopyIcon aria-hidden="true" focusable="false" />}

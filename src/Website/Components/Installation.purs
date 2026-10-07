@@ -24,7 +24,12 @@ foreign import installationImpl ::
 styles =
   StyleX.create
     { root:
-        { display: "flex", flexDirection: "column", gap: 8, maxWidth: "100%" }
+        { display: "flex"
+        , flexDirection: "column"
+        , gap: 8
+        , maxWidth: "100%"
+        , width: "fit-content"
+        }
     , header:
         { alignItems: "center"
         , display: "flex"
@@ -36,16 +41,19 @@ styles =
     , source:
         { alignItems: "center"
         , backgroundColor:
-            { default: "transparent", ":hover": "var(--glass-fill)" }
+            { default: "var(--glass-fill)"
+            , ":hover": "var(--glass-fill-strong)"
+            }
         , borderRadius: 5
         , color:
             { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
         , display: "inline-flex"
+        , flexShrink: 0
+        , fontFamily: "var(--font-sans)"
         , fontSize: 13
         , fontWeight: 500
         , gap: 6
         , lineHeight: 1
-        -- Stays right-aligned when it wraps below the platform tabs on narrow screens.
         , marginInlineStart: "auto"
         , boxShadow:
             { default: "none", ":focus-visible": "var(--shadow-focus)" }
@@ -73,8 +81,7 @@ styles =
         , borderStyle: "solid"
         , borderWidth: 1
         , display: "flex"
-        -- Fits the longer command (51 characters with its prompt) plus padding, gap, copy button
-        -- and borders, so switching platforms keeps the copy button in place.
+        -- Fits the longer command and copy button without stretching the header to the article width.
         , fontFamily: "var(--font-mono)"
         , fontSize: 14
         , gap: 12
