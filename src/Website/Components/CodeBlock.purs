@@ -17,7 +17,7 @@ type Token = { kind :: String, text :: String }
 
 foreign import tokenizeImpl :: String -> String -> Array (Array Token)
 
-data Language = PureScript | JavaScript
+data Language = PureScript | JavaScript | JSON
 
 data Surface = Flat | Glass
 
@@ -129,6 +129,8 @@ languageName :: Language -> String
 languageName = case _ of
   PureScript -> "purescript"
   JavaScript -> "javascript"
+  -- JSON values are JavaScript expressions, so the JavaScript tokenizer highlights them.
+  JSON -> "javascript"
 
 codeBlock :: CodeBlock -> JSX
 codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =

@@ -18,7 +18,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "GettingStarted" \_ -> Ho
   Hooks.useEffectOnce Documentation.configurePlatform
   pure
     $ Documentation.documentation
-        { title: "Getting started"
+        { page: Documentation.GettingStarted
         , intro:
             "Install Iris, create your first workspace, and run a small command-line application with Node.js."
         , sections
@@ -99,6 +99,11 @@ sections =
             , inlineCode "gh"
             , DOM.text
                 ") with attestation support lets the installer verify release provenance. Without it, the installer warns and continues without verification."
+            ]
+        , paragraph
+            [ DOM.text "To install a particular release or choose another directory, see "
+            , link "/docs/installation" "Installation"
+            , DOM.text "."
             ]
         ]
     }
@@ -227,6 +232,12 @@ sections =
     , body:
         [ list
             [ item
+                [ DOM.strong {} "Set up your editor. "
+                , DOM.text "Install the VS Code extension or connect another editor to the "
+                , link "/docs/language-server" "Iris language server"
+                , DOM.text "."
+                ]
+            , item
                 [ DOM.strong {} "Keep compiling as you edit. "
                 , DOM.text "Run "
                 , inlineCode "iris watch"

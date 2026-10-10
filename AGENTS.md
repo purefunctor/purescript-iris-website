@@ -29,6 +29,11 @@ This repository is the Iris website: Astro handles routing and server rendering 
 - Use a descriptive component name, such as `header`, for an effectful `Component props` constructor that callers must instantiate during component construction.
 - When a module exports multiple peer `ReactComponent` values and none is the canonical module component, give each value a descriptive name rather than using `component`.
 
+### Documentation pages
+
+- Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs`. Add it to `Page` in `Website.Components.Documentation`, which orders the sidebar, and build its body from `Website.Documentation.Prose`.
+- The compiler README links to these routes. Keep their slugs stable, or update those links when renaming a page.
+
 ### Deployment
 
 - Production is a static Astro build deployed as Cloudflare Workers Static Assets without a Worker script. `public/_headers` owns the static security and cache headers.

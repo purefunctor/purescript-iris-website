@@ -1,4 +1,4 @@
-module Website.Components.Documentation (Section, configurePlatform, documentation) where
+module Website.Components.Documentation (Page(..), Section, configurePlatform, documentation) where
 
 import Prelude
 
@@ -9,6 +9,28 @@ import Website.Breakpoints (breakpoints)
 import Website.Components.Icon as Icon
 import Website.Components.SiteNav as SiteNav
 import Yoga.React.DOM as DOM
+
+data Page = GettingStarted | Installation | LanguageServer | Formatting
+
+derive instance Eq Page
+
+-- | Pages in sidebar order. The compiler README links to these routes.
+pages :: Array Page
+pages = [ GettingStarted, Installation, LanguageServer, Formatting ]
+
+pageHref :: Page -> String
+pageHref = case _ of
+  GettingStarted -> "/docs/getting-started"
+  Installation -> "/docs/installation"
+  LanguageServer -> "/docs/language-server"
+  Formatting -> "/docs/formatting"
+
+pageTitle :: Page -> String
+pageTitle = case _ of
+  GettingStarted -> "Getting started"
+  Installation -> "Installation"
+  LanguageServer -> "Language server"
+  Formatting -> "Formatting"
 
 type Section = { id :: String, title :: String, body :: Array JSX }
 
@@ -264,8 +286,8 @@ styles =
 
 styleProps = StyleX.recordProps styles
 
-documentation :: { title :: String, intro :: String, sections :: Array Section } -> JSX
-documentation { title, intro, sections } =
+documentation :: { page :: Page, intro :: String, sections :: Array Section } -> JSX
+documentation { page, intro, sections } =
   DOM.div
     styleProps.page
     [ DOM.a { className: styleProps.skip.className, href: "#content" } "Skip to content"
@@ -308,7 +330,7 @@ documentation { title, intro, sections } =
             ]
         , DOM.main
             { className: styleProps.article.className, id: "content", tabIndex: -1 }
-            [ DOM.h1 styleProps.title title
+            [ DOM.h1 styleProps.title (pageTitle page)
             , DOM.p styleProps.intro intro
             , DOM.div {} (map section sections)
             , DOM.footer
@@ -321,11 +343,8 @@ documentation { title, intro, sections } =
         ]
     ]
   where
-  guide =
-    [ DOM.div
-        styleProps.links
-        [ navigationLink "/docs/getting-started" true [ DOM.text "Getting started" ] ]
-    ]
+  guide = [ DOM.div styleProps.links (map guideLink pages) ]
+  guideLink entry = navigationLink (pageHref entry) (entry == page) [ DOM.text (pageTitle entry) ]
   resources =
     [ DOM.p styleProps.label "Resources"
     , DOM.div

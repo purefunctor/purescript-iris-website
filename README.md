@@ -2,13 +2,13 @@
 
 The website for [IRIS](https://github.com/purefunctor/purescript-iris), a modern functional programming language. Built with Astro, React and PureScript.
 
-The documentation starts at `/docs/getting-started` (`/docs` redirects there). It covers installing Iris and running a Node.js Hello World application. The page uses the shared documentation shell, installation tabs, and code blocks.
+The documentation starts at `/docs/getting-started` (`/docs` redirects there), which covers installing Iris and running a Node.js Hello World application. Further pages document installer options, the language server, and formatting; the compiler README links to them. Pages use the shared documentation shell, installation tabs, and code blocks.
 
 ## Quickstart
 
 ### Prerequisites
 
-You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https://pnpm.io/installation), and Iris 0.1.5 on PATH. fnm reads the Node version from `.node-version`; pnpm manages its own version using the `packageManager` pin. `.agents/setup` bootstraps these tools and installs Iris 0.1.5 using the [official installer](https://github.com/purefunctor/purescript-iris#installation), with GitHub attestation checks explicitly skipped.
+You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https://pnpm.io/installation), and Iris 0.1.5 on PATH. fnm reads the Node version from `.node-version`; pnpm manages its own version using the `packageManager` pin. `.agents/setup` bootstraps these tools and installs Iris 0.1.5 using the [official installer](https://iris-lang.com/docs/installation), with GitHub attestation checks explicitly skipped.
 
 **In an Amp orb:** open Website in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
 
