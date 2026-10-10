@@ -37,8 +37,8 @@ jobs:
           archive="$RUNNER_TEMP/iris.tar.gz"
           curl --proto '=https' --tlsv1.2 -fLsS --retry 3 \
             -o "$archive" \
-            https://github.com/purefunctor/purescript-iris/releases/download/v0.1.4/iris-x86_64-unknown-linux-musl.tar.gz
-          echo "bdf8388671a4c66eb2cab6eb080c635dfcf74b68e6c9f94d46100d7dabe4739e  $archive" | sha256sum --check -
+            https://github.com/purefunctor/purescript-iris/releases/download/v0.1.5/iris-x86_64-unknown-linux-musl.tar.gz
+          echo "77fdc30148f40eda57b28f669e6350c8241a92337545f9deb8b42cf97ec7fd3f  $archive" | sha256sum --check -
           tar -xzf "$archive" -C "$RUNNER_TEMP" iris-x86_64-unknown-linux-musl/iris
           echo "$RUNNER_TEMP/iris-x86_64-unknown-linux-musl" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/iris-x86_64-unknown-linux-musl/iris" --version

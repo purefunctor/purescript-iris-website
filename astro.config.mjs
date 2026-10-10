@@ -52,12 +52,6 @@ export default defineConfig({
         dev: development,
         runtimeInjection: false,
         useCSSLayers: true,
-        // Iris emits shared StyleX constants in output/<Module>/index.js.
-        unstable_moduleResolution: {
-          type: "commonJS",
-          rootDir: process.cwd(),
-          themeFileExtension: "index",
-        },
       }),
     ],
     server: {

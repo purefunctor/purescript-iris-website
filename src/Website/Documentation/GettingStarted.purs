@@ -120,7 +120,7 @@ sections =
             , DOM.text " and check the compiler:"
             ]
         , Terminal.terminal
-            [ { command: "iris --version", output: "iris 0.1.4" } ]
+            [ { command: "iris --version", output: "iris 0.1.5" } ]
         , DOM.aside
             styleProps.note
             [ DOM.strong {} "If your shell can’t find Iris"

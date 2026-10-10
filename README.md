@@ -8,7 +8,7 @@ The documentation starts at `/docs/getting-started` (`/docs` redirects there). I
 
 ### Prerequisites
 
-You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https://pnpm.io/installation), and Iris 0.1.4 on PATH. fnm reads the Node version from `.node-version`; pnpm manages its own version using the `packageManager` pin. `.agents/setup` bootstraps these tools and installs Iris 0.1.4 using the [official installer](https://github.com/purefunctor/purescript-iris#installation), with GitHub attestation checks explicitly skipped.
+You'll need Git, [fnm](https://github.com/Schniz/fnm) for Node.js, [pnpm](https://pnpm.io/installation), and Iris 0.1.5 on PATH. fnm reads the Node version from `.node-version`; pnpm manages its own version using the `packageManager` pin. `.agents/setup` bootstraps these tools and installs Iris 0.1.5 using the [official installer](https://github.com/purefunctor/purescript-iris#installation), with GitHub attestation checks explicitly skipped.
 
 **In an Amp orb:** open Website in the Portal tab. Orb preparation installs the tools and dependencies and builds the development assets; startup reuses those caches and starts the dev server. A fresh preparation takes longer than starting from a cached snapshot. See [the agent guide](AGENTS.md#orb-setup-and-preview) for lifecycle and recovery commands.
 
@@ -20,7 +20,7 @@ On Linux or macOS, run these from the website directory:
 .agents/setup
 ```
 
-Setup installs Iris 0.1.4 and prepares website components. Open a new Bash login shell to pick up the installed tools, then run `pnpm dev` to start the dev server. Later starts reuse caches. A production build is not required for development.
+Setup installs Iris 0.1.5 and prepares website components. Open a new Bash login shell to pick up the installed tools, then run `pnpm dev` to start the dev server. Later starts reuse caches. A production build is not required for development.
 
 ### Start developing
 

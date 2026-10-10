@@ -51,11 +51,11 @@ printf 'Node.js and pnpm ready (%ss total).\n' "$SECONDS"
 
 install_iris() {
   curl --proto '=https' --tlsv1.2 -fsSL --retry 3 \
-    https://raw.githubusercontent.com/purefunctor/purescript-iris/v0.1.4/install.sh \
-    | env IRIS_VERSION=v0.1.4 IRIS_SKIP_ATTESTATION=1 sh
+    https://raw.githubusercontent.com/purefunctor/purescript-iris/v0.1.5/install.sh \
+    | env IRIS_VERSION=v0.1.5 IRIS_SKIP_ATTESTATION=1 sh
 }
 
-step 'Installing Iris 0.1.4' install_iris
+step 'Installing Iris 0.1.5' install_iris
 # Snapshot the development inputs, not a production Astro build.
 step 'Installing project dependencies' pnpm install --frozen-lockfile
 step 'Preparing PureScript' pnpm prepare:dev
