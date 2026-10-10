@@ -3,64 +3,26 @@ module Website.Documentation.GettingStarted (component) where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
-import Iris.StyleX as StyleX
-import React.Basic (JSX, ReactComponent)
+import React.Basic (ReactComponent)
 import React.Basic.Hooks as Hooks
 import Website.Components.CodeBlock as CodeBlock
 import Website.Components.Documentation as Documentation
 import Website.Components.Installation as Installation
 import Website.Components.Terminal as Terminal
+import Website.Documentation.Prose (inlineCode, item, link, list, note, paragraph)
 import Yoga.React.DOM as DOM
-
-foreign import configurePlatform :: Effect (Effect Unit)
-
-styles =
-  StyleX.create
-    { page: { fontSize: 16, lineHeight: 1.75, color: "var(--text-secondary)" }
-    , paragraph: { maxWidth: "72ch" }
-    , inlineCode:
-        { fontFamily: "var(--font-mono)"
-        , fontSize: "0.86em"
-        , color: "var(--text-primary)"
-        , backgroundColor: "var(--surface-1)"
-        , paddingInline: 5
-        , paddingBlock: 2
-        }
-    , list: { paddingInlineStart: 22, display: "flex", flexDirection: "column", gap: 10 }
-    , link:
-        { color: { default: "var(--accent-text)", ":hover": "var(--iris-200)" }
-        , textUnderlineOffset: 4
-        , outlineColor: "var(--focus-ring)"
-        }
-    , note:
-        { backgroundColor: "var(--surface-1)"
-        , display: "flex"
-        , flexDirection: "column"
-        , gap: 12
-        , padding: 20
-        , fontSize: 14
-        , lineHeight: 1.7
-        , color: "var(--text-secondary)"
-        }
-    }
-
-styleProps = StyleX.recordProps styles
 
 component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "GettingStarted" \_ -> Hooks.do
-  Hooks.useEffectOnce configurePlatform
+  Hooks.useEffectOnce Documentation.configurePlatform
   pure
-    $ DOM.div
-        styleProps.page
-        [ Documentation.documentation
-            { title: "Getting started"
-            , intro:
-                "Install Iris, create your first workspace, and run a small command-line application with Node.js."
-            , sections
-            }
-        ]
+    $ Documentation.documentation
+        { title: "Getting started"
+        , intro:
+            "Install Iris, create your first workspace, and run a small command-line application with Node.js."
+        , sections
+        }
 
 sections :: Array Documentation.Section
 sections =
@@ -113,8 +75,7 @@ sections =
             , DOM.text " and check the compiler:"
             ]
         , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.5" } ]
-        , DOM.aside
-            styleProps.note
+        , note
             [ DOM.strong {} "If your shell can’t find Iris"
             , DOM.p
                 {}
@@ -162,8 +123,7 @@ sections =
             [ DOM.text
                 "Iris asks Spago for a compatible Registry package set and creates these files:"
             ]
-        , DOM.ul
-            styleProps.list
+        , list
             [ item
                 [ inlineCode "spago.yaml"
                 , DOM.text
@@ -265,8 +225,7 @@ sections =
   , { id: "next-steps"
     , title: "Where to go next"
     , body:
-        [ DOM.ul
-            styleProps.list
+        [ list
             [ item
                 [ DOM.strong {} "Keep compiling as you edit. "
                 , DOM.text "Run "
@@ -292,15 +251,3 @@ sections =
         ]
     }
   ]
-
-paragraph :: Array JSX -> JSX
-paragraph = DOM.p styleProps.paragraph
-
-inlineCode :: String -> JSX
-inlineCode = DOM.code styleProps.inlineCode
-
-link :: String -> String -> JSX
-link href label = DOM.a { className: styleProps.link.className, href } label
-
-item :: Array JSX -> JSX
-item = DOM.li {}

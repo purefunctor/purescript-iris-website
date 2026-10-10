@@ -1,7 +1,8 @@
-module Website.Components.Documentation (Section, documentation) where
+module Website.Components.Documentation (Section, configurePlatform, documentation) where
 
 import Prelude
 
+import Effect (Effect)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 import Website.Breakpoints (breakpoints)
@@ -10,6 +11,8 @@ import Website.Components.SiteNav as SiteNav
 import Yoga.React.DOM as DOM
 
 type Section = { id :: String, title :: String, body :: Array JSX }
+
+foreign import configurePlatform :: Effect (Effect Unit)
 
 foreign import navigationLinkImpl ::
   ReactComponent
@@ -43,7 +46,8 @@ fadeOut = StyleX.keyframes { from: { opacity: 1 }, to: { opacity: 0 } }
 
 styles =
   StyleX.create
-    { layout:
+    { page: { fontSize: 16, lineHeight: 1.75, color: "var(--text-secondary)" }
+    , layout:
         { display: "grid"
         , gridTemplateColumns:
             StyleX.conditionalValue
@@ -263,7 +267,7 @@ styleProps = StyleX.recordProps styles
 documentation :: { title :: String, intro :: String, sections :: Array Section } -> JSX
 documentation { title, intro, sections } =
   DOM.div
-    {}
+    styleProps.page
     [ DOM.a { className: styleProps.skip.className, href: "#content" } "Skip to content"
     , SiteNav.siteHeader
         [ DOM.p styleProps.headerTitle "Documentation"

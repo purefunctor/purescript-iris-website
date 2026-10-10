@@ -4,6 +4,13 @@ import MenuIcon from "~icons/lucide/menu";
 import CloseIcon from "~icons/lucide/x";
 import { createNavigationOcean } from "#src/Website/Components/NavigationOcean.js";
 
+export const configurePlatform = () => {
+  if (/^Mac|^macOS/.test(navigator.platform)) {
+    document.documentElement.setAttribute("data-landing-macos", "");
+  }
+  return () => {};
+};
+
 export function navigationLinkImpl({ href, className, canvasClassName, contentClassName, current, content }) {
   const canvas = useRef(null);
   const field = useRef(null);
