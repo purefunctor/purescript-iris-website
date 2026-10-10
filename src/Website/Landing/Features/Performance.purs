@@ -15,39 +15,29 @@ styles =
         , fontSize:
             StyleX.conditionalValue
               "16px"
-              [ StyleX.conditionalCase
-                  breakpoints.upTo800
-                  "clamp(11.5px, 3.1vw, 12.5px)"
-              ]
+              [ StyleX.conditionalCase breakpoints.upTo800 "clamp(11.5px, 3.1vw, 12.5px)" ]
         , fontVariantNumeric: "tabular-nums"
         , lineHeight: 1.25
         , margin: 0
         , maxWidth: "100%"
         , overflowX: "auto"
-        , paddingBlock:
-            StyleX.conditionalValue
-              0
-              [ StyleX.conditionalCase breakpoints.upTo800 12 ]
+        , paddingBlock: StyleX.conditionalValue 0 [ StyleX.conditionalCase breakpoints.upTo800 12 ]
         , paddingInline: 0
         , width: "100%"
         }
     , performanceLine: { display: "block" }
     , performancePhase: { fontWeight: 600 }
     , performanceBar: { color: "var(--landing-color-latte-teal)" }
-    , performanceFinished:
-        { color: "var(--landing-color-latte-green)", fontWeight: 650 }
+    , performanceFinished: { color: "var(--landing-color-latte-green)", fontWeight: 650 }
     , performanceBarTail:
         { display:
-            StyleX.conditionalValue
-              "inline"
-              [ StyleX.conditionalCase breakpoints.upTo800 "none" ]
+            StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo800 "none" ]
         }
     }
 
 styleProps = StyleX.recordProps styles
 
-performanceBarTail =
-  StyleX.props [ styles.performanceBar, styles.performanceBarTail ]
+performanceBarTail = StyleX.props [ styles.performanceBar, styles.performanceBarTail ]
 
 performanceMedia :: JSX
 performanceMedia =

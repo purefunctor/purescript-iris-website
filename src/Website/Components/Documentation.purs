@@ -35,15 +35,9 @@ foreign import mobileSidebarImpl ::
     }
 
 slideIn =
-  StyleX.keyframes
-    { from: { transform: "translateX(-100%)" }
-    , to: { transform: "translateX(0)" }
-    }
+  StyleX.keyframes { from: { transform: "translateX(-100%)" }, to: { transform: "translateX(0)" } }
 slideOut =
-  StyleX.keyframes
-    { from: { transform: "translateX(0)" }
-    , to: { transform: "translateX(-100%)" }
-    }
+  StyleX.keyframes { from: { transform: "translateX(0)" }, to: { transform: "translateX(-100%)" } }
 fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
 fadeOut = StyleX.keyframes { from: { opacity: 1 }, to: { opacity: 0 } }
 
@@ -55,9 +49,7 @@ styles =
             StyleX.conditionalValue
               "210px minmax(0, 720px) max-content"
               [ StyleX.conditionalCase breakpoints.upTo960 "minmax(0, 1fr)"
-              , StyleX.conditionalCase
-                  breakpoints.above960To1160
-                  "210px minmax(0, 720px)"
+              , StyleX.conditionalCase breakpoints.above960To1160 "210px minmax(0, 720px)"
               ]
         , columnGap: "clamp(32px, 4vw, 64px)"
         , rowGap: 32
@@ -65,21 +57,15 @@ styles =
         , maxWidth: "var(--container-wide)"
         , paddingInline: "var(--gutter)"
         , paddingBlockStart:
-            StyleX.conditionalValue
-              64
-              [ StyleX.conditionalCase breakpoints.upTo960 24 ]
+            StyleX.conditionalValue 64 [ StyleX.conditionalCase breakpoints.upTo960 24 ]
         , paddingBlockEnd: 80
         , alignItems: "start"
         }
     , sidebar:
         { display:
-            StyleX.conditionalValue
-              "block"
-              [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
+            StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
         , position:
-            StyleX.conditionalValue
-              "sticky"
-              [ StyleX.conditionalCase breakpoints.upTo960 "static" ]
+            StyleX.conditionalValue "sticky" [ StyleX.conditionalCase breakpoints.upTo960 "static" ]
         , top: "calc(var(--nav-height) + 64px)"
         -- Match the layout's top and bottom padding, including at the page end.
         , maxHeight:
@@ -87,14 +73,11 @@ styles =
               "calc(100dvh - var(--nav-height) - 64px - 80px)"
               [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
         , overflowY:
-            StyleX.conditionalValue
-              "auto"
-              [ StyleX.conditionalCase breakpoints.upTo960 "visible" ]
+            StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo960 "visible" ]
         , minWidth: 0
         }
     , trigger:
-        { backgroundColor:
-            { default: "transparent", ":hover": "var(--surface-2)" }
+        { backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
         , display: "inline-flex"
         , alignItems: "center"
         , justifyContent: "center"
@@ -108,25 +91,19 @@ styles =
         }
     , headerTitle:
         { display:
-            StyleX.conditionalValue
-              "block"
-              [ StyleX.conditionalCase breakpoints.upTo480 "none" ]
+            StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo480 "none" ]
         , color: "var(--text-secondary)"
         , fontSize: 14
         , fontWeight: 500
         }
     , mobileMenu:
         { display:
-            StyleX.conditionalValue
-              "none"
-              [ StyleX.conditionalCase breakpoints.upTo960 "block" ]
+            StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo960 "block" ]
         , marginInlineStart: "auto"
         }
     , navigation:
         { display:
-            StyleX.conditionalValue
-              "block"
-              [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
+            StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
         }
     , overlay:
         { position: "fixed"
@@ -134,30 +111,16 @@ styles =
         , zIndex: 40
         , display: "flex"
         , backgroundColor: "var(--overlay-scrim)"
-        , animationName:
-            { default: "none"
-            , "[data-entering]": fadeIn
-            , "[data-exiting]": fadeOut
-            }
-        , animationDuration:
-            { default: "180ms"
-            , "@media (prefers-reduced-motion: reduce)": "0ms"
-            }
+        , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
+        , animationDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         }
     , modal:
         { backgroundColor: "var(--loam-900)"
         , width: "min(340px, calc(100vw - 40px))"
         , height: "100dvh"
         , overflowY: "auto"
-        , animationName:
-            { default: "none"
-            , "[data-entering]": slideIn
-            , "[data-exiting]": slideOut
-            }
-        , animationDuration:
-            { default: "180ms"
-            , "@media (prefers-reduced-motion: reduce)": "0ms"
-            }
+        , animationName: { default: "none", "[data-entering]": slideIn, "[data-exiting]": slideOut }
+        , animationDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         , animationTimingFunction: "var(--ease-out)"
         }
     , dialog: { padding: 24, outline: "none" }
@@ -169,19 +132,14 @@ styles =
         , marginBlockEnd: 32
         }
     , drawerTitle:
-        { fontSize: 21
-        , fontWeight: 600
-        , color: "var(--text-primary)"
-        , letterSpacing: "-0.025em"
-        }
+        { fontSize: 21, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.025em" }
     , close:
         { display: "inline-flex"
         , alignItems: "center"
         , justifyContent: "center"
         , height: 36
         , width: 36
-        , backgroundColor:
-            { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
+        , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
         , color: "var(--text-primary)"
         , borderRadius: "50%"
         , cursor: "default"
@@ -193,12 +151,7 @@ styles =
               "none"
               [ StyleX.conditionalCase breakpoints.above960To1160 "block" ]
         }
-    , label:
-        { fontSize: 13
-        , fontWeight: 600
-        , color: "var(--text-primary)"
-        , marginBlockEnd: 14
-        }
+    , label: { fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBlockEnd: 14 }
     , navigationTitle:
         { fontSize: 21
         , fontWeight: 600
@@ -206,17 +159,12 @@ styles =
         , color: "var(--text-primary)"
         , marginBlockEnd: 24
         }
-    , links:
-        { display: "flex", flexDirection: "column", gap: 4, marginBlockEnd: 32 }
+    , links: { display: "flex", flexDirection: "column", gap: 4, marginBlockEnd: 32 }
     , link:
         { position: "relative"
         , isolation: "isolate"
-        , backgroundColor:
-            { default: "transparent", ":hover": "var(--surface-1)" }
-        , color:
-            { default: "var(--text-secondary)"
-            , ":hover": "var(--text-primary)"
-            }
+        , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
+        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , cursor: "default"
         , display: "flex"
         , alignItems: "center"
@@ -229,8 +177,7 @@ styles =
         , outlineColor: "var(--focus-ring)"
         }
     , current:
-        { backgroundColor:
-            { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
+        { backgroundColor: { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
         , color: "var(--iris-200)"
         , fontWeight: 600
         }
@@ -254,11 +201,7 @@ styles =
         , minWidth: 0
         }
     , resourceIcon:
-        { display: "inline-flex"
-        , flexShrink: 0
-        , fontSize: 11
-        , color: "var(--text-tertiary)"
-        }
+        { display: "inline-flex", flexShrink: 0, fontSize: 11, color: "var(--text-tertiary)" }
     , article: { minWidth: 0 }
     , title:
         { fontSize: "clamp(38px, 4vw, 54px)"
@@ -275,10 +218,7 @@ styles =
         , maxWidth: "60ch"
         , marginBlockEnd: 48
         }
-    , section:
-        { marginBlockEnd: 48
-        , scrollMarginTop: "calc(var(--nav-height) + 28px)"
-        }
+    , section: { marginBlockEnd: 48, scrollMarginTop: "calc(var(--nav-height) + 28px)" }
     , heading:
         { fontSize: 25
         , color: "var(--text-primary)"
@@ -290,9 +230,7 @@ styles =
     , body: { display: "flex", flexDirection: "column", gap: 18 }
     , toc:
         { display:
-            StyleX.conditionalValue
-              "block"
-              [ StyleX.conditionalCase breakpoints.upTo1160 "none" ]
+            StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo1160 "none" ]
         , position: "sticky"
         , top: "calc(var(--nav-height) + 64px)"
         , maxHeight: "calc(100dvh - var(--nav-height) - 64px - 80px)"
@@ -301,16 +239,14 @@ styles =
         , width: "28ch"
         }
     , tocLink:
-        { color:
-            { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
+        { color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
         , display: "block"
         , fontSize: 13
         , paddingBlock: 6
         , textDecoration: "none"
         , outlineColor: "var(--focus-ring)"
         }
-    , footer:
-        { color: "var(--text-tertiary)", fontSize: 13, marginBlockStart: 64 }
+    , footer: { color: "var(--text-tertiary)", fontSize: 13, marginBlockStart: 64 }
     , skip:
         { position: "fixed"
         , top: { default: "-100px", ":focus": "12px" }
@@ -324,14 +260,11 @@ styles =
 
 styleProps = StyleX.recordProps styles
 
-documentation ::
-  { title :: String, intro :: String, sections :: Array Section } -> JSX
+documentation :: { title :: String, intro :: String, sections :: Array Section } -> JSX
 documentation { title, intro, sections } =
   DOM.div
     {}
-    [ DOM.a
-        { className: styleProps.skip.className, href: "#content" }
-        "Skip to content"
+    [ DOM.a { className: styleProps.skip.className, href: "#content" } "Skip to content"
     , SiteNav.siteHeader
         [ DOM.p styleProps.headerTitle "Documentation"
         , element
@@ -357,28 +290,20 @@ documentation { title, intro, sections } =
         [ DOM.aside
             styleProps.sidebar
             [ DOM.nav
-                { className: styleProps.navigation.className
-                , "aria-label": "Documentation"
-                }
-                (
-                  [ DOM.p styleProps.navigationTitle "Documentation" ]
+                { className: styleProps.navigation.className, "aria-label": "Documentation" }
+                ( [ DOM.p styleProps.navigationTitle "Documentation" ]
                     <> guide
                     <> resources
                     <> [ DOM.div
                            styleProps.tabletToc
                            [ DOM.p styleProps.label "In this guide"
-                           , DOM.div
-                               styleProps.links
-                               (map sidebarAnchor sections)
+                           , DOM.div styleProps.links (map sidebarAnchor sections)
                            ]
                        ]
                 )
             ]
         , DOM.main
-            { className: styleProps.article.className
-            , id: "content"
-            , tabIndex: -1
-            }
+            { className: styleProps.article.className, id: "content", tabIndex: -1 }
             [ DOM.h1 styleProps.title title
             , DOM.p styleProps.intro intro
             , DOM.div {} (map section sections)
@@ -387,9 +312,7 @@ documentation { title, intro, sections } =
                 "Iris is in alpha. Commands and APIs may change between releases."
             ]
         , DOM.nav
-            { className: styleProps.toc.className
-            , "aria-label": "On this page"
-            }
+            { className: styleProps.toc.className, "aria-label": "On this page" }
             ([ DOM.p styleProps.label "On this page" ] <> map anchor sections)
         ]
     ]
@@ -397,22 +320,14 @@ documentation { title, intro, sections } =
   guide =
     [ DOM.div
         styleProps.links
-        [ navigationLink
-            "/docs/getting-started"
-            true
-            [ DOM.text "Getting started" ]
-        ]
+        [ navigationLink "/docs/getting-started" true [ DOM.text "Getting started" ] ]
     ]
   resources =
     [ DOM.p styleProps.label "Resources"
     , DOM.div
         styleProps.links
-        [ resource
-            "https://github.com/purefunctor/purescript-iris"
-            "Compiler source"
-        , resource
-            "https://github.com/purefunctor/purescript-iris/releases"
-            "Releases"
+        [ resource "https://github.com/purefunctor/purescript-iris" "Compiler source"
+        , resource "https://github.com/purefunctor/purescript-iris/releases" "Releases"
         , resource "https://pursuit.purescript.org" "Library documentation"
         ]
     ]
@@ -430,17 +345,13 @@ documentation { title, intro, sections } =
       navigationLinkImpl
       { href
       , className:
-          (
-            StyleX.props
-              [ styles.link, StyleX.conditional current styles.current ]
-          ).className
+          (StyleX.props [ styles.link, StyleX.conditional current styles.current ]).className
       , canvasClassName: styleProps.navigationCanvas.className
       , contentClassName: styleProps.linkContent.className
       , current
       , content
       }
-  sidebarAnchor { id, title: label } =
-    navigationLink ("#" <> id) false [ DOM.text label ]
+  sidebarAnchor { id, title: label } = navigationLink ("#" <> id) false [ DOM.text label ]
   anchor { id, title: label } =
     DOM.a { className: styleProps.tocLink.className, href: "#" <> id } label
   section { id, title: heading, body } =

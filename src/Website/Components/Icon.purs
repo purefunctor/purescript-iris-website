@@ -1,34 +1,33 @@
 module Website.Components.Icon
-  (
-    IconProps
-    , arrowRight
-    , bluesky
-    , bookOpen
-    , bot
-    , check
-    , checkCircle
-    , code
-    , codeXml
-    , copy
-    , copyright
-    , database
-    , externalLink
-    , fileCode
-    , flame
-    , gitHub
-    , globe
-    , maximize
-    , menu
-    , minimize
-    , pause
-    , play
-    , pureScript
-    , server
-    , shieldCheck
-    , snowflake
-    , squareTerminal
-    , x
-    , xSocial
+  ( IconProps
+  , arrowRight
+  , bluesky
+  , bookOpen
+  , bot
+  , check
+  , checkCircle
+  , code
+  , codeXml
+  , copy
+  , copyright
+  , database
+  , externalLink
+  , fileCode
+  , flame
+  , gitHub
+  , globe
+  , maximize
+  , menu
+  , minimize
+  , pause
+  , play
+  , pureScript
+  , server
+  , shieldCheck
+  , snowflake
+  , squareTerminal
+  , x
+  , xSocial
   )
   where
 

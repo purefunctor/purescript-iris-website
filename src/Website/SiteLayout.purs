@@ -7,9 +7,7 @@ styles =
   StyleX.create
     { html:
         { scrollbarGutter:
-            StyleX.conditionalValue
-              "stable"
-              [ StyleX.conditionalCase breakpoints.upTo800 "auto" ]
+            StyleX.conditionalValue "stable" [ StyleX.conditionalCase breakpoints.upTo800 "auto" ]
         }
     }
 

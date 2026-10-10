@@ -1,6 +1,4 @@
-module Website.Components.CodeBlock
-  (CodeBlock, Language(..), Surface(..), codeBlock)
-  where
+module Website.Components.CodeBlock (CodeBlock, Language(..), Surface(..), codeBlock) where
 
 import Prelude
 
@@ -43,10 +41,7 @@ styles =
         , overflow: "hidden"
         , position: "relative"
         }
-    , flat:
-        { backgroundColor: "var(--syn-bg)"
-        , borderColor: "var(--border-subtle)"
-        }
+    , flat: { backgroundColor: "var(--syn-bg)", borderColor: "var(--border-subtle)" }
     , glass:
         { "WebkitBackdropFilter": "blur(18px) saturate(1.25)"
         , backdropFilter: "blur(18px) saturate(1.25)"
@@ -65,8 +60,7 @@ styles =
         , paddingInlineStart: 14
         , paddingInlineEnd: 8
         }
-    , fileIcon:
-        { color: "var(--text-tertiary)", display: "inline-flex", fontSize: 12 }
+    , fileIcon: { color: "var(--text-tertiary)", display: "inline-flex", fontSize: 12 }
     , filename:
         { color: "var(--text-secondary)"
         , flexGrow: 1
@@ -90,22 +84,15 @@ styles =
     , code: { display: "block" }
     , line: { display: "flex", paddingInline: 18 }
     , highlighted:
-        { backgroundColor: "var(--syn-highlight)"
-        , boxShadow: "inset 2px 0 0 var(--ochre-400)"
-        }
+        { backgroundColor: "var(--syn-highlight)", boxShadow: "inset 2px 0 0 var(--ochre-400)" }
     , lineNumber:
         { color: "var(--syn-line-number)"
         , flexShrink: 0
         , marginInlineEnd:
-            StyleX.conditionalValue
-              16
-              [ StyleX.conditionalCase breakpoints.upTo480 12 ]
+            StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo480 12 ]
         , textAlign: "right"
         , userSelect: "none"
-        , width:
-            StyleX.conditionalValue
-              28
-              [ StyleX.conditionalCase breakpoints.upTo480 18 ]
+        , width: StyleX.conditionalValue 28 [ StyleX.conditionalCase breakpoints.upTo480 18 ]
         }
     , content: { minWidth: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
     , keyword: { color: "var(--syn-keyword)" }
@@ -122,29 +109,26 @@ styles =
 styleProps = StyleX.recordProps styles
 
 surfaceStyle :: Surface -> StyleX.Style
-surfaceStyle =
-  case _ of
-    Flat -> styles.flat
-    Glass -> styles.glass
+surfaceStyle = case _ of
+  Flat -> styles.flat
+  Glass -> styles.glass
 
 tokenStyle :: String -> StyleX.Style
-tokenStyle =
-  case _ of
-    "keyword" -> styles.keyword
-    "type" -> styles.type
-    "string" -> styles.string
-    "number" -> styles.number
-    "comment" -> styles.comment
-    "function" -> styles.function
-    "operator" -> styles.operator
-    "punct" -> styles.punct
-    _ -> styles.text
+tokenStyle = case _ of
+  "keyword" -> styles.keyword
+  "type" -> styles.type
+  "string" -> styles.string
+  "number" -> styles.number
+  "comment" -> styles.comment
+  "function" -> styles.function
+  "operator" -> styles.operator
+  "punct" -> styles.punct
+  _ -> styles.text
 
 languageName :: Language -> String
-languageName =
-  case _ of
-    PureScript -> "purescript"
-    JavaScript -> "javascript"
+languageName = case _ of
+  PureScript -> "purescript"
+  JavaScript -> "javascript"
 
 codeBlock :: CodeBlock -> JSX
 codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =
@@ -157,47 +141,32 @@ codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =
             (element Icon.fileCode { "aria-hidden": true, focusable: false })
         , DOM.span styleProps.filename filename
         , foldMap InfoButton.infoButton note
-        , CopyButton.copyButton
-            { label: "Copy " <> filename, size: CopyButton.Small, text: code }
+        , CopyButton.copyButton { label: "Copy " <> filename, size: CopyButton.Small, text: code }
         ]
     , DOM.pre
         styleProps.pre
-        (
-          DOM.code
+        ( DOM.code
             styleProps.code
-            (
-              mapWithIndex
-                renderLine
-                (tokenizeImpl (languageName language) code)
-            )
+            (mapWithIndex renderLine (tokenizeImpl (languageName language) code))
         )
     ]
   where
   renderLine index tokens =
     DOM.span
-      (
-        StyleX.props
-          [ styles.line
-          , StyleX.conditional (elem (index + 1) highlight) styles.highlighted
-          ]
+      ( StyleX.props
+          [ styles.line, StyleX.conditional (elem (index + 1) highlight) styles.highlighted ]
       )
-      (
-        (
-            if lineNumbers
-            then
-              [ DOM.span
-                  { className: styleProps.lineNumber.className
-                  , "aria-hidden": true
-                  }
-                  (show (index + 1))
-              ]
-            else []
-          )
+      ( ( if lineNumbers
+          then
+            [ DOM.span
+                { className: styleProps.lineNumber.className, "aria-hidden": true }
+                (show (index + 1))
+            ]
+          else []
+        )
           <> [ DOM.span
                  styleProps.content
-                 if null tokens
-                 then [ DOM.text " " ]
-                 else map renderToken tokens
+                 if null tokens then [ DOM.text " " ] else map renderToken tokens
              ]
       )
 

@@ -24,12 +24,7 @@ foreign import installationImpl ::
 styles =
   StyleX.create
     { root:
-        { display: "flex"
-        , flexDirection: "column"
-        , gap: 8
-        , maxWidth: "100%"
-        , width: "fit-content"
-        }
+        { display: "flex", flexDirection: "column", gap: 8, maxWidth: "100%", width: "fit-content" }
     , header:
         { alignItems: "center"
         , display: "flex"
@@ -40,13 +35,9 @@ styles =
     -- Opens the selected platform's installation script.
     , source:
         { alignItems: "center"
-        , backgroundColor:
-            { default: "var(--glass-fill)"
-            , ":hover": "var(--glass-fill-strong)"
-            }
+        , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
         , borderRadius: 5
-        , color:
-            { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
+        , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
         , display: "inline-flex"
         , flexShrink: 0
         , fontFamily: "var(--font-sans)"
@@ -55,8 +46,7 @@ styles =
         , gap: 6
         , lineHeight: 1
         , marginInlineStart: "auto"
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , paddingBlock: 7
         , paddingInline: 10
@@ -87,8 +77,7 @@ styles =
         , gap: 12
         , maxWidth: "100%"
         , minHeight: 44
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , paddingBlock: 3
         , paddingInlineStart: 16
@@ -117,10 +106,7 @@ installation =
     , copyButton:
         \text ->
           CopyButton.copyButton
-            { label: "Copy installation command"
-            , size: CopyButton.Medium
-            , text
-            }
+            { label: "Copy installation command", size: CopyButton.Medium, text }
     , headerClassName: styleProps.header.className
     , iconClassName: styleProps.icon.className
     , panelClassName: styleProps.panel.className

@@ -1,6 +1,4 @@
-module Website.Components.Button
-  (ButtonAction, Size(..), Variant(..), buttonAction)
-  where
+module Website.Components.Button (ButtonAction, Size(..), Variant(..), buttonAction) where
 
 import Prelude
 
@@ -41,8 +39,7 @@ styles =
         , justifyContent: "center"
         , letterSpacing: "-0.005em"
         , lineHeight: 1
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , textDecoration: "none"
         , transform: { default: "none", ":active": "scale(0.98)" }
@@ -52,8 +49,7 @@ styles =
         , userSelect: "none"
         , whiteSpace: "nowrap"
         }
-    , small:
-        { borderRadius: 5, fontSize: 13, gap: 6, height: 28, paddingInline: 10 }
+    , small: { borderRadius: 5, fontSize: 13, gap: 6, height: 28, paddingInline: 10 }
     , medium: { fontSize: 14, gap: 8, height: 36, paddingInline: 14 }
     , large: { fontSize: 15, gap: 8, height: 44, paddingInline: 20 }
     , primary:
@@ -65,23 +61,15 @@ styles =
         , color: "var(--text-on-accent)"
         }
     , secondary:
-        { backgroundColor:
-            { default: "var(--surface-2)", ":hover": "var(--surface-3)" }
-        , borderColor:
-            { default: "var(--border-default)"
-            , ":hover": "var(--border-strong)"
-            }
+        { backgroundColor: { default: "var(--surface-2)", ":hover": "var(--surface-3)" }
+        , borderColor: { default: "var(--border-default)", ":hover": "var(--border-strong)" }
         , color: "var(--text-primary)"
         }
     , glass:
         { "WebkitBackdropFilter": "blur(12px)"
         , backdropFilter: "blur(12px)"
-        , backgroundColor:
-            { default: "var(--glass-fill)"
-            , ":hover": "var(--glass-fill-strong)"
-            }
-        , borderColor:
-            { default: "var(--glass-border)", ":hover": "var(--border-strong)" }
+        , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
+        , borderColor: { default: "var(--glass-border)", ":hover": "var(--border-strong)" }
         , boxShadow:
             { default: "inset 0 1px 0 var(--glass-highlight)"
             , ":focus-visible": "var(--shadow-focus)"
@@ -96,47 +84,39 @@ styles =
     }
 
 sizeStyle :: Size -> StyleX.Style
-sizeStyle =
-  case _ of
-    Small -> styles.small
-    Medium -> styles.medium
-    Large -> styles.large
+sizeStyle = case _ of
+  Small -> styles.small
+  Medium -> styles.medium
+  Large -> styles.large
 
 iconSizeStyle :: Size -> StyleX.Style
-iconSizeStyle =
-  case _ of
-    Small -> styles.smallIcon
-    Medium -> styles.mediumIcon
-    Large -> styles.largeIcon
+iconSizeStyle = case _ of
+  Small -> styles.smallIcon
+  Medium -> styles.mediumIcon
+  Large -> styles.largeIcon
 
 variantStyle :: Variant -> StyleX.Style
-variantStyle =
-  case _ of
-    Primary -> styles.primary
-    Secondary -> styles.secondary
-    Glass -> styles.glass
+variantStyle = case _ of
+  Primary -> styles.primary
+  Secondary -> styles.secondary
+  Glass -> styles.glass
 
 -- | An action styled as a button.
 buttonAction :: ButtonAction -> JSX
 buttonAction { label, icon, onPress, size, variant } =
   DOM.button
-    { className:
-        (
-          StyleX.props [ styles.button, sizeStyle size, variantStyle variant ]
-        ).className
+    { className: (StyleX.props [ styles.button, sizeStyle size, variantStyle variant ]).className
     , onClick: handler_ onPress
     , type: "button"
     }
     (buttonContent label icon size)
 
-buttonContent ::
-  String -> Maybe (ReactComponent Icon.IconProps) -> Size -> Array JSX
-buttonContent label icon size =
-  case icon of
-    Nothing -> [ DOM.text label ]
-    Just component ->
-      [ DOM.text label
-      , DOM.span
-          (StyleX.props [ styles.icon, iconSizeStyle size ])
-          (element component { "aria-hidden": true, focusable: false })
-      ]
+buttonContent :: String -> Maybe (ReactComponent Icon.IconProps) -> Size -> Array JSX
+buttonContent label icon size = case icon of
+  Nothing -> [ DOM.text label ]
+  Just component ->
+    [ DOM.text label
+    , DOM.span
+        (StyleX.props [ styles.icon, iconSizeStyle size ])
+        (element component { "aria-hidden": true, focusable: false })
+    ]

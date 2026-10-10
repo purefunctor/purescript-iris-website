@@ -7,19 +7,14 @@ iconButtonStyles =
   StyleX.create
     { button:
         { alignItems: "center"
-        , backgroundColor:
-            { default: "transparent", ":hover": "var(--surface-2)" }
+        , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
         , borderRadius: 8
-        , color:
-            { default: "var(--text-secondary)"
-            , ":hover": "var(--text-primary)"
-            }
+        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , cursor: "var(--landing-interactive-cursor, pointer)"
         , display: "inline-flex"
         , flexShrink: 0
         , justifyContent: "center"
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , transform: { default: "none", ":active": "scale(0.94)" }
         , transitionDuration: "140ms, 140ms, 80ms"
@@ -48,10 +43,7 @@ iconButtonStyles =
             , "[data-entering]": "translateY(3px)"
             , "[data-exiting]": "translateY(3px)"
             }
-        , transitionDuration:
-            { default: "140ms"
-            , "@media (prefers-reduced-motion: reduce)": "0ms"
-            }
+        , transitionDuration: { default: "140ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         , transitionProperty: "opacity, transform"
         , transitionTimingFunction: "var(--ease-out)"
         }

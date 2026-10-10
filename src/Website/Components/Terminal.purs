@@ -33,8 +33,7 @@ styles =
         , borderBlockEndStyle: "solid"
         , borderBlockEndWidth: 1
         }
-    , icon:
-        { display: "inline-flex", color: "var(--text-tertiary)", fontSize: 12 }
+    , icon: { display: "inline-flex", color: "var(--text-tertiary)", fontSize: 12 }
     , title:
         { flexGrow: 1
         , fontFamily: "var(--font-sans)"
@@ -55,11 +54,7 @@ styles =
     , command: { display: "flex", gap: 10, color: "var(--syn-text)" }
     , prompt: { color: "var(--accent-text)", flexShrink: 0, userSelect: "none" }
     , input: { minWidth: 0 }
-    , output:
-        { display: "block"
-        , color: "var(--text-tertiary)"
-        , paddingBlockStart: 2
-        }
+    , output: { display: "block", color: "var(--text-tertiary)", paddingBlockStart: 2 }
     }
 
 styleProps = StyleX.recordProps styles
@@ -72,11 +67,7 @@ terminal entries =
         styleProps.head
         [ DOM.span
             styleProps.icon
-            (
-              element
-                Icon.squareTerminal
-                { "aria-hidden": true, focusable: false }
-            )
+            (element Icon.squareTerminal { "aria-hidden": true, focusable: false })
         , DOM.span styleProps.title "Terminal"
         , CopyButton.copyButton
             { label: "Copy terminal commands"
@@ -92,9 +83,7 @@ terminal entries =
       styleProps.entry
       [ DOM.span
           styleProps.command
-          [ DOM.span
-              { className: styleProps.prompt.className, "aria-hidden": true }
-              "$"
+          [ DOM.span { className: styleProps.prompt.className, "aria-hidden": true } "$"
           , DOM.span styleProps.input command
           ]
       , if output == "" then mempty else DOM.span styleProps.output output

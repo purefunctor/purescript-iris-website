@@ -28,12 +28,7 @@ styles =
         , paddingInline: 5
         , paddingBlock: 2
         }
-    , list:
-        { paddingInlineStart: 22
-        , display: "flex"
-        , flexDirection: "column"
-        , gap: 10
-        }
+    , list: { paddingInlineStart: 22, display: "flex", flexDirection: "column", gap: 10 }
     , link:
         { color: { default: "var(--accent-text)", ":hover": "var(--iris-200)" }
         , textUnderlineOffset: 4
@@ -54,19 +49,18 @@ styles =
 styleProps = StyleX.recordProps styles
 
 component :: ReactComponent {}
-component = unsafePerformEffect $ Hooks.reactComponent "GettingStarted" \_ ->
-  Hooks.do
-    Hooks.useEffectOnce configurePlatform
-    pure
-      $ DOM.div
-          styleProps.page
-          [ Documentation.documentation
-              { title: "Getting started"
-              , intro:
-                  "Install Iris, create your first workspace, and run a small command-line application with Node.js."
-              , sections
-              }
-          ]
+component = unsafePerformEffect $ Hooks.reactComponent "GettingStarted" \_ -> Hooks.do
+  Hooks.useEffectOnce configurePlatform
+  pure
+    $ DOM.div
+        styleProps.page
+        [ Documentation.documentation
+            { title: "Getting started"
+            , intro:
+                "Install Iris, create your first workspace, and run a small command-line application with Node.js."
+            , sections
+            }
+        ]
 
 sections :: Array Documentation.Section
 sections =
@@ -78,8 +72,7 @@ sections =
             , link "https://nodejs.org/en/download" "Node.js"
             , DOM.text " 22.5.0 or later (with npm), "
             , link "https://git-scm.com/downloads" "Git"
-            , DOM.text
-                ", and an internet connection for your first workspace and build."
+            , DOM.text ", and an internet connection for your first workspace and build."
             ]
         , paragraph
             [ DOM.text "Iris uses "
@@ -119,8 +112,7 @@ sections =
             , inlineCode "PATH"
             , DOM.text " and check the compiler:"
             ]
-        , Terminal.terminal
-            [ { command: "iris --version", output: "iris 0.1.5" } ]
+        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.5" } ]
         , DOM.aside
             styleProps.note
             [ DOM.strong {} "If your shell can’t find Iris"
@@ -131,13 +123,8 @@ sections =
                 , DOM.text ". Add it to your PATH for this session:"
                 ]
             , Terminal.terminal
-                [ { command: "export PATH=\"$HOME/.local/bin:$PATH\""
-                  , output: ""
-                  }
-                ]
-            , DOM.p
-                {}
-                "Add the same command to your shell configuration for future terminals."
+                [ { command: "export PATH=\"$HOME/.local/bin:$PATH\"", output: "" } ]
+            , DOM.p {} "Add the same command to your shell configuration for future terminals."
             , DOM.p
                 {}
                 [ DOM.text "On Windows, add "
@@ -161,8 +148,7 @@ sections =
             [ DOM.text
                 "Create an empty directory outside any existing Spago workspace, then initialize it. "
             , inlineCode "iris new"
-            , DOM.text
-                " works in the current directory and uses its name for your package."
+            , DOM.text " works in the current directory and uses its name for your package."
             ]
         , Terminal.terminal
             [ { command: "mkdir hello-iris", output: "" }
@@ -183,25 +169,15 @@ sections =
                 , DOM.text
                     " — your package’s dependencies and pinned Registry package set. The starter includes prelude, effect, and console."
                 ]
-            , item
-                [ inlineCode "src/Main.purs"
-                , DOM.text " — your application’s main module."
-                ]
-            , item
-                [ inlineCode "test/Test/Main.purs"
-                , DOM.text " — a starter test module."
-                ]
+            , item [ inlineCode "src/Main.purs", DOM.text " — your application’s main module." ]
+            , item [ inlineCode "test/Test/Main.purs", DOM.text " — a starter test module." ]
             , item
                 [ inlineCode ".gitignore"
-                , DOM.text
-                    " — keeps generated output and package caches out of Git."
+                , DOM.text " — keeps generated output and package caches out of Git."
                 ]
             ]
         , paragraph
-            [ DOM.text "Run the remaining commands from "
-            , inlineCode "hello-iris"
-            , DOM.text "."
-            ]
+            [ DOM.text "Run the remaining commands from ", inlineCode "hello-iris", DOM.text "." ]
         ]
     }
   , { id: "write-your-program"
@@ -210,8 +186,7 @@ sections =
         [ paragraph
             [ DOM.text "Open "
             , inlineCode "src/Main.purs"
-            , DOM.text
-                " in your editor and replace the generated contents with:"
+            , DOM.text " in your editor and replace the generated contents with:"
             ]
         , CodeBlock.codeBlock
             { code:
@@ -234,8 +209,7 @@ sections =
             ]
         , paragraph
             [ inlineCode "main :: Effect Unit"
-            , DOM.text
-                " says that main performs effects without returning a useful value. The "
+            , DOM.text " says that main performs effects without returning a useful value. The "
             , inlineCode "do"
             , DOM.text " block contains the action that prints your greeting."
             ]

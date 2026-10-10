@@ -33,12 +33,7 @@ foreign import benchmarkChartImpl ::
     , rootClassName :: String
     , tabClassName :: String
     , tabListClassName :: String
-    , tabs ::
-        Array
-          { icon :: ReactComponent Icon.IconProps
-          , id :: String
-          , label :: String
-          }
+    , tabs :: Array { icon :: ReactComponent Icon.IconProps, id :: String, label :: String }
     }
 
 -- | A value for each measurement: a cold build, and a rebuild after an edit.
@@ -53,9 +48,7 @@ type Bar =
 
 type Tick = { label :: String, position :: Measured StyleX.Style }
 
-grow =
-  StyleX.keyframes
-    { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } }
+grow = StyleX.keyframes { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } }
 
 styles =
   StyleX.create
@@ -77,18 +70,12 @@ styles =
     -- Use responsive properties directly: StyleX's unlayered custom-property defaults
     -- otherwise outrank the layered overrides generated from imported conditions.
     , grid:
-        { columnGap:
-            StyleX.conditionalValue
-              24
-              [ StyleX.conditionalCase breakpoints.upTo600 10 ]
+        { columnGap: StyleX.conditionalValue 24 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
         , display: "grid"
         , gridTemplateColumns:
             StyleX.conditionalValue
               "168px minmax(0, 1fr) 96px"
-              [ StyleX.conditionalCase
-                  breakpoints.upTo600
-                  "92px minmax(0, 1fr) 64px"
-              ]
+              [ StyleX.conditionalCase breakpoints.upTo600 "92px minmax(0, 1fr) 64px" ]
         }
     -- Gridlines and the Iris marker sit behind the bars, across the plot column. Ticks that are off
     -- the current axis wait far beyond it, so the overlay and the axis clip just past its end.
@@ -98,10 +85,7 @@ styles =
         , insetInlineEnd:
             StyleX.conditionalValue
               "calc(96px + 24px - 16px)"
-              [ StyleX.conditionalCase
-                  breakpoints.upTo600
-                  "calc(64px + 10px - 16px)"
-              ]
+              [ StyleX.conditionalCase breakpoints.upTo600 "calc(64px + 10px - 16px)" ]
         , insetInlineStart:
             StyleX.conditionalValue
               "calc(168px + 24px)"
@@ -110,18 +94,12 @@ styles =
         , pointerEvents: "none"
         , position: "absolute"
         }
-    , plotArea:
-        { insetBlock: 0
-        , insetInlineEnd: 16
-        , insetInlineStart: 0
-        , position: "absolute"
-        }
+    , plotArea: { insetBlock: 0, insetInlineEnd: 16, insetInlineStart: 0, position: "absolute" }
     , gridline:
         { backgroundColor: "var(--border-subtle)"
         , insetBlock: 0
         , position: "absolute"
-        , transitionDuration:
-            { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+        , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
         , transitionProperty: "left, opacity"
         , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
         , width: 1
@@ -130,8 +108,7 @@ styles =
         { backgroundColor: "var(--accent)"
         , insetBlock: 0
         , position: "absolute"
-        , transitionDuration:
-            { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+        , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
         , transitionProperty: "left"
         , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
         , width: 1
@@ -139,52 +116,32 @@ styles =
     , rows: { listStyle: "none", padding: 0, position: "relative" }
     , row:
         { alignItems: "center"
-        , minHeight:
-            StyleX.conditionalValue
-              88
-              [ StyleX.conditionalCase breakpoints.upTo600 64 ]
+        , minHeight: StyleX.conditionalValue 88 [ StyleX.conditionalCase breakpoints.upTo600 64 ]
         }
     , tool:
         { color: "var(--text-secondary)"
         , fontFamily: "var(--font-mono)"
-        , fontSize:
-            StyleX.conditionalValue
-              15
-              [ StyleX.conditionalCase breakpoints.upTo600 12 ]
+        , fontSize: StyleX.conditionalValue 15 [ StyleX.conditionalCase breakpoints.upTo600 12 ]
         , whiteSpace: "nowrap"
         }
     , irisTool: { color: "var(--text-primary)" }
-    , plot:
-        { alignItems: "center"
-        , display: "flex"
-        , minWidth: 0
-        , position: "relative"
-        }
+    , plot: { alignItems: "center", display: "flex", minWidth: 0, position: "relative" }
     , bar:
         { backgroundColor: "var(--surface-3)"
         , display: "block"
-        , height:
-            StyleX.conditionalValue
-              32
-              [ StyleX.conditionalCase breakpoints.upTo600 24 ]
+        , height: StyleX.conditionalValue 32 [ StyleX.conditionalCase breakpoints.upTo600 24 ]
         , transformOrigin: "left"
-        , transitionDuration:
-            { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+        , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
         , transitionProperty: "width"
         , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
         }
     , irisBar: { backgroundColor: "var(--accent)" }
     , waiting:
-        { transform:
-            { default: "scaleX(0)"
-            , "@media (prefers-reduced-motion: reduce)": "none"
-            }
-        }
+        { transform: { default: "scaleX(0)", "@media (prefers-reduced-motion: reduce)": "none" } }
     , racing:
         { animationDuration: "1.5s"
         , animationFillMode: "both"
-        , animationName:
-            { default: grow, "@media (prefers-reduced-motion: reduce)": "none" }
+        , animationName: { default: grow, "@media (prefers-reduced-motion: reduce)": "none" }
         -- A strong ease-out: bars shoot out and settle on their result without overshooting it.
         , animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
         }
@@ -193,34 +150,25 @@ styles =
         , borderRadius: 5
         , color: "var(--text-secondary)"
         , fontFamily: "var(--font-mono)"
-        , fontSize:
-            StyleX.conditionalValue
-              13
-              [ StyleX.conditionalCase breakpoints.upTo600 11 ]
+        , fontSize: StyleX.conditionalValue 13 [ StyleX.conditionalCase breakpoints.upTo600 11 ]
         , paddingBlock: 4
         , paddingInline: 8
         , position: "absolute"
-        , transitionDuration:
-            { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+        , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
         , transitionProperty: "left"
         , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
         , whiteSpace: "nowrap"
         }
     , badgeComparison:
         { display:
-            StyleX.conditionalValue
-              "inline"
-              [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
+            StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
         }
     , value:
         { alignItems: "center"
         , color: "var(--text-secondary)"
         , display: "flex"
         , fontFamily: "var(--font-mono)"
-        , fontSize:
-            StyleX.conditionalValue
-              16
-              [ StyleX.conditionalCase breakpoints.upTo600 12 ]
+        , fontSize: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 12 ]
         , fontVariantNumeric: "tabular-nums"
         , justifyContent: "flex-end"
         }
@@ -230,12 +178,8 @@ styles =
     , variant:
         { gridRowStart: 1
         , gridColumnStart: 1
-        , transitionDelay:
-            { default: "0.1s", "@media (prefers-reduced-motion: reduce)": "0s" }
-        , transitionDuration:
-            { default: "0.25s"
-            , "@media (prefers-reduced-motion: reduce)": "0s"
-            }
+        , transitionDelay: { default: "0.1s", "@media (prefers-reduced-motion: reduce)": "0s" }
+        , transitionDuration: { default: "0.25s", "@media (prefers-reduced-motion: reduce)": "0s" }
         , transitionProperty: "opacity, filter"
         , transitionTimingFunction: "var(--ease-out)"
         }
@@ -243,23 +187,16 @@ styles =
         { filter: "blur(2px)"
         , opacity: 0
         , transitionDelay: "0s"
-        , transitionDuration:
-            { default: "0.1s", "@media (prefers-reduced-motion: reduce)": "0s" }
+        , transitionDuration: { default: "0.1s", "@media (prefers-reduced-motion: reduce)": "0s" }
         }
     , axis: { paddingBlockStart: 12 }
-    , ticks:
-        { height: 16
-        , marginInlineEnd: -16
-        , overflow: "hidden"
-        , position: "relative"
-        }
+    , ticks: { height: 16, marginInlineEnd: -16, overflow: "hidden", position: "relative" }
     , tick:
         { color: "var(--text-tertiary)"
         , fontFamily: "var(--font-mono)"
         , fontSize: 12
         , position: "absolute"
-        , transitionDuration:
-            { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+        , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
         , transitionProperty: "left, opacity"
         , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
         }
@@ -271,10 +208,7 @@ styles =
         , textWrap: "pretty"
         }
     , link:
-        { color:
-            { default: "var(--text-secondary)"
-            , ":hover": "var(--text-primary)"
-            }
+        { color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , textDecorationLine: "underline"
         , textUnderlineOffset: 3
         }
@@ -310,8 +244,7 @@ styles =
 
 styleProps = StyleX.recordProps styles
 
-tabs ::
-  Array { icon :: ReactComponent Icon.IconProps, id :: String, label :: String }
+tabs :: Array { icon :: ReactComponent Icon.IconProps, id :: String, label :: String }
 tabs =
   [ { icon: Icon.snowflake, id: "cold", label: "Cold" }
   , { icon: Icon.flame, id: "hot", label: "Hot" }
@@ -364,11 +297,9 @@ benchmarks =
     , id: "benchmarks"
     , "aria-labelledby": "benchmarks-heading"
     }
-    (
-      DOM.div
+    ( DOM.div
         ContentShell.contentShell
-        (
-          element
+        ( element
             benchmarkChartImpl
             { chart
             , controlsClassName: styleProps.controls.className
@@ -418,39 +349,26 @@ chart { selected, started } =
             { className: styleProps.overlay.className, "aria-hidden": true }
             [ DOM.div
                 styleProps.plotArea
-                (
-                  map
-                      (
-                        \{ position } ->
-                          DOM.span
-                            (StyleX.props [ styles.gridline, pick position ])
-                            []
+                ( map
+                      ( \{ position } ->
+                          DOM.span (StyleX.props [ styles.gridline, pick position ]) []
                       )
                       ticks
-                    <> [ DOM.span
-                           (StyleX.props [ styles.marker, pick marker ])
-                           []
-                       ]
+                    <> [ DOM.span (StyleX.props [ styles.marker, pick marker ]) [] ]
                 )
             ]
         , DOM.ol styleProps.rows (map row bars)
         ]
     , DOM.div
-        { className: (StyleX.props [ styles.grid, styles.axis ]).className
-        , "aria-hidden": true
-        }
+        { className: (StyleX.props [ styles.grid, styles.axis ]).className, "aria-hidden": true }
         [ DOM.span {} []
         , DOM.div
             styleProps.ticks
             [ DOM.div
                 styleProps.plotArea
-                (
-                  map
-                    (
-                      \{ label, position } ->
-                        DOM.span
-                          (StyleX.props [ styles.tick, pick position ])
-                          label
+                ( map
+                    ( \{ label, position } ->
+                        DOM.span (StyleX.props [ styles.tick, pick position ]) label
                     )
                     ticks
                 )
@@ -467,43 +385,31 @@ chart { selected, started } =
   -- Keeps both measurements' figures in place so that switching crossfades between them.
   swap :: Measured (Array JSX) -> JSX
   swap measured =
-    DOM.span
-      styleProps.swap
-      [ variant (not hot) measured.cold, variant hot measured.hot ]
+    DOM.span styleProps.swap [ variant (not hot) measured.cold, variant hot measured.hot ]
 
   variant shown =
     DOM.span
       { className:
-          (
-            StyleX.props
-              [ styles.variant
-              , StyleX.conditional (not shown) styles.concealed
-              ]
+          ( StyleX.props [ styles.variant, StyleX.conditional (not shown) styles.concealed ]
           ).className
       , "aria-hidden": not shown
       }
 
   figure measured
     | measured.cold == measured.hot = DOM.text measured.cold
-    | otherwise =
-      swap { cold: [ DOM.text measured.cold ], hot: [ DOM.text measured.hot ] }
+    | otherwise = swap { cold: [ DOM.text measured.cold ], hot: [ DOM.text measured.hot ] }
 
   row { tool, seconds, iris, width } =
     DOM.li
       (StyleX.props [ styles.grid, styles.row ])
       [ DOM.span
-          (
-            StyleX.props
-              [ styles.tool, StyleX.conditional iris styles.irisTool ]
-          )
+          (StyleX.props [ styles.tool, StyleX.conditional iris styles.irisTool ])
           (figure tool)
       , DOM.span
           styleProps.plot
-          (
-            [ DOM.span
+          ( [ DOM.span
                 { className:
-                    (
-                      StyleX.props
+                    ( StyleX.props
                         [ styles.bar
                         , StyleX.conditional iris styles.irisBar
                         , pick width
@@ -518,8 +424,7 @@ chart { selected, started } =
                  then
                    [ DOM.span
                        (StyleX.props [ styles.badge, pick badge.position ])
-                       (
-                         swap
+                       ( swap
                            { cold: comparison badge.multiple.cold
                            , hot: comparison badge.multiple.hot
                            }
@@ -528,14 +433,9 @@ chart { selected, started } =
                  else []
           )
       , DOM.span
-          (
-            StyleX.props
-              [ styles.value, StyleX.conditional iris styles.irisValue ]
-          )
+          (StyleX.props [ styles.value, StyleX.conditional iris styles.irisValue ])
           (figure seconds)
       ]
 
   comparison multiple =
-    [ DOM.text (multiple <> " faster")
-    , DOM.span styleProps.badgeComparison " than purs compile"
-    ]
+    [ DOM.text (multiple <> " faster"), DOM.span styleProps.badgeComparison " than purs compile" ]

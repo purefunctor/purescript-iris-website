@@ -26,8 +26,7 @@ import Website.Landing.Hero (hero)
 import Website.Landing.Places (places)
 import Yoga.React.DOM as DOM
 
-foreign import revealInstall ::
-  Ref (Nullable Element) -> Effect Unit -> Effect Unit
+foreign import revealInstall :: Ref (Nullable Element) -> Effect Unit -> Effect Unit
 foreign import enableCopyEditing :: Effect (Effect Unit)
 
 styles =
@@ -43,25 +42,18 @@ styles =
     }
 
 component :: ReactComponent {}
-component = unsafePerformEffect $ Hooks.reactComponent "LandingPage" \_ ->
-  Hooks.do
-    install <- Hooks.useRef Nullable.null
-    ripples /\ setRipples <- Hooks.useState 0
-    Hooks.useEffectOnce configurePlatformStyles
-    Hooks.useEffectOnce enableCopyEditing
-    pure
-      $ DOM.div
-          (StyleX.props styles.page)
-          [ siteNav { onInstall: revealInstall install (setRipples (_ + 1)) }
-          , DOM.main
-              {}
-              [ hero { install, ripples }
-              , places
-              , benchmarks
-              , element Demos.component {}
-              ]
-          , footer
-          ]
+component = unsafePerformEffect $ Hooks.reactComponent "LandingPage" \_ -> Hooks.do
+  install <- Hooks.useRef Nullable.null
+  ripples /\ setRipples <- Hooks.useState 0
+  Hooks.useEffectOnce configurePlatformStyles
+  Hooks.useEffectOnce enableCopyEditing
+  pure
+    $ DOM.div
+        (StyleX.props styles.page)
+        [ siteNav { onInstall: revealInstall install (setRipples (_ + 1)) }
+        , DOM.main {} [ hero { install, ripples }, places, benchmarks, element Demos.component {} ]
+        , footer
+        ]
 
 configurePlatformStyles :: Effect (Effect Unit)
 configurePlatformStyles = do
@@ -72,18 +64,13 @@ configurePlatformStyles = do
     documentElement <- HTMLDocument.documentElement document
     for_
       documentElement
-      \html ->
-        Element.setAttribute
-          "data-landing-macos"
-          ""
-          (HTMLHtmlElement.toElement html)
+      \html -> Element.setAttribute "data-landing-macos" "" (HTMLHtmlElement.toElement html)
   pure (pure unit)
 
 isMacOS :: String -> Boolean
-isMacOS =
-  case _ of
-    "MacIntel" -> true
-    "MacPPC" -> true
-    "Mac68K" -> true
-    "macOS" -> true
-    _ -> false
+isMacOS = case _ of
+  "MacIntel" -> true
+  "MacPPC" -> true
+  "Mac68K" -> true
+  "macOS" -> true
+  _ -> false

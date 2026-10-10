@@ -38,12 +38,11 @@ logo { className } =
       { className: fill color, cx: x, cy: y, r: radius, key: color }
       []
 
-  fill =
-    case _ of
-      "red" -> styleProps.red.className
-      "orange" -> styleProps.orange.className
-      "yellow" -> styleProps.yellow.className
-      "green" -> styleProps.green.className
-      "blue" -> styleProps.blue.className
-      "indigo" -> styleProps.indigo.className
-      _ -> styleProps.violet.className
+  fill = case _ of
+    "red" -> styleProps.red.className
+    "orange" -> styleProps.orange.className
+    "yellow" -> styleProps.yellow.className
+    "green" -> styleProps.green.className
+    "blue" -> styleProps.blue.className
+    "indigo" -> styleProps.indigo.className
+    _ -> styleProps.violet.className

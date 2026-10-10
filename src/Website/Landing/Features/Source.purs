@@ -1,6 +1,4 @@
-module Website.Landing.Features.Source
-  (landingPageSource, editorIntelligenceMedia)
-  where
+module Website.Landing.Features.Source (landingPageSource, editorIntelligenceMedia) where
 
 import Prelude
 
@@ -22,9 +20,7 @@ styles =
         , lineHeight: "inherit"
         , margin: 0
         , outlineColor:
-            { default: "currentColor"
-            , ":focus-visible": "var(--landing-color-crystal)"
-            }
+            { default: "currentColor", ":focus-visible": "var(--landing-color-crystal)" }
         , outlineOffset: { default: 0, ":focus-visible": 3 }
         , outlineStyle: { default: "none", ":focus-visible": "solid" }
         , outlineWidth: { default: "medium", ":focus-visible": "2px" }
@@ -56,15 +52,9 @@ styles =
         }
     , editorTooltipKind: { color: "var(--landing-color-latte-subtext-1)" }
     , editorTooltipSymbol:
-        { color: "var(--landing-color-latte-blue)"
-        , fontStyle: "italic"
-        , fontWeight: 650
-        }
+        { color: "var(--landing-color-latte-blue)", fontStyle: "italic", fontWeight: 650 }
     , editorTooltipType:
-        { color: "var(--landing-color-latte-text)"
-        , gridColumnStart: 1
-        , gridColumnEnd: -1
-        }
+        { color: "var(--landing-color-latte-text)", gridColumnStart: 1, gridColumnEnd: -1 }
     }
 
 styleProps = StyleX.recordProps styles
@@ -180,19 +170,12 @@ editorIntelligenceMedia =
         {}
         [ DOM.span
             Code.sourceLine
-            [ DOM.span
-                Code.sourceComment
-                "-- Inspect the source code with your cursor"
-            ]
+            [ DOM.span Code.sourceComment "-- Inspect the source code with your cursor" ]
         , DOM.span
             Code.sourceLine
             [ DOM.span Code.sourceKeyword "newtype"
             , DOM.span {} " "
-            , editorBinding
-                Code.sourceType
-                "type"
-                "Routine"
-                "Routine :: Type -> Type -> Type"
+            , editorBinding Code.sourceType "type" "Routine" "Routine :: Type -> Type -> Type"
             , DOM.span {} " "
             , editorBinding Code.sourceType "type variable" "r" "Type"
             , DOM.span {} " "
@@ -227,11 +210,7 @@ editorIntelligenceMedia =
                 "Functor"
                 "Functor :: (Type -> Type) -> Constraint"
             , DOM.span Code.sourceBracket " ("
-            , editorBinding
-                Code.sourceType
-                "type"
-                "Routine"
-                "Routine :: Type -> Type -> Type"
+            , editorBinding Code.sourceType "type" "Routine" "Routine :: Type -> Type -> Type"
             , DOM.span {} " "
             , editorBinding Code.sourceType "type variable" "r" "Type"
             , DOM.span Code.sourceBracket ")"
@@ -257,11 +236,7 @@ editorIntelligenceMedia =
                 "Routine"
                 "Routine :: forall @r @a. ((a -> r) -> r) -> Routine r a"
             , DOM.span {} " "
-            , editorBinding
-                Code.sourceVariable
-                "variable"
-                "routine"
-                "(a -> r) -> r"
+            , editorBinding Code.sourceVariable "variable" "routine" "(a -> r) -> r"
             , DOM.span Code.sourceBracket ")"
             , DOM.span Code.sourceAccent " ="
             ]

@@ -9,10 +9,7 @@ import Yoga.React.DOM as DOM
 styles =
   StyleX.create
     -- Every section shares this padding, so consecutive sections sit the same distance apart.
-    { section:
-        { paddingBlock: "clamp(40px, 5vw, 64px)"
-        , scrollMarginTop: "var(--nav-height)"
-        }
+    { section: { paddingBlock: "clamp(40px, 5vw, 64px)", scrollMarginTop: "var(--nav-height)" }
     , heading:
         { fontSize: "clamp(32px, 4.4vw, 44px)"
         , fontWeight: 500
@@ -22,12 +19,7 @@ styles =
         , textWrap: "balance"
         }
     , emphasis: { color: "var(--text-emphasis)" }
-    , lead:
-        { color: "var(--text-secondary)"
-        , fontSize: 17
-        , lineHeight: 1.65
-        , textWrap: "pretty"
-        }
+    , lead: { color: "var(--text-secondary)", fontSize: 17, lineHeight: 1.65, textWrap: "pretty" }
     }
 
 -- | A section heading whose second beat, when given, shifts to the emphasis color.

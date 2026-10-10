@@ -25,8 +25,7 @@ tabStyles =
         , fontWeight: 500
         , gap: 5
         , lineHeight: 1
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , paddingBlock: 7
         , paddingInline: 10

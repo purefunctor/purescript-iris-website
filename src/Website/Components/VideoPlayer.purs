@@ -25,8 +25,7 @@ foreign import wholeSeconds :: Number -> Int
 foreign import setPlayback :: Ref (Nullable Element) -> Boolean -> Effect Unit
 foreign import after :: Int -> Effect Unit -> Effect (Effect Unit)
 foreign import toggleFullscreen ::
-  { frame :: Ref (Nullable Element), video :: Ref (Nullable Element) } ->
-  Effect Unit
+  { frame :: Ref (Nullable Element), video :: Ref (Nullable Element) } -> Effect Unit
 
 foreign import observePlayer ::
   { bubble :: Ref (Nullable Element)
@@ -118,22 +117,16 @@ styles =
         , opacity:
             StyleX.conditionalValue
               0
-              [ When.ancestor ":hover" 1
-              , When.ancestor ":has(:focus-visible)" 1
-              ]
+              [ When.ancestor ":hover" 1, When.ancestor ":has(:focus-visible)" 1 ]
         , padding: 3
         , position: "absolute"
-        , transitionDuration:
-            { default: "200ms"
-            , "@media (prefers-reduced-motion: reduce)": "0ms"
-            }
+        , transitionDuration: { default: "200ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         , transitionProperty: "opacity"
         , transitionTimingFunction: "var(--ease-out)"
         }
     , controlsShown: { opacity: 1 }
     , mediaButton:
-        { backgroundColor:
-            { default: "transparent", ":hover": "var(--border-default)" }
+        { backgroundColor: { default: "transparent", ":hover": "var(--border-default)" }
         , borderRadius: 999
         }
     , time:
@@ -149,18 +142,10 @@ styles =
     , slider:
         { "--seek-height": { default: "4px", "[data-seeking]": "6px" }
         , "--seek-thumb":
-            { default: "0.75"
-            , ":hover": "1"
-            , ":focus-visible": "1"
-            , "[data-seeking]": "1.25"
-            }
+            { default: "0.75", ":hover": "1", ":focus-visible": "1", "[data-seeking]": "1.25" }
         , "--seek-preview": { default: "0", ":hover": "1" }
         , "--seek-bubble":
-            { default: "0"
-            , ":hover": "1"
-            , ":focus-visible": "1"
-            , "[data-seeking]": "1"
-            }
+            { default: "0", ":hover": "1", ":focus-visible": "1", "[data-seeking]": "1" }
         , alignSelf: "stretch"
         , borderRadius: 999
         , cursor: "var(--landing-interactive-cursor, pointer)"
@@ -168,8 +153,7 @@ styles =
         , marginInline: 6
         , minWidth: 48
         , outline: "none"
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , position: "relative"
         , touchAction: "none"
         }
@@ -192,10 +176,7 @@ styles =
         , opacity: "var(--seek-preview)"
         , transform: "scaleX(var(--seek-pointer, 0))"
         }
-    , progress:
-        { backgroundColor: "var(--accent)"
-        , transform: "scaleX(var(--seek-progress, 0))"
-        }
+    , progress: { backgroundColor: "var(--accent)", transform: "scaleX(var(--seek-progress, 0))" }
     , thumb:
         { backgroundColor: "var(--text-primary)"
         , borderRadius: 999
@@ -224,8 +205,7 @@ styles =
         , fontFamily: "var(--font-mono)"
         , fontSize: 12
         , fontVariantNumeric: "tabular-nums"
-        , left:
-            "clamp(20px, calc(var(--seek-pointer, 0) * 100%), calc(100% - 20px))"
+        , left: "clamp(20px, calc(var(--seek-pointer, 0) * 100%), calc(100% - 20px))"
         , lineHeight: 1.3
         , opacity: "var(--seek-bubble)"
         , paddingBlock: 3
@@ -243,157 +223,130 @@ styles =
 styleProps = StyleX.recordProps styles
 
 component :: ReactComponent VideoPlayer
-component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props ->
-  Hooks.do
-    frame <- Hooks.useRef Nullable.null
-    video <- Hooks.useRef Nullable.null
-    slider <- Hooks.useRef Nullable.null
-    bubble <- Hooks.useRef Nullable.null
-    time /\ setTime <- Hooks.useState' { current: 0.0, duration: 0.0 }
-    fullscreen /\ setFullscreen <- Hooks.useState' false
-    visible /\ setVisible <- Hooks.useState' false
-    hoverable /\ setHoverable <- Hooks.useState' true
-    -- The source on the element trails props.src while the outgoing recording blurs.
-    shown /\ setShown <- Hooks.useState' props.src
-    blurred /\ setBlurred <- Hooks.useState' false
-    let
-      active = props.playing && visible
-      current = shown == props.src
-      toggle = props.setPlaying not
-      controls =
-        StyleX.props
-          [ styles.controls
-          , StyleX.conditional
-              (not active || not hoverable)
-              styles.controlsShown
-          ]
+component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> Hooks.do
+  frame <- Hooks.useRef Nullable.null
+  video <- Hooks.useRef Nullable.null
+  slider <- Hooks.useRef Nullable.null
+  bubble <- Hooks.useRef Nullable.null
+  time /\ setTime <- Hooks.useState' { current: 0.0, duration: 0.0 }
+  fullscreen /\ setFullscreen <- Hooks.useState' false
+  visible /\ setVisible <- Hooks.useState' false
+  hoverable /\ setHoverable <- Hooks.useState' true
+  -- The source on the element trails props.src while the outgoing recording blurs.
+  shown /\ setShown <- Hooks.useState' props.src
+  blurred /\ setBlurred <- Hooks.useState' false
+  let
+    active = props.playing && visible
+    current = shown == props.src
+    toggle = props.setPlaying not
+    controls =
+      StyleX.props
+        [ styles.controls, StyleX.conditional (not active || not hoverable) styles.controlsShown ]
 
-    Hooks.useEffectOnce do
-      reduced <- prefersReducedMotion
-      when reduced $ props.setPlaying (const false)
-      canHover >>= setHoverable
-      observePlayer
-        { bubble
-        , frame
-        , onEnded: props.onEnded
-        , onFullscreen: setFullscreen
-        , onLoaded: setBlurred false
-        , onTime: \current duration -> setTime { current, duration }
-        , onToggle: toggle
-        , onVisible: setVisible
-        , slider
-        , video
-        }
+  Hooks.useEffectOnce do
+    reduced <- prefersReducedMotion
+    when reduced $ props.setPlaying (const false)
+    canHover >>= setHoverable
+    observePlayer
+      { bubble
+      , frame
+      , onEnded: props.onEnded
+      , onFullscreen: setFullscreen
+      , onLoaded: setBlurred false
+      , onTime: \current duration -> setTime { current, duration }
+      , onToggle: toggle
+      , onVisible: setVisible
+      , slider
+      , video
+      }
 
-    -- Returning to the shown recording mid-blur, or reducing motion, skips the transition.
-    Hooks.useEffect props.src do
-      reduced <- prefersReducedMotion
-      if current || reduced
-      then do
-        setBlurred false
-        setShown props.src
-        pure (pure unit)
-      else do
-        setBlurred true
-        after blurOut (setShown props.src)
-
-    -- The outgoing recording holds its frame while it blurs. An incoming recording that will not
-    -- load until played unblurs straight away.
-    Hooks.useEffect (shown /\ props.src /\ active) do
-      setPlayback video (active && current)
-      when (current && not active) (setBlurred false)
+  -- Returning to the shown recording mid-blur, or reducing motion, skips the transition.
+  Hooks.useEffect props.src do
+    reduced <- prefersReducedMotion
+    if current || reduced
+    then do
+      setBlurred false
+      setShown props.src
       pure (pure unit)
+    else do
+      setBlurred true
+      after blurOut (setShown props.src)
 
-    pure
-      $ DOM.div
-          { className:
-              (StyleX.props [ styles.frame, StyleX.defaultMarker ]).className
-          , ref: DOM.reactRef frame
-          }
-          [ createBuiltinElement
-              "video"
-              { className:
-                  (
-                    StyleX.props
-                      [ styles.video
-                      , StyleX.conditional blurred styles.videoBlurred
-                      ]
-                  ).className
-              , ref: DOM.reactRef video
-              , muted: true
-              , playsInline: true
-              , poster: props.poster
-              , preload: "none"
-              , src: shown
-              , "aria-label": props.label
-              , onClick: handler_ toggle
-              }
-              []
-          , DOM.div
-              (
-                StyleX.props
-                  [ styles.blur, StyleX.conditional blurred styles.blurred ]
-              )
-              []
-          , DOM.div
-              controls
-              [ mediaButton
-                  (if active then "Pause" else "Play")
-                  (if active then Icon.pause else Icon.play)
-                  toggle
-              , DOM.span
-                  styleProps.time
-                  (formatTime time.current <> " / " <> formatTime time.duration)
-              , createBuiltinElement
-                  "div"
-                  { className: styleProps.slider.className
-                  , ref: DOM.reactRef slider
-                  , role: "slider"
-                  , tabIndex: 0
-                  , "aria-label": "Recording position"
-                  , "aria-valuemin": 0
-                  , "aria-valuemax": wholeSeconds time.duration
-                  , "aria-valuenow": wholeSeconds time.current
-                  , "aria-valuetext":
-                      formatTime time.current
-                        <> " of "
-                        <> formatTime time.duration
-                  }
-                  [ DOM.div
-                      styleProps.track
-                      [ DOM.div
-                          (StyleX.props [ styles.fill, styles.preview ])
-                          []
-                      , DOM.div
-                          (StyleX.props [ styles.fill, styles.progress ])
-                          []
-                      ]
-                  , DOM.div styleProps.thumb []
-                  , DOM.div
-                      { className: styleProps.bubble.className
-                      , ref: DOM.reactRef bubble
-                      , "aria-hidden": true
-                      }
-                      []
-                  ]
-              , mediaButton
-                  (if fullscreen then "Exit full screen" else "Full screen")
-                  (if fullscreen then Icon.minimize else Icon.maximize)
-                  (toggleFullscreen { frame, video })
-              ]
-          ]
+  -- The outgoing recording holds its frame while it blurs. An incoming recording that will not
+  -- load until played unblurs straight away.
+  Hooks.useEffect (shown /\ props.src /\ active) do
+    setPlayback video (active && current)
+    when (current && not active) (setBlurred false)
+    pure (pure unit)
+
+  pure
+    $ DOM.div
+        { className: (StyleX.props [ styles.frame, StyleX.defaultMarker ]).className
+        , ref: DOM.reactRef frame
+        }
+        [ createBuiltinElement
+            "video"
+            { className:
+                ( StyleX.props [ styles.video, StyleX.conditional blurred styles.videoBlurred ]
+                ).className
+            , ref: DOM.reactRef video
+            , muted: true
+            , playsInline: true
+            , poster: props.poster
+            , preload: "none"
+            , src: shown
+            , "aria-label": props.label
+            , onClick: handler_ toggle
+            }
+            []
+        , DOM.div (StyleX.props [ styles.blur, StyleX.conditional blurred styles.blurred ]) []
+        , DOM.div
+            controls
+            [ mediaButton
+                (if active then "Pause" else "Play")
+                (if active then Icon.pause else Icon.play)
+                toggle
+            , DOM.span
+                styleProps.time
+                (formatTime time.current <> " / " <> formatTime time.duration)
+            , createBuiltinElement
+                "div"
+                { className: styleProps.slider.className
+                , ref: DOM.reactRef slider
+                , role: "slider"
+                , tabIndex: 0
+                , "aria-label": "Recording position"
+                , "aria-valuemin": 0
+                , "aria-valuemax": wholeSeconds time.duration
+                , "aria-valuenow": wholeSeconds time.current
+                , "aria-valuetext": formatTime time.current <> " of " <> formatTime time.duration
+                }
+                [ DOM.div
+                    styleProps.track
+                    [ DOM.div (StyleX.props [ styles.fill, styles.preview ]) []
+                    , DOM.div (StyleX.props [ styles.fill, styles.progress ]) []
+                    ]
+                , DOM.div styleProps.thumb []
+                , DOM.div
+                    { className: styleProps.bubble.className
+                    , ref: DOM.reactRef bubble
+                    , "aria-hidden": true
+                    }
+                    []
+                ]
+            , mediaButton
+                (if fullscreen then "Exit full screen" else "Full screen")
+                (if fullscreen then Icon.minimize else Icon.maximize)
+                (toggleFullscreen { frame, video })
+            ]
+        ]
 
 mediaButton :: String -> ReactComponent Icon.IconProps -> Effect Unit -> JSX
 mediaButton label icon action =
   DOM.button
     { type: "button"
     , className:
-        (
-          StyleX.props
-            [ iconButtonStyles.button
-            , iconButtonStyles.small
-            , styles.mediaButton
-            ]
+        ( StyleX.props [ iconButtonStyles.button, iconButtonStyles.small, styles.mediaButton ]
         ).className
     , "aria-label": label
     , onClick: handler_ action

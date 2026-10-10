@@ -10,11 +10,7 @@ import Website.Landing.Section as Section
 import Yoga.React.DOM as DOM
 
 type Place =
-  { icon :: ReactComponent Icon.IconProps
-  , title :: String
-  , body :: Array JSX
-  , command :: String
-  }
+  { icon :: ReactComponent Icon.IconProps, title :: String, body :: Array JSX, command :: String }
 
 -- The tools the hero names, each backed by an `iris` subcommand.
 placeList :: Array Place
@@ -79,18 +75,8 @@ styles =
         , justifyContent: "center"
         , width: 36
         }
-    , title:
-        { fontSize: 20
-        , fontWeight: 500
-        , letterSpacing: "-0.015em"
-        , lineHeight: 1.25
-        }
-    , body:
-        { color: "var(--text-secondary)"
-        , fontSize: 15
-        , lineHeight: 1.65
-        , textWrap: "pretty"
-        }
+    , title: { fontSize: 20, fontWeight: 500, letterSpacing: "-0.015em", lineHeight: 1.25 }
+    , body: { color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.65, textWrap: "pretty" }
     , inlineCode:
         { backgroundColor: "var(--surface-2)"
         , borderColor: "var(--border-subtle)"
@@ -122,18 +108,13 @@ inlineCode = DOM.code styleProps.inlineCode
 places :: JSX
 places =
   DOM.section
-    { className: Section.section.className
-    , "aria-labelledby": "places-heading"
-    }
+    { className: Section.section.className, "aria-labelledby": "places-heading" }
     [ DOM.div
         ContentShell.contentShell
         [ DOM.div
             styleProps.heading
             [ Section.heading
-                { id: "places-heading"
-                , text: "Vertically integrated tooling."
-                , emphasis: ""
-                }
+                { id: "places-heading", text: "Vertically integrated tooling.", emphasis: "" }
             ]
         , DOM.ul styleProps.grid (map place placeList)
         ]
@@ -142,9 +123,7 @@ places =
   place { icon, title, body, command } =
     DOM.li
       styleProps.card
-      [ DOM.span
-          styleProps.icon
-          (element icon { "aria-hidden": true, focusable: false })
+      [ DOM.span styleProps.icon (element icon { "aria-hidden": true, focusable: false })
       , DOM.h3 styleProps.title title
       , DOM.p styleProps.body body
       , DOM.code styleProps.command ("$ " <> command)

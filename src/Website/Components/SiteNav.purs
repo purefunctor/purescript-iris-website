@@ -52,8 +52,7 @@ styles =
         , display: "inline-flex"
         , gap: 7
         , lineHeight: 1
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , textDecoration: "none"
         }
@@ -69,26 +68,19 @@ styles =
         }
     , links:
         { display:
-            StyleX.conditionalValue
-              "flex"
-              [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
+            StyleX.conditionalValue "flex" [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
         , gap: 4
         , minWidth: 0
         }
     , link:
-        { backgroundColor:
-            { default: "transparent", ":hover": "var(--surface-2)" }
+        { backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
         , borderRadius: 5
-        , color:
-            { default: "var(--text-secondary)"
-            , ":hover": "var(--text-primary)"
-            }
+        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , cursor: "default"
         , fontSize: 14
         , fontWeight: 500
         , lineHeight: 1
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , paddingBlock: 7
         , paddingInline: 10
@@ -99,28 +91,18 @@ styles =
         , whiteSpace: "nowrap"
         }
     , actions:
-        { alignItems: "center"
-        , display: "flex"
-        , flexShrink: 0
-        , gap: 8
-        , marginInlineStart: "auto"
-        }
+        { alignItems: "center", display: "flex", flexShrink: 0, gap: 8, marginInlineStart: "auto" }
     , iconLink:
         { alignItems: "center"
-        , backgroundColor:
-            { default: "transparent", ":hover": "var(--surface-2)" }
+        , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
         , borderRadius: 8
-        , color:
-            { default: "var(--text-secondary)"
-            , ":hover": "var(--text-primary)"
-            }
+        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , cursor: "default"
         , display: "inline-flex"
         , fontSize: 13
         , height: 36
         , justifyContent: "center"
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , transitionDuration: "140ms"
         , transitionProperty: "background-color, color"
@@ -138,8 +120,7 @@ siteHeader navigation =
     styleProps.header
     [ DOM.div
         styleProps.content
-        (
-          [ DOM.a
+        ( [ DOM.a
               { className: styleProps.brand.className
               , href: "/"
               , onClick: scrollToTop
@@ -149,11 +130,7 @@ siteHeader navigation =
               , DOM.span
                   styleProps.name
                   [ DOM.span styleProps.wordmark "IRIS"
-                  , DOM.span
-                      { className: styleProps.stage.className
-                      , "aria-hidden": true
-                      }
-                      "alpha"
+                  , DOM.span { className: styleProps.stage.className, "aria-hidden": true } "alpha"
                   ]
               ]
           ]

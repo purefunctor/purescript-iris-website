@@ -30,36 +30,24 @@ styles =
         , paddingInline: "var(--gutter)"
         }
     , copy:
-        { alignItems: "flex-start"
-        , display: "flex"
-        , flexDirection: "column"
-        , gap: 28
-        , minWidth: 0
-        }
+        { alignItems: "flex-start", display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }
     , release:
         { "WebkitBackdropFilter": "blur(12px)"
         , alignItems: "center"
         , backdropFilter: "blur(12px)"
-        , backgroundColor:
-            { default: "var(--glass-fill)"
-            , ":hover": "var(--glass-fill-strong)"
-            }
+        , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
         , borderColor: "var(--glass-border)"
         , borderRadius: 999
         , borderStyle: "solid"
         , borderWidth: 1
-        , color:
-            { default: "var(--text-secondary)"
-            , ":hover": "var(--text-primary)"
-            }
+        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , cursor: "default"
         , display: "inline-flex"
         , fontSize: 13
         , gap: 10
         , lineHeight: 1.3
         , maxWidth: "100%"
-        , boxShadow:
-            { default: "none", ":focus-visible": "var(--shadow-focus)" }
+        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
         , outline: { default: "revert", ":focus-visible": "none" }
         , paddingBlock: 5
         , paddingInlineStart: 5
@@ -113,25 +101,18 @@ hero { install, ripples } =
     , ripples
     , content:
         [ DOM.section
-            { className: styleProps.section.className
-            , "aria-labelledby": "hero-title"
-            }
+            { className: styleProps.section.className, "aria-labelledby": "hero-title" }
             [ DOM.div
                 styleProps.copy
                 [ ExternalLink.externalLink
                     { className: styleProps.release.className
-                    , href:
-                        "https://github.com/purefunctor/purescript-iris/releases"
+                    , href: "https://github.com/purefunctor/purescript-iris/releases"
                     }
                     [ DOM.span styleProps.badge "alpha"
                     , DOM.span {} "Expect breaking changes"
                     , DOM.span
                         styleProps.releaseIcon
-                        (
-                          element
-                            Icon.arrowRight
-                            { "aria-hidden": true, focusable: false }
-                        )
+                        (element Icon.arrowRight { "aria-hidden": true, focusable: false })
                     ]
                 , DOM.h1
                     { className: styleProps.title.className, id: "hero-title" }
@@ -148,8 +129,7 @@ hero { install, ripples } =
                 ]
             , DOM.div
                 styleProps.code
-                (
-                  CodeBlock.codeBlock
+                ( CodeBlock.codeBlock
                     { code: Example.source
                     , filename: "src/Main.purs"
                     , highlight: []

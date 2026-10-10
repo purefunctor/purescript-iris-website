@@ -20,10 +20,7 @@ javascriptExamplesStyles =
         , fontSize:
             StyleX.conditionalValue
               "13.5px"
-              [ StyleX.conditionalCase
-                  breakpoints.upTo800
-                  "clamp(11.5px, 3.1vw, 12.5px)"
-              ]
+              [ StyleX.conditionalCase breakpoints.upTo800 "clamp(11.5px, 3.1vw, 12.5px)" ]
         , fontVariantLigatures: "none"
         , gap:
             StyleX.conditionalValue
@@ -37,9 +34,7 @@ javascriptExamplesStyles =
               [ StyleX.conditionalCase breakpoints.upTo1160 "minmax(0, 1fr)" ]
         , lineHeight: 1.25
         , paddingBlockEnd:
-            StyleX.conditionalValue
-              20
-              [ StyleX.conditionalCase breakpoints.upTo800 12 ]
+            StyleX.conditionalValue 20 [ StyleX.conditionalCase breakpoints.upTo800 12 ]
         , width: "100%"
         }
     , exampleTitle:
@@ -59,9 +54,7 @@ javascriptExamplesStyles =
         , gridTemplateRows: "auto 1fr"
         , minWidth: 0
         , paddingInline:
-            StyleX.conditionalValue
-              0
-              [ StyleX.conditionalCase breakpoints.from641To800 4 ]
+            StyleX.conditionalValue 0 [ StyleX.conditionalCase breakpoints.from641To800 4 ]
         }
     , paneLabel:
         { color: "var(--landing-color-muted)"
@@ -103,9 +96,7 @@ javascriptExample title source output =
 
 javascriptPane :: String -> JSX -> JSX
 javascriptPane label code =
-  DOM.div
-    styleProps.pane
-    [ DOM.span styleProps.paneLabel label, DOM.pre styleProps.code code ]
+  DOM.div styleProps.pane [ DOM.span styleProps.paneLabel label, DOM.pre styleProps.code code ]
 
 factorialSource :: JSX
 factorialSource =
@@ -130,9 +121,7 @@ factorialSource =
         , DOM.span Code.sourceAccent "=="
         , DOM.span {} " 0"
         ]
-    , DOM.span
-        Code.sourceLine
-        [ DOM.span Code.sourceKeyword "  then", DOM.span {} " accumulator" ]
+    , DOM.span Code.sourceLine [ DOM.span Code.sourceKeyword "  then", DOM.span {} " accumulator" ]
     , DOM.span
         Code.sourceLine
         [ DOM.span Code.sourceKeyword "  else"
@@ -161,9 +150,7 @@ factorialOutput =
         , DOM.span Code.sourceKeyword "as"
         , DOM.span Code.sourceReference " Data_Eq"
         , DOM.span Code.sourceKeyword " from"
-        , DOM.span
-            Code.sourceString
-            (" " <> quoted "../Data.Eq/index.js" <> ";")
+        , DOM.span Code.sourceString (" " <> quoted "../Data.Eq/index.js" <> ";")
         ]
     , DOM.span Code.sourceLine " "
     , DOM.span
@@ -266,9 +253,7 @@ factorialOutput =
         , DOM.span Code.sourceVariable "$currentArgument0"
         , DOM.span {} " | 0;"
         ]
-    , DOM.span
-        Code.sourceLine
-        [ DOM.span Code.sourceKeyword "        continue", DOM.span {} ";" ]
+    , DOM.span Code.sourceLine [ DOM.span Code.sourceKeyword "        continue", DOM.span {} ";" ]
     , DOM.span Code.sourceLine [ DOM.span Code.sourceBracket "      }" ]
     , DOM.span Code.sourceLine [ DOM.span Code.sourceBracket "    }" ]
     , DOM.span Code.sourceLine [ DOM.span Code.sourceBracket "  };" ]
@@ -352,9 +337,7 @@ effectOutput =
         , DOM.span Code.sourceKeyword "as"
         , DOM.span Code.sourceReference " Effect_Console"
         , DOM.span Code.sourceKeyword " from"
-        , DOM.span
-            Code.sourceString
-            (" " <> quoted "../Effect.Console/index.js" <> ";")
+        , DOM.span Code.sourceString (" " <> quoted "../Effect.Console/index.js" <> ";")
         ]
     , DOM.span Code.sourceLine " "
     , DOM.span
@@ -377,9 +360,7 @@ effectOutput =
         ]
     , DOM.span
         Code.sourceLine
-        [ DOM.span Code.sourceKeyword "  return"
-        , DOM.span Code.sourceBracket " () => {"
-        ]
+        [ DOM.span Code.sourceKeyword "  return", DOM.span Code.sourceBracket " () => {" ]
     , DOM.span
         Code.sourceLine
         [ DOM.span Code.sourceKeyword "    const"
