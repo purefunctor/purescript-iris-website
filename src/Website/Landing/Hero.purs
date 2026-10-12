@@ -7,8 +7,6 @@ import React.Basic (JSX, Ref, element)
 import Web.DOM.Element (Element)
 import Website.Components.Backdrop as Backdrop
 import Website.Components.CodeBlock as CodeBlock
-import Website.Components.ExternalLink as ExternalLink
-import Website.Components.Icon as Icon
 import Website.Components.Installation as Installation
 import Website.Landing.Example as Example
 import Yoga.React.DOM as DOM
@@ -31,45 +29,6 @@ styles =
         }
     , copy:
         { alignItems: "flex-start", display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }
-    , release:
-        { "WebkitBackdropFilter": "blur(12px)"
-        , alignItems: "center"
-        , backdropFilter: "blur(12px)"
-        , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
-        , borderColor: "var(--glass-border)"
-        , borderRadius: 999
-        , borderStyle: "solid"
-        , borderWidth: 1
-        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
-        , cursor: "default"
-        , display: "inline-flex"
-        , fontSize: 13
-        , gap: 10
-        , lineHeight: 1.3
-        , maxWidth: "100%"
-        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
-        , outline: { default: "revert", ":focus-visible": "none" }
-        , paddingBlock: 5
-        , paddingInlineStart: 5
-        , paddingInlineEnd: 12
-        , textDecoration: "none"
-        , transitionDuration: "140ms"
-        , transitionProperty: "background-color, color"
-        , transitionTimingFunction: "var(--ease-out)"
-        }
-    , badge:
-        { alignItems: "center"
-        , backgroundColor: "var(--accent)"
-        , borderRadius: 999
-        , color: "var(--text-on-accent)"
-        , display: "inline-flex"
-        , fontFamily: "var(--font-mono)"
-        , fontSize: 11
-        , fontWeight: 500
-        , height: 20
-        , paddingInline: 7
-        }
-    , releaseIcon: { display: "inline-flex", fontSize: 11 }
     , title:
         { fontSize: "clamp(44px, 6.4vw, 76px)"
         , fontWeight: 500
@@ -104,17 +63,7 @@ hero { install, ripples } =
             { className: styleProps.section.className, "aria-labelledby": "hero-title" }
             [ DOM.div
                 styleProps.copy
-                [ ExternalLink.externalLink
-                    { className: styleProps.release.className
-                    , href: "https://github.com/purefunctor/purescript-iris/releases"
-                    }
-                    [ DOM.span styleProps.badge "alpha"
-                    , DOM.span {} "Expect breaking changes"
-                    , DOM.span
-                        styleProps.releaseIcon
-                        (element Icon.arrowRight { "aria-hidden": true, focusable: false })
-                    ]
-                , DOM.h1
+                [ DOM.h1
                     { className: styleProps.title.className, id: "hero-title" }
                     "IRIS, a superset of PureScript."
                 , DOM.p
