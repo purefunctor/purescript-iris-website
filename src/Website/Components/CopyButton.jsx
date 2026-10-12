@@ -44,7 +44,7 @@ export function copyButtonImpl({ className, copiedClassName, fallbackClassName, 
       >
         {copied ? <CheckIcon aria-hidden="true" focusable="false" /> : <CopyIcon aria-hidden="true" focusable="false" />}
       </Button>
-      <Tooltip className={tooltipClassName} offset={8} placement="top">Copied</Tooltip>
+      <Tooltip className={tooltipClassName} offset={8} placement="top end">Copied</Tooltip>
     </TooltipTrigger>
   );
 }

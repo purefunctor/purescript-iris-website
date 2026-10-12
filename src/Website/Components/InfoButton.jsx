@@ -12,7 +12,7 @@ export function infoButtonImpl({ className, text, tooltipClassName }) {
       <Button aria-label={text} className={className} onPress={() => setOpen(true)}>
         <InfoIcon aria-hidden="true" focusable="false" />
       </Button>
-      <Tooltip className={tooltipClassName} offset={8} placement="top">{text}</Tooltip>
+      <Tooltip className={tooltipClassName} offset={8} placement="top end">{text}</Tooltip>
     </TooltipTrigger>
   );
 }
