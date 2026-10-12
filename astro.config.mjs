@@ -14,6 +14,8 @@ export default defineConfig({
   // The toolbar adds about 1.3 MB of client modules to every development page.
   devToolbar: { enabled: false },
   output: "static",
+  // DocumentationLayout prefetches and caches documentation pages itself.
+  prefetch: false,
   session: false,
   security: {
     csp: {

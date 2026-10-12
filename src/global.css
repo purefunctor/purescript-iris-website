@@ -162,6 +162,8 @@
     scroll-padding-top: var(--nav-height);
     text-size-adjust: none;
     text-rendering: optimizeLegibility;
+    /* Astro's client router cuts straight to the next documentation page instead of cross-fading. */
+    view-transition-name: none;
   }
 
   html[data-landing-macos] {

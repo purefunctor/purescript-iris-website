@@ -12,8 +12,15 @@ const { title, description } = Astro.props;
 
 <SiteLayout title={`${title} — Iris documentation`} description={description}>
   <Fragment slot="head">
-    {/* Links between pages that use this layout swap the document instead of reloading it. */}
-    <ClientRouter />
+    {/* Links between pages that use this layout swap the document instead of reloading it, without
+        an animation in browsers that lack view transitions. */}
+    <ClientRouter fallback="swap" />
+    <script>
+      import { cacheDocumentationPages } from "#src/lib/documentationPageCache.ts";
+
+      // Development pages change with every edit, so only cache production pages.
+      if (import.meta.env.PROD) cacheDocumentationPages();
+    </script>
     {
       import.meta.env.DEV ? (
         <>
