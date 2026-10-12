@@ -233,7 +233,7 @@ sections =
                 "Downloads use HTTPS and the operating system's certificate store, so proxies that use a private certificate authority are supported. Iris respects "
             , inlineCode "HTTPS_PROXY"
             , DOM.text
-                " and the related proxy variables. On the canary channel, Iris uses the GitHub API to find the latest canary build. To avoid API rate limits, set "
+                " and the related proxy variables. On the canary channel, Iris uses the GitHub API to find the latest canary build. If GitHub refuses the request, usually because of its rate limit, the update stops. To raise the limit, set "
             , inlineCode "GH_TOKEN"
             , DOM.text " or "
             , inlineCode "GITHUB_TOKEN"
@@ -244,11 +244,14 @@ sections =
                 "On Windows, a running executable cannot be deleted, so the previous executable is kept next to the new one as "
             , inlineCode "iris.exe.old"
             , DOM.text
-                ". The next update removes it. If that file is still in use, the update stops and asks you to stop the Iris processes that use it before trying again."
+                ". The next update removes it. If Iris cannot remove that file, for example because it is still running or is read-only, the update stops. Stop the Iris processes that use it, or remove the file yourself, and then try again."
             ]
         , paragraph
             [ DOM.text
-                "Updates are available on the same platforms as the install scripts. On other platforms, the command reports that no release is built for the platform and advises updating Iris with the tool that built it."
+                "Updates are available on the same platforms as the install scripts. On other platforms, the command stops with an error, even with "
+            , inlineCode "--check"
+            , DOM.text
+                ". The error says that no release is built for the platform and advises updating Iris with the tool that built it."
             ]
         ]
     }
