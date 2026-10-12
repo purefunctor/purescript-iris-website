@@ -6,8 +6,7 @@ import Yoga.React.DOM as DOM
 
 styles =
   StyleX.create
-    { paragraph: { maxWidth: "72ch" }
-    , inlineCode:
+    { inlineCode:
         { fontFamily: "var(--font-mono)"
         , fontSize: "0.86em"
         , color: "var(--text-primary)"
@@ -27,7 +26,7 @@ styles =
         , flexDirection: "column"
         , gap: 12
         , padding: 20
-        , fontSize: 14
+        , fontSize: "0.875em"
         , lineHeight: 1.7
         , color: "var(--text-secondary)"
         }
@@ -36,7 +35,7 @@ styles =
 styleProps = StyleX.recordProps styles
 
 paragraph :: Array JSX -> JSX
-paragraph = DOM.p styleProps.paragraph
+paragraph = DOM.p {}
 
 inlineCode :: String -> JSX
 inlineCode = DOM.code styleProps.inlineCode

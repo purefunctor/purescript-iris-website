@@ -2,11 +2,14 @@ module Website.Components.Documentation (Page(..), Section, configurePlatform, d
 
 import Prelude
 
+import Data.Array (findIndex, (!!))
+import Data.Maybe (maybe)
 import Effect (Effect)
 import Iris.StyleX as StyleX
-import React.Basic (JSX, ReactComponent, element)
+import React.Basic (JSX, ReactComponent, element, fragment)
 import Website.Breakpoints (breakpoints)
 import Website.Components.Icon as Icon
+import Website.Components.NavigationLink as NavigationLink
 import Website.Components.SiteNav as SiteNav
 import Yoga.React.DOM as DOM
 
@@ -14,7 +17,8 @@ data Page = GettingStarted | Installation | LanguageServer | Formatting
 
 derive instance Eq Page
 
--- | Pages in sidebar order. The compiler README links to these routes.
+-- | Pages in header navigation and previous/next order. The compiler README links to these
+-- | routes.
 pages :: Array Page
 pages = [ GettingStarted, Installation, LanguageServer, Formatting ]
 
@@ -34,158 +38,207 @@ pageTitle = case _ of
 
 type Section = { id :: String, title :: String, body :: Array JSX }
 
+type SectionLink = { id :: String, title :: String }
+
+type Links =
+  { listClassName :: String
+  , className :: String
+  , currentClassName :: String
+  , canvasClassName :: String
+  , contentClassName :: String
+  }
+
 foreign import configurePlatform :: Effect (Effect Unit)
 
-foreign import navigationLinkImpl ::
-  ReactComponent
-    { href :: String
-    , className :: String
-    , canvasClassName :: String
-    , contentClassName :: String
-    , current :: Boolean
-    , content :: Array JSX
-    }
+foreign import pageNavigationImpl ::
+  ReactComponent { className :: String, label :: String, content :: JSX }
 
-foreign import mobileSidebarImpl ::
+foreign import sectionNavigationImpl ::
+  ReactComponent { sections :: Array SectionLink, links :: Links }
+
+foreign import sectionMenuImpl ::
   ReactComponent
-    { rootClassName :: String
+    { sections :: Array SectionLink
+    , links :: Links
+    , rootClassName :: String
     , triggerClassName :: String
-    , overlayClassName :: String
-    , modalClassName :: String
+    , labelClassName :: String
+    , currentClassName :: String
+    , iconClassName :: String
+    , popoverClassName :: String
     , dialogClassName :: String
-    , headClassName :: String
-    , titleClassName :: String
-    , closeClassName :: String
-    , navigation :: Array JSX
+    , headingClassName :: String
+    , resources :: JSX
     }
 
+foreign import sectionSidebarImpl ::
+  ReactComponent
+    { sections :: Array SectionLink
+    , links :: Links
+    , rootClassName :: String
+    , buttonClassName :: String
+    , closeClassName :: String
+    , overlayClassName :: String
+    , panelClassName :: String
+    , dialogClassName :: String
+    , labelClassName :: String
+    , resources :: JSX
+    }
+
+fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
+fadeOut = StyleX.keyframes { from: { opacity: 1 }, to: { opacity: 0 } }
 slideIn =
   StyleX.keyframes { from: { transform: "translateX(-100%)" }, to: { transform: "translateX(0)" } }
 slideOut =
   StyleX.keyframes { from: { transform: "translateX(0)" }, to: { transform: "translateX(-100%)" } }
-fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
-fadeOut = StyleX.keyframes { from: { opacity: 1 }, to: { opacity: 0 } }
 
 styles =
   StyleX.create
     { page: { fontSize: 16, lineHeight: 1.75, color: "var(--text-secondary)" }
+    -- On narrow screens the page links scroll within the header, out to the viewport's edge.
+    , pageNavigation:
+        { display: "flex"
+        , position: "relative"
+        , alignSelf: "stretch"
+        , minWidth: 0
+        , marginInlineEnd: "calc(-1 * var(--gutter))"
+        , overflowX: "auto"
+        , scrollbarWidth: "none"
+        , maskImage:
+            { default: "none"
+            , "[data-fade=start]": "linear-gradient(to right, transparent, black 48px)"
+            , "[data-fade=end]": "linear-gradient(to left, transparent, black 48px)"
+            , "[data-fade=both]":
+                "linear-gradient(to right, transparent, black 48px, black calc(100% - 48px), transparent)"
+            }
+        }
+    , menu:
+        { display:
+            StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo720 "block" ]
+        , position: "sticky"
+        , top: "var(--nav-height)"
+        , zIndex: 15
+        , backgroundColor: "var(--loam-900)"
+        }
+    , menuTrigger:
+        { display: "flex"
+        , alignItems: "center"
+        , gap: 12
+        , width: "100%"
+        , height: 48
+        , paddingInline: "var(--gutter)"
+        , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
+        , color: "var(--text-primary)"
+        , cursor: "default"
+        , fontSize: 14
+        , textAlign: "start"
+        , outlineColor: "var(--focus-ring)"
+        , outlineOffset: -2
+        }
+    , menuLabel: { flexShrink: 0, fontWeight: 600 }
+    , menuCurrent:
+        { minWidth: 0
+        , overflow: "hidden"
+        , textOverflow: "ellipsis"
+        , whiteSpace: "nowrap"
+        , color: "var(--text-tertiary)"
+        }
+    , menuIcon:
+        { flexShrink: 0, marginInlineStart: "auto", fontSize: 16, color: "var(--text-tertiary)" }
+    , popover:
+        { width: "var(--trigger-width)"
+        , overflowY: "auto"
+        , backgroundColor: "var(--loam-900)"
+        , boxShadow: "0 28px 40px -20px oklch(0% 0 0 / 70%)"
+        , outline: "none"
+        , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
+        , animationDuration: { default: "140ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+        }
+    , popoverDialog:
+        { paddingInline: "calc(var(--gutter) - 12px)"
+        , paddingBlockStart: 8
+        , paddingBlockEnd: 16
+        , outline: "none"
+        }
     , layout:
         { display: "grid"
         , gridTemplateColumns:
             StyleX.conditionalValue
-              "210px minmax(0, 720px) max-content"
-              [ StyleX.conditionalCase breakpoints.upTo960 "minmax(0, 1fr)"
-              , StyleX.conditionalCase breakpoints.above960To1160 "210px minmax(0, 720px)"
+              "var(--rail-width) minmax(0, 1fr)"
+              [ StyleX.conditionalCase breakpoints.above720To960 "64px minmax(0, 1fr)"
+              , StyleX.conditionalCase breakpoints.upTo720 "minmax(0, 1fr)"
               ]
-        , columnGap: "clamp(32px, 4vw, 64px)"
-        , rowGap: 32
-        , marginInline: "auto"
-        , maxWidth: "var(--container-wide)"
-        , paddingInline: "var(--gutter)"
-        , paddingBlockStart:
-            StyleX.conditionalValue 64 [ StyleX.conditionalCase breakpoints.upTo960 24 ]
-        , paddingBlockEnd: 80
         , alignItems: "start"
         }
-    , sidebar:
+    , rail:
         { display:
             StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
-        , position:
-            StyleX.conditionalValue "sticky" [ StyleX.conditionalCase breakpoints.upTo960 "static" ]
-        , top: "calc(var(--nav-height) + 64px)"
-        -- Match the layout's top and bottom padding, including at the page end.
-        , maxHeight:
-            StyleX.conditionalValue
-              "calc(100dvh - var(--nav-height) - 64px - 80px)"
-              [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
-        , overflowY:
-            StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo960 "visible" ]
-        , minWidth: 0
+        , position: "sticky"
+        , top: "var(--nav-height)"
+        , height: "calc(100dvh - var(--nav-height))"
+        , overflowY: "auto"
+        , backgroundColor: "var(--loam-900)"
+        , paddingInline: "calc(var(--gutter) - 12px)"
+        , paddingBlockStart: 64
+        , paddingBlockEnd: 32
         }
-    , trigger:
-        { backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
-        , display: "inline-flex"
+    -- On tablets the rail collapses to a floating button, in line with the brand, that slides it out
+    -- over the article.
+    , collapsedRail:
+        { display:
+            StyleX.conditionalValue
+              "none"
+              [ StyleX.conditionalCase breakpoints.above720To960 "block" ]
+        , position: "sticky"
+        , top: "var(--nav-height)"
+        , height: "calc(100dvh - var(--nav-height))"
+        , paddingInlineStart: "var(--gutter)"
+        , paddingBlockStart: 16
+        }
+    , sidebarButton:
+        { display: "inline-flex"
         , alignItems: "center"
         , justifyContent: "center"
-        , height: 44
-        , width: 44
-        , borderRadius: "50%"
-        , cursor: "default"
+        , width: 40
+        , height: 40
+        , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
+        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
+        , cursor: "var(--landing-interactive-cursor, pointer)"
         , fontSize: 18
-        , color: "var(--text-primary)"
         , outlineColor: "var(--focus-ring)"
         }
-    , headerTitle:
-        { display:
-            StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo480 "none" ]
-        , color: "var(--text-secondary)"
-        , fontSize: 14
-        , fontWeight: 500
-        }
-    , mobileMenu:
-        { display:
-            StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo960 "block" ]
-        , marginInlineStart: "auto"
-        }
-    , navigation:
-        { display:
-            StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
-        }
-    , overlay:
+    , sidebarClose: { marginInlineStart: 12, marginBlockEnd: 32 }
+    , sidebarOverlay:
         { position: "fixed"
-        , inset: 0
+        , insetBlockStart: "var(--nav-height)"
+        , insetBlockEnd: 0
+        , insetInline: 0
         , zIndex: 40
         , display: "flex"
         , backgroundColor: "var(--overlay-scrim)"
         , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
         , animationDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         }
-    , modal:
-        { backgroundColor: "var(--loam-900)"
-        , width: "min(340px, calc(100vw - 40px))"
-        , height: "100dvh"
+    , sidebarPanel:
+        { width: "var(--rail-width)"
+        , height: "100%"
         , overflowY: "auto"
+        , backgroundColor: "var(--loam-900)"
         , animationName: { default: "none", "[data-entering]": slideIn, "[data-exiting]": slideOut }
         , animationDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         , animationTimingFunction: "var(--ease-out)"
         }
-    , dialog: { padding: 24, outline: "none" }
-    , drawerHead:
-        { display: "flex"
-        , alignItems: "center"
-        , justifyContent: "space-between"
-        , gap: 12
-        , marginBlockEnd: 32
-        }
-    , drawerTitle:
-        { fontSize: 21, fontWeight: 600, color: "var(--text-primary)", letterSpacing: "-0.025em" }
-    , close:
-        { display: "inline-flex"
-        , alignItems: "center"
-        , justifyContent: "center"
-        , height: 36
-        , width: 36
-        , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
-        , color: "var(--text-primary)"
-        , borderRadius: "50%"
-        , cursor: "default"
-        , outlineColor: "var(--focus-ring)"
-        }
-    , tabletToc:
-        { display:
-            StyleX.conditionalValue
-              "none"
-              [ StyleX.conditionalCase breakpoints.above960To1160 "block" ]
-        }
-    , label: { fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBlockEnd: 14 }
-    , navigationTitle:
-        { fontSize: 21
+    , sidebarDialog:
+        { paddingInline: 12, paddingBlockStart: 16, paddingBlockEnd: 32, outline: "none" }
+    , label:
+        { fontSize: 13
         , fontWeight: 600
-        , letterSpacing: "-0.025em"
         , color: "var(--text-primary)"
-        , marginBlockEnd: 24
+        , paddingInline: 12
+        , marginBlockEnd: 10
         }
-    , links: { display: "flex", flexDirection: "column", gap: 4, marginBlockEnd: 32 }
+    , popoverLabel: { marginBlockStart: 20 }
+    , links: { display: "flex", flexDirection: "column", gap: 2, marginBlockEnd: 32 }
     , link:
         { position: "relative"
         , isolation: "isolate"
@@ -196,39 +249,33 @@ styles =
         , alignItems: "center"
         , justifyContent: "space-between"
         , gap: 10
-        , paddingBlock: 8
+        , paddingBlock: 7
         , paddingInline: 12
         , fontSize: 14
+        , lineHeight: 1.5
         , textDecoration: "none"
         , outlineColor: "var(--focus-ring)"
         }
+    -- Keep the regular weight so marking a section never rewraps its title.
     , current:
         { backgroundColor: { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
         , color: "var(--iris-200)"
-        , fontWeight: 600
-        }
-    , navigationCanvas:
-        { position: "absolute"
-        , inset: 0
-        , width: "100%"
-        , height: "100%"
-        , zIndex: 0
-        , pointerEvents: "none"
-        , opacity: { default: 0.0, "[data-ocean]": 1.0 }
-        }
-    , linkContent:
-        { position: "relative"
-        , zIndex: 1
-        , display: "flex"
-        , alignItems: "center"
-        , justifyContent: "space-between"
-        , gap: 10
-        , width: "100%"
-        , minWidth: 0
         }
     , resourceIcon:
         { display: "inline-flex", flexShrink: 0, fontSize: 11, color: "var(--text-tertiary)" }
-    , article: { minWidth: 0 }
+    -- Text, terminals and code blocks share one 72ch measure. Text grows on wide screens so the
+    -- article can widen without longer lines.
+    , article:
+        { justifySelf: "center"
+        , width: "100%"
+        , minWidth: 0
+        , maxWidth: "calc(72ch + 2 * clamp(24px, 4.5vw, 72px))"
+        , paddingInline: "clamp(24px, 4.5vw, 72px)"
+        , fontSize: "clamp(16px, 0.25vw + 12.4px, 18px)"
+        , paddingBlockStart:
+            StyleX.conditionalValue 56 [ StyleX.conditionalCase breakpoints.upTo720 32 ]
+        , paddingBlockEnd: 80
+        }
     , title:
         { fontSize: "clamp(38px, 4vw, 54px)"
         , color: "var(--text-primary)"
@@ -238,15 +285,19 @@ styles =
         , marginBlockEnd: 20
         }
     , intro:
-        { fontSize: 19
+        { fontSize: "1.1875em"
         , color: "var(--text-secondary)"
         , lineHeight: 1.65
-        , maxWidth: "60ch"
         , marginBlockEnd: 48
         }
-    , section: { marginBlockEnd: 48, scrollMarginTop: "calc(var(--nav-height) + 28px)" }
+    -- Clear the sticky header, and on narrow screens the section menu below it.
+    , section:
+        { marginBlockEnd: 48
+        , scrollMarginTop:
+            StyleX.conditionalValue 32 [ StyleX.conditionalCase breakpoints.upTo720 80 ]
+        }
     , heading:
-        { fontSize: 25
+        { fontSize: "1.5625em"
         , color: "var(--text-primary)"
         , fontWeight: 600
         , letterSpacing: "-0.025em"
@@ -254,25 +305,36 @@ styles =
         , marginBlockEnd: 20
         }
     , body: { display: "flex", flexDirection: "column", gap: 18 }
-    , toc:
-        { display:
-            StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo1160 "none" ]
-        , position: "sticky"
-        , top: "calc(var(--nav-height) + 64px)"
-        , maxHeight: "calc(100dvh - var(--nav-height) - 64px - 80px)"
-        , overflowY: "auto"
-        , fontSize: 13
-        , width: "28ch"
+    , footer: { display: "flex", flexDirection: "column", gap: 32, marginBlockStart: 72 }
+    , pager:
+        { display: "grid"
+        , gridTemplateColumns:
+            StyleX.conditionalValue
+              "repeat(2, minmax(0, 1fr))"
+              [ StyleX.conditionalCase breakpoints.upTo480 "minmax(0, 1fr)" ]
+        , gap: 12
         }
-    , tocLink:
-        { color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
-        , display: "block"
-        , fontSize: 13
-        , paddingBlock: 6
+    , pagerLink:
+        { display: "flex"
+        , flexDirection: "column"
+        , gap: 2
+        , paddingBlock: 16
+        , paddingInline: 20
+        , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
+        , cursor: "default"
         , textDecoration: "none"
         , outlineColor: "var(--focus-ring)"
         }
-    , footer: { color: "var(--text-tertiary)", fontSize: 13, marginBlockStart: 64 }
+    , pagerNext:
+        { gridColumnStart:
+            StyleX.conditionalValue 2 [ StyleX.conditionalCase breakpoints.upTo480 1 ]
+        , alignItems: "flex-end"
+        , textAlign: "end"
+        }
+    , pagerLabel: { fontSize: 13, color: "var(--text-tertiary)" }
+    , pagerTitle:
+        { fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", color: "var(--text-primary)" }
+    , notice: { color: "var(--text-tertiary)", fontSize: 13 }
     , skip:
         { position: "fixed"
         , top: { default: "-100px", ":focus": "12px" }
@@ -292,42 +354,52 @@ documentation { page, intro, sections } =
     styleProps.page
     [ DOM.a { className: styleProps.skip.className, href: "#content" } "Skip to content"
     , SiteNav.siteHeader
-        [ DOM.p styleProps.headerTitle "Documentation"
-        , element
-            mobileSidebarImpl
-            { rootClassName: styleProps.mobileMenu.className
-            , triggerClassName: styleProps.trigger.className
-            , overlayClassName: styleProps.overlay.className
-            , modalClassName: styleProps.modal.className
-            , dialogClassName: styleProps.dialog.className
-            , headClassName: styleProps.drawerHead.className
-            , titleClassName: styleProps.drawerTitle.className
-            , closeClassName: styleProps.close.className
-            , navigation:
-                guide
-                  <> [ DOM.p styleProps.label "On this page"
-                     , DOM.div styleProps.links (map sidebarAnchor sections)
-                     ]
-                  <> resources
+        [ element
+            pageNavigationImpl
+            { className: styleProps.pageNavigation.className
+            , label: "Documentation"
+            , content: fragment (map pageLink pages)
             }
         ]
+    , element
+        sectionMenuImpl
+        { sections: sectionLinks
+        , links
+        , rootClassName: styleProps.menu.className
+        , triggerClassName: styleProps.menuTrigger.className
+        , labelClassName: styleProps.menuLabel.className
+        , currentClassName: styleProps.menuCurrent.className
+        , iconClassName: styleProps.menuIcon.className
+        , popoverClassName: styleProps.popover.className
+        , dialogClassName: styleProps.popoverDialog.className
+        , headingClassName: (StyleX.props [ styles.label, styles.popoverLabel ]).className
+        , resources
+        }
     , DOM.div
         styleProps.layout
         [ DOM.aside
-            styleProps.sidebar
+            styleProps.rail
             [ DOM.nav
-                { className: styleProps.navigation.className, "aria-label": "Documentation" }
-                ( [ DOM.p styleProps.navigationTitle "Documentation" ]
-                    <> guide
-                    <> resources
-                    <> [ DOM.div
-                           styleProps.tabletToc
-                           [ DOM.p styleProps.label "In this guide"
-                           , DOM.div styleProps.links (map sidebarAnchor sections)
-                           ]
-                       ]
-                )
+                { "aria-label": "On this page" }
+                [ DOM.p styleProps.label "On this page"
+                , element sectionNavigationImpl { sections: sectionLinks, links }
+                ]
+            , DOM.p styleProps.label "Resources"
+            , resources
             ]
+        , element
+            sectionSidebarImpl
+            { sections: sectionLinks
+            , links
+            , rootClassName: styleProps.collapsedRail.className
+            , buttonClassName: styleProps.sidebarButton.className
+            , closeClassName: (StyleX.props [ styles.sidebarButton, styles.sidebarClose ]).className
+            , overlayClassName: styleProps.sidebarOverlay.className
+            , panelClassName: styleProps.sidebarPanel.className
+            , dialogClassName: styleProps.sidebarDialog.className
+            , labelClassName: styleProps.label.className
+            , resources
+            }
         , DOM.main
             { className: styleProps.article.className, id: "content", tabIndex: -1 }
             [ DOM.h1 styleProps.title (pageTitle page)
@@ -335,48 +407,64 @@ documentation { page, intro, sections } =
             , DOM.div {} (map section sections)
             , DOM.footer
                 styleProps.footer
-                "Iris is in alpha. Commands and APIs may change between releases."
+                [ DOM.nav
+                    { className: styleProps.pager.className
+                    , "aria-label": "Previous and next pages"
+                    }
+                    (pagerLink "Previous" false (offset (-1)) <> pagerLink "Next" true (offset 1))
+                , DOM.p
+                    styleProps.notice
+                    "Iris is in alpha. Commands and APIs may change between releases."
+                ]
             ]
-        , DOM.nav
-            { className: styleProps.toc.className, "aria-label": "On this page" }
-            ([ DOM.p styleProps.label "On this page" ] <> map anchor sections)
         ]
     ]
   where
-  guide = [ DOM.div styleProps.links (map guideLink pages) ]
-  guideLink entry = navigationLink (pageHref entry) (entry == page) [ DOM.text (pageTitle entry) ]
-  resources =
-    [ DOM.p styleProps.label "Resources"
-    , DOM.div
-        styleProps.links
-        [ resource "https://github.com/purefunctor/purescript-iris" "Compiler source"
-        , resource "https://github.com/purefunctor/purescript-iris/releases" "Releases"
-        , resource "https://pursuit.purescript.org" "Library documentation"
+  sectionLinks = map (\{ id, title } -> { id, title }) sections
+  links =
+    { listClassName: styleProps.links.className
+    , className: styleProps.link.className
+    , currentClassName: (StyleX.props [ styles.link, styles.current ]).className
+    , canvasClassName: NavigationLink.classNames.canvas
+    , contentClassName: NavigationLink.classNames.content
+    }
+  pageLink entry =
+    SiteNav.headerLink { href: pageHref entry, label: pageTitle entry, current: entry == page }
+  offset by = findIndex (_ == page) pages >>= \index -> pages !! (index + by)
+  pagerLink label next =
+    maybe
+      []
+      \entry ->
+        [ DOM.a
+            { className:
+                ( StyleX.props [ styles.pagerLink, StyleX.conditional next styles.pagerNext ]
+                ).className
+            , href: pageHref entry
+            }
+            [ DOM.span styleProps.pagerLabel label
+            , DOM.span styleProps.pagerTitle (pageTitle entry)
+            ]
         ]
-    ]
-  resource href label =
-    navigationLink
-      href
-      false
-      [ DOM.text label
-      , DOM.span
-          styleProps.resourceIcon
-          (element Icon.externalLink { "aria-hidden": true, focusable: false })
+  resources =
+    DOM.div
+      styleProps.links
+      [ resource "https://github.com/purefunctor/purescript-iris" "Compiler source"
+      , resource "https://github.com/purefunctor/purescript-iris/releases" "Releases"
+      , resource "https://pursuit.purescript.org" "Library documentation"
       ]
-  navigationLink href current content =
-    element
-      navigationLinkImpl
+  resource href label =
+    NavigationLink.navigationLink
       { href
-      , className:
-          (StyleX.props [ styles.link, StyleX.conditional current styles.current ]).className
-      , canvasClassName: styleProps.navigationCanvas.className
-      , contentClassName: styleProps.linkContent.className
-      , current
-      , content
+      , className: styleProps.link.className
+      , current: false
+      , content:
+          fragment
+            [ DOM.text label
+            , DOM.span
+                styleProps.resourceIcon
+                (element Icon.externalLink { "aria-hidden": true, focusable: false })
+            ]
       }
-  sidebarAnchor { id, title: label } = navigationLink ("#" <> id) false [ DOM.text label ]
-  anchor { id, title: label } =
-    DOM.a { className: styleProps.tocLink.className, href: "#" <> id } label
   section { id, title: heading, body } =
     DOM.section
       { className: styleProps.section.className, id }

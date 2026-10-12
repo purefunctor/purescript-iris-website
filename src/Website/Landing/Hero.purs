@@ -125,7 +125,7 @@ hero { install, ripples } =
                     , id: "install"
                     , ref: DOM.reactRef install
                     }
-                    Installation.installation
+                    (Installation.installation { fill: false })
                 ]
             , DOM.div
                 styleProps.code

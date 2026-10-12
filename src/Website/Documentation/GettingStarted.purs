@@ -67,7 +67,7 @@ sections =
             [ DOM.text
                 "Run the installer for your platform. It downloads the latest stable Iris release."
             ]
-        , Installation.installation
+        , Installation.installation { fill: true }
         , paragraph
             [ DOM.text
                 "Use “Show source” to inspect the script before running it. Then make sure the installation directory is on your "

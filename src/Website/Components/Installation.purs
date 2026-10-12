@@ -25,6 +25,7 @@ styles =
   StyleX.create
     { root:
         { display: "flex", flexDirection: "column", gap: 8, maxWidth: "100%", width: "fit-content" }
+    , fill: { width: "100%" }
     , header:
         { alignItems: "center"
         , display: "flex"
@@ -98,8 +99,10 @@ styles =
 
 styleProps = StyleX.recordProps styles
 
-installation :: JSX
-installation =
+-- | Without `fill`, the command panel fits the longer command; with it, the installer spans its
+-- | container, matching the text around it.
+installation :: { fill :: Boolean } -> JSX
+installation { fill } =
   element
     installationImpl
     { commandClassName: styleProps.command.className
@@ -109,9 +112,9 @@ installation =
             { label: "Copy installation command", size: CopyButton.Medium, text }
     , headerClassName: styleProps.header.className
     , iconClassName: styleProps.icon.className
-    , panelClassName: styleProps.panel.className
+    , panelClassName: (StyleX.props [ styles.panel, StyleX.conditional fill styles.fill ]).className
     , promptClassName: styleProps.prompt.className
-    , rootClassName: styleProps.root.className
+    , rootClassName: (StyleX.props [ styles.root, StyleX.conditional fill styles.fill ]).className
     , sourceClassName: styleProps.source.className
     , sourceIconClassName: styleProps.sourceIcon.className
     , systemClassName: styleProps.system.className

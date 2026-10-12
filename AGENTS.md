@@ -31,7 +31,7 @@ This repository is the Iris website: Astro handles routing and server rendering 
 
 ### Documentation pages
 
-- Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs`. Add it to `Page` in `Website.Components.Documentation`, which orders the sidebar, and build its body from `Website.Documentation.Prose`.
+- Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs`. Add it to `Page` in `Website.Components.Documentation`, which orders the header navigation and previous/next links, and build its body from `Website.Documentation.Prose`.
 - The compiler README links to these routes. Keep their slugs stable, or update those links when renaming a page.
 
 ### Deployment

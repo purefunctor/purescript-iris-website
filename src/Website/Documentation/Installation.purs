@@ -33,7 +33,7 @@ sections =
             , inlineCode "iris"
             , DOM.text " executable."
             ]
-        , Installation.installation
+        , Installation.installation { fill: true }
         , paragraph
             [ DOM.text
                 "The installers support Linux on x86-64, macOS on Intel and Apple silicon, and 64-bit Windows. By default, they install Iris in "

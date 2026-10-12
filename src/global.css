@@ -118,6 +118,7 @@
     --container-wide: 1360px;
     --gutter: 24px;
     --nav-height: 60px;
+    --rail-width: 240px;
 
     /* Colors for the code samples in the feature sections. */
     --landing-color-ink: oklch(30% 0.055 279);
