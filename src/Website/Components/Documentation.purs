@@ -22,12 +22,14 @@ derive instance Eq Page
 pages :: Array Page
 pages = [ GettingStarted, Installation, LanguageServer, Formatting ]
 
+-- | Production serves each page at its trailing-slash URL and redirects the bare form, so links
+-- | use that URL to avoid a round trip.
 pageHref :: Page -> String
 pageHref = case _ of
-  GettingStarted -> "/docs/getting-started"
-  Installation -> "/docs/installation"
-  LanguageServer -> "/docs/language-server"
-  Formatting -> "/docs/formatting"
+  GettingStarted -> "/docs/getting-started/"
+  Installation -> "/docs/installation/"
+  LanguageServer -> "/docs/language-server/"
+  Formatting -> "/docs/formatting/"
 
 pageTitle :: Page -> String
 pageTitle = case _ of

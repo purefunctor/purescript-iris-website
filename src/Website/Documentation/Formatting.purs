@@ -81,7 +81,7 @@ sections =
     , body:
         [ paragraph
             [ DOM.text "When your editor is connected to the "
-            , link "/docs/language-server" "Iris language server"
+            , link "/docs/language-server/" "Iris language server"
             , DOM.text
                 ", the editor's Format Document command formats the current file. It uses the same formatter as "
             , inlineCode "iris format"

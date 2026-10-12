@@ -258,7 +258,7 @@ siteNav { onInstall } =
             , content:
                 [ link true "/#benchmarks" "Benchmarks"
                 , link true "/#editor" "Editor"
-                , link true "/docs/getting-started" "Documentation"
+                , link true "/docs/getting-started/" "Documentation"
                 , installButton true
                 , DOM.div
                     styleProps.menuFooter
@@ -318,7 +318,7 @@ siteNav { onInstall } =
       (DOM.span styleProps.icon (element icon { "aria-hidden": true, focusable: false }))
   documentationLink =
     NavigationLink.navigationLink
-      { href: "/docs/getting-started"
+      { href: "/docs/getting-started/"
       , className:
           (StyleX.props [ styles.link, styles.landingItem, styles.documentation ]).className
       , current: false

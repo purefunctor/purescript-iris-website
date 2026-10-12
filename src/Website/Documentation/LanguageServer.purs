@@ -61,7 +61,7 @@ sections =
             , inlineCode "iris"
             , DOM.text
                 " executable on your PATH, so no further configuration is required if you followed "
-            , link "/docs/getting-started" "Getting started"
+            , link "/docs/getting-started/" "Getting started"
             , DOM.text "."
             ]
         , paragraph

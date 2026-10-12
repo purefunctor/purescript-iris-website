@@ -44,7 +44,7 @@ sections =
         , paragraph
             [ DOM.text
                 "The script does not modify your PATH. If the installation directory is not on your PATH, the script prints a reminder. "
-            , link "/docs/getting-started#install-iris" "Getting started"
+            , link "/docs/getting-started/#install-iris" "Getting started"
             , DOM.text " explains how to add it."
             ]
         ]
@@ -182,7 +182,7 @@ sections =
             [ DOM.text "Running "
             , inlineCode "iris watch"
             , DOM.text " processes and editor "
-            , link "/docs/language-server" "language servers"
+            , link "/docs/language-server/" "language servers"
             , DOM.text
                 " continue to use the previous version until they are restarted. Restart them after updating."
             ]

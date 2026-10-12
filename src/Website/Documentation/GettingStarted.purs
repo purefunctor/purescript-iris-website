@@ -130,7 +130,7 @@ sections =
         , paragraph
             [ DOM.text
                 "To install a specific version or use a different installation directory, see "
-            , link "/docs/installation" "Installation"
+            , link "/docs/installation/" "Installation"
             , DOM.text "."
             ]
         ]
@@ -314,7 +314,7 @@ sections =
             [ item
                 [ DOM.text
                     "To get types, completion, and error messages in your editor, install the Visual Studio Code extension or connect another editor to the "
-                , link "/docs/language-server" "Iris language server"
+                , link "/docs/language-server/" "Iris language server"
                 , DOM.text "."
                 ]
             , item
