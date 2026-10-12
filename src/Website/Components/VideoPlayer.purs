@@ -62,7 +62,6 @@ styles =
         { aspectRatio: "16 / 9"
         , backgroundColor: "oklch(0% 0 0)"
         , borderColor: "var(--border-subtle)"
-        , borderRadius: { default: 12, ":fullscreen": 0 }
         , borderStyle: "solid"
         , borderWidth: { default: 1, ":fullscreen": 0 }
         , overflow: "hidden"
@@ -107,7 +106,6 @@ styles =
         , backdropFilter: "blur(30px)"
         , backgroundColor: "var(--glass-fill-strong)"
         , borderColor: "var(--glass-border)"
-        , borderRadius: 999
         , borderStyle: "solid"
         , borderWidth: 1
         , display: "flex"
@@ -126,9 +124,7 @@ styles =
         }
     , controlsShown: { opacity: 1 }
     , mediaButton:
-        { backgroundColor: { default: "transparent", ":hover": "var(--border-default)" }
-        , borderRadius: 999
-        }
+        { backgroundColor: { default: "transparent", ":hover": "var(--border-default)" } }
     , time:
         { color: "var(--text-secondary)"
         , flexShrink: 0
@@ -147,7 +143,6 @@ styles =
         , "--seek-bubble":
             { default: "0", ":hover": "1", ":focus-visible": "1", "[data-seeking]": "1" }
         , alignSelf: "stretch"
-        , borderRadius: 999
         , cursor: "var(--landing-interactive-cursor, pointer)"
         , flexGrow: 1
         , marginInline: 6
@@ -159,7 +154,6 @@ styles =
         }
     , track:
         { backgroundColor: "var(--border-default)"
-        , borderRadius: 999
         , height: "var(--seek-height)"
         , insetInline: 0
         , overflow: "hidden"
@@ -197,7 +191,6 @@ styles =
         , backdropFilter: "blur(30px)"
         , backgroundColor: "var(--glass-fill-strong)"
         , borderColor: "var(--glass-border)"
-        , borderRadius: 5
         , borderStyle: "solid"
         , borderWidth: 1
         , bottom: "calc(100% + 10px)"

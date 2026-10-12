@@ -147,7 +147,7 @@ styles =
         }
     , badge:
         { backgroundColor: "var(--surface-2)"
-        , borderRadius: 5
+        , borderRadius: 999
         , color: "var(--text-secondary)"
         , fontFamily: "var(--font-mono)"
         , fontSize: StyleX.conditionalValue 13 [ StyleX.conditionalCase breakpoints.upTo600 11 ]

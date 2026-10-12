@@ -76,8 +76,7 @@ styles =
     , heading: { color: "var(--text-tertiary)", fontSize: 13, fontWeight: 600, lineHeight: 1.3 }
     , links: { display: "flex", flexDirection: "column", gap: 10, listStyle: "none", padding: 0 }
     , link:
-        { borderRadius: 3
-        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
+        { color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , fontSize: 13
         , lineHeight: 1.5
         , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }

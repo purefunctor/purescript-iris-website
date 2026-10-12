@@ -80,7 +80,6 @@ styles =
         }
     , brand:
         { alignItems: "center"
-        , borderRadius: 5
         , color: "var(--text-primary)"
         , cursor: "default"
         , display: "inline-flex"

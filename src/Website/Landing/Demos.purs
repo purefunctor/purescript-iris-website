@@ -119,7 +119,6 @@ styles =
     , choice:
         { alignItems: "center"
         , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
-        , borderRadius: 8
         , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , cursor: "var(--landing-interactive-cursor, pointer)"
         , display: "grid"

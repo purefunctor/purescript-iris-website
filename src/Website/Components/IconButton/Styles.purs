@@ -8,7 +8,6 @@ iconButtonStyles =
     { button:
         { alignItems: "center"
         , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
-        , borderRadius: 8
         , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , cursor: "var(--landing-interactive-cursor, pointer)"
         , display: "inline-flex"
@@ -22,12 +21,11 @@ iconButtonStyles =
         , transitionTimingFunction: "var(--ease-out)"
         }
     -- Lucide icons render at 1.2em.
-    , small: { borderRadius: 5, fontSize: 12, height: 28, width: 28 }
+    , small: { fontSize: 12, height: 28, width: 28 }
     , medium: { fontSize: 13, height: 36, width: 36 }
     , tooltip:
         { backgroundColor: "var(--surface-3)"
         , borderColor: "var(--border-default)"
-        , borderRadius: 5
         , borderStyle: "solid"
         , borderWidth: 1
         , color: "var(--text-primary)"

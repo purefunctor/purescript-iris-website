@@ -13,7 +13,6 @@ tabStyles =
             , ":hover": "var(--glass-fill)"
             , "[data-selected]": "var(--glass-fill-strong)"
             }
-        , borderRadius: 5
         , color:
             { default: "var(--text-tertiary)"
             , ":hover": "var(--text-primary)"

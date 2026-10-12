@@ -34,8 +34,7 @@ type CodeBlock =
 styles =
   StyleX.create
     { root:
-        { borderRadius: 12
-        , borderStyle: "solid"
+        { borderStyle: "solid"
         , borderWidth: 1
         , minWidth: 0
         , overflow: "hidden"

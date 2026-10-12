@@ -18,7 +18,6 @@ styles =
         , borderColor: "var(--border-subtle)"
         , borderStyle: "solid"
         , borderWidth: 1
-        , borderRadius: 8
         , minWidth: 0
         , overflow: "hidden"
         }

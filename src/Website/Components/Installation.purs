@@ -37,7 +37,6 @@ styles =
     , source:
         { alignItems: "center"
         , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
-        , borderRadius: 5
         , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
         , display: "inline-flex"
         , flexShrink: 0
@@ -68,7 +67,6 @@ styles =
         , backdropFilter: "blur(12px)"
         , backgroundColor: "var(--glass-fill)"
         , borderColor: "var(--glass-border)"
-        , borderRadius: 8
         , borderStyle: "solid"
         , borderWidth: 1
         , display: "flex"

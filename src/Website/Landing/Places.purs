@@ -57,7 +57,6 @@ styles =
         }
     , card:
         { backgroundColor: "var(--surface-1)"
-        , borderRadius: 12
         , display: "flex"
         , flexDirection: "column"
         , gap: 14
@@ -67,7 +66,6 @@ styles =
     , icon:
         { alignItems: "center"
         , backgroundColor: "var(--accent-soft)"
-        , borderRadius: 8
         , color: "var(--accent-text)"
         , display: "inline-flex"
         , fontSize: 15
@@ -80,7 +78,6 @@ styles =
     , inlineCode:
         { backgroundColor: "var(--surface-2)"
         , borderColor: "var(--border-subtle)"
-        , borderRadius: 3
         , borderStyle: "solid"
         , borderWidth: 1
         , color: "var(--text-primary)"
