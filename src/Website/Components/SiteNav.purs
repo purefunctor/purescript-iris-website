@@ -26,6 +26,21 @@ foreign import mobileNavigationImpl ::
     , content :: Array JSX
     }
 
+foreign import spectrumInstallButtonImpl ::
+  ReactComponent
+    { className :: String
+    , pressedClassName :: String
+    , label :: String
+    , onPress :: Effect Unit
+    , content :: Array JSX
+    }
+
+-- Staggered bars carry a wave across the button. Each bar sinks by moving rather than by clipping,
+-- so the wave adds to the fill's own transitions instead of interrupting them, and its label copy
+-- moves the opposite way to stay aligned with the label beneath.
+installWave = StyleX.keyframes { "40%": { transform: "translateY(20%)" } }
+installLabelWave = StyleX.keyframes { "40%": { transform: "translateY(-20%)" } }
+
 styles =
   StyleX.create
     { header:
@@ -207,8 +222,7 @@ styles =
         , overflow: "hidden"
         , textTransform: "uppercase"
         , width: 168
-        , "--install-fill":
-            { default: "0.07", ":hover": "1", ":focus-visible": "1", ":active": "0.88" }
+        , "--install-fill": { default: "0.07", ":hover": "1", ":focus-visible": "1" }
         -- The bars would cover the header's focus outline, so the ring is drawn above them.
         , outlineStyle: "none"
         , "--install-ring": { default: "transparent", ":focus-visible": "var(--focus-ring)" }
@@ -221,6 +235,12 @@ styles =
             , position: "absolute"
             , zIndex: 2
             }
+        }
+    , pressedInstall:
+        { "--install-wave":
+            { default: installWave, "@media (prefers-reduced-motion: reduce)": "none" }
+        , "--install-label-wave":
+            { default: installLabelWave, "@media (prefers-reduced-motion: reduce)": "none" }
         }
     , bars:
         { display: "flex"
@@ -240,17 +260,49 @@ styles =
         , transitionDuration: { default: "320ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         , transitionProperty: "clip-path"
         , transitionTimingFunction: "var(--ease-out)"
+        , animationDuration: "520ms"
+        , animationName: "var(--install-wave, none)"
+        , animationTimingFunction: "cubic-bezier(0.45, 0, 0.55, 1)"
         }
-    , bar0: { backgroundColor: "var(--spectrum-red)", transitionDelay: "0ms" }
-    , bar1: { backgroundColor: "var(--spectrum-orange)", transitionDelay: "28ms" }
-    , bar2: { backgroundColor: "var(--spectrum-yellow)", transitionDelay: "56ms" }
-    , bar3: { backgroundColor: "var(--spectrum-green)", transitionDelay: "84ms" }
-    , bar4: { backgroundColor: "var(--spectrum-blue)", transitionDelay: "112ms" }
-    , bar5: { backgroundColor: "var(--spectrum-indigo)", transitionDelay: "140ms" }
-    , bar6: { backgroundColor: "var(--spectrum-violet)", transitionDelay: "168ms" }
+    , bar0:
+        { backgroundColor: "var(--spectrum-red)", animationDelay: "0ms", transitionDelay: "0ms" }
+    , bar1:
+        { backgroundColor: "var(--spectrum-orange)"
+        , animationDelay: "45ms"
+        , transitionDelay: "28ms"
+        }
+    , bar2:
+        { backgroundColor: "var(--spectrum-yellow)"
+        , animationDelay: "90ms"
+        , transitionDelay: "56ms"
+        }
+    , bar3:
+        { backgroundColor: "var(--spectrum-green)"
+        , animationDelay: "135ms"
+        , transitionDelay: "84ms"
+        }
+    , bar4:
+        { backgroundColor: "var(--spectrum-blue)"
+        , animationDelay: "180ms"
+        , transitionDelay: "112ms"
+        }
+    , bar5:
+        { backgroundColor: "var(--spectrum-indigo)"
+        , animationDelay: "225ms"
+        , transitionDelay: "140ms"
+        }
+    , bar6:
+        { backgroundColor: "var(--spectrum-violet)"
+        , animationDelay: "270ms"
+        , transitionDelay: "168ms"
+        }
     -- Each copy spans the whole button, offset so it lines up with the label beneath.
     , barLabel:
         { alignItems: "center"
+        , animationDelay: "inherit"
+        , animationDuration: "inherit"
+        , animationName: "var(--install-label-wave, none)"
+        , animationTimingFunction: "inherit"
         , color: "var(--loam-950)"
         , display: "flex"
         , insetBlock: 0
@@ -359,34 +411,36 @@ siteNav { onInstall } =
       }
       "Install"
   spectrumInstallButton =
-    DOM.button
-      { className:
-          ( StyleX.props
-              [ styles.link, styles.landingItem, styles.desktopInstall, styles.spectrumInstall ]
-          ).className
-      , onClick: handler_ onInstall
-      , "aria-label": "Install"
-      , type: "button"
-      }
-      [ DOM.span
-          { className: styleProps.bars.className, "aria-hidden": true }
-          ( map
-              ( \{ bar, label } ->
-                  DOM.span
-                    (StyleX.props [ styles.bar, bar ])
-                    (DOM.span (StyleX.props [ styles.barLabel, label ]) "Install")
+    element
+      spectrumInstallButtonImpl
+      { className: (StyleX.props spectrumInstallStyles).className
+      , pressedClassName:
+          (StyleX.props (spectrumInstallStyles <> [ styles.pressedInstall ])).className
+      , label: "Install"
+      , onPress: onInstall
+      , content:
+          [ DOM.span
+              { className: styleProps.bars.className, "aria-hidden": true }
+              ( map
+                  ( \{ bar, label } ->
+                      DOM.span
+                        (StyleX.props [ styles.bar, bar ])
+                        (DOM.span (StyleX.props [ styles.barLabel, label ]) "Install")
+                  )
+                  [ { bar: styles.bar0, label: styles.barLabel0 }
+                  , { bar: styles.bar1, label: styles.barLabel1 }
+                  , { bar: styles.bar2, label: styles.barLabel2 }
+                  , { bar: styles.bar3, label: styles.barLabel3 }
+                  , { bar: styles.bar4, label: styles.barLabel4 }
+                  , { bar: styles.bar5, label: styles.barLabel5 }
+                  , { bar: styles.bar6, label: styles.barLabel6 }
+                  ]
               )
-              [ { bar: styles.bar0, label: styles.barLabel0 }
-              , { bar: styles.bar1, label: styles.barLabel1 }
-              , { bar: styles.bar2, label: styles.barLabel2 }
-              , { bar: styles.bar3, label: styles.barLabel3 }
-              , { bar: styles.bar4, label: styles.barLabel4 }
-              , { bar: styles.bar5, label: styles.barLabel5 }
-              , { bar: styles.bar6, label: styles.barLabel6 }
-              ]
-          )
-      , DOM.span styleProps.spectrumInstallLabel "Install"
-      ]
+          , DOM.span styleProps.spectrumInstallLabel "Install"
+          ]
+      }
+  spectrumInstallStyles =
+    [ styles.link, styles.landingItem, styles.desktopInstall, styles.spectrumInstall ]
   link mobile href label =
     NavigationLink.navigationLink
       { href

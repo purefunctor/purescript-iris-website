@@ -69,3 +69,36 @@ export function mobileNavigationImpl({ className, buttonClassName, panelClassNam
     },
   }, content));
 }
+
+// A press plays the bars' wave to the end, however briefly the button is held. Pointer presses
+// start it on pointer down; keyboard activation, which has no pointer down, starts it on click.
+export function spectrumInstallButtonImpl({ className, pressedClassName, label, onPress, content }) {
+  const [pressed, setPressed] = useState(false);
+  const button = useRef(null);
+
+  useEffect(() => {
+    if (!pressed) return undefined;
+    let current = true;
+    const moving = button.current.getAnimations({ subtree: true }).map(animation => animation.finished);
+    Promise.allSettled(moving).then(() => {
+      if (current) setPressed(false);
+    });
+    return () => {
+      current = false;
+    };
+  }, [pressed]);
+
+  return createElement("button", {
+    className: pressed ? pressedClassName : className,
+    ref: button,
+    type: "button",
+    "aria-label": label,
+    onPointerDown: event => {
+      if (event.button === 0) setPressed(true);
+    },
+    onClick: event => {
+      if (event.detail === 0) setPressed(true);
+      onPress();
+    },
+  }, ...content);
+}
