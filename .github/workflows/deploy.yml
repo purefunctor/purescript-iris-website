@@ -32,16 +32,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install pinned Iris release
+      - name: Install latest stable Iris release
         run: |
-          archive="$RUNNER_TEMP/iris.tar.gz"
-          curl --proto '=https' --tlsv1.2 -fLsS --retry 3 \
-            -o "$archive" \
-            https://github.com/purefunctor/purescript-iris/releases/download/v0.1.5/iris-x86_64-unknown-linux-musl.tar.gz
-          echo "77fdc30148f40eda57b28f669e6350c8241a92337545f9deb8b42cf97ec7fd3f  $archive" | sha256sum --check -
-          tar -xzf "$archive" -C "$RUNNER_TEMP" iris-x86_64-unknown-linux-musl/iris
-          echo "$RUNNER_TEMP/iris-x86_64-unknown-linux-musl" >> "$GITHUB_PATH"
-          "$RUNNER_TEMP/iris-x86_64-unknown-linux-musl/iris" --version
+          gh attestation verify --help >/dev/null
+          IRIS_VERSION=latest IRIS_SKIP_ATTESTATION=0 IRIS_INSTALL_DIR="$RUNNER_TEMP/iris-bin" sh public/install.sh
+          echo "$RUNNER_TEMP/iris-bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/iris-bin/iris" --version
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Build static assets
         run: |
