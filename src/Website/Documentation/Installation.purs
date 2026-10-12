@@ -156,7 +156,7 @@ sections =
         , paragraph [ DOM.text "The command also accepts a release tag and the following options:" ]
         , list
             [ item
-                [ inlineCode "iris self update v0.1.6"
+                [ inlineCode "iris self update v0.1.7"
                 , DOM.text
                     " installs a specific release by its tag, including an older release. As with the install scripts, Iris 0.1.0 and later are supported."
                 ]
