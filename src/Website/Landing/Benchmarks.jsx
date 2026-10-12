@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
+import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
 
 // The bars race once the chart is on screen. One panel follows the selected tab rather than one
 // panel per tab, so switching keeps the chart mounted and its styles transition between the

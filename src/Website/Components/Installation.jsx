@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
+import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
 import AppleIcon from "~icons/simple-icons/apple";
 import LinuxIcon from "~icons/simple-icons/linux";
 import WindowsIcon from "~icons/simple-icons/windows";

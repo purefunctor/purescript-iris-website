@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Dialog, DialogTrigger, Modal, ModalOverlay, Popover } from "react-aria-components";
+import { Button } from "react-aria-components/Button";
+import { Dialog, DialogTrigger } from "react-aria-components/Dialog";
+import { Modal, ModalOverlay } from "react-aria-components/Modal";
+import { Popover } from "react-aria-components/Popover";
 import ChevronDownIcon from "~icons/lucide/chevron-down";
 import PanelLeftCloseIcon from "~icons/lucide/panel-left-close";
 import PanelLeftOpenIcon from "~icons/lucide/panel-left-open";

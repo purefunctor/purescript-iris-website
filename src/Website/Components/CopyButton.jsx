@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button, Tooltip, TooltipTrigger } from "react-aria-components";
+import { Button } from "react-aria-components/Button";
+import { Tooltip, TooltipTrigger } from "react-aria-components/Tooltip";
 import CheckIcon from "~icons/lucide/check";
 import CopyIcon from "~icons/lucide/copy";
 

@@ -2,13 +2,17 @@ import react from "@astrojs/react";
 import stylex from "@stylexjs/unplugin";
 import icons from "unplugin-icons/vite";
 import { defineConfig } from "astro/config";
+import { devLibraryBundle } from "./src/lib/devLibraryBundle.ts";
+import { devModulePreload } from "./src/lib/devModulePreload.ts";
 
 // Astro sets NODE_ENV before loading config.
 const development = process.env.NODE_ENV === "development";
 
 export default defineConfig({
   site: "https://iris-lang.com",
-  integrations: [react()],
+  integrations: [react(), devModulePreload()],
+  // The toolbar adds about 1.3 MB of client modules to every development page.
+  devToolbar: { enabled: false },
   output: "static",
   session: false,
   security: {
@@ -41,12 +45,18 @@ export default defineConfig({
     optimizeDeps: {
       include: [
         "@stylexjs/stylex",
-        "react-aria-components",
+        "react-aria-components/Button",
+        "react-aria-components/Dialog",
+        "react-aria-components/Modal",
+        "react-aria-components/Popover",
+        "react-aria-components/Tabs",
+        "react-aria-components/Tooltip",
       ],
     },
     // StyleX aggregates all rules into one CSS asset.
     build: { cssCodeSplit: false },
     plugins: [
+      devLibraryBundle(),
       icons({ compiler: "jsx", jsx: "react" }),
       stylex.vite({
         dev: development,
@@ -56,6 +66,8 @@ export default defineConfig({
     ],
     server: {
       strictPort: process.env.PORT !== undefined,
+      // Iris watches PureScript sources; Vite only needs the JavaScript it emits.
+      watch: { ignored: ["**/.spago/**", "**/output/.iris-watch*", "**/*.purs"] },
     },
   },
 });
