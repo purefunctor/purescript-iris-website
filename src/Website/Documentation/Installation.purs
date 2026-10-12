@@ -18,7 +18,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Installation" \_ -> Hook
     $ Documentation.documentation
         { page: Documentation.Installation
         , intro:
-            "Install Iris on macOS, Linux, or Windows, and choose which release you get, where it goes, and how the installer verifies it."
+            "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build."
         , sections
         }
 
@@ -29,65 +29,67 @@ sections =
     , body:
         [ paragraph
             [ DOM.text
-                "Run the installer for your platform. It downloads the latest stable release from GitHub and installs the "
-            , inlineCode "iris"
-            , DOM.text " executable."
+                "Releases are available for Linux on x86-64, macOS on Intel and Apple silicon, and 64-bit Windows. To install the latest stable release, run the command for your platform:"
             ]
         , Installation.installation { fill: true }
         , paragraph
-            [ DOM.text
-                "The installers support Linux on x86-64, macOS on Intel and Apple silicon, and 64-bit Windows. By default, they install Iris in "
+            [ DOM.text "The script downloads Iris from GitHub and installs the "
+            , inlineCode "iris"
+            , DOM.text " executable in "
             , inlineCode "~/.local/bin"
-            , DOM.text " on macOS and Linux, and in "
+            , DOM.text " on macOS and Linux, or in "
             , inlineCode "%LOCALAPPDATA%\\Iris\\bin"
             , DOM.text " on Windows."
             ]
         , paragraph
-            [ DOM.text "If that directory isn’t on your "
-            , inlineCode "PATH"
-            , DOM.text ", the installer says so but doesn’t change it for you. "
+            [ DOM.text
+                "The script does not modify your PATH. If the installation directory is not on your PATH, the script prints a reminder. "
             , link "/docs/getting-started#install-iris" "Getting started"
-            , DOM.text " shows how to add it."
+            , DOM.text " explains how to add it."
             ]
         ]
     }
   , { id: "installer-options"
     , title: "Choose a release or directory"
     , body:
-        [ paragraph [ DOM.text "The installers read these environment variables:" ]
+        [ paragraph [ DOM.text "The install scripts read the following environment variables:" ]
         , list
             [ item
                 [ inlineCode "IRIS_VERSION"
-                , DOM.text " — the release tag to install, such as "
+                , DOM.text " selects a release by its tag, such as "
                 , inlineCode "v0.1.5"
-                , DOM.text
-                    ". Defaults to the latest stable release. The installers support v0.1.0 and later; for a v0.0.x release, use the installer from that release’s "
-                , link "https://github.com/purefunctor/purescript-iris/tags" "Git tag"
-                , DOM.text "."
+                , DOM.text ". If it is not set, the latest stable release is installed."
                 ]
-            , item
-                [ inlineCode "IRIS_INSTALL_DIR"
-                , DOM.text " — the directory to install Iris in, instead of the default."
-                ]
+            , item [ inlineCode "IRIS_INSTALL_DIR", DOM.text " sets the installation directory." ]
             , item
                 [ inlineCode "IRIS_SKIP_ATTESTATION"
-                , DOM.text " — set to "
+                , DOM.text " disables release verification when set to "
                 , inlineCode "1"
-                , DOM.text " to skip release verification. See "
+                , DOM.text ". See "
                 , link "#verify-releases" "Verify releases"
                 , DOM.text "."
                 ]
             ]
         , paragraph
-            [ DOM.text "On macOS and Linux, set them for the shell that runs the installer:" ]
+            [ DOM.text "On macOS and Linux, set the variables immediately before "
+            , inlineCode "sh"
+            , DOM.text " so that they apply to the script:"
+            ]
         , Terminal.terminal
             [ { command: "curl -fsSL https://iris-lang.com/install.sh | IRIS_VERSION=v0.1.5 sh"
               , output: ""
               }
             ]
         , paragraph
-            [ DOM.text "In PowerShell, set them before running the installer, for example "
+            [ DOM.text
+                "In PowerShell, set the variables before running the install command. For example, "
             , inlineCode "$env:IRIS_VERSION = \"v0.1.5\""
+            , DOM.text " selects version 0.1.5."
+            ]
+        , paragraph
+            [ DOM.text
+                "The install scripts support Iris 0.1.0 and later. To install a 0.0.x release, use the install script from that release's "
+            , link "https://github.com/purefunctor/purescript-iris/tags" "Git tag"
             , DOM.text "."
             ]
         ]
@@ -96,22 +98,33 @@ sections =
     , title: "Verify releases"
     , body:
         [ paragraph
-            [ DOM.text "When the "
+            [ DOM.text
+                "Iris releases are built with GitHub Actions. For each release archive, GitHub signs a record of the repository and workflow that built it, known as a build provenance attestation. The install scripts verify this record before installing, which confirms that the download came from the Iris repository and was not modified."
+            ]
+        , paragraph
+            [ DOM.text "Verification requires the "
             , link "https://cli.github.com/" "GitHub CLI"
             , DOM.text " ("
             , inlineCode "gh"
-            , DOM.text
-                ") with attestation support is installed, the installers verify the downloaded release’s GitHub build-provenance attestation and stop if verification fails. Without it, they display a warning and continue without verification."
-            ]
-        , paragraph
-            [ DOM.text "Set "
-            , inlineCode "IRIS_SKIP_ATTESTATION=1"
-            , DOM.text " to skip verification explicitly, for example when "
+            , DOM.text ") with the "
+            , inlineCode "gh attestation"
+            , DOM.text " command. If "
             , inlineCode "gh"
             , DOM.text
-                " is installed but can’t access attestations. This reduces provenance assurance, and the installer prints a warning. In PowerShell, set "
+                " is installed and verification fails, the script stops without installing anything. If "
+            , inlineCode "gh"
+            , DOM.text
+                " is not installed, the script prints a warning and installs Iris without verification."
+            ]
+        , paragraph
+            [ DOM.text "If "
+            , inlineCode "gh"
+            , DOM.text " is installed but cannot access the attestations, set "
+            , inlineCode "IRIS_SKIP_ATTESTATION=1"
+            , DOM.text ", or "
             , inlineCode "$env:IRIS_SKIP_ATTESTATION = \"1\""
-            , DOM.text " before running the installer."
+            , DOM.text
+                " in PowerShell, to skip verification. The script then prints a warning, because it cannot confirm where the download came from."
             ]
         ]
     }
@@ -119,18 +132,21 @@ sections =
     , title: "Canary builds"
     , body:
         [ paragraph
-            [ DOM.text "Successful builds of the "
+            [ DOM.text
+                "Canary builds allow you to test changes before they are released. Every successful build of the "
             , inlineCode "main"
-            , DOM.text " branch are published as GitHub prereleases tagged "
+            , DOM.text " branch is published on GitHub as a prerelease, tagged "
             , inlineCode "v<version>-dev.<revision>"
-            , DOM.text
-                ". To test against the canary channel, find the newest published, non-draft prerelease on the "
+            , DOM.text "."
+            ]
+        , paragraph
+            [ DOM.text "To install a canary build, find the newest prerelease on the "
             , link "https://github.com/purefunctor/purescript-iris/releases" "releases page"
-            , DOM.text " and pass its exact tag through "
+            , DOM.text " and pass its tag in "
             , inlineCode "IRIS_VERSION"
-            , DOM.text ". Installations without "
+            , DOM.text ". The install scripts do not select canary builds automatically. Without "
             , inlineCode "IRIS_VERSION"
-            , DOM.text " continue to use GitHub’s latest stable release."
+            , DOM.text ", they install the latest stable release."
             ]
         ]
     }
@@ -139,20 +155,22 @@ sections =
     , body:
         [ paragraph
             [ DOM.text
-                "Iris keeps its package version separate from source provenance. When building Iris with Cargo, packagers can set "
+                "When building Iris from source with Cargo, for example to package it for a Linux distribution, you can include the Git revision in the version reported by the CLI and the language server. Set "
             , inlineCode "IRIS_BUILD_REVISION"
             , DOM.text
-                " to a Git revision to include it in the versions that the CLI and language server report."
+                " to the revision when building. The value is read at compile time and must be 7 to 64 hexadecimal characters long."
             ]
         , paragraph
-            [ DOM.text
-                "The value is read at compile time and must contain 7 to 64 hexadecimal characters. A 0.1.5 build with the revision "
+            [ DOM.text "For example, a 0.1.5 build with the revision "
             , inlineCode "bcea1aafe65e"
             , DOM.text " reports:"
             ]
         , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.5-dev.bcea1aafe65e" } ]
         , paragraph
-            [ DOM.text "Builds that omit the variable report the package version unchanged." ]
+            [ DOM.text "Builds without the variable report only the package version, such as "
+            , inlineCode "iris 0.1.5"
+            , DOM.text "."
+            ]
         ]
     }
   ]
