@@ -354,6 +354,7 @@ documentation { page, intro, sections } =
     styleProps.page
     [ DOM.a { className: styleProps.skip.className, href: "#content" } "Skip to content"
     , SiteNav.siteHeader
+        { contained: false }
         [ element
             pageNavigationImpl
             { className: styleProps.pageNavigation.className
