@@ -18,7 +18,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Installation" \_ -> Hook
     $ Documentation.documentation
         { page: Documentation.Installation
         , intro:
-            "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build. Releases after 0.1.6 can also update themselves."
+            "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build. Iris 0.1.7 and later can also update themselves."
         , sections
         }
 
@@ -132,7 +132,7 @@ sections =
     , title: "Update Iris"
     , body:
         [ note
-            [ DOM.strong {} "Requires a release after v0.1.6"
+            [ DOM.strong {} "Requires Iris 0.1.7 or later"
             , DOM.p
                 {}
                 [ DOM.text "Iris 0.1.6 and earlier do not include "
@@ -276,7 +276,7 @@ sections =
             , DOM.text ", they install the latest stable release."
             ]
         , paragraph
-            [ DOM.text "In releases after 0.1.6, "
+            [ DOM.text "In Iris 0.1.7 and later, "
             , inlineCode "iris self update --canary"
             , DOM.text " switches to the latest canary build, and "
             , inlineCode "iris self update --stable"
