@@ -212,7 +212,7 @@ styles =
     -- Hard spectrum bars, a strip along the bottom edge at rest, rise in turn to fill the button.
     -- Each bar clips its own dark copy of the label, so the bars mask the text as they rise.
     , spectrumInstall:
-        { backgroundColor: "var(--loam-950)"
+        { backgroundColor: "transparent"
         , color: "var(--text-primary)"
         , cursor: "var(--landing-interactive-cursor, pointer)"
         , fontSize: 18
