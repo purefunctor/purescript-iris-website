@@ -65,7 +65,7 @@
     --ochre-300: oklch(84.2% 0.093 85);
     --lichen-300: oklch(79.1% 0.028 176);
     --rust-300: oklch(72.3% 0.101 34);
-    /* Pastel spectrum for the hero backdrop only; never for UI or text. */
+    /* Pastel spectrum for the hero backdrop, the logo and the header's Install bars; never for text. */
     --spectrum-red: oklch(78.6% 0.072 25);
     --spectrum-orange: oklch(83% 0.072 60);
     --spectrum-yellow: oklch(88.3% 0.072 93);

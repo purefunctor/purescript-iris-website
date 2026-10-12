@@ -194,6 +194,78 @@ styles =
         , color: "var(--text-on-accent)"
         , cursor: "var(--landing-interactive-cursor, pointer)"
         }
+    -- Hard spectrum bars, a strip along the bottom edge at rest, rise in turn to fill the button.
+    -- Each bar clips its own dark copy of the label, so the bars mask the text as they rise.
+    , spectrumInstall:
+        { backgroundColor: "var(--loam-950)"
+        , color: "var(--text-primary)"
+        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , fontSize: 18
+        , fontWeight: 900
+        , letterSpacing: "-0.04em"
+        , lineHeight: 1
+        , overflow: "hidden"
+        , textTransform: "uppercase"
+        , width: 168
+        , "--install-fill":
+            { default: "0.07", ":hover": "1", ":focus-visible": "1", ":active": "0.88" }
+        -- The bars would cover the header's focus outline, so the ring is drawn above them.
+        , outlineStyle: "none"
+        , "--install-ring": { default: "transparent", ":focus-visible": "var(--focus-ring)" }
+        , "::after":
+            { boxShadow: "inset 0 0 0 2px var(--install-ring, transparent)"
+            , content: "''"
+            , insetBlock: 0
+            , insetInline: 0
+            , pointerEvents: "none"
+            , position: "absolute"
+            , zIndex: 2
+            }
+        }
+    , bars:
+        { display: "flex"
+        , insetBlock: 0
+        , insetInline: 0
+        , pointerEvents: "none"
+        , position: "absolute"
+        , zIndex: 1
+        }
+    -- The clip extends past each side so that bars meet without anti-aliased seams.
+    , bar:
+        { clipPath: "inset(calc((1 - var(--install-fill, 0.07)) * 100%) -1px 0 -1px)"
+        , flexBasis: 0
+        , flexGrow: 1
+        , minWidth: 0
+        , position: "relative"
+        , transitionDuration: { default: "320ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+        , transitionProperty: "clip-path"
+        , transitionTimingFunction: "var(--ease-out)"
+        }
+    , bar0: { backgroundColor: "var(--spectrum-red)", transitionDelay: "0ms" }
+    , bar1: { backgroundColor: "var(--spectrum-orange)", transitionDelay: "28ms" }
+    , bar2: { backgroundColor: "var(--spectrum-yellow)", transitionDelay: "56ms" }
+    , bar3: { backgroundColor: "var(--spectrum-green)", transitionDelay: "84ms" }
+    , bar4: { backgroundColor: "var(--spectrum-blue)", transitionDelay: "112ms" }
+    , bar5: { backgroundColor: "var(--spectrum-indigo)", transitionDelay: "140ms" }
+    , bar6: { backgroundColor: "var(--spectrum-violet)", transitionDelay: "168ms" }
+    -- Each copy spans the whole button, offset so it lines up with the label beneath.
+    , barLabel:
+        { alignItems: "center"
+        , color: "var(--loam-950)"
+        , display: "flex"
+        , insetBlock: 0
+        , justifyContent: "center"
+        , position: "absolute"
+        , width: "700%"
+        }
+    , barLabel0: { insetInlineStart: "0%" }
+    , barLabel1: { insetInlineStart: "-100%" }
+    , barLabel2: { insetInlineStart: "-200%" }
+    , barLabel3: { insetInlineStart: "-300%" }
+    , barLabel4: { insetInlineStart: "-400%" }
+    , barLabel5: { insetInlineStart: "-500%" }
+    , barLabel6: { insetInlineStart: "-600%" }
+    , spectrumInstallLabel: { position: "relative" }
     }
 
 styleProps = StyleX.recordProps styles
@@ -258,7 +330,7 @@ siteNav { onInstall } =
                 [ link true "/#benchmarks" "Benchmarks"
                 , link true "/#editor" "Editor"
                 , link true "/docs/getting-started/" "Documentation"
-                , installButton true
+                , menuInstallButton
                 , DOM.div
                     styleProps.menuFooter
                     [ socialLink
@@ -273,24 +345,48 @@ siteNav { onInstall } =
                     ]
                 ]
             }
-        , installButton false
+        , spectrumInstallButton
         ]
     ]
   where
-  installButton mobile =
+  menuInstallButton =
     DOM.button
       { className:
-          ( StyleX.props
-              [ styles.link
-              , styles.landingItem
-              , styles.install
-              , if mobile then styles.menuItem else styles.desktopInstall
-              ]
+          ( StyleX.props [ styles.link, styles.landingItem, styles.install, styles.menuItem ]
           ).className
       , onClick: handler_ onInstall
       , type: "button"
       }
       "Install"
+  spectrumInstallButton =
+    DOM.button
+      { className:
+          ( StyleX.props
+              [ styles.link, styles.landingItem, styles.desktopInstall, styles.spectrumInstall ]
+          ).className
+      , onClick: handler_ onInstall
+      , "aria-label": "Install"
+      , type: "button"
+      }
+      [ DOM.span
+          { className: styleProps.bars.className, "aria-hidden": true }
+          ( map
+              ( \{ bar, label } ->
+                  DOM.span
+                    (StyleX.props [ styles.bar, bar ])
+                    (DOM.span (StyleX.props [ styles.barLabel, label ]) "Install")
+              )
+              [ { bar: styles.bar0, label: styles.barLabel0 }
+              , { bar: styles.bar1, label: styles.barLabel1 }
+              , { bar: styles.bar2, label: styles.barLabel2 }
+              , { bar: styles.bar3, label: styles.barLabel3 }
+              , { bar: styles.bar4, label: styles.barLabel4 }
+              , { bar: styles.bar5, label: styles.barLabel5 }
+              , { bar: styles.bar6, label: styles.barLabel6 }
+              ]
+          )
+      , DOM.span styleProps.spectrumInstallLabel "Install"
+      ]
   link mobile href label =
     NavigationLink.navigationLink
       { href
