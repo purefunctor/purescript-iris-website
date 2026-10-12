@@ -172,6 +172,11 @@
     html {
       scroll-behavior: smooth;
     }
+
+    /* Astro's client router restores the scroll position while it swaps documentation pages. */
+    html[data-astro-transition] {
+      scroll-behavior: auto;
+    }
   }
 
   ::selection {

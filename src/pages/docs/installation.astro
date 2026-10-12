@@ -1,25 +1,13 @@
 ---
-import SiteLayout from "#src/layouts/SiteLayout.astro";
+import DocumentationLayout from "#src/layouts/DocumentationLayout.astro";
 import * as Installation from "#output/Website.Documentation.Installation/index.js";
 
 export const prerender = true;
 ---
 
-<SiteLayout
-  title="Installation — Iris documentation"
+<DocumentationLayout
+  title="Installation"
   description="Install Iris on macOS, Linux, or Windows, choose a specific version or directory, verify downloads, and try canary builds."
 >
-  <Fragment slot="head">
-    {
-      import.meta.env.DEV ? (
-        <>
-          <link rel="stylesheet" href="/virtual:stylex.css" />
-          <script type="module" src="/@id/virtual:stylex:runtime"></script>
-        </>
-      ) : (
-        <link rel="stylesheet" href="/assets/stylex.css" />
-      )
-    }
-  </Fragment>
   <Installation.component client:load />
-</SiteLayout>
+</DocumentationLayout>

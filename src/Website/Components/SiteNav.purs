@@ -124,7 +124,6 @@ styles =
     , current:
         { backgroundColor: { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
         , color: "var(--iris-200)"
-        , fontWeight: 600
         }
     -- Share interaction states; size related controls together rather than every item alike.
     , landingItem:

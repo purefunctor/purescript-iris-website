@@ -32,7 +32,9 @@ This repository is the Iris website: Astro handles routing and server rendering 
 
 ### Documentation pages
 
-- Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs`. Add it to `Page` in `Website.Components.Documentation`, which orders the header navigation and previous/next links, and build its body from `Website.Documentation.Prose`.
+- Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs` that uses `DocumentationLayout`. Add it to `Page` in `Website.Components.Documentation`, which orders the header navigation and previous/next links, and build its body from `Website.Documentation.Prose`.
+- `DocumentationLayout` adds Astro's `<ClientRouter />`, so links between documentation pages fetch the next page, swap the document and hydrate its island without a full reload. Astro documents the client router as unsupported with `security.csp`. It works here because Astro emits the same script and style hashes on every page, and the first page's CSP stays in force after a swap. Do not add page-specific inline scripts or styles to these pages. Verify router changes in the production preview, because development does not enforce the CSP.
+- The development StyleX runtime fills `#__stylex_virtual__` once and disables the `/virtual:stylex.css` link. `DocumentationLayout` declares that element with `transition:persist` so swaps keep it; without it, swapped pages lose StyleX rules until the next HMR update.
 - The compiler README links to these routes. Keep their slugs stable, or update those links when renaming a page.
 
 ### Deployment
