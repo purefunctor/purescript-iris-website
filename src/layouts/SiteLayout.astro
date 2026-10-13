@@ -1,6 +1,7 @@
 ---
 import "#src/global.css";
 import * as Layout from "#output/Website.SiteLayout/index.js";
+import { layerOrder, pressableStyle, pressableStyleId } from "#src/lib/inlineStyles.ts";
 
 interface Props {
   title: string;
@@ -18,7 +19,8 @@ const imageUrl = new URL(image, Astro.site!);
 <html lang="en" {...Layout.html}>
   <head>
     <meta charset="UTF-8" />
-    <style is:inline>@layer reset, priority1, priority2, priority3, priority4;</style>
+    <style is:inline set:html={layerOrder} />
+    <style is:inline id={pressableStyleId} set:html={pressableStyle} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="oklch(17.4% 0.007 78)" />

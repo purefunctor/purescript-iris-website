@@ -4,6 +4,7 @@ import icons from "unplugin-icons/vite";
 import { defineConfig } from "astro/config";
 import { devLibraryBundle } from "./src/lib/devLibraryBundle.ts";
 import { devModulePreload } from "./src/lib/devModulePreload.ts";
+import { inlineStyleHashes } from "./src/lib/inlineStyles.ts";
 
 // Astro sets NODE_ENV before loading config.
 const development = process.env.NODE_ENV === "development";
@@ -31,6 +32,7 @@ export default defineConfig({
         "media-src 'self' blob:",
       ],
       scriptDirective: { resources: ["'self'"] },
+      styleDirective: { hashes: inlineStyleHashes },
     },
   },
   server: {
