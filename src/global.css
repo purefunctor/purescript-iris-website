@@ -65,6 +65,18 @@
     --yellow-300: oklch(89% 0.1 98);
     --cyan-300: oklch(83% 0.08 205);
     --red-300: oklch(76% 0.13 28);
+    /* Temperatures for the benchmark's Cold and Hot tabs and their particles. */
+    --frost-400: oklch(79% 0.1 238);
+    --frost-300: oklch(89% 0.06 230);
+    --ember-400: oklch(72% 0.18 18);
+    --ember-300: oklch(83% 0.11 24);
+    /* Fire cooling from white-hot to a dying ember, for the Hot tab's particles. */
+    --fire-100: oklch(97% 0.05 98);
+    --fire-200: oklch(91% 0.15 95);
+    --fire-300: oklch(82% 0.17 72);
+    --fire-400: oklch(71% 0.2 48);
+    --fire-500: oklch(58% 0.21 32);
+    --fire-600: oklch(40% 0.14 27);
     /* Pastel spectrum for the hero backdrop, the logo and the header's Install bars; never for text. */
     --spectrum-red: oklch(78.6% 0.072 25);
     --spectrum-orange: oklch(83% 0.072 60);

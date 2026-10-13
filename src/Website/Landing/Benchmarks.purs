@@ -27,14 +27,22 @@ foreign import benchmarkChartImpl ::
     , controlsClassName :: String
     , footer :: JSX
     , headerClassName :: String
-    , iconClassName :: String
     , introduction :: JSX
     , panelClassName :: String
     , rootClassName :: String
-    , tabClassName :: String
+    , particlesClassName :: String
     , tabListClassName :: String
-    , tabs :: Array { icon :: ReactComponent Icon.IconProps, id :: String, label :: String }
+    , tabs :: Array Tab
     }
+
+-- | Each tab takes its temperature's colors; selecting it bursts that temperature's particles.
+type Tab =
+  { className :: String
+  , icon :: ReactComponent Icon.IconProps
+  , iconClassName :: String
+  , id :: String
+  , label :: String
+  }
 
 -- | A value for each measurement: a cold build, and a rebuild after an edit.
 type Measured a = { cold :: a, hot :: a }
@@ -63,9 +71,46 @@ styles =
         , justifyContent: "space-between"
         }
     , introduction: { display: "flex", flexDirection: "column", gap: 14 }
-    , controls: { alignItems: "center", display: "flex", gap: 8 }
+    , controls: { alignItems: "center", display: "flex", gap: 8, position: "relative" }
+    -- Particles may drift past the tabs, so the canvas extends beyond the controls.
+    , particles:
+        { height: "calc(100% + 200px)"
+        , insetBlockStart: -140
+        , insetInlineStart: -80
+        , maxWidth: "none"
+        , pointerEvents: "none"
+        , position: "absolute"
+        , width: "calc(100% + 160px)"
+        , zIndex: 1
+        }
     -- Lucide icons render at 1.2em.
     , tabIcon: { flexShrink: 0, fontSize: 11 }
+    , coldIcon: { color: "var(--frost-400)" }
+    , hotIcon: { color: "var(--ember-400)" }
+    , coldTab:
+        { backgroundColor:
+            { default: "transparent"
+            , ":hover": "var(--glass-fill)"
+            , "[data-selected]": "oklch(from var(--frost-400) l c h / 16%)"
+            }
+        , color:
+            { default: "var(--text-tertiary)"
+            , ":hover": "var(--frost-300)"
+            , "[data-selected]": "var(--frost-300)"
+            }
+        }
+    , hotTab:
+        { backgroundColor:
+            { default: "transparent"
+            , ":hover": "var(--glass-fill)"
+            , "[data-selected]": "oklch(from var(--ember-400) l c h / 16%)"
+            }
+        , color:
+            { default: "var(--text-tertiary)"
+            , ":hover": "var(--ember-300)"
+            , "[data-selected]": "var(--ember-300)"
+            }
+        }
     , chart: { position: "relative" }
     -- Use responsive properties directly: StyleX's unlayered custom-property defaults
     -- otherwise outrank the layered overrides generated from imported conditions.
@@ -244,10 +289,20 @@ styles =
 
 styleProps = StyleX.recordProps styles
 
-tabs :: Array { icon :: ReactComponent Icon.IconProps, id :: String, label :: String }
+tabs :: Array Tab
 tabs =
-  [ { icon: Icon.snowflake, id: "cold", label: "Cold" }
-  , { icon: Icon.flame, id: "hot", label: "Hot" }
+  [ { className: (StyleX.props [ tabStyles.tab, styles.coldTab ]).className
+    , icon: Icon.snowflake
+    , iconClassName: (StyleX.props [ styles.tabIcon, styles.coldIcon ]).className
+    , id: "cold"
+    , label: "Cold"
+    }
+  , { className: (StyleX.props [ tabStyles.tab, styles.hotTab ]).className
+    , icon: Icon.flame
+    , iconClassName: (StyleX.props [ styles.tabIcon, styles.hotIcon ]).className
+    , id: "hot"
+    , label: "Hot"
+    }
   ]
 
 bars :: Array Bar
@@ -305,7 +360,6 @@ benchmarks =
             , controlsClassName: styleProps.controls.className
             , footer
             , headerClassName: styleProps.header.className
-            , iconClassName: styleProps.tabIcon.className
             , introduction:
                 DOM.div
                   styleProps.introduction
@@ -316,8 +370,8 @@ benchmarks =
                       }
                   ]
             , panelClassName: styleProps.panel.className
+            , particlesClassName: styleProps.particles.className
             , rootClassName: styleProps.root.className
-            , tabClassName: (StyleX.props tabStyles.tab).className
             , tabListClassName: (StyleX.props tabStyles.tabList).className
             , tabs
             }
