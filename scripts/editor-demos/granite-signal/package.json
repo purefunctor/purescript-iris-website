@@ -1,0 +1,24 @@
+{
+  "name": "granite-signal",
+  "displayName": "Granite Signal",
+  "description": "The website's granite and signal palette for the editor demo recordings. Not published.",
+  "publisher": "iris-website",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.139.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "id": "Granite Signal",
+        "label": "Granite Signal",
+        "uiTheme": "vs-dark",
+        "path": "./themes/granite-signal-color-theme.json"
+      }
+    ]
+  }
+}

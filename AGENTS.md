@@ -110,10 +110,10 @@ amp orb service start website-production --command 'pnpm preview' --port 8787 --
 
 `scripts/editor-demos/` reproduces the native VS Code workflow from the [original recording thread](https://ampcode.com/threads/T-01a0cf38-55ca-765a-a413-2e7de30fe101). It seeds a disposable `iris-website` workspace from this checkout's `src`, `spago.yaml`, and `spago.lock`, using its installed dependencies and Iris on PATH. Never perform recording edits in the website checkout itself.
 
-The Linux recording environment needs `agent-browser`, FFmpeg, curl, unzip, fontconfig, Xvfb, Openbox, xdotool and the native Electron libraries. On Debian:
+The Linux recording environment needs `agent-browser`, FFmpeg, curl, unzip, Python 3, fontconfig, Xvfb, Openbox, xdotool and the native Electron libraries. On Debian:
 
 ```sh
-sudo apt-get install -y xvfb openbox xdotool bibata-cursor-theme \
+sudo apt-get install -y xvfb openbox xdotool bibata-cursor-theme python3 \
   libnss3 libxss1 libasound2 libgtk-3-0 libgbm1 libxkbfile1 libsecret-1-0 xauth
 bash scripts/editor-demos/setup.sh
 amp orb service start iris-demo-code --command 'bash scripts/editor-demos/launch.sh'
@@ -122,7 +122,7 @@ node scripts/editor-demos/record.mjs all
 ```
 
 - Setup pins VS Code 1.139.0, Iris extension 0.1.0, PureScript syntax extension 0.2.10 and Geist 1.7.2. The current takes use Iris 0.1.7. It selects Geist for the workbench and Geist Mono for code, and enables opt-in on-change diagnostics.
-- [`theme.ts`](scripts/editor-demos/theme.ts) generates the editor colors from the site's tokens in `src/global.css` and layers them over Default Dark Modern through the profile's color customization settings, so recordings match the site. Change the tokens or the mapping there rather than editing the profile, then rerun setup and record again.
+- The recordings use Granite Signal, a local color theme extension that is never published. [`granite-signal/package.json`](scripts/editor-demos/granite-signal/package.json) contributes the theme, and [`theme.ts`](scripts/editor-demos/theme.ts) generates its complete theme JSON (`colors`, `tokenColors` and semantic token colors) from the site's tokens in `src/global.css`, so recordings match the site. Setup packages both as `granite-signal.vsix` in the tools directory, installs it into the recording profile and selects it with `workbench.colorTheme`; the profile has no color customization settings. The theme inherits nothing, so map every color the demos show there. Change the tokens or the mapping rather than editing the profile or the installed extension, then rerun setup and record again.
 - Capture is native 1920×1080 at 60 fps with the real pointer, encoded as H.264/yuv420p MP4 with fast start and no audio. Electron's scale factor is 150% by default; this scales the whole application, not just the editor font. Use VS Code's F11 fullscreen, not the window manager's fullscreen, to avoid window borders. Do not apply browser viewport emulation to the Electron session.
 - The export runs at 75% of captured speed and adds a one-second final-frame hold: `setpts=(PTS-STARTPTS)/0.75,fps=60,tpad=stop_mode=clone:stop_duration=1`. Apply this once to a normal-speed take, never to an already slowed export.
 - For a quick 200% comparison, stop the service and start it with `--command 'IRIS_DEMO_SCALE=200 bash scripts/editor-demos/launch.sh'`, enter F11 fullscreen again, then run `IRIS_DEMO_OUTPUT=/tmp/iris-editor-tools/recordings-200 node scripts/editor-demos/record.mjs inferred-types`. Return to the default launch command for production takes. Text targets are resolved from the live DOM at either scale.
