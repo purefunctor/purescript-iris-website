@@ -153,20 +153,38 @@ async function click(selector) {
   await sleep(300);
 }
 
-// The pointer stays visible while typing, so move it aside first: to the line-number gutter of the
-// editor under it, clear of the caret and its suggestions, where it raises no hovers.
+// The pointer stays visible while typing, so move it aside first, into the nearest negative space
+// of the editor: clear of text, outside the area around the caret where suggestion lists, quick
+// fixes and hovers open, and preferably below and to the right of the caret.
 async function aside() {
   const location = run('xdotool', ['getmouselocation', '--shell']);
   const [x, y] = ['X', 'Y'].map(axis => Number(location.match(new RegExp(`^${axis}=(\\d+)`, 'm'))[1]));
-  const gutter = evaluate(`(() => {
-    const [x, y] = [${x} / devicePixelRatio, ${y} / devicePixelRatio];
-    const margin = [...document.querySelectorAll('.monaco-editor .margin')].findLast(m => {
-      const r = m.closest('.monaco-editor').getBoundingClientRect();
-      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  const target = evaluate(`(() => {
+    const [px, py] = [${x} / devicePixelRatio, ${y} / devicePixelRatio];
+    const editor = [...document.querySelectorAll('.monaco-editor')].findLast(e => {
+      const r = e.getBoundingClientRect();
+      return px >= r.left && px <= r.right && py >= r.top && py <= r.bottom;
     });
-    return (margin.getBoundingClientRect().left + 12) * devicePixelRatio;
+    const bounds = editor.querySelector('.lines-content').closest('.monaco-scrollable-element').getBoundingClientRect();
+    const lines = [...editor.querySelectorAll('.view-line')].map(line => {
+      const text = [...line.querySelectorAll('span span')].filter(s => s.textContent.trim()).at(-1);
+      const r = line.getBoundingClientRect();
+      return { top: r.top, bottom: r.bottom, end: text ? text.getBoundingClientRect().right : -Infinity };
+    });
+    const clear = (x, y, gap) => lines.every(l => l.bottom < y - gap || l.top > y + gap || l.end + 24 < x);
+    const popups = (x, y) => x > px - 40 && x < px + 520 && y > py - 80 && y < py + 260;
+    const [x0, y0] = [px + 160, py + 200];
+    const candidates = [];
+    for (let y = bounds.top + 24; y <= bounds.bottom - 40; y += 12)
+      for (let x = bounds.left + 24; x <= bounds.right - 40; x += 24)
+        if (!popups(x, y)) candidates.push([x, y]);
+    // Points above or left of the caret count as further away.
+    const cost = ([x, y]) => Math.hypot(x - x0, y - y0) + (y < py + 24 ? 400 : 0) + (x < px ? 400 : 0);
+    const [x, y] = [36, 12].map(gap => candidates.filter(([x, y]) => clear(x, y, gap)).sort((a, b) => cost(a) - cost(b))[0])
+      .find(Boolean) ?? [Math.min(x0, bounds.right - 40), Math.min(y0, bounds.bottom - 40)];
+    return { x: Math.round(x * devicePixelRatio), y: Math.round(y * devicePixelRatio) };
   })()`);
-  await move(Math.round(gutter), y, 450);
+  await move(target.x, target.y, 600);
 }
 
 async function type(text) {
