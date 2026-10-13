@@ -1,7 +1,7 @@
 // Cap (https://cap.so) as the capture backend for record.mjs: IRIS_DEMO_RECORDER=cap.
 // Cap renders its own smoothed cursor, click ripples and zoom from the recorded pointer data.
 // Its CLI writes a default project configuration, so the zoom segments come from the action
-// timeline that record.mjs logs. cap-setup.sh installs the CLI as $IRIS_DEMO_HOME/cap-cli; IRIS_DEMO_CAP
+// timeline that record.mjs logs: pointer positions and the overlays visible at each check. cap-setup.sh installs the CLI as $IRIS_DEMO_HOME/cap-cli; IRIS_DEMO_CAP
 // overrides it, for example with `cap-cli` where Cap's packages install natively.
 //
 // Re-export a recorded take with different effects, without re-recording it:
@@ -45,38 +45,49 @@ function offset(actions, moves) {
 // Manual centres are in Cap's travel space: 0 is flush left/top and 1 flush right/bottom.
 const travel = (p, amount) => Math.min(1, Math.max(0, (p - 0.5 / amount) / (1 - 1 / amount)));
 
-// One zoom segment per run of nearby actions. Each action holds focus until the next one,
-// or for `hold` seconds; an action without a position ends the run. The last segment ends
-// early enough for the zoom out to settle.
-export function zoomSegments(actions, duration, { amount = 1.5, lead = 0.5, hold = 2.4, settle = 1 } = {}) {
+// What an action needs in view: the pointer and any overlays logged with it, as [left, top, right, bottom].
+function box(action) {
+  const boxes = [...action.boxes ?? []];
+  if (action.x !== undefined) boxes.push([action.x - 24, action.y - 24, action.x + 24, action.y + 24]);
+  if (!boxes.length) return undefined;
+  const [left, top] = [0, 1].map(i => Math.max(0, Math.min(...boxes.map(b => b[i]))));
+  return [left, top, Math.min(width, Math.max(...boxes.map(b => b[2]))), Math.min(height, Math.max(...boxes.map(b => b[3])))];
+}
+const union = (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
+
+// Zoom segments that keep each action's pointer and overlays in frame. An action extends the
+// current framing for `hold` seconds when the framing can include it without zooming out;
+// otherwise the camera moves to a framing of its own. Framings that cannot zoom past `minimum`
+// show the whole editor, as does an action with nothing to show. The last segment ends early
+// enough for the zoom out to settle.
+export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, margin = 48, hold = 2.4, settle = 1 } = {}) {
+  const zoom = b => Math.min(amount, width / (b[2] - b[0] + 2 * margin), height / (b[3] - b[1] + 2 * margin));
   const runs = [];
   for (const a of actions) {
-    const zoom = a.zoom ?? amount;
     const last = runs.at(-1);
-    if (a.x === undefined) {
+    const b = box(a);
+    if (!b) {
       if (last) last.end = Math.min(last.end, a.t);
       continue;
     }
-    const fits = last && last.zoom === zoom && a.t - last.end < 1.2
-      && Math.max(last.maxX, a.x) - Math.min(last.minX, a.x) < width * 0.5 / zoom
-      && Math.max(last.maxY, a.y) - Math.min(last.minY, a.y) < height * 0.5 / zoom;
-    if (fits) Object.assign(last, {
-      end: a.t + hold, minX: Math.min(last.minX, a.x), maxX: Math.max(last.maxX, a.x),
-      minY: Math.min(last.minY, a.y), maxY: Math.max(last.maxY, a.y),
-    });
-    else {
-      if (last) last.end = Math.min(last.end, a.t - lead);
-      runs.push({ start: a.t - lead, end: a.t + hold, zoom, minX: a.x, maxX: a.x, minY: a.y, maxY: a.y });
+    // Overlays are logged once visible; the pointer is logged on arrival, after its move began.
+    const start = a.t - (a.action === 'ui' ? 0.2 : 0.5);
+    const joined = last && start < last.end && union(last.box, b);
+    if (joined && zoom(joined) >= last.zoom - 0.05) {
+      Object.assign(last, { box: joined, zoom: zoom(joined), end: Math.max(last.end, a.t + hold) });
+      continue;
     }
+    if (last) last.end = Math.min(last.end, start);
+    runs.push({ start, end: a.t + hold, box: b, zoom: zoom(b) });
   }
   return runs
     .map(r => ({ ...r, start: Math.max(0.05, r.start), end: Math.min(duration - settle, r.end) }))
-    .filter(r => r.end - r.start > 0.4)
+    .filter(r => r.zoom >= minimum && r.end - r.start > 0.4)
     .map(r => ({
       start: r.start, end: r.end, amount: r.zoom,
       mode: { manual: {
-        x: travel((r.minX + r.maxX) / 2 / width, r.zoom),
-        y: travel((r.minY + r.maxY) / 2 / height, r.zoom),
+        x: travel((r.box[0] + r.box[2]) / 2 / width, r.zoom),
+        y: travel((r.box[1] + r.box[3]) / 2 / height, r.zoom),
       } },
       glideDirection: 'none', glideSpeed: 0.5, instantAnimation: false, edgeSnapRatio: 0.25,
     }));

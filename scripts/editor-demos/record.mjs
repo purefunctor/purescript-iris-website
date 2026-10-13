@@ -23,20 +23,29 @@ let recording;
 // Pointer and keyboard actions in the current take, in seconds since capture started. Cap zooms toward them.
 let actions = [], epoch;
 const mark = (x, y, detail = {}) => epoch && actions.push({ t: (Date.now() - epoch) / 1000, x, y, ...detail });
-// Keyboard work keeps the focus at the last pointer action; overview zooms out to the whole editor.
-const focus = () => { const last = actions.findLast(a => a.x !== undefined); if (last) mark(last.x, last.y, { action: 'key' }); };
-const overview = () => mark(undefined, undefined, { action: 'overview' });
+// Keyboard work keeps the focus at the last pointer action.
+const pointer = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
+const focus = () => { const last = pointer(); if (last) mark(last.x, last.y, { action: 'key' }); };
+// Overlays that demos show. Each passing check logs their screen boxes, which Cap's zoom keeps in frame.
+const overlays = ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget', '.rename-box'];
 
 async function expect(code, message) {
-  const result = evaluate(`new Promise(resolve => {
+  const boxes = evaluate(`new Promise(resolve => {
     const deadline = Date.now() + 12000;
+    const overlays = () => [...document.querySelectorAll(${JSON.stringify(overlays.join(', '))})]
+      .filter(e => e.checkVisibility({ opacityProperty: true, visibilityProperty: true }))
+      .map(e => e.getBoundingClientRect())
+      .filter(r => r.width > 0 && r.height > 0)
+      .map(r => [r.left, r.top, r.right, r.bottom].map(v => Math.round(v * devicePixelRatio)));
     const check = () => {
-      if (${code}) resolve(true);
+      if (${code}) resolve(overlays());
       else if (Date.now() > deadline) resolve(false);
       else setTimeout(check, 100);
     }; check();
   })`);
-  if (!result) throw new Error(message);
+  if (!boxes) throw new Error(message);
+  const last = pointer();
+  mark(last?.x, last?.y, { action: 'ui', boxes });
   console.log(`PASS: ${message}`);
 }
 
@@ -310,7 +319,6 @@ const cases = {
       await token('contentShell = StyleX.props', 'contentShell', 'click');
       await sleep(700);
       press('Shift+F12');
-      overview();
       await expect(`document.querySelector('.peekview-widget')?.innerText.includes('Demos.purs')`, 'References include consumers in other website modules');
       await move(1500, 800);
       await sleep(1000);
