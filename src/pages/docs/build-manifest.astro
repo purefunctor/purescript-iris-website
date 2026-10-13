@@ -1,0 +1,13 @@
+---
+import DocumentationLayout from "#src/layouts/DocumentationLayout.astro";
+import * as BuildManifest from "#output/Website.Documentation.BuildManifest/index.js";
+
+export const prerender = true;
+---
+
+<DocumentationLayout
+  title="Build manifest"
+  description="Read output/manifest.json to find the modules, packages, and generated files of the last successful Iris build."
+>
+  <BuildManifest.component client:load />
+</DocumentationLayout>

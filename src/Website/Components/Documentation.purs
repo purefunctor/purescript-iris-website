@@ -12,14 +12,14 @@ import Website.Components.NavigationLink as NavigationLink
 import Website.Components.SiteNav as SiteNav
 import Yoga.React.DOM as DOM
 
-data Page = GettingStarted | Installation | LanguageServer | Formatting
+data Page = GettingStarted | Installation | LanguageServer | Formatting | BuildManifest
 
 derive instance Eq Page
 
 -- | Pages in header navigation and previous/next order. The compiler README links to these
 -- | routes.
 pages :: Array Page
-pages = [ GettingStarted, Installation, LanguageServer, Formatting ]
+pages = [ GettingStarted, Installation, LanguageServer, Formatting, BuildManifest ]
 
 -- | Production serves each page at its trailing-slash URL and redirects the bare form, so links
 -- | use that URL to avoid a round trip.
@@ -29,6 +29,7 @@ pageHref = case _ of
   Installation -> "/docs/installation/"
   LanguageServer -> "/docs/language-server/"
   Formatting -> "/docs/formatting/"
+  BuildManifest -> "/docs/build-manifest/"
 
 pageTitle :: Page -> String
 pageTitle = case _ of
@@ -36,6 +37,7 @@ pageTitle = case _ of
   Installation -> "Installation"
   LanguageServer -> "Language server"
   Formatting -> "Formatting"
+  BuildManifest -> "Build manifest"
 
 type Section = { id :: String, title :: String, body :: Array JSX }
 
