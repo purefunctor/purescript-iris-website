@@ -60,8 +60,9 @@ function box(action) {
 const union = (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
 
 // Zoom segments that keep each action's pointer and overlays in frame. An action extends the
-// current framing for `hold` seconds when the framing can include it without zooming out;
-// otherwise the camera moves to a framing of its own. Framings that cannot zoom past `minimum`
+// current framing for `hold` seconds when the framing can include it without zooming out, or
+// widens it from the start when its own framing contains the current one; otherwise the camera
+// moves to a framing of its own. Framings that cannot zoom past `minimum`
 // show the whole editor, as does an action with nothing to show. The last segment ends early
 // enough for the zoom out to settle.
 export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, margin = 48, hold = 2.4, settle = 1 } = {}) {
@@ -79,6 +80,14 @@ export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, m
     const joined = last && start < last.end && union(last.box, b);
     if (joined && zoom(joined) >= last.zoom - 0.05) {
       Object.assign(last, { box: joined, zoom: zoom(joined), end: Math.max(last.end, a.t + hold) });
+      continue;
+    }
+    // A wider framing that still shows everything the current one does replaces it from its start,
+    // so the camera settles once instead of moving out partway.
+    const contains = last && start < last.end && b[0] <= last.box[0] && b[1] <= last.box[1]
+      && b[2] >= last.box[2] && b[3] >= last.box[3];
+    if (contains) {
+      Object.assign(last, { box: b, zoom: zoom(b), end: Math.max(last.end, a.t + hold) });
       continue;
     }
     if (last) last.end = Math.min(last.end, start);

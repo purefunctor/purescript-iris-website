@@ -26,7 +26,8 @@ inferredTypes :: Demo
 inferredTypes =
   { slug: "inferred-types"
   , title: "Inferred local types"
-  , description: "Hover shows inferred types for local bindings and the expressions that use them, with no annotations required."
+  , description:
+      "Hover shows the inferred types of local bindings and the names used in expressions, with no annotations required."
   }
 
 typeIntelligence :: Array Demo
@@ -34,7 +35,8 @@ typeIntelligence =
   [ inferredTypes
   , { slug: "rename"
     , title: "Scope-aware rename"
-    , description: "Renaming the component's props follows scope: every use changes, while StyleX.props and comments keep the name."
+    , description:
+        "Renames follow scope, changing every reference to a binding and nothing that merely shares its name."
     }
   , { slug: "live-diagnostics"
     , title: "Live diagnostics"
@@ -43,12 +45,12 @@ typeIntelligence =
     }
   , { slug: "document-highlights"
     , title: "Document highlights"
-    , description: "Every reference to a local binding is highlighted in the current file."
+    , description: "Selecting a name highlights every reference to the same binding in the file."
     }
   , { slug: "semantic-highlighting"
     , title: "Semantic highlighting"
     , description:
-        "Names are coloured by their role: parameters, functions, constructors, types and classes."
+        "Names are coloured by their role, such as parameters, record labels, modules, functions and types."
     }
   ]
 
@@ -56,11 +58,11 @@ workflows :: Array Demo
 workflows =
   [ { slug: "completion"
     , title: "Completion"
-    , description: "Completion offers names in scope, including locally bound setters."
+    , description: "Completion offers every name in scope, including local bindings."
     }
   , { slug: "typed-hole-suggestions"
     , title: "Typed-hole suggestions"
-    , description: "A typed hole is replaced with a suggested expression that fits its type."
+    , description: "Typed holes suggest names in scope that fit the expected type."
     }
   , { slug: "automatic-import"
     , title: "Automatic imports"
