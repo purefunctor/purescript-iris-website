@@ -19,6 +19,8 @@ const input = '.quick-input-widget input';
 // ffmpeg captures the X display as is; cap renders Cap's cursor, click ripples and zoom (cap.mjs).
 const recorder = process.env.IRIS_DEMO_RECORDER || 'ffmpeg';
 const cap = recorder === 'cap' && await import('./cap.mjs');
+// Playback speed of the exported take. Cap's zoom makes faster takes easy to follow.
+const speed = cap ? cap.speed : 0.75;
 let recording;
 // Pointer and keyboard actions in the current take, in seconds since capture started. Cap zooms toward them.
 let actions = [], epoch;
@@ -26,8 +28,10 @@ const mark = (x, y, detail = {}) => epoch && actions.push({ t: (Date.now() - epo
 // Keyboard work keeps the focus at the last pointer action.
 const pointer = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
 const focus = () => { const last = pointer(); if (last) mark(last.x, last.y, { action: 'key' }); };
-// Overlays that demos show. Each passing check logs their screen boxes, which Cap's zoom keeps in frame.
-const overlays = ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget', '.rename-box'];
+// Overlays and highlights that demos show. Each passing check logs their screen boxes, which Cap's
+// zoom keeps in frame.
+const overlays = ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget',
+  '.rename-box', '.cdr.wordHighlight', '.cdr.wordHighlightStrong', '.cdr.wordHighlightText'];
 
 async function expect(code, message) {
   const boxes = evaluate(`new Promise(resolve => {
@@ -149,8 +153,25 @@ async function click(selector) {
   await sleep(300);
 }
 
+// The pointer stays visible while typing, so move it aside first: to the line-number gutter of the
+// editor under it, clear of the caret and its suggestions, where it raises no hovers.
+async function aside() {
+  const location = run('xdotool', ['getmouselocation', '--shell']);
+  const [x, y] = ['X', 'Y'].map(axis => Number(location.match(new RegExp(`^${axis}=(\\d+)`, 'm'))[1]));
+  const gutter = evaluate(`(() => {
+    const [x, y] = [${x} / devicePixelRatio, ${y} / devicePixelRatio];
+    const margin = [...document.querySelectorAll('.monaco-editor .margin')].findLast(m => {
+      const r = m.closest('.monaco-editor').getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    });
+    return (margin.getBoundingClientRect().left + 12) * devicePixelRatio;
+  })()`);
+  await move(Math.round(gutter), y, 450);
+}
+
 async function type(text) {
   focus();
+  await aside();
   run('xdotool', ['type', '--clearmodifiers', '--delay', '85', text]);
   await sleep(300);
 }
@@ -186,8 +207,8 @@ async function capture(name, action) {
     if (code !== 0) throw new Error(`ffmpeg exited ${code}`);
   }
   run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
-    // Slow the interactions to 75% speed, then hold the final frame for one extra second.
-    '-vf', 'setpts=(PTS-STARTPTS)/0.75,fps=60,tpad=stop_mode=clone:stop_duration=1',
+    // Slow the interactions, then hold the final frame for one extra second.
+    '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '23', '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart', `${output}/${name}.mp4`]);
   writeFileSync(`${output}/${name}.txt`, browser('snapshot', '-i'));
@@ -215,11 +236,11 @@ const cases = {
       await token('    controls =', 'controls', 'click');
       press('F2');
       await sleep(500);
+      await aside();
       browser('fill', '.rename-box input', 'controlProps');
       await sleep(900);
       press('Enter');
       await expect(`document.querySelector('.view-lines')?.textContent.includes('controlProps') && document.querySelector('.view-lines')?.textContent.includes('styles.controls')`, 'Local rename leaves styles.controls unchanged');
-      await move(1650, 820);
     });
     press('Control+s');
     await sleep(500);
@@ -234,7 +255,6 @@ const cases = {
     await capture('document-highlights', async () => {
       await token('active = props.playing', 'active', 'click');
       await expect(`document.querySelectorAll('.wordHighlightText').length >= 2`, 'Binding and its references are highlighted');
-      await move(1640, 820);
       await sleep(1600);
     });
   },
@@ -249,7 +269,6 @@ const cases = {
       await sleep(1700);
       press('Escape');
       press('Control+z');
-      await move(1640, 820);
       await expect(`document.querySelectorAll('.squiggly-error').length === 0`, 'Undo clears the unsaved diagnostic');
     });
     await prepare(demos, 163);
@@ -264,7 +283,6 @@ const cases = {
       await sleep(1700);
       press('Enter');
       await expect(`document.querySelector('.view-lines')?.textContent.includes('setPlaying (const true)')`, 'Completion inserts setPlaying');
-      await move(1640, 820);
     });
     await prepare(demos, 163);
   },
@@ -310,7 +328,6 @@ const cases = {
       await sleep(700);
       press('F12');
       await expect(`document.querySelector('[role="tab"][aria-selected="true"][data-resource-name="SiteNav.purs"]') !== null && document.querySelector('.view-lines')?.textContent.includes('siteNav ::')`, 'Definition navigation opens siteNav in another module');
-      await move(1650, 820);
     });
   },
   async 'find-references'() {
@@ -320,7 +337,6 @@ const cases = {
       await sleep(700);
       press('Shift+F12');
       await expect(`document.querySelector('.peekview-widget')?.innerText.includes('Demos.purs')`, 'References include consumers in other website modules');
-      await move(1500, 800);
       await sleep(1000);
     });
     press('Escape');
@@ -334,7 +350,6 @@ const cases = {
       await sleep(1700);
       press('Enter');
       await expect(`document.querySelector('.view-lines')?.textContent.includes('mediaButton :: String')`, 'Document-symbol selection reaches its declaration');
-      await move(1650, 820);
     });
   },
   async 'workspace-symbols'() {
@@ -346,7 +361,6 @@ const cases = {
       await sleep(1700);
       press('Enter');
       await expect(`document.querySelector('[role="tab"][aria-selected="true"][data-resource-name="CopyButton.purs"]') !== null`, 'Workspace-symbol selection opens CopyButton.purs');
-      await move(1650, 820);
     });
   },
   async 'semantic-highlighting'() {
@@ -374,7 +388,6 @@ const cases = {
       await sleep(900);
       press('Escape');
       await expect(`JSON.stringify(${colors}) !== ${JSON.stringify(JSON.stringify(before))}`, 'Iris semantic tokens change the parameter colours');
-      await move(1450, 20);
       await sleep(1600);
     });
   },

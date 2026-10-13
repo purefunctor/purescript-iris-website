@@ -15,6 +15,8 @@ import { parseArgs } from 'node:util';
 const width = 1920, height = 1080;
 const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
 const command = (process.env.IRIS_DEMO_CAP || `${tools}/cap-cli`).split(' ');
+// Takes play at 85% of captured speed, against 75% for FFmpeg takes without zoom.
+export const speed = 0.85;
 
 function cap(...args) {
   const out = execFileSync(command[0], [...command.slice(1), ...args, '--json'],
@@ -119,10 +121,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(JSON.stringify(render(project, actions, raw, {
     zoom: !values['no-zoom'], ripple: !values['no-ripple'], amount: values.zoom && Number(values.zoom),
   })));
-  // The same 75% retime and final hold as record.mjs, applied to the normal-speed export.
+  // The same retime and final hold as record.mjs, applied to the normal-speed export.
   mkdirSync(output, { recursive: true });
   execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
-    '-vf', 'setpts=(PTS-STARTPTS)/0.75,fps=60,tpad=stop_mode=clone:stop_duration=1',
+    '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '23', '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart', `${output}/${name}.mp4`]);
   console.log(`Exported ${output}/${name}.mp4`);
