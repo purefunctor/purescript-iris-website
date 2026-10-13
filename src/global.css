@@ -180,10 +180,6 @@
     view-transition-name: none;
   }
 
-  html[data-landing-macos] {
-    --landing-interactive-cursor: default;
-  }
-
   @media (prefers-reduced-motion: no-preference) {
     html {
       scroll-behavior: smooth;

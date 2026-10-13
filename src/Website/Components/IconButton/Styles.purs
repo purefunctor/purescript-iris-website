@@ -9,7 +9,7 @@ iconButtonStyles =
         { alignItems: "center"
         , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
         , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , cursor: "default"
         , display: "inline-flex"
         , flexShrink: 0
         , justifyContent: "center"

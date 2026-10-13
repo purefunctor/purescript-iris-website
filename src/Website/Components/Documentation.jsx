@@ -8,13 +8,6 @@ import PanelLeftCloseIcon from "~icons/lucide/panel-left-close";
 import PanelLeftOpenIcon from "~icons/lucide/panel-left-open";
 import { NavigationLink } from "#src/Website/Components/NavigationLink.jsx";
 
-export const configurePlatform = () => {
-  if (/^Mac|^macOS/.test(navigator.platform)) {
-    document.documentElement.setAttribute("data-landing-macos", "");
-  }
-  return () => {};
-};
-
 // When the page links scroll horizontally on narrow screens, keep the current page in view and
 // mark the edges that hide links so they can fade.
 export function pageNavigationImpl({ className, label, content }) {

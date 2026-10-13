@@ -12,15 +12,18 @@ import Website.Documentation.Prose (inlineCode, link, paragraph)
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
-component = unsafePerformEffect $ Hooks.reactComponent "LanguageServer" \_ -> Hooks.do
-  Hooks.useEffectOnce Documentation.configurePlatform
-  pure
-    $ Documentation.documentation
-        { page: Documentation.LanguageServer
-        , intro:
-            "Iris includes a language server that provides types, completion, and error reporting for PureScript in your editor. It is available in Visual Studio Code through the Iris extension and in any other editor that supports the Language Server Protocol (LSP)."
-        , sections
-        }
+component =
+  unsafePerformEffect
+    $ Hooks.reactComponent
+        "LanguageServer"
+        \_ ->
+          pure
+            $ Documentation.documentation
+                { page: Documentation.LanguageServer
+                , intro:
+                    "Iris includes a language server that provides types, completion, and error reporting for PureScript in your editor. It is available in Visual Studio Code through the Iris extension and in any other editor that supports the Language Server Protocol (LSP)."
+                , sections
+                }
 
 sections :: Array Documentation.Section
 sections =

@@ -120,7 +120,7 @@ styles =
         { alignItems: "center"
         , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
         , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , cursor: "default"
         , display: "grid"
         , fontSize: 15
         , gap: 12

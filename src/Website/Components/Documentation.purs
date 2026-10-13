@@ -1,10 +1,9 @@
-module Website.Components.Documentation (Page(..), Section, configurePlatform, documentation) where
+module Website.Components.Documentation (Page(..), Section, documentation) where
 
 import Prelude
 
 import Data.Array (findIndex, (!!))
 import Data.Maybe (maybe)
-import Effect (Effect)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element, fragment)
 import Website.Breakpoints (breakpoints)
@@ -49,8 +48,6 @@ type Links =
   , canvasClassName :: String
   , contentClassName :: String
   }
-
-foreign import configurePlatform :: Effect (Effect Unit)
 
 foreign import pageNavigationImpl ::
   ReactComponent { className :: String, label :: String, content :: JSX }
@@ -205,7 +202,7 @@ styles =
         , height: 40
         , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
         , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , cursor: "default"
         , fontSize: 18
         , outlineColor: "var(--focus-ring)"
         }

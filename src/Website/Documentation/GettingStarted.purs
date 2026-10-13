@@ -14,15 +14,18 @@ import Website.Documentation.Prose (inlineCode, item, link, list, note, paragrap
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
-component = unsafePerformEffect $ Hooks.reactComponent "GettingStarted" \_ -> Hooks.do
-  Hooks.useEffectOnce Documentation.configurePlatform
-  pure
-    $ Documentation.documentation
-        { page: Documentation.GettingStarted
-        , intro:
-            "This guide covers installing Iris, creating a project, and running a small program that prints a greeting."
-        , sections
-        }
+component =
+  unsafePerformEffect
+    $ Hooks.reactComponent
+        "GettingStarted"
+        \_ ->
+          pure
+            $ Documentation.documentation
+                { page: Documentation.GettingStarted
+                , intro:
+                    "This guide covers installing Iris, creating a project, and running a small program that prints a greeting."
+                , sections
+                }
 
 sections :: Array Documentation.Section
 sections =

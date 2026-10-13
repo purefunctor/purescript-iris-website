@@ -18,7 +18,7 @@ tabStyles =
             , ":hover": "var(--text-primary)"
             , "[data-selected]": "var(--text-primary)"
             }
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , cursor: "default"
         , display: "inline-flex"
         , fontSize: 13
         , fontWeight: 500

@@ -68,7 +68,7 @@ styles =
         , position: "relative"
         }
     , video:
-        { cursor: "var(--landing-interactive-cursor, pointer)"
+        { cursor: "default"
         , display: "block"
         , height: "100%"
         , inset: 0
@@ -143,7 +143,7 @@ styles =
         , "--seek-bubble":
             { default: "0", ":hover": "1", ":focus-visible": "1", "[data-seeking]": "1" }
         , alignSelf: "stretch"
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , cursor: "default"
         , flexGrow: 1
         , marginInline: 6
         , minWidth: 48

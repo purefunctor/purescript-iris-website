@@ -207,14 +207,14 @@ styles =
             , ":active": "var(--accent-press)"
             }
         , color: "var(--text-on-accent)"
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , cursor: "default"
         }
     -- Hard spectrum bars, a strip along the bottom edge at rest, rise in turn to fill the button.
     -- Each bar clips its own dark copy of the label, so the bars mask the text as they rise.
     , spectrumInstall:
         { backgroundColor: "transparent"
         , color: "var(--text-primary)"
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        , cursor: "default"
         , fontSize: 18
         , fontWeight: 900
         , letterSpacing: "-0.04em"

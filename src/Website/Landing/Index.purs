@@ -2,7 +2,6 @@ module Website.Landing.Index (component) where
 
 import Prelude
 
-import Data.Foldable (for_)
 import Data.Nullable (Nullable)
 import Data.Nullable as Nullable
 import Data.Tuple.Nested ((/\))
@@ -12,12 +11,6 @@ import Iris.StyleX as StyleX
 import React.Basic (ReactComponent, Ref, element)
 import React.Basic.Hooks as Hooks
 import Web.DOM.Element (Element)
-import Web.DOM.Element as Element
-import Web.HTML (window)
-import Web.HTML.HTMLDocument as HTMLDocument
-import Web.HTML.HTMLHtmlElement as HTMLHtmlElement
-import Web.HTML.Navigator as Navigator
-import Web.HTML.Window as Window
 import Website.Components.SiteNav (siteNav)
 import Website.Landing.Benchmarks (benchmarks)
 import Website.Landing.Demos as Demos
@@ -46,7 +39,6 @@ component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "LandingPage" \_ -> Hooks.do
   install <- Hooks.useRef Nullable.null
   ripples /\ setRipples <- Hooks.useState 0
-  Hooks.useEffectOnce configurePlatformStyles
   Hooks.useEffectOnce enableCopyEditing
   pure
     $ DOM.div
@@ -55,23 +47,3 @@ component = unsafePerformEffect $ Hooks.reactComponent "LandingPage" \_ -> Hooks
         , DOM.main {} [ hero { install, ripples }, places, benchmarks, element Demos.component {} ]
         , footer
         ]
-
-configurePlatformStyles :: Effect (Effect Unit)
-configurePlatformStyles = do
-  browserWindow <- window
-  platform <- Window.navigator browserWindow >>= Navigator.platform
-  when (isMacOS platform) do
-    document <- Window.document browserWindow
-    documentElement <- HTMLDocument.documentElement document
-    for_
-      documentElement
-      \html -> Element.setAttribute "data-landing-macos" "" (HTMLHtmlElement.toElement html)
-  pure (pure unit)
-
-isMacOS :: String -> Boolean
-isMacOS = case _ of
-  "MacIntel" -> true
-  "MacPPC" -> true
-  "Mac68K" -> true
-  "macOS" -> true
-  _ -> false

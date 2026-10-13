@@ -30,8 +30,8 @@ styles =
         , borderRadius: 8
         , borderStyle: "solid"
         , borderWidth: 1
-        -- Buttons keep the platform's control cursor; macOS uses the regular arrow.
-        , cursor: "var(--landing-interactive-cursor, pointer)"
+        -- Controls use the regular arrow on every platform, as on macOS.
+        , cursor: "default"
         , display: "inline-flex"
         , flexShrink: 0
         , fontFamily: "var(--font-sans)"

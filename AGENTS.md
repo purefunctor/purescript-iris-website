@@ -63,7 +63,7 @@ Apply design feedback to what it names. When it points to an existing treatment,
 - Reserve full rounding for focused interactive elements such as calls to action and status pills.
 - Give transparent actions a subtle background fill so they remain identifiable beside prose, then strengthen that fill on hover. Do not add a persistent border.
 - Set status pills in the sans-serif typeface with high-contrast colors. Add a border only when a light treatment needs separation from its background.
-- Preserve macOS cursor semantics by using the regular arrow cursor for controls such as buttons and toggles on macOS. Button-styled navigation links also use the regular arrow cursor on every platform; inline text hyperlinks use the pointing-hand cursor. Continue to communicate interactivity through shape, contrast, hover, and focus treatments.
+- Use macOS cursor semantics on every platform: controls such as buttons, toggles and tabs, and button-styled navigation links, use the regular arrow cursor; inline text hyperlinks use the pointing-hand cursor. Do not detect the platform for cursors. Continue to communicate interactivity through shape, contrast, hover, and focus treatments.
 
 ### Color tokens
 
