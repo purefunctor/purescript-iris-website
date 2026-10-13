@@ -38,6 +38,7 @@ styles =
         { alignItems: "center"
         , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
         , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
+        , cursor: "default"
         , display: "inline-flex"
         , flexShrink: 0
         , fontFamily: "var(--font-sans)"
