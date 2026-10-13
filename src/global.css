@@ -123,6 +123,10 @@
     --syn-operator: var(--granite-300);
     --syn-punct: var(--granite-400);
     --syn-line-number: var(--granite-500);
+    /* Semantic roles, used by the editor demos' theme. */
+    --syn-label: oklch(from var(--yellow-300) calc(l - 0.06) calc(c - 0.045) h);
+    --syn-parameter: var(--spectrum-violet);
+    --syn-namespace: var(--spectrum-blue);
     --syn-highlight: oklch(from var(--signal-400) l c h / 9%);
     --shadow-glass: inset 0 1px 0 var(--glass-highlight), 0 14px 40px -14px oklch(0% 0 0 / 55%);
     --shadow-focus: 0 0 0 2px var(--granite-900), 0 0 0 4px var(--focus-ring);
