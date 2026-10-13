@@ -299,30 +299,34 @@ const cases = {
     });
   },
   async rename() {
-    // The `onTime` handler's `current` parameter shadows the component's `current` binding and is
-    // passed on through a record pun. Renaming it must leave the outer binding and the label alone.
-    const handler = '\\current duration -> setTime { current, duration }';
-    const renamed = '\\seconds duration -> setTime { current: seconds, duration }';
-    await prepare(player, 242);
+    // The component's `props` parameter is used throughout, beside `StyleX.props` and a comment that
+    // mention the same name. Renaming the parameter must rewrite its uses and leave those alone.
+    const view = region('-- The source on the element trails props.src', ', onEnded:');
+    await prepare(player, 239);
     await capture('rename', async () => {
-      await token(`onTime: ${handler}`, 'current', 'click');
+      await token('active = props.playing', 'props', 'click');
       press('F2');
       await sleep(500);
       await aside();
-      browser('fill', '.rename-box input', 'seconds');
+      browser('fill', '.rename-box input', 'player');
       await sleep(900);
       press('Enter');
-      await expect(`${lines(renamed)}.length === 1 && ${lines('current = shown == props.src')}.length === 1`,
-        'Rename expands the pun and leaves the shadowed binding', lines(renamed, 'current = shown == props.src'));
-      await sleep(1800);
+      await expect(`${lines('active = player.playing')}.length === 1 && ${lines('toggle = player.setPlaying not')}.length === 1
+        && ${lines('StyleX.props')}.length === 1 && ${lines('trails props.src')}.length === 1`,
+        'Rename rewrites every use of props but not StyleX.props or the comment', view);
+      await sleep(2200);
     });
     press('Control+s');
     await sleep(500);
     const text = readFileSync(`${tools}/iris-website/src/Website/${player}`, 'utf8');
-    const expected = readFileSync(`${root}/src/Website/${player}`, 'utf8').replace(handler, renamed);
-    if (text !== expected) throw new Error('Rename changed more than the shadowing parameter and its pun');
-    await prepare(player, 242);
+    const expected = readFileSync(`${root}/src/Website/${player}`, 'utf8').split('\n')
+      .map(line => line.trimStart().startsWith('--') ? line
+        : line.replace('\\props ->', '\\player ->').replace(/(?<![\w.])props\./g, 'player.'))
+      .join('\n');
+    if (text !== expected) throw new Error('Rename missed a use of props or changed another name');
+    await prepare(player, 239);
   },
+
   async 'document-highlights'() {
     const marks = `[...${highlights}].filter(e => e.getBoundingClientRect().width > 0)`;
     // The highlighted words, by the line they sit on.

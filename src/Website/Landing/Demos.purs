@@ -34,7 +34,7 @@ typeIntelligence =
   [ inferredTypes
   , { slug: "rename"
     , title: "Scope-aware rename"
-    , description: "Renaming a parameter follows its scope: the binding it shadows keeps its name, and its record pun expands."
+    , description: "Renaming the component's props follows scope: every use changes, while StyleX.props and comments keep the name."
     }
   , { slug: "live-diagnostics"
     , title: "Live diagnostics"
