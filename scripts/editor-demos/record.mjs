@@ -14,9 +14,18 @@ const run = (name, args) => execFileSync(name, args, { env, encoding: 'utf8' }).
 const browser = (...args) => run('agent-browser', ['--session', session, '--cdp', '9223', ...args]);
 const evaluate = code => JSON.parse(browser('eval', code));
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-const press = key => browser('press', key);
+const press = key => (focus(), browser('press', key));
 const input = '.quick-input-widget input';
+// ffmpeg captures the X display as is; cap renders Cap's cursor, click ripples and zoom (cap.mjs).
+const recorder = process.env.IRIS_DEMO_RECORDER || 'ffmpeg';
+const cap = recorder === 'cap' && await import('./cap.mjs');
 let recording;
+// Pointer and keyboard actions in the current take, in seconds since capture started. Cap zooms toward them.
+let actions = [], epoch;
+const mark = (x, y, detail = {}) => epoch && actions.push({ t: (Date.now() - epoch) / 1000, x, y, ...detail });
+// Keyboard work keeps the focus at the last pointer action; overview zooms out to the whole editor.
+const focus = () => { const last = actions.findLast(a => a.x !== undefined); if (last) mark(last.x, last.y, { action: 'key' }); };
+const overview = () => mark(undefined, undefined, { action: 'overview' });
 
 async function expect(code, message) {
   const result = evaluate(`new Promise(resolve => {
@@ -101,11 +110,22 @@ async function move(x, y, duration = 650) {
   }
 }
 
+// Hold each button press for a few frames. Cap polls the pointer every 16 ms and misses instant clicks.
+async function press1(count = 1) {
+  for (let i = 0; i < count; i++) {
+    if (i) await sleep(70);
+    run('xdotool', ['mousedown', '1']);
+    await sleep(50);
+    run('xdotool', ['mouseup', '1']);
+  }
+}
+
 async function token(line, text, action = 'hover', occurrence = 0) {
   const { x, y } = tokenPoint(line, text, occurrence);
   await move(x, y);
-  if (action === 'click') run('xdotool', ['click', '1']);
-  if (action === 'select') run('xdotool', ['click', '--repeat', '2', '--delay', '90', '1']);
+  mark(x, y, { action });
+  if (action === 'click') await press1();
+  if (action === 'select') await press1(2);
   await sleep(300);
 }
 
@@ -115,28 +135,47 @@ async function click(selector) {
     return { x: (r.x + r.width / 2) * devicePixelRatio, y: (r.y + r.height / 2) * devicePixelRatio };
   })()`);
   await move(x, y);
-  run('xdotool', ['click', '1']);
+  mark(x, y, { action: 'click' });
+  await press1();
   await sleep(300);
 }
 
 async function type(text) {
+  focus();
   run('xdotool', ['type', '--clearmodifiers', '--delay', '85', text]);
   await sleep(300);
 }
 
 async function capture(name, action) {
   const raw = `${tools}/${name}-raw.mp4`;
-  recording = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y',
+  const project = `${tools}/cap/${name}.cap`;
+  if (cap) recording = cap.start(project);
+  else recording = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y',
     '-f', 'x11grab', '-draw_mouse', '1', '-video_size', '1920x1080', '-framerate', '60',
     '-i', ':94', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '18', '-pix_fmt', 'yuv420p', raw],
     { env, stdio: ['pipe', 'ignore', 'inherit'] });
+  [actions, epoch] = [[], Date.now()];
   await sleep(800);
   await action();
   await sleep(2000);
-  recording.stdin.end('q\n');
-  const [code] = await once(recording, 'exit');
-  recording = undefined;
-  if (code !== 0) throw new Error(`ffmpeg exited ${code}`);
+  epoch = undefined;
+  if (cap) {
+    // Cap measures the last cursor shape only until the last move and replaces it when that is
+    // under a second, so a pointer resting in a new shape needs a late, invisible move.
+    run('xdotool', ['mousemove_relative', '--', '1', '0']);
+    await sleep(50);
+    run('xdotool', ['mousemove_relative', '--', '-1', '0']);
+    await sleep(50);
+    cap.stop(recording);
+    recording = undefined;
+    writeFileSync(`${project}/iris-actions.json`, JSON.stringify(actions, null, 2));
+    console.log(JSON.stringify(cap.render(project, actions, raw)));
+  } else {
+    recording.stdin.end('q\n');
+    const [code] = await once(recording, 'exit');
+    recording = undefined;
+    if (code !== 0) throw new Error(`ffmpeg exited ${code}`);
+  }
   run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
     // Slow the interactions to 75% speed, then hold the final frame for one extra second.
     '-vf', 'setpts=(PTS-STARTPTS)/0.75,fps=60,tpad=stop_mode=clone:stop_duration=1',
@@ -271,6 +310,7 @@ const cases = {
       await token('contentShell = StyleX.props', 'contentShell', 'click');
       await sleep(700);
       press('Shift+F12');
+      overview();
       await expect(`document.querySelector('.peekview-widget')?.innerText.includes('Demos.purs')`, 'References include consumers in other website modules');
       await move(1500, 800);
       await sleep(1000);
@@ -345,7 +385,8 @@ try {
     await cases[name]();
   }
 } finally {
-  if (recording) {
+  if (recording && cap) cap.stop(recording);
+  else if (recording) {
     recording.stdin.end('q\n');
     await once(recording, 'exit');
   }
