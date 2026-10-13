@@ -169,9 +169,12 @@ async function token(line, text, action = 'hover', occurrence = 0) {
   await sleep(300);
 }
 
-async function click(selector) {
+const click = selector => clickOn(`document.querySelector(${JSON.stringify(selector)})`);
+
+// Click the element that a script returns.
+async function clickOn(element) {
   const { x, y } = evaluate(`(() => {
-    const r = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();
+    const r = (${element}).getBoundingClientRect();
     return { x: (r.x + r.width / 2) * devicePixelRatio, y: (r.y + r.height / 2) * devicePixelRatio };
   })()`);
   await move(x, y);
@@ -321,13 +324,27 @@ const cases = {
     await prepare(player, 242);
   },
   async 'document-highlights'() {
-    await prepare(player, 238);
+    const marks = `[...${highlights}].filter(e => e.getBoundingClientRect().width > 0)`;
+    // The highlighted words, by the line they sit on.
+    const on = text => `${marks}.filter(e => ${lines(text)}.some(line => {
+      const [a, b] = [line.getBoundingClientRect(), e.getBoundingClientRect()];
+      return b.top >= a.top - 2 && b.bottom <= a.bottom + 2;
+    })).length`;
+    await prepare(player, 242);
     await capture('document-highlights', async () => {
-      await token('active = props.playing', 'active', 'click');
-      await expect(`document.querySelectorAll('.wordHighlightText').length >= 2`, 'Binding and its references are highlighted', highlights);
+      await token('active = props.playing', 'props', 'click');
+      await expect(`${marks}.length >= 5`, 'Every use of props in the component is highlighted', highlights);
+      await sleep(1800);
+      await token('toggle = props.setPlaying', 'toggle', 'click');
+      await expect(`${marks}.length === 2 && ${on(', onToggle: toggle')} === 1`, 'Binding toggle and its use are highlighted', highlights);
       await sleep(1600);
+      await token('onTime: \\current duration', 'current', 'click');
+      await expect(`${marks}.length === 2 && ${on('setTime { current, duration }')} === 2 && ${on('current = shown == props.src')} === 0`,
+        'The handler parameter highlights its own uses, not the binding it shadows', highlights);
+      await sleep(1800);
     });
   },
+
   async 'live-diagnostics'() {
     await prepare(demos, 163);
     await capture('live-diagnostics', async () => {
@@ -385,10 +402,11 @@ const cases = {
       await sleep(1600);
       press('Enter');
       await sleep(1100);
-      await overview(() => scrollTo('import Data.Maybe (fromMaybe)'));
-      await expect(`${lines('import Data.Maybe (fromMaybe)')}.length === 1`, 'Completion adds the Data.Maybe import',
-        lines('import Data.Maybe (fromMaybe)'));
-      await token('import Data.Maybe (fromMaybe)', 'fromMaybe');
+      await overview(async () => {
+        await scrollTo('import Data.Maybe (fromMaybe)');
+        await expect(`${lines('import Data.Maybe (fromMaybe)')}.length === 1`, 'Completion adds the Data.Maybe import');
+        await token('import Data.Maybe (fromMaybe)', 'fromMaybe');
+      });
     });
     await prepare(demos, 160);
   },
@@ -436,36 +454,52 @@ const cases = {
   },
   async 'semantic-highlighting'() {
     const path = `${tools}/profile/User/settings.json`;
-    const settings = JSON.parse(readFileSync(path, 'utf8'));
-    settings['editor.semanticHighlighting.enabled'] = false;
-    writeFileSync(path, JSON.stringify(settings, null, 2));
+    const semantic = enabled => {
+      const settings = JSON.parse(readFileSync(path, 'utf8'));
+      settings['editor.semanticHighlighting.enabled'] = enabled;
+      writeFileSync(path, JSON.stringify(settings, null, 2));
+    };
+    semantic(false);
     await prepare(player, 242);
     // The player's effect: binders, labels, qualifiers and a lambda, all of which semantic tokens recolour.
     const code = region('Hooks.useEffectOnce do', 'onVisible: setVisible');
-    const colors = `${code}.map(e => [e.textContent, getComputedStyle(e).color, getComputedStyle(e).fontStyle])`;
+    const colors = `JSON.stringify(${code}.map(e => [e.textContent, getComputedStyle(e).color, getComputedStyle(e).fontStyle]))`;
     const before = evaluate(colors);
-    if (!before.length) throw new Error('The player effect is not visible');
+    if (before === '[]') throw new Error('The player effect is not visible');
+    const recoloured = `${colors} !== ${JSON.stringify(before)}`;
+    const plain = `${colors} === ${JSON.stringify(before)}`;
+    const setting = `document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')`;
     await capture('semantic-highlighting', async () => {
-      await sleep(1500);
+      await sleep(1200);
       await overview(async () => {
-        await command('Preferences: Open Settings (UI)');
-        press('Control+a');
-        browser('keyboard', 'inserttext', '@id:editor.semanticHighlighting.enabled');
-        await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'false'`, 'Semantic highlighting starts disabled');
-        await click('select[aria-label="editor.semanticHighlighting.enabled"]');
-        await sleep(800);
-        press('Home');
-        press('Enter');
-        await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'true'`, 'Semantic highlighting is enabled through Settings');
+        await clickOn(`[...document.querySelectorAll('.activitybar .action-label')].find(e => e.getAttribute('aria-label') === 'Manage')`);
+        await sleep(500);
+        await clickOn(`[...document.querySelectorAll('.monaco-menu .action-label')].find(e => e.textContent.trim() === 'Settings')`);
         await sleep(900);
-        press('Escape');
-        // The editor recolours as soon as the setting changes; zoom in once the dialog has closed.
+        await clickOn(`document.querySelector('.settings-editor .suggest-input-container')`);
+        run('xdotool', ['type', '--delay', '60', 'semantic highlighting']);
+        await expect(`${setting}?.value === 'false'`, 'Semantic highlighting starts disabled');
+        await sleep(500);
+        await clickOn(setting);
+        await sleep(600);
+        await clickOn(`[...document.querySelectorAll('.monaco-select-box-dropdown-container .monaco-list-row')].find(e => e.innerText.trim() === 'true')`);
+        await expect(`${setting}?.value === 'true'`, 'Semantic highlighting is enabled through Settings');
+        await sleep(700);
+        await clickOn(`document.querySelector('[aria-label^="Close Modal Editor"]')`);
         await sleep(700);
       });
-      await expect(`JSON.stringify(${colors}) !== ${JSON.stringify(JSON.stringify(before))}`, 'Iris semantic tokens recolour the player effect', code);
-      await sleep(2400);
+      await expect(recoloured, 'Iris semantic tokens recolour the player effect', code);
+      await sleep(1600);
+      // Flip back and forth while zoomed in, so the difference is easy to see.
+      for (const enabled of [false, true, false, true]) {
+        semantic(enabled);
+        await expect(enabled ? recoloured : plain,
+          enabled ? 'Semantic tokens return' : 'Without semantic tokens, the effect falls back to TextMate colours', code);
+        await sleep(1300);
+      }
     });
   },
+
 
 };
 
