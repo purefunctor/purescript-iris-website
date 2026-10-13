@@ -19,7 +19,7 @@ fc-cache -f "$HOME/.local/share/fonts/iris-demos"
 
 curl -fLsS --retry 2 https://github.com/purefunctor/purescript-iris-vscode/releases/download/v0.1.0/purescript-analyzer-0.1.0.vsix -o "$TOOLS/iris.vsix"
 echo "e19528ba5881a509675ce40c427c042f70847c229cac76817f4d542bb41134ab  $TOOLS/iris.vsix" | sha256sum -c -
-for extension in nwolverson.language-purescript@0.2.10 Catppuccin.catppuccin-vsc@3.19.0 "$TOOLS/iris.vsix"; do
+for extension in nwolverson.language-purescript@0.2.10 "$TOOLS/iris.vsix"; do
   "$TOOLS/VSCode-linux-x64/bin/code" --no-sandbox --disable-gpu \
     --user-data-dir "$TOOLS/profile" --extensions-dir "$TOOLS/extensions" \
     --install-extension "$extension" --force
@@ -35,8 +35,11 @@ git -C "$ROOT" rev-parse HEAD > "$TOOLS/seed-commit"
 TOOLS="$TOOLS" ROOT="$ROOT" IRIS_BIN=$(command -v iris) node --input-type=module <<'JS'
 import { writeFileSync } from 'node:fs';
 const { TOOLS: tools, ROOT: root, IRIS_BIN: iris } = process.env;
+// The site's palette, read from src/global.css relative to the repository root.
+process.chdir(root);
+const { themeSettings } = await import(`${root}/scripts/editor-demos/theme.ts`);
 writeFileSync(`${tools}/profile/User/settings.json`, JSON.stringify({
-  'workbench.colorTheme': 'Catppuccin Macchiato',
+  ...await themeSettings(),
   'editor.fontFamily': 'Geist Mono',
   'editor.fontSize': 16,
   'editor.lineHeight': 24,
