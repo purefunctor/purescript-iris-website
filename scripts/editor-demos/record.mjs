@@ -151,7 +151,7 @@ const demos = 'Landing/Demos.purs';
 const factorial = 'Landing/Example/Factorial.purs';
 const cases = {
   async 'inferred-types'() {
-    await prepare(player, 236);
+    await prepare(player, 238);
     await capture('inferred-types', async () => {
       await token('active = props.playing', 'active');
       await expect(`document.querySelector('.monaco-hover')?.innerText.includes('Boolean')`, 'Local active has inferred Boolean type');
@@ -162,7 +162,7 @@ const cases = {
     });
   },
   async rename() {
-    await prepare(player, 239);
+    await prepare(player, 241);
     await capture('rename', async () => {
       await token('    controls =', 'controls', 'click');
       press('F2');
@@ -176,11 +176,13 @@ const cases = {
     press('Control+s');
     await sleep(500);
     const text = readFileSync(`${tools}/iris-website/src/Website/${player}`, 'utf8');
-    if (!text.includes('DOM.div controlProps') || !text.includes('[ styles.controls')) throw new Error('Rename missed a reference or changed a field');
-    await prepare(player, 239);
+    const expected = readFileSync(`${root}/src/Website/${player}`, 'utf8')
+      .replace('\n    controls =\n', '\n    controlProps =\n').replace('\n            controls\n', '\n            controlProps\n');
+    if (text !== expected) throw new Error('Rename missed a reference or changed a field');
+    await prepare(player, 241);
   },
   async 'document-highlights'() {
-    await prepare(player, 236);
+    await prepare(player, 238);
     await capture('document-highlights', async () => {
       await token('active = props.playing', 'active', 'click');
       await expect(`document.querySelectorAll('.wordHighlightText').length >= 2`, 'Binding and its references are highlighted');
@@ -189,7 +191,7 @@ const cases = {
     });
   },
   async 'live-diagnostics'() {
-    await prepare(demos, 181);
+    await prepare(demos, 163);
     await capture('live-diagnostics', async () => {
       await token('setPlaying (const true)', 'true', 'select');
       await type('"true"');
@@ -202,10 +204,10 @@ const cases = {
       await move(1640, 820);
       await expect(`document.querySelectorAll('.squiggly-error').length === 0`, 'Undo clears the unsaved diagnostic');
     });
-    await prepare(demos, 181);
+    await prepare(demos, 163);
   },
   async completion() {
-    await prepare(demos, 181);
+    await prepare(demos, 163);
     await capture('completion', async () => {
       await token('setPlaying (const true)', 'setPlaying', 'select');
       await type('setPla');
@@ -216,7 +218,7 @@ const cases = {
       await expect(`document.querySelector('.view-lines')?.textContent.includes('setPlaying (const true)')`, 'Completion inserts setPlaying');
       await move(1640, 820);
     });
-    await prepare(demos, 181);
+    await prepare(demos, 163);
   },
   async 'typed-hole-suggestions'() {
     await prepare(factorial);
@@ -234,11 +236,11 @@ const cases = {
     await prepare(factorial);
   },
   async 'automatic-import'() {
-    await prepare(demos, 178);
+    await prepare(demos, 160);
     const path = `${tools}/iris-website/src/Website/${demos}`;
     writeFileSync(path, readFileSync(path, 'utf8').replace('import Data.Maybe (fromMaybe)\n', ''));
     await command('File: Revert File');
-    await open(demos, 177);
+    await open(demos, 159);
     await capture('automatic-import', async () => {
       await token('demo = fromMaybe inferredTypes', 'fromMaybe', 'select');
       await type('fromMa');
@@ -251,10 +253,10 @@ const cases = {
       await expect(`document.querySelector('.view-lines')?.textContent.includes('import Data.Maybe (fromMaybe)')`, 'Completion adds the Data.Maybe import');
       await token('import Data.Maybe (fromMaybe)', 'fromMaybe');
     });
-    await prepare(demos, 178);
+    await prepare(demos, 160);
   },
   async 'go-to-definition'() {
-    await prepare('Landing/Index.purs', 50);
+    await prepare('Landing/Index.purs', 54);
     await capture('go-to-definition', async () => {
       await token('[ siteNav { onInstall:', 'siteNav', 'click');
       await sleep(700);

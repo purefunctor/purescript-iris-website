@@ -121,7 +121,7 @@ agent-browser --session iriscode --cdp 9223 press F11
 node scripts/editor-demos/record.mjs all
 ```
 
-- Setup pins VS Code 1.139.0, Iris extension 0.1.0, PureScript syntax extension 0.2.10 and Geist 1.7.2. The current takes use Iris 0.1.3. It selects Geist for the workbench and Geist Mono for code, and enables opt-in on-change diagnostics.
+- Setup pins VS Code 1.139.0, Iris extension 0.1.0, PureScript syntax extension 0.2.10 and Geist 1.7.2. The current takes use Iris 0.1.7. It selects Geist for the workbench and Geist Mono for code, and enables opt-in on-change diagnostics.
 - [`theme.ts`](scripts/editor-demos/theme.ts) generates the editor colors from the site's tokens in `src/global.css` and layers them over Default Dark Modern through the profile's color customization settings, so recordings match the site. Change the tokens or the mapping there rather than editing the profile, then rerun setup and record again.
 - Capture is native 1920×1080 at 60 fps with the real pointer, encoded as H.264/yuv420p MP4 with fast start and no audio. Electron's scale factor is 150% by default; this scales the whole application, not just the editor font. Use VS Code's F11 fullscreen, not the window manager's fullscreen, to avoid window borders. Do not apply browser viewport emulation to the Electron session.
 - The export runs at 75% of captured speed and adds a one-second final-frame hold: `setpts=(PTS-STARTPTS)/0.75,fps=60,tpad=stop_mode=clone:stop_duration=1`. Apply this once to a normal-speed take, never to an already slowed export.
