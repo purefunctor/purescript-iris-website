@@ -97,6 +97,21 @@ export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, m
     }));
 }
 
+// Cap replaces a last cursor shape held under a second until the last move. record.mjs ends each take
+// with an invisible move that logs the shape the pointer rests in, so date that shape from the last
+// scripted action when the pointer stayed put after it, such as a dialog closing under the pointer.
+function holdRestingShape(path, since) {
+  const events = JSON.parse(readFileSync(path, 'utf8'));
+  const last = events.moves.at(-1);
+  const time = Math.round(since * 1000);
+  const rested = m => Math.abs(m.x - last.x) * width <= 2 && Math.abs(m.y - last.y) * height <= 2;
+  if (!last || !events.moves.filter(m => m.time_ms > time).every(rested)) return;
+  if (events.moves.findLast(m => m.time_ms <= time)?.cursor_id === last.cursor_id) return;
+  events.moves.push({ ...last, time_ms: time });
+  events.moves.sort((a, b) => a.time_ms - b.time_ms);
+  writeFileSync(path, JSON.stringify(events, null, 2));
+}
+
 export function render(project, actions, output, { zoom = true, ripple = true, amount } = {}) {
   const json = path => JSON.parse(readFileSync(`${project}/${path}`, 'utf8'));
   const meta = json('recording-meta.json');
@@ -105,6 +120,8 @@ export function render(project, actions, output, { zoom = true, ripple = true, a
   const duration = config.timeline.segments.reduce((sum, s) => sum + (s.end - s.start) / s.timescale, 0);
   const shift = offset(actions, moves);
   const aligned = actions.map(a => ({ ...a, t: a.t + shift }));
+  const cursor = (meta.segments ?? [meta.segment]).at(-1).cursor;
+  if (cursor && aligned.length) holdRestingShape(`${project}/${cursor}`, aligned.at(-1).t);
   config.timeline.zoomSegments = zoom ? zoomSegments(aligned, duration, amount ? { amount } : {}) : [];
   config.cursor.ripple = { ...config.cursor.ripple, enabled: ripple };
   writeFileSync(`${project}/project-config.json`, JSON.stringify(config, null, 2));

@@ -28,19 +28,25 @@ const mark = (x, y, detail = {}) => epoch && actions.push({ t: (Date.now() - epo
 // Keyboard work keeps the focus at the last pointer action.
 const pointer = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
 const focus = () => { const last = pointer(); if (last) mark(last.x, last.y, { action: 'key' }); };
-// Overlays and highlights that demos show. Each passing check logs their screen boxes, which Cap's
-// zoom keeps in frame.
+// Overlays that demos show. Each passing check logs the screen boxes of those that are in view, which
+// Cap's zoom keeps in frame. A check can name what else it shows with a script returning elements.
 const overlays = ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget',
-  '.rename-box', '.cdr.wordHighlight', '.cdr.wordHighlightStrong', '.cdr.wordHighlightText'];
+  '.rename-box'];
+const highlights = `document.querySelectorAll('.cdr.wordHighlight, .cdr.wordHighlightStrong, .cdr.wordHighlightText')`;
 
-async function expect(code, message) {
+async function expect(code, message, shows = '[]') {
   const boxes = evaluate(`new Promise(resolve => {
     const deadline = Date.now() + 12000;
-    const overlays = () => [...document.querySelectorAll(${JSON.stringify(overlays.join(', '))})]
+    // Skip anything covered by something else, such as an editor behind the Settings dialog.
+    const uncovered = (e, r) => {
+      const hit = document.elementFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+      return hit && (e.contains(hit) || hit.closest('.monaco-editor') === e.closest('.monaco-editor'));
+    };
+    const overlays = () => [...document.querySelectorAll(${JSON.stringify(overlays.join(', '))}), ...${shows}]
       .filter(e => e.checkVisibility({ opacityProperty: true, visibilityProperty: true }))
-      .map(e => e.getBoundingClientRect())
-      .filter(r => r.width > 0 && r.height > 0)
-      .map(r => [r.left, r.top, r.right, r.bottom].map(v => Math.round(v * devicePixelRatio)));
+      .map(e => [e, e.getBoundingClientRect()])
+      .filter(([e, r]) => r.width > 0 && r.height > 0 && uncovered(e, r))
+      .map(([, r]) => [r.left, r.top, r.right, r.bottom].map(v => Math.round(v * devicePixelRatio)));
     const check = () => {
       if (${code}) resolve(overlays());
       else if (Date.now() > deadline) resolve(false);
@@ -48,7 +54,8 @@ async function expect(code, message) {
     }; check();
   })`);
   if (!boxes) throw new Error(message);
-  const last = pointer();
+  // A check that names what it shows is framed on that alone.
+  const last = shows === '[]' ? pointer() : undefined;
   mark(last?.x, last?.y, { action: 'ui', boxes });
   console.log(`PASS: ${message}`);
 }
@@ -208,8 +215,8 @@ async function capture(name, action) {
   await sleep(2000);
   epoch = undefined;
   if (cap) {
-    // Cap measures the last cursor shape only until the last move and replaces it when that is
-    // under a second, so a pointer resting in a new shape needs a late, invisible move.
+    // Cap logs the cursor shape only when the pointer moves. An invisible move just before stopping,
+    // too late to raise a hover, logs the shape the pointer rests in; cap.mjs dates it back.
     run('xdotool', ['mousemove_relative', '--', '1', '0']);
     await sleep(50);
     run('xdotool', ['mousemove_relative', '--', '-1', '0']);
@@ -272,7 +279,7 @@ const cases = {
     await prepare(player, 238);
     await capture('document-highlights', async () => {
       await token('active = props.playing', 'active', 'click');
-      await expect(`document.querySelectorAll('.wordHighlightText').length >= 2`, 'Binding and its references are highlighted');
+      await expect(`document.querySelectorAll('.wordHighlightText').length >= 2`, 'Binding and its references are highlighted', highlights);
       await sleep(1600);
     });
   },
@@ -392,20 +399,30 @@ const cases = {
       return [...line.querySelectorAll('span span')].map(e => [e.textContent, getComputedStyle(e).color]);
     })()`;
     const before = evaluate(colors);
+    const setting = `[document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.closest('.setting-item-contents')].filter(Boolean)`;
+    // The definition whose parameters change colour, up to the next blank line.
+    const definition = `(() => {
+      const text = line => line.textContent.replaceAll('\u00a0', ' ');
+      const lines = [...document.querySelectorAll('.view-line')]
+        .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+      const start = lines.findIndex(line => text(line).includes('copyButton { label, size, text }'));
+      const end = lines.findIndex((line, i) => i > start && !text(line).trim());
+      return lines.slice(start, end < 0 ? undefined : end).flatMap(line => [...line.querySelectorAll('span span')]);
+    })()`;
     await capture('semantic-highlighting', async () => {
       await sleep(1500);
       await command('Preferences: Open Settings (UI)');
       press('Control+a');
       browser('keyboard', 'inserttext', '@id:editor.semanticHighlighting.enabled');
-      await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'false'`, 'Semantic highlighting starts disabled');
+      await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'false'`, 'Semantic highlighting starts disabled', setting);
       await click('select[aria-label="editor.semanticHighlighting.enabled"]');
       await sleep(800);
       press('Home');
       press('Enter');
-      await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'true'`, 'Semantic highlighting is enabled through Settings');
+      await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'true'`, 'Semantic highlighting is enabled through Settings', setting);
       await sleep(900);
       press('Escape');
-      await expect(`JSON.stringify(${colors}) !== ${JSON.stringify(JSON.stringify(before))}`, 'Iris semantic tokens change the parameter colours');
+      await expect(`JSON.stringify(${colors}) !== ${JSON.stringify(JSON.stringify(before))}`, 'Iris semantic tokens change the parameter colours', definition);
       await sleep(1600);
     });
   },
