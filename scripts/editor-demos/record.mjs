@@ -16,11 +16,11 @@ const evaluate = code => JSON.parse(browser('eval', code));
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const press = key => (focus(), browser('press', key));
 const input = '.quick-input-widget input';
-// ffmpeg captures the X display as is; cap renders Cap's cursor, click ripples and zoom (cap.mjs).
-const recorder = process.env.IRIS_DEMO_RECORDER || 'ffmpeg';
+// cap renders Cap's cursor, click ripples and zoom (cap.mjs); ffmpeg captures the X display as is.
+const recorder = process.env.IRIS_DEMO_RECORDER || 'cap';
 const cap = recorder === 'cap' && await import('./cap.mjs');
-// Playback speed of the exported take. Cap's zoom makes faster takes easy to follow.
-const speed = cap ? cap.speed : 0.75;
+// Playback speed and quality of the exported take. Cap's zoom makes faster takes easy to follow.
+const [speed, crf] = cap ? [cap.speed, cap.crf] : [0.75, 23];
 let recording;
 // Pointer and keyboard actions in the current take, in seconds since capture started. Cap zooms toward them.
 let actions = [], epoch;
@@ -227,7 +227,7 @@ async function capture(name, action) {
   run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
     // Slow the interactions, then hold the final frame for one extra second.
     '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '23', '-pix_fmt', 'yuv420p',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart', `${output}/${name}.mp4`]);
   writeFileSync(`${output}/${name}.txt`, browser('snapshot', '-i'));
   console.log(`Recorded ${name}`);

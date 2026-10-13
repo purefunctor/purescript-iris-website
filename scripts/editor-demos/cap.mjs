@@ -1,4 +1,4 @@
-// Cap (https://cap.so) as the capture backend for record.mjs: IRIS_DEMO_RECORDER=cap.
+// Cap (https://cap.so), the default capture backend for record.mjs.
 // Cap renders its own smoothed cursor, click ripples and zoom from the recorded pointer data.
 // Its CLI writes a default project configuration, so the zoom segments come from the action
 // timeline that record.mjs logs: pointer positions and the overlays visible at each check. cap-setup.sh installs the CLI as $IRIS_DEMO_HOME/cap-cli; IRIS_DEMO_CAP
@@ -15,8 +15,10 @@ import { parseArgs } from 'node:util';
 const width = 1920, height = 1080;
 const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
 const command = (process.env.IRIS_DEMO_CAP || `${tools}/cap-cli`).split(' ');
-// Takes play at 85% of captured speed, against 75% for FFmpeg takes without zoom.
+// Takes play at 85% of captured speed, against 75% for FFmpeg takes without zoom. Zoom and motion
+// blur change every pixel, so CRF 28 keeps files near FFmpeg's size without visible loss in text.
 export const speed = 0.85;
+export const crf = 28;
 
 function cap(...args) {
   const out = execFileSync(command[0], [...command.slice(1), ...args, '--json'],
@@ -125,7 +127,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   mkdirSync(output, { recursive: true });
   execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
     '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '23', '-pix_fmt', 'yuv420p',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart', `${output}/${name}.mp4`]);
   console.log(`Exported ${output}/${name}.mp4`);
 }
