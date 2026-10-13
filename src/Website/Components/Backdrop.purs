@@ -22,26 +22,19 @@ styles =
   StyleX.create
     { root:
         { backgroundColor: "var(--bg-canvas)"
+        , backgroundImage: "var(--canvas-texture)"
         , isolation: "isolate"
         , overflow: "hidden"
         , position: "relative"
         }
     , layer: { inset: 0, pointerEvents: "none", position: "absolute", zIndex: 0 }
-    , canvas: { height: "100%", inset: 0, position: "absolute", width: "100%" }
-    , fade:
-        { backgroundImage: "linear-gradient(transparent, var(--bg-canvas))"
-        , blockSize: "22%"
-        , insetBlockEnd: 0
-        , insetInline: 0
-        , position: "absolute"
-        }
-    , grain:
-        { backgroundImage: "var(--texture-grain)"
-        , backgroundSize: 240
+    -- The field fades out over its bottom 22% so the canvas texture continues beneath it.
+    , canvas:
+        { height: "100%"
         , inset: 0
-        , mixBlendMode: "overlay"
-        , opacity: 0.09
+        , maskImage: "linear-gradient(black 78%, transparent)"
         , position: "absolute"
+        , width: "100%"
         }
     , content: { position: "relative", zIndex: 1 }
     }
@@ -75,8 +68,6 @@ component = unsafePerformEffect $ Hooks.reactComponent "Backdrop" \props -> Hook
                 "canvas"
                 { className: styleProps.canvas.className, ref: DOM.reactRef canvas }
                 []
-            , DOM.div styleProps.fade []
-            , DOM.div styleProps.grain []
             ]
         , DOM.div styleProps.content props.content
         ]

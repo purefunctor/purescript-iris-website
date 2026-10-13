@@ -48,7 +48,7 @@ styles =
         , backdropFilter: "blur(30px) saturate(1.2)"
         , backgroundColor:
             { default: "var(--glass-fill-strong)"
-            , "@media (prefers-reduced-transparency: reduce)": "var(--loam-900)"
+            , "@media (prefers-reduced-transparency: reduce)": "var(--granite-900)"
             }
         , borderBlockEndColor: "var(--border-subtle)"
         , borderBlockEndStyle: "solid"
@@ -59,7 +59,7 @@ styles =
         , zIndex: 20
         }
     , containedHeader:
-        { backgroundColor: "var(--loam-900)"
+        { backgroundColor: "var(--granite-900)"
         , backdropFilter: "none"
         , "WebkitBackdropFilter": "none"
         }
@@ -137,7 +137,7 @@ styles =
         }
     , current:
         { backgroundColor: { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
-        , color: "var(--iris-200)"
+        , color: "var(--signal-200)"
         }
     -- Share interaction states; size related controls together rather than every item alike.
     , landingItem:
@@ -152,7 +152,7 @@ styles =
         , color:
             { default: "var(--text-secondary)"
             , ":hover": "var(--text-primary)"
-            , ":active": "var(--iris-200)"
+            , ":active": "var(--signal-200)"
             }
         , outlineColor: "var(--focus-ring)"
         , outlineOffset: -2
@@ -182,7 +182,7 @@ styles =
         }
     , menuButton: { width: 64, paddingInline: 0, fontSize: 20 }
     , menuPanel:
-        { backgroundColor: "var(--loam-900)"
+        { backgroundColor: "var(--granite-900)"
         , insetBlockStart: "100%"
         , insetInline: 0
         , maxHeight: "calc(100dvh - var(--nav-height))"
@@ -303,7 +303,7 @@ styles =
         , animationDuration: "inherit"
         , animationName: "var(--install-label-wave, none)"
         , animationTimingFunction: "inherit"
-        , color: "var(--loam-950)"
+        , color: "var(--granite-950)"
         , display: "flex"
         , insetBlock: 0
         , justifyContent: "center"

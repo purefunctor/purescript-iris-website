@@ -120,7 +120,7 @@ styles =
         , position: "sticky"
         , top: "var(--nav-height)"
         , zIndex: 15
-        , backgroundColor: "var(--loam-900)"
+        , backgroundColor: "var(--granite-900)"
         }
     , menuTrigger:
         { display: "flex"
@@ -150,7 +150,7 @@ styles =
     , popover:
         { width: "var(--trigger-width)"
         , overflowY: "auto"
-        , backgroundColor: "var(--loam-900)"
+        , backgroundColor: "var(--granite-900)"
         , boxShadow: "0 28px 40px -20px oklch(0% 0 0 / 70%)"
         , outline: "none"
         , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
@@ -179,7 +179,7 @@ styles =
         , top: "var(--nav-height)"
         , height: "calc(100dvh - var(--nav-height))"
         , overflowY: "auto"
-        , backgroundColor: "var(--loam-900)"
+        , backgroundColor: "var(--granite-900)"
         , paddingInline: "calc(var(--gutter) - 12px)"
         , paddingBlockStart: 64
         , paddingBlockEnd: 32
@@ -225,7 +225,7 @@ styles =
         { width: "var(--rail-width)"
         , height: "100%"
         , overflowY: "auto"
-        , backgroundColor: "var(--loam-900)"
+        , backgroundColor: "var(--granite-900)"
         , animationName: { default: "none", "[data-entering]": slideIn, "[data-exiting]": slideOut }
         , animationDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
         , animationTimingFunction: "var(--ease-out)"
@@ -261,7 +261,7 @@ styles =
     -- Keep the regular weight so marking a section never rewraps its title.
     , current:
         { backgroundColor: { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
-        , color: "var(--iris-200)"
+        , color: "var(--signal-200)"
         }
     , resourceIcon:
         { display: "inline-flex", flexShrink: 0, fontSize: 11, color: "var(--text-tertiary)" }

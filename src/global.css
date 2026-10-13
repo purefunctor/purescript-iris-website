@@ -42,29 +42,29 @@
 
 @layer reset {
   :root {
-    /* Site design tokens: warm "loam" neutrals, one dusty iris accent, earth-toned status colors. */
+    /* Site design tokens: flat granite neutrals, one safety-orange signal accent, flat status colors. */
     --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    --loam-950: oklch(17.4% 0.007 78);
-    --loam-900: oklch(20.7% 0.009 75);
-    --loam-850: oklch(23.4% 0.011 73);
-    --loam-800: oklch(26.4% 0.013 72);
-    --loam-700: oklch(31.4% 0.017 71);
-    --loam-500: oklch(49.5% 0.024 74);
-    --loam-400: oklch(61.5% 0.027 77);
-    --loam-300: oklch(73.6% 0.028 80);
-    --loam-100: oklch(91.1% 0.02 85);
-    --loam-50: oklch(95.4% 0.013 82);
-    --iris-500: oklch(57.9% 0.075 300);
-    --iris-400: oklch(67.2% 0.065 300);
-    --iris-300: oklch(76.9% 0.05 300);
-    --iris-200: oklch(86.5% 0.031 300);
-    --moss-400: oklch(67% 0.076 118);
-    --moss-300: oklch(77.3% 0.063 118);
-    --ochre-400: oklch(76.9% 0.117 85);
-    --ochre-300: oklch(84.2% 0.093 85);
-    --lichen-300: oklch(79.1% 0.028 176);
-    --rust-300: oklch(72.3% 0.101 34);
+    --granite-950: oklch(16% 0.004 255);
+    --granite-900: oklch(19.2% 0.005 255);
+    --granite-850: oklch(22% 0.005 255);
+    --granite-800: oklch(25% 0.006 255);
+    --granite-700: oklch(30.5% 0.007 255);
+    --granite-500: oklch(48.5% 0.008 255);
+    --granite-400: oklch(62% 0.008 255);
+    --granite-300: oklch(75% 0.007 255);
+    --granite-100: oklch(91.5% 0.004 255);
+    --granite-50: oklch(96.5% 0.002 255);
+    --signal-500: oklch(63% 0.2 38);
+    --signal-400: oklch(71% 0.19 44);
+    --signal-300: oklch(79% 0.15 52);
+    --signal-200: oklch(88% 0.08 58);
+    --green-400: oklch(78% 0.14 150);
+    --green-300: oklch(85% 0.11 152);
+    --yellow-400: oklch(86% 0.13 95);
+    --yellow-300: oklch(89% 0.1 98);
+    --cyan-300: oklch(83% 0.08 205);
+    --red-300: oklch(76% 0.13 28);
     /* Pastel spectrum for the hero backdrop, the logo and the header's Install bars; never for text. */
     --spectrum-red: oklch(78.6% 0.072 25);
     --spectrum-orange: oklch(83% 0.072 60);
@@ -74,46 +74,48 @@
     --spectrum-indigo: oklch(76.5% 0.059 280);
     --spectrum-violet: oklch(78.5% 0.062 313);
 
-    --bg-canvas: var(--loam-950);
-    --surface-1: var(--loam-850);
-    --surface-2: var(--loam-800);
-    --surface-3: var(--loam-700);
-    --glass-fill: oklch(from var(--loam-800) l c h / 52%);
-    --glass-fill-strong: oklch(from var(--loam-900) calc(l + 0.017) c h / 74%);
-    --overlay-scrim: oklch(from var(--loam-950) l c h / 72%);
-    --glass-border: oklch(from var(--loam-100) l c h / 11%);
-    --glass-highlight: oklch(from var(--loam-50) calc(l + 0.03) c h / 7%);
-    --border-subtle: oklch(from var(--loam-100) l c h / 8%);
-    --border-default: oklch(from var(--loam-100) l c h / 14%);
-    --border-strong: oklch(from var(--loam-100) l c h / 26%);
-    --text-primary: var(--loam-50);
-    --text-secondary: var(--loam-100);
-    --text-tertiary: oklch(from var(--loam-400) calc(l + 0.04) c h);
-    --text-emphasis: oklch(from var(--iris-200) calc(l - 0.045) calc(c + 0.012) h);
-    --accent: var(--iris-400);
-    --accent-hover: var(--iris-300);
-    --accent-press: var(--iris-500);
-    --accent-soft: oklch(from var(--iris-400) l c h / 16%);
-    --accent-text: var(--iris-300);
-    --text-on-accent: var(--loam-950);
-    --focus-ring: var(--ochre-400);
-    --success: var(--moss-400);
-    --grid-line: oklch(from var(--loam-100) l c h / 5.5%);
-    --syn-bg: oklch(from var(--loam-950) l c h / 55%);
-    --syn-text: var(--loam-100);
-    --syn-keyword: var(--iris-300);
-    --syn-type: var(--ochre-300);
-    --syn-string: var(--moss-300);
-    --syn-number: var(--rust-300);
-    --syn-comment: var(--loam-400);
-    --syn-function: var(--lichen-300);
-    --syn-operator: var(--loam-300);
-    --syn-punct: var(--loam-400);
-    --syn-line-number: var(--loam-500);
-    --syn-highlight: oklch(from var(--ochre-400) l c h / 8%);
+    --bg-canvas: var(--granite-950);
+    --surface-1: var(--granite-850);
+    --surface-2: var(--granite-800);
+    --surface-3: var(--granite-700);
+    --glass-fill: oklch(from var(--granite-800) l c h / 52%);
+    --glass-fill-strong: oklch(from var(--granite-900) calc(l + 0.017) c h / 74%);
+    --overlay-scrim: oklch(from var(--granite-950) l c h / 72%);
+    --glass-border: oklch(from var(--granite-100) l c h / 11%);
+    --glass-highlight: oklch(from var(--granite-50) calc(l + 0.03) c h / 7%);
+    --border-subtle: oklch(from var(--granite-100) l c h / 8%);
+    --border-default: oklch(from var(--granite-100) l c h / 14%);
+    --border-strong: oklch(from var(--granite-100) l c h / 26%);
+    --text-primary: var(--granite-50);
+    --text-secondary: var(--granite-100);
+    --text-tertiary: oklch(from var(--granite-400) calc(l + 0.04) c h);
+    --text-emphasis: var(--signal-300);
+    --accent: var(--signal-400);
+    --accent-hover: var(--signal-300);
+    --accent-press: var(--signal-500);
+    --accent-soft: oklch(from var(--signal-400) l c h / 16%);
+    --accent-text: var(--signal-300);
+    --text-on-accent: var(--granite-950);
+    --focus-ring: var(--yellow-400);
+    --selection: oklch(from var(--signal-400) l c h / 30%);
+    --success: var(--green-400);
+    --grid-line: oklch(from var(--granite-100) l c h / 5.5%);
+    --syn-bg: oklch(from var(--granite-950) l c h / 55%);
+    --syn-text: var(--granite-100);
+    --syn-keyword: var(--signal-300);
+    --syn-type: var(--yellow-300);
+    --syn-string: var(--green-300);
+    --syn-number: var(--red-300);
+    --syn-comment: var(--granite-400);
+    --syn-function: var(--cyan-300);
+    --syn-operator: var(--granite-300);
+    --syn-punct: var(--granite-400);
+    --syn-line-number: var(--granite-500);
+    --syn-highlight: oklch(from var(--signal-400) l c h / 9%);
     --shadow-glass: inset 0 1px 0 var(--glass-highlight), 0 14px 40px -14px oklch(0% 0 0 / 55%);
-    --shadow-focus: 0 0 0 2px var(--loam-900), 0 0 0 4px var(--focus-ring);
-    --texture-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    --shadow-focus: 0 0 0 2px var(--granite-900), 0 0 0 4px var(--focus-ring);
+    /* Granite: pale flecks over dark mineral grains, tiled behind the whole page. */
+    --canvas-texture: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='l'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 9 0 0 0 -5.6'/><feComponentTransfer><feFuncA type='linear' slope='.075'/></feComponentTransfer></filter><filter id='d'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 0 0 0 -4.8'/><feComponentTransfer><feFuncA type='linear' slope='.35'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23d)'/><rect width='100%' height='100%' filter='url(%23l)'/></svg>");
     --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
     --container-wide: 1360px;
     --gutter: 24px;
@@ -151,7 +153,7 @@
   }
 
   html {
-    background: var(--bg-canvas);
+    background: var(--canvas-texture), var(--bg-canvas);
     color: var(--text-primary);
     color-scheme: dark;
     font-family: var(--font-sans);
@@ -182,7 +184,7 @@
   }
 
   ::selection {
-    background: oklch(from var(--ochre-400) l c h / 32%);
+    background: var(--selection);
   }
 
   body {

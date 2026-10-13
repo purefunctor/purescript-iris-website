@@ -33,6 +33,7 @@ styles =
   StyleX.create
     { page:
         { backgroundColor: "var(--bg-canvas)"
+        , backgroundImage: "var(--canvas-texture)"
         , color: "var(--text-primary)"
         , fontFamily: "var(--font-sans)"
         , fontSize: 15

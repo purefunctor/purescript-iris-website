@@ -16,7 +16,7 @@ styles =
         }
     , list: { paddingInlineStart: 22, display: "flex", flexDirection: "column", gap: 10 }
     , link:
-        { color: { default: "var(--accent-text)", ":hover": "var(--iris-200)" }
+        { color: { default: "var(--accent-text)", ":hover": "var(--signal-200)" }
         , textUnderlineOffset: 4
         , outlineColor: "var(--focus-ring)"
         }

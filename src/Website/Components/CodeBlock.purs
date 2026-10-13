@@ -83,7 +83,7 @@ styles =
     , code: { display: "block" }
     , line: { display: "flex", paddingInline: 18 }
     , highlighted:
-        { backgroundColor: "var(--syn-highlight)", boxShadow: "inset 2px 0 0 var(--ochre-400)" }
+        { backgroundColor: "var(--syn-highlight)", boxShadow: "inset 2px 0 0 var(--yellow-400)" }
     , lineNumber:
         { color: "var(--syn-line-number)"
         , flexShrink: 0

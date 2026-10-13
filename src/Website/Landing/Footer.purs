@@ -44,8 +44,7 @@ columns =
 styles =
   StyleX.create
     { footer:
-        { backgroundColor: "var(--bg-canvas)"
-        , borderBlockStartColor: "var(--border-subtle)"
+        { borderBlockStartColor: "var(--border-subtle)"
         , borderBlockStartStyle: "solid"
         , borderBlockStartWidth: 1
         }
