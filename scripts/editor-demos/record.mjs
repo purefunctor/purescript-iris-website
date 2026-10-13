@@ -24,7 +24,16 @@ const [speed, crf] = cap ? [cap.speed, cap.crf] : [0.75, 23];
 let recording;
 // Pointer and keyboard actions in the current take, in seconds since capture started. Cap zooms toward them.
 let actions = [], epoch;
-const mark = (x, y, detail = {}) => epoch && actions.push({ t: (Date.now() - epoch) / 1000, x, y, ...detail });
+const mark = (x, y, detail = {}) => epoch && actions.push(wide
+  ? { t: (Date.now() - epoch) / 1000, action: 'overview' }
+  : { t: (Date.now() - epoch) / 1000, x, y, ...detail });
+// Actions inside `overview` show the whole editor rather than zooming in.
+let wide = false;
+async function overview(action) {
+  wide = true;
+  mark();
+  try { await action(); } finally { wide = false; }
+}
 // Keyboard work keeps the focus at the last pointer action.
 const pointer = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
 const focus = () => { const last = pointer(); if (last) mark(last.x, last.y, { action: 'key' }); };
@@ -32,6 +41,17 @@ const focus = () => { const last = pointer(); if (last) mark(last.x, last.y, { a
 // Cap's zoom keeps in frame. A check can name what else it shows with a script returning elements.
 const overlays = ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget',
   '.rename-box'];
+const lines = (...texts) => `[...document.querySelectorAll('.view-line')].filter(line => ${JSON.stringify(texts)}
+  .some(text => line.textContent.replaceAll('\\u00a0', ' ').includes(text)))`;
+// The visible lines from the one containing `from` to the one containing `to`.
+const region = (from, to) => `(() => {
+  const text = line => line.textContent.replaceAll('\\u00a0', ' ');
+  const lines = [...document.querySelectorAll('.view-line')]
+    .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  const start = lines.findIndex(line => text(line).includes(${JSON.stringify(from)}));
+  const end = lines.findIndex((line, i) => i >= start && text(line).includes(${JSON.stringify(to)}));
+  return start < 0 || end < 0 ? [] : lines.slice(start, end + 1).flatMap(line => [...line.querySelectorAll('span span')]);
+})()`;
 const highlights = `document.querySelectorAll('.cdr.wordHighlight, .cdr.wordHighlightStrong, .cdr.wordHighlightText')`;
 
 async function expect(code, message, shows = '[]') {
@@ -191,7 +211,23 @@ async function aside() {
       .find(Boolean) ?? [Math.min(x0, bounds.right - 40), Math.min(y0, bounds.bottom - 40)];
     return { x: Math.round(x * devicePixelRatio), y: Math.round(y * devicePixelRatio) };
   })()`);
-  await move(target.x, target.y, 600);
+  await move(target.x, target.y, 300);
+}
+
+// Scroll with the wheel, as a person would, until the line containing `text` is in the upper part of
+// the editor, or the editor reaches the top of the file.
+async function scrollTo(text) {
+  const visible = `[...document.querySelectorAll('.view-line')].some(line =>
+    line.textContent.replaceAll('\\u00a0', ' ').includes(${JSON.stringify(text)})
+    && line.getBoundingClientRect().top > 60
+    && (line.getBoundingClientRect().top < innerHeight * 0.6
+      || [...document.querySelectorAll('.line-numbers')].some(n => n.textContent.trim() === '1')))`;
+  for (let i = 0; i < 60 && !evaluate(visible); i++) {
+    run('xdotool', ['click', '--repeat', '6', '--delay', '15', '4']);
+    await sleep(20);
+  }
+  if (!evaluate(visible)) throw new Error(`Could not scroll to ${text}`);
+  await sleep(500);
 }
 
 async function type(text) {
@@ -245,35 +281,44 @@ const demos = 'Landing/Demos.purs';
 const factorial = 'Landing/Example/Factorial.purs';
 const cases = {
   async 'inferred-types'() {
-    await prepare(player, 238);
+    const hover = text => `document.querySelector('.monaco-hover')?.innerText.includes(${JSON.stringify(text)})`;
+    await prepare(player, 242);
     await capture('inferred-types', async () => {
       await token('active = props.playing', 'active');
-      await expect(`document.querySelector('.monaco-hover')?.innerText.includes('Boolean')`, 'Local active has inferred Boolean type');
-      await sleep(1800);
-      await token('toggle = props.setPlaying', 'toggle');
-      await expect(`document.querySelector('.monaco-hover')?.innerText.includes('Effect Unit')`, 'Local toggle has inferred Effect Unit type');
+      await expect(hover('Boolean'), 'Local active has inferred Boolean type');
+      await sleep(1500);
+      await token('active = props.playing', 'props');
+      await expect(hover('setPlaying :: (Boolean -> Boolean) -> Effect Unit'), 'Component props have an inferred record type');
+      await sleep(2000);
+      await token('setTime { current, duration }', 'setTime');
+      await expect(hover('{ current :: Number, duration :: Number } -> Effect Unit'), 'State setter has an inferred type');
       await sleep(1800);
     });
   },
   async rename() {
-    await prepare(player, 241);
+    // The `onTime` handler's `current` parameter shadows the component's `current` binding and is
+    // passed on through a record pun. Renaming it must leave the outer binding and the label alone.
+    const handler = '\\current duration -> setTime { current, duration }';
+    const renamed = '\\seconds duration -> setTime { current: seconds, duration }';
+    await prepare(player, 242);
     await capture('rename', async () => {
-      await token('    controls =', 'controls', 'click');
+      await token(`onTime: ${handler}`, 'current', 'click');
       press('F2');
       await sleep(500);
       await aside();
-      browser('fill', '.rename-box input', 'controlProps');
+      browser('fill', '.rename-box input', 'seconds');
       await sleep(900);
       press('Enter');
-      await expect(`document.querySelector('.view-lines')?.textContent.includes('controlProps') && document.querySelector('.view-lines')?.textContent.includes('styles.controls')`, 'Local rename leaves styles.controls unchanged');
+      await expect(`${lines(renamed)}.length === 1 && ${lines('current = shown == props.src')}.length === 1`,
+        'Rename expands the pun and leaves the shadowed binding', lines(renamed, 'current = shown == props.src'));
+      await sleep(1800);
     });
     press('Control+s');
     await sleep(500);
     const text = readFileSync(`${tools}/iris-website/src/Website/${player}`, 'utf8');
-    const expected = readFileSync(`${root}/src/Website/${player}`, 'utf8')
-      .replace('\n    controls =\n', '\n    controlProps =\n').replace('\n            controls\n', '\n            controlProps\n');
-    if (text !== expected) throw new Error('Rename missed a reference or changed a field');
-    await prepare(player, 241);
+    const expected = readFileSync(`${root}/src/Website/${player}`, 'utf8').replace(handler, renamed);
+    if (text !== expected) throw new Error('Rename changed more than the shadowing parameter and its pun');
+    await prepare(player, 242);
   },
   async 'document-highlights'() {
     await prepare(player, 238);
@@ -340,8 +385,9 @@ const cases = {
       await sleep(1600);
       press('Enter');
       await sleep(1100);
-      press('Control+Home');
-      await expect(`document.querySelector('.view-lines')?.textContent.includes('import Data.Maybe (fromMaybe)')`, 'Completion adds the Data.Maybe import');
+      await overview(() => scrollTo('import Data.Maybe (fromMaybe)'));
+      await expect(`${lines('import Data.Maybe (fromMaybe)')}.length === 1`, 'Completion adds the Data.Maybe import',
+        lines('import Data.Maybe (fromMaybe)'));
       await token('import Data.Maybe (fromMaybe)', 'fromMaybe');
     });
     await prepare(demos, 160);
@@ -393,39 +439,34 @@ const cases = {
     const settings = JSON.parse(readFileSync(path, 'utf8'));
     settings['editor.semanticHighlighting.enabled'] = false;
     writeFileSync(path, JSON.stringify(settings, null, 2));
-    await prepare('Components/CopyButton.purs', 22);
-    const colors = `(() => {
-      const line = [...document.querySelectorAll('.view-line')].find(e => e.textContent.replaceAll('\u00a0', ' ').includes('copyButton { label, size, text }'));
-      return [...line.querySelectorAll('span span')].map(e => [e.textContent, getComputedStyle(e).color]);
-    })()`;
+    await prepare(player, 242);
+    // The player's effect: binders, labels, qualifiers and a lambda, all of which semantic tokens recolour.
+    const code = region('Hooks.useEffectOnce do', 'onVisible: setVisible');
+    const colors = `${code}.map(e => [e.textContent, getComputedStyle(e).color, getComputedStyle(e).fontStyle])`;
     const before = evaluate(colors);
-    const setting = `[document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.closest('.setting-item-contents')].filter(Boolean)`;
-    // The definition whose parameters change colour, up to the next blank line.
-    const definition = `(() => {
-      const text = line => line.textContent.replaceAll('\u00a0', ' ');
-      const lines = [...document.querySelectorAll('.view-line')]
-        .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-      const start = lines.findIndex(line => text(line).includes('copyButton { label, size, text }'));
-      const end = lines.findIndex((line, i) => i > start && !text(line).trim());
-      return lines.slice(start, end < 0 ? undefined : end).flatMap(line => [...line.querySelectorAll('span span')]);
-    })()`;
+    if (!before.length) throw new Error('The player effect is not visible');
     await capture('semantic-highlighting', async () => {
       await sleep(1500);
-      await command('Preferences: Open Settings (UI)');
-      press('Control+a');
-      browser('keyboard', 'inserttext', '@id:editor.semanticHighlighting.enabled');
-      await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'false'`, 'Semantic highlighting starts disabled', setting);
-      await click('select[aria-label="editor.semanticHighlighting.enabled"]');
-      await sleep(800);
-      press('Home');
-      press('Enter');
-      await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'true'`, 'Semantic highlighting is enabled through Settings', setting);
-      await sleep(900);
-      press('Escape');
-      await expect(`JSON.stringify(${colors}) !== ${JSON.stringify(JSON.stringify(before))}`, 'Iris semantic tokens change the parameter colours', definition);
-      await sleep(1600);
+      await overview(async () => {
+        await command('Preferences: Open Settings (UI)');
+        press('Control+a');
+        browser('keyboard', 'inserttext', '@id:editor.semanticHighlighting.enabled');
+        await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'false'`, 'Semantic highlighting starts disabled');
+        await click('select[aria-label="editor.semanticHighlighting.enabled"]');
+        await sleep(800);
+        press('Home');
+        press('Enter');
+        await expect(`document.querySelector('select[aria-label="editor.semanticHighlighting.enabled"]')?.value === 'true'`, 'Semantic highlighting is enabled through Settings');
+        await sleep(900);
+        press('Escape');
+        // The editor recolours as soon as the setting changes; zoom in once the dialog has closed.
+        await sleep(700);
+      });
+      await expect(`JSON.stringify(${colors}) !== ${JSON.stringify(JSON.stringify(before))}`, 'Iris semantic tokens recolour the player effect', code);
+      await sleep(2400);
     });
   },
+
 };
 
 mkdirSync(output, { recursive: true });

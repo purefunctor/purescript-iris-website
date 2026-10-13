@@ -26,7 +26,7 @@ inferredTypes :: Demo
 inferredTypes =
   { slug: "inferred-types"
   , title: "Inferred local types"
-  , description: "Hover shows the inferred types of local values, with no annotations required."
+  , description: "Hover shows inferred types for local bindings and the expressions that use them, with no annotations required."
   }
 
 typeIntelligence :: Array Demo
@@ -34,7 +34,7 @@ typeIntelligence =
   [ inferredTypes
   , { slug: "rename"
     , title: "Scope-aware rename"
-    , description: "Renames follow scope, leaving a similarly named style field untouched."
+    , description: "Renaming a parameter follows its scope: the binding it shadows keeps its name, and its record pun expands."
     }
   , { slug: "live-diagnostics"
     , title: "Live diagnostics"
