@@ -45,6 +45,7 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
     label: color("syn-label"),
     parameter: color("syn-parameter"),
     namespace: color("syn-namespace"),
+    declaration: color("syn-declaration"),
     // Like the site's tokenizer, constructors share the type color.
     constructor: color("syn-type"),
   };
@@ -340,8 +341,8 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
         parameter: { foreground: syntax.parameter, italic: true },
         variable: syntax.text,
         property: syntax.label,
-        function: syntax.function,
-        method: syntax.function,
+        function: syntax.declaration,
+        method: syntax.declaration,
         keyword: syntax.keyword,
         string: syntax.string,
         number: syntax.number,

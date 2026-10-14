@@ -2,7 +2,8 @@ module Website.Landing.Demos (component) where
 
 import Prelude
 
-import Data.Array (index, length, mapWithIndex)
+import Data.Array (findLastIndex, index, length, mapWithIndex)
+import Data.Foldable (for_)
 import Data.Maybe (fromMaybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
@@ -17,77 +18,84 @@ import Website.Components.VideoPlayer as VideoPlayer
 import Website.Landing.Section as Section
 import Yoga.React.DOM as DOM
 
-type Demo = { slug :: String, title :: String, description :: String }
+-- | A feature's chapter in the trailer. `at` is where its card enters, in seconds, as printed by
+-- | `scripts/editor-demos/trailer/render.mjs`.
+type Chapter = { title :: String, description :: String, at :: Number }
 
-mediaPath :: String -> String
-mediaPath slug = "/editor-demos/" <> slug <> ".mp4"
+-- | The trailer in AV1, for browsers that decode it, and in H.264 for the rest. Both come from
+-- | `scripts/editor-demos/trailer/render.mjs`.
+trailer :: Array { src :: String, type :: String }
+trailer =
+  [ { src: "/editor-demos/trailer-av1.mp4", type: "video/mp4; codecs=\"av01.0.09M.08\"" }
+  , { src: "/editor-demos/trailer.mp4", type: "video/mp4; codecs=\"avc1.64002A\"" }
+  ]
 
-inferredTypes :: Demo
-inferredTypes =
-  { slug: "inferred-types"
-  , title: "Inferred local types"
+semanticHighlighting :: Chapter
+semanticHighlighting =
+  { title: "Semantic highlighting"
   , description:
-      "Hover shows the inferred types of local bindings and the names used in expressions, with no annotations required."
+      "Names are coloured by their role, such as declarations, record labels, module qualifiers and bindings."
+  , at: 5.3
   }
 
-typeIntelligence :: Array Demo
-typeIntelligence =
-  [ inferredTypes
-  , { slug: "rename"
-    , title: "Scope-aware rename"
-    , description:
-        "Renames follow scope, changing every reference to a binding and nothing that merely shares its name."
+reading :: Array Chapter
+reading =
+  [ semanticHighlighting
+  , { title: "Go to definition"
+    , description: "Names jump to their declarations, in the project or its dependencies."
+    , at: 15.9
     }
-  , { slug: "live-diagnostics"
-    , title: "Live diagnostics"
+  , { title: "Hover"
+    , description:
+        "Hover shows inferred types, signatures and documentation, for names and operators alike."
+    , at: 18.9
+    }
+  , { title: "Document highlights"
+    , description: "Selecting a name highlights every reference to the same binding in the file."
+    , at: 32.1
+    }
+  , { title: "Document symbols"
+    , description: "Declarations in the current file are searchable by name."
+    , at: 35.5
+    }
+  , { title: "Find references"
+    , description: "Every use of a name is found across the workspace."
+    , at: 40.8
+    }
+  , { title: "Workspace symbols"
+    , description: "Declarations across the whole project are searchable by name."
+    , at: 46.4
+    }
+  ]
+
+writing :: Array Chapter
+writing =
+  [ { title: "Rename"
+    , description:
+        "Renames follow scope, and update a constructor, type or value in every module that uses it, qualified or not."
+    , at: 51.0
+    }
+  , { title: "Automatic imports"
+    , description: "Completing a name from another module adds its import."
+    , at: 69.0
+    }
+  , { title: "Completion"
+    , description: "Completion offers every name in scope, including local bindings."
+    , at: 79.5
+    }
+  , { title: "Typed holes"
+    , description: "Typed holes suggest names in scope that fit the expected type."
+    , at: 82.3
+    }
+  , { title: "Diagnostics"
     , description:
         "Type errors appear and clear on unsaved edits; on-change diagnostics are opt-in."
-    }
-  , { slug: "document-highlights"
-    , title: "Document highlights"
-    , description: "Selecting a name highlights every reference to the same binding in the file."
-    }
-  , { slug: "semantic-highlighting"
-    , title: "Semantic highlighting"
-    , description:
-        "Names are coloured by their role, such as parameters, record labels, modules, functions and types."
+    , at: 87.9
     }
   ]
 
-workflows :: Array Demo
-workflows =
-  [ { slug: "completion"
-    , title: "Completion"
-    , description: "Completion offers every name in scope, including local bindings."
-    }
-  , { slug: "typed-hole-suggestions"
-    , title: "Typed-hole suggestions"
-    , description: "Typed holes suggest names in scope that fit the expected type."
-    }
-  , { slug: "automatic-import"
-    , title: "Automatic imports"
-    , description: "Completing a name from another module adds its import."
-    }
-  , { slug: "go-to-definition"
-    , title: "Go to definition"
-    , description: "Names jump to their declarations, in the project or its dependencies."
-    }
-  , { slug: "find-references"
-    , title: "Find references"
-    , description: "Every use of a name is found across the workspace."
-    }
-  , { slug: "document-symbols"
-    , title: "Document symbols"
-    , description: "Declarations in the current file are searchable by name."
-    }
-  , { slug: "workspace-symbols"
-    , title: "Workspace symbols"
-    , description: "Declarations across the whole project are searchable by name."
-    }
-  ]
-
-demos :: Array Demo
-demos = typeIntelligence <> workflows
+chapters :: Array Chapter
+chapters = reading <> writing
 
 styles =
   StyleX.create
@@ -155,13 +163,17 @@ styleProps = StyleX.recordProps styles
 
 component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks.do
-  selected /\ setSelected <- Hooks.useState 0
-  -- Recordings wait for the visitor's first play or selection.
+  time /\ setTime <- Hooks.useState' 0.0
+  -- The trailer waits for the visitor's first play or chapter selection.
   playing /\ setPlaying <- Hooks.useState false
+  seek /\ setSeek <- Hooks.useState { request: 0, time: 0.0 }
   let
-    demo = fromMaybe inferredTypes (index demos selected)
-    select number = do
-      setSelected (const number)
+    -- The opening titles belong to the first chapter.
+    selected = fromMaybe 0 (findLastIndex (\chapter -> chapter.at <= time) chapters)
+    chapter = fromMaybe semanticHighlighting (index chapters selected)
+    select number = for_ (index chapters number) \{ at } -> do
+      setSeek \{ request } -> { request: request + 1, time: at }
+      setTime at
       setPlaying (const true)
   pure
     $ DOM.section
@@ -181,41 +193,38 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
                     styleProps.playerColumn
                     [ element
                         VideoPlayer.component
-                        { label: demo.title <> " recording"
-                        , onEnded: setSelected \current -> (current + 1) `mod` length demos
+                        { label: "Iris language server demo in Visual Studio Code"
+                        , onEnded: setPlaying (const false)
+                        , onTime: setTime
                         , playing
-                        , poster: if selected == 0 then "/editor-demos/inferred-types.webp" else ""
+                        , poster: "/editor-demos/trailer.webp"
+                        , seek
                         , setPlaying
-                        , src: mediaPath demo.slug
+                        , sources: trailer
                         }
                     , DOM.div
                         styleProps.caption
-                        [ DOM.h3 styleProps.captionTitle demo.title
-                        , DOM.p styleProps.captionDescription demo.description
+                        [ DOM.h3 styleProps.captionTitle chapter.title
+                        , DOM.p styleProps.captionDescription chapter.description
                         ]
                     ]
                 , DOM.div
                     styleProps.groups
-                    [ group "Type intelligence" 0 typeIntelligence selected select
-                    , group
-                        "Navigation and editing"
-                        (length typeIntelligence)
-                        workflows
-                        selected
-                        select
+                    [ group "Reading code" 0 reading selected select
+                    , group "Writing code" (length reading) writing selected select
                     ]
                 ]
             ]
         ]
 
-group :: String -> Int -> Array Demo -> Int -> (Int -> Effect Unit) -> JSX
+group :: String -> Int -> Array Chapter -> Int -> (Int -> Effect Unit) -> JSX
 group title offset items selected select =
   DOM.div
     {}
     [ DOM.h3 styleProps.groupTitle title
     , DOM.ol styleProps.list
         $ mapWithIndex
-            ( \position demo ->
+            ( \position chapter ->
                 let
                   number = offset + position
                   current = number == selected
@@ -232,7 +241,7 @@ group title offset items selected select =
                         , onClick: handler_ (select number)
                         }
                         [ DOM.span styleProps.number (show (number + 1))
-                        , DOM.span styleProps.title demo.title
+                        , DOM.span styleProps.title chapter.title
                         ]
                     ]
             )

@@ -53,6 +53,8 @@ writeFileSync(`${tools}/profile/User/settings.json`, JSON.stringify({
   'editor.hover.delay': 350,
   'editor.cursorBlinking': 'solid',
   'editor.autoClosingQuotes': 'never',
+  // New lines keep the previous line's indentation, so typed code indents predictably.
+  'editor.autoIndent': 'keep',
   'editor.autoClosingBrackets': 'never',
   'editor.autoSurround': 'never',
   'editor.quickSuggestions': false,
@@ -75,7 +77,6 @@ writeFileSync(`${tools}/profile/User/settings.json`, JSON.stringify({
   'update.mode': 'none',
   'extensions.autoUpdate': false,
   'iris.client.serverPath': `${tools}/iris-wrapper.sh`,
-  'iris.server.diagnostics.onChange': true,
   'files.exclude': { '**/.spago': true, '**/node_modules': true, '**/output': true },
 }, null, 2));
 const quote = s => `'${s.replaceAll("'", "'\\''")}'`;

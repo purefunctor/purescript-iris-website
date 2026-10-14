@@ -23,7 +23,7 @@ foreign import canHover :: Effect Boolean
 foreign import formatTime :: Number -> String
 foreign import wholeSeconds :: Number -> Int
 foreign import setPlayback :: Ref (Nullable Element) -> Boolean -> Effect Unit
-foreign import after :: Int -> Effect Unit -> Effect (Effect Unit)
+foreign import seekTo :: Ref (Nullable Element) -> Number -> Effect Unit
 foreign import toggleFullscreen ::
   { frame :: Ref (Nullable Element), video :: Ref (Nullable Element) } -> Effect Unit
 
@@ -32,7 +32,6 @@ foreign import observePlayer ::
   , frame :: Ref (Nullable Element)
   , onEnded :: Effect Unit
   , onFullscreen :: Boolean -> Effect Unit
-  , onLoaded :: Effect Unit
   , onTime :: Number -> Number -> Effect Unit
   , onToggle :: Effect Unit
   , onVisible :: Boolean -> Effect Unit
@@ -41,19 +40,19 @@ foreign import observePlayer ::
   } -> Effect (Effect Unit)
 
 -- | A muted recording with custom controls. The caller owns the playing intent so that it can
--- | reflect it elsewhere; playback also waits until the player is on screen.
+-- | reflect it elsewhere; playback also waits until the player is on screen. `onTime` reports the
+-- | playback position, and each new `seek.request` moves it to `seek.time`. The browser plays the
+-- | first of `sources` whose `type` it supports, so list the most efficient encoding first.
 type VideoPlayer =
   { label :: String
   , onEnded :: Effect Unit
+  , onTime :: Number -> Effect Unit
   , playing :: Boolean
   , poster :: String
+  , seek :: { request :: Int, time :: Number }
   , setPlaying :: (Boolean -> Boolean) -> Effect Unit
-  , src :: String
+  , sources :: Array { src :: String, type :: String }
   }
-
--- | How long the outgoing recording blurs before its source is replaced; matches `blurred`.
-blurOut :: Int
-blurOut = 160
 
 styles =
   StyleX.create
@@ -74,29 +73,7 @@ styles =
         , inset: 0
         , objectFit: "contain"
         , position: "absolute"
-        , transitionDuration: "260ms"
-        , transitionProperty: "opacity"
-        , transitionTimingFunction: "var(--ease-out)"
         , width: "100%"
-        }
-    , videoBlurred: { opacity: 0.5, transitionDuration: "160ms" }
-    -- Switching recordings blurs the outgoing frame, then the incoming recording unblurs once its
-    -- first frame has loaded. A backdrop filter extends the frame's edges rather than fading them
-    -- into the letterbox as a filter on the video would.
-    , blur:
-        { "WebkitBackdropFilter": "blur(0px)"
-        , backdropFilter: "blur(0px)"
-        , inset: 0
-        , pointerEvents: "none"
-        , position: "absolute"
-        , transitionDuration: "260ms"
-        , transitionProperty: "backdrop-filter, -webkit-backdrop-filter"
-        , transitionTimingFunction: "var(--ease-out)"
-        }
-    , blurred:
-        { "WebkitBackdropFilter": "blur(12px)"
-        , backdropFilter: "blur(12px)"
-        , transitionDuration: "160ms"
         }
     -- Controls fade out during playback unless the player is hovered or holds keyboard focus;
     -- focus left behind by a mouse click does not keep them visible.
@@ -225,12 +202,8 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
   fullscreen /\ setFullscreen <- Hooks.useState' false
   visible /\ setVisible <- Hooks.useState' false
   hoverable /\ setHoverable <- Hooks.useState' true
-  -- The source on the element trails props.src while the outgoing recording blurs.
-  shown /\ setShown <- Hooks.useState' props.src
-  blurred /\ setBlurred <- Hooks.useState' false
   let
     active = props.playing && visible
-    current = shown == props.src
     toggle = props.setPlaying not
     controls =
       StyleX.props
@@ -245,31 +218,19 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
       , frame
       , onEnded: props.onEnded
       , onFullscreen: setFullscreen
-      , onLoaded: setBlurred false
-      , onTime: \current duration -> setTime { current, duration }
+      , onTime: \current duration -> setTime { current, duration } *> props.onTime current
       , onToggle: toggle
       , onVisible: setVisible
       , slider
       , video
       }
 
-  -- Returning to the shown recording mid-blur, or reducing motion, skips the transition.
-  Hooks.useEffect props.src do
-    reduced <- prefersReducedMotion
-    if current || reduced
-    then do
-      setBlurred false
-      setShown props.src
-      pure (pure unit)
-    else do
-      setBlurred true
-      after blurOut (setShown props.src)
+  Hooks.useEffect props.seek.request do
+    when (props.seek.request > 0) $ seekTo video props.seek.time
+    pure (pure unit)
 
-  -- The outgoing recording holds its frame while it blurs. An incoming recording that will not
-  -- load until played unblurs straight away.
-  Hooks.useEffect (shown /\ props.src /\ active) do
-    setPlayback video (active && current)
-    when (current && not active) (setBlurred false)
+  Hooks.useEffect active do
+    setPlayback video active
     pure (pure unit)
 
   pure
@@ -279,20 +240,24 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
         }
         [ createBuiltinElement
             "video"
-            { className:
-                ( StyleX.props [ styles.video, StyleX.conditional blurred styles.videoBlurred ]
-                ).className
+            { className: styleProps.video.className
             , ref: DOM.reactRef video
             , muted: true
             , playsInline: true
             , poster: props.poster
             , preload: "none"
-            , src: shown
             , "aria-label": props.label
             , onClick: handler_ toggle
             }
-            []
-        , DOM.div (StyleX.props [ styles.blur, StyleX.conditional blurred styles.blurred ]) []
+            ( map
+                ( \source ->
+                    createBuiltinElement
+                      "source"
+                      { key: source.src, src: source.src, type: source.type }
+                      []
+                )
+                props.sources
+            )
         , DOM.div
             controls
             [ mediaButton

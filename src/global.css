@@ -123,10 +123,12 @@
     --syn-operator: var(--granite-300);
     --syn-punct: var(--granite-400);
     --syn-line-number: var(--granite-500);
-    /* Semantic roles, used by the editor demos' theme. */
-    --syn-label: oklch(from var(--yellow-300) calc(l - 0.06) calc(c - 0.045) h);
-    --syn-parameter: var(--spectrum-violet);
-    --syn-namespace: var(--spectrum-blue);
+    /* Semantic roles, used by the editor demos' theme and the trailer's captions. They carry more
+       chroma than the site's code colors, so semantic tokens visibly light up the code. */
+    --syn-label: oklch(from var(--yellow-300) calc(l - 0.05) calc(c + 0.03) calc(h - 12));
+    --syn-parameter: oklch(from var(--spectrum-violet) calc(l - 0.02) calc(c + 0.09) h);
+    --syn-namespace: oklch(from var(--spectrum-blue) l calc(c + 0.08) h);
+    --syn-declaration: oklch(from var(--cyan-300) l calc(c + 0.045) h);
     --syn-highlight: oklch(from var(--signal-400) l c h / 9%);
     --shadow-glass: inset 0 1px 0 var(--glass-highlight), 0 14px 40px -14px oklch(0% 0 0 / 55%);
     --shadow-focus: 0 0 0 2px var(--granite-900), 0 0 0 4px var(--focus-ring);

@@ -12,7 +12,8 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-const width = 1920, height = 1080;
+// The recording display, which launch.sh sizes from IRIS_DEMO_SCALE: 1080p by default.
+export const [width, height] = { 150: [1920, 1080], 200: [2560, 1440], 300: [3840, 2160] }[process.env.IRIS_DEMO_SCALE || 150];
 const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
 const command = (process.env.IRIS_DEMO_CAP || `${tools}/cap-cli`).split(' ');
 // Takes play at 85% of captured speed, against 75% for FFmpeg takes without zoom. Zoom and motion
@@ -52,7 +53,8 @@ const travel = (p, amount) => Math.min(1, Math.max(0, (p - 0.5 / amount) / (1 - 
 // What an action needs in view: the pointer and any overlays logged with it, as [left, top, right, bottom].
 function box(action) {
   const boxes = [...action.boxes ?? []];
-  if (action.x !== undefined) boxes.push([action.x - 24, action.y - 24, action.x + 24, action.y + 24]);
+  const reach = 24 * width / 1920;
+  if (action.x !== undefined) boxes.push([action.x - reach, action.y - reach, action.x + reach, action.y + reach]);
   if (!boxes.length) return undefined;
   const [left, top] = [0, 1].map(i => Math.max(0, Math.min(...boxes.map(b => b[i]))));
   return [left, top, Math.min(width, Math.max(...boxes.map(b => b[2]))), Math.min(height, Math.max(...boxes.map(b => b[3])))];
@@ -63,34 +65,56 @@ const union = (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[
 // current framing for `hold` seconds when the framing can include it without zooming out, or
 // widens it from the start when its own framing contains the current one; otherwise the camera
 // moves to a framing of its own. Framings that cannot zoom past `minimum`
-// show the whole editor, as does an action with nothing to show. The last segment ends early
-// enough for the zoom out to settle.
-export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, margin = 48, hold = 2.4, settle = 1 } = {}) {
+// show the whole editor, as does an action with nothing to show. A framing holds across a pause of
+// up to `bridge` seconds before the next one. The last segment ends early enough for the zoom out
+// to settle.
+export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, margin = 48 * width / 1920, hold = 3, settle = 1, bridge = 2 } = {}) {
   const zoom = b => Math.min(amount, width / (b[2] - b[0] + 2 * margin), height / (b[3] - b[1] + 2 * margin));
   const runs = [];
   for (const a of actions) {
     const last = runs.at(-1);
+    // A new feature starts a framing of its own: the camera pans to it rather than widening the
+    // previous feature's framing to include it.
+    if (a.action === 'beat') {
+      if (last) last.split = true;
+      continue;
+    }
+    // A steady stretch holds one given framing, however its actions move within it.
+    if (a.action === 'steady') {
+      if (last?.steady && last.box.join() === a.box.join()) {
+        last.end = Math.max(last.end, a.t + hold);
+        continue;
+      }
+      if (last && !last.closed && a.t - last.end < bridge) last.end = a.t;
+      else if (last) last.end = Math.min(last.end, a.t);
+      runs.push({ start: a.t, end: a.t + hold, box: a.box, zoom: a.zoom, steady: true });
+      continue;
+    }
     const b = box(a);
     if (!b) {
-      if (last) last.end = Math.min(last.end, a.t);
+      // An action with nothing to show, such as `overview`, zooms out on purpose.
+      if (last) Object.assign(last, { end: Math.min(last.end, a.t), closed: true });
       continue;
     }
     // Overlays are logged once visible; the pointer is logged on arrival, after its move began.
     const start = a.t - (a.action === 'ui' ? 0.2 : 0.5);
-    const joined = last && start < last.end && union(last.box, b);
+    const joined = last && !last.split && start < last.end && union(last.box, b);
     if (joined && zoom(joined) >= last.zoom - 0.05) {
       Object.assign(last, { box: joined, zoom: zoom(joined), end: Math.max(last.end, a.t + hold) });
       continue;
     }
     // A wider framing that still shows everything the current one does replaces it from its start,
     // so the camera settles once instead of moving out partway.
-    const contains = last && start < last.end && b[0] <= last.box[0] && b[1] <= last.box[1]
+    const contains = last && !last.split && start < last.end && b[0] <= last.box[0] && b[1] <= last.box[1]
       && b[2] >= last.box[2] && b[3] >= last.box[3];
     if (contains) {
       Object.assign(last, { box: b, zoom: zoom(b), end: Math.max(last.end, a.t + hold) });
       continue;
     }
-    if (last) last.end = Math.min(last.end, start);
+    // A short pause between two framings holds the first until the camera moves to the next, rather
+    // than zooming out and straight back in.
+    if (last && !last.closed && start - last.end < bridge) last.end = start;
+    else if (last) last.end = Math.min(last.end, start);
     runs.push({ start, end: a.t + hold, box: b, zoom: zoom(b) });
   }
   return runs
