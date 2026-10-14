@@ -243,46 +243,42 @@ async function aside() {
   await move(target.x, target.y, 300);
 }
 
-// Scroll by dragging the editor's scrollbar thumb, like a quick pull on a desktop scrollbar: an eased
-// drag that overshoots a little and settles, so that `line` (1-based) ends at fraction `at` of the
-// editor's height.
-async function dragScroll(line, at = 0.45) {
-  const geometry = evaluate(`(() => {
+// One swift, eased scroll that ends with `line` (1-based) at fraction `at` of the editor's height, or
+// as near as the ends of the file allow. The page animates it itself, a wheel event per frame, with
+// VS Code's own smooth scrolling off so that each event applies at once. Monaco scrolls a synthetic
+// wheel event's wheelDeltaY / 120 × 50 pixels, and Chrome sets wheelDeltaY to the event's deltaY.
+async function smoothScroll(line, at = 0.45, duration = 700) {
+  evaluate(`new Promise(resolve => {
     const scrollable = [...document.querySelectorAll('.monaco-editor .monaco-scrollable-element.editor-scrollable')]
       .find(e => e.checkVisibility());
-    const track = scrollable.querySelector(':scope > .scrollbar.vertical').getBoundingClientRect();
-    const slider = scrollable.querySelector(':scope > .scrollbar.vertical > .slider').getBoundingClientRect();
-    const view = scrollable.getBoundingClientRect();
-    const lineHeight = scrollable.querySelector('.view-line').getBoundingClientRect().height;
-    return { track: [track.left, track.top, track.width, track.height], slider: [slider.top, slider.height],
-      view: view.height, lineHeight, scale: devicePixelRatio };
-  })()`);
-  const { track: [left, top, trackWidth, trackHeight], slider: [sliderTop, sliderHeight], view, lineHeight, scale } = geometry;
-  // The thumb covers the viewport's share of the content and travels linearly with the scroll position.
-  const content = view * trackHeight / sliderHeight;
-  const travel = trackHeight - sliderHeight;
-  const target = Math.min(content - view, Math.max(0, (line - 1) * lineHeight - at * view + lineHeight / 2));
-  const to = top + target / (content - view) * travel;
-  const x = Math.round((left + trackWidth / 2) * scale);
-  const from = sliderTop + sliderHeight / 2;
-  await move(x, Math.round(from * scale), 450);
-  mark(x, Math.round(from * scale), { action: 'click' });
-  run('xdotool', ['mousedown', '1']);
-  await sleep(80);
-  // Ease out past the target by a tenth of the distance, then settle back onto it.
-  const delta = to + sliderHeight / 2 - from;
-  const duration = 620, steps = Math.round(duration / 16), start = Date.now();
-  for (let i = 1; i <= steps; i++) {
-    const t = i / steps;
-    const eased = 1 - (1 - Math.min(1, t / 0.7)) ** 3;
-    const y = from + delta * (t < 0.7 ? eased * 1.1 : 1 + 0.1 * (1 - smoothstep((t - 0.7) / 0.3)));
-    run('xdotool', ['mousemove', String(x), String(Math.round(y * scale))]);
-    await sleep(Math.max(0, start + duration * t - Date.now()));
-  }
-  run('xdotool', ['mouseup', '1']);
-  await sleep(350);
+    // How many pixels below fraction at of the editor the line sits; negative when above it.
+    const offset = () => {
+      const view = scrollable.getBoundingClientRect();
+      const [number, r] = [...scrollable.closest('.monaco-editor').querySelectorAll('.line-numbers')]
+        .map(e => [Number(e.textContent), e.getBoundingClientRect()])
+        .filter(([n, r]) => n > 0 && r.height > 0)
+        .sort((a, b) => a[1].top - b[1].top)[0];
+      return r.top + (${line} - number + 0.5) * r.height - view.top - ${at} * view.height;
+    };
+    const wheel = pixels => {
+      const r = scrollable.getBoundingClientRect();
+      scrollable.dispatchEvent(new WheelEvent('wheel', { deltaY: -pixels * 120 / 50, deltaMode: 0, bubbles: true,
+        cancelable: true, clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 }));
+    };
+    const distance = offset(), started = performance.now();
+    let sent = 0;
+    const frame = now => {
+      const t = Math.min(1, (now - started) / ${duration});
+      const eased = t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2;
+      wheel(distance * eased - sent);
+      sent = distance * eased;
+      if (t < 1) requestAnimationFrame(frame);
+      else setTimeout(resolve, 150);
+    };
+    requestAnimationFrame(frame);
+  })`);
+  await sleep(300);
 }
-const smoothstep = t => { const x = Math.min(1, Math.max(0, t)); return x * x * (3 - 2 * x); };
 
 async function type(text) {
   focus();
@@ -385,17 +381,20 @@ let beats = [], captions = [];
 async function quickInput(key) {
   // Pressed without framing the text cursor, so the camera moves once, straight to the quick input.
   browser('press', key);
-  await expect(`document.querySelector('.quick-input-widget')?.checkVisibility()`, 'Quick input opens',
+  // It fades in, so wait until it is opaque enough to be logged as in view.
+  await expect(`document.querySelector('.quick-input-widget')?.checkVisibility({ opacityProperty: true })
+    && getComputedStyle(document.querySelector('.quick-input-widget')).opacity === '1'`, 'Quick input opens',
     `[document.querySelector('.quick-input-widget')]`);
   await sleep(600);
 }
 
-async function beat(slug) {
+async function beat(slug, { continues = false } = {}) {
   // Each feature's result holds on screen for a moment before the next one starts.
   await sleep(500);
   beats.push({ slug, t: (Date.now() - epoch) / 1000 });
-  // Cap's zoom starts a new framing here, so one feature's framing never stretches over the next.
-  if (epoch && !steady) actions.push({ t: (Date.now() - epoch) / 1000, action: 'beat' });
+  // Cap's zoom starts a new framing here, so one feature's framing never stretches over the next,
+  // unless the feature continues in the place, and the framing, where the previous one ended.
+  if (epoch && !steady && !continues) actions.push({ t: (Date.now() - epoch) / 1000, action: 'beat' });
   await sleep(200);
 }
 
@@ -536,12 +535,16 @@ const cases = {
       });
 
       await beat('go-to-definition');
-      await token('element Demos.component {}', 'component', 'click');
-      await sleep(300);
-      press('F12');
-      await expect(`${activeTab('Demos.purs')} && ${shown('component = unsafePerformEffect')}`,
-        'Go to definition opens the demo section component');
-      await sleep(900);
+      // Line 47 sits low, where the feature's caption is, so the camera stays on the whole editor
+      // until the definition opens; hover zooms in from there.
+      await overview(async () => {
+        await token('element Demos.component {}', 'component', 'click');
+        await sleep(300);
+        press('F12');
+        await expect(`${activeTab('Demos.purs')} && ${shown('component = unsafePerformEffect')}`,
+          'Go to definition opens the demo section component');
+        await sleep(900);
+      });
 
       await beat('information-on-hover');
       for (const [line, name, type, rest] of [
@@ -557,8 +560,9 @@ const cases = {
       }
 
       await beat('document-highlights');
-      // The last hover card covers the lambda on the line above.
-      press('Escape');
+      // The last hover card covers the lambda on the line above. Pressed without framing the text
+      // cursor, which is still at the top of the component, so the camera moves once, to the lambda.
+      browser('press', 'Escape');
       await sleep(200);
       await token('(\\chapter -> chapter.at', 'chapter', 'click');
       await expect(`${marks}.length === 2 && ${on('(\\chapter -> chapter.at')} === 2 && ${on('chapter = fromMaybe')} === 0`,
@@ -571,16 +575,15 @@ const cases = {
       await keys('styles', 60);
       await expect(`document.querySelector('.quick-input-list .monaco-list-row.focused')?.innerText.includes('styles')`,
         'Document symbols find the style table');
-      await sleep(600);
-      // The camera returns to the whole editor before the jump, so that the scroll reads.
-      await overview(async () => {
-        await sleep(600);
-        press('Enter');
-        await sleep(300);
-        await dragScroll(lineOf('StyleX.conditionalCase breakpoints.from960'));
-        await expect(shown('StyleX.conditionalCase breakpoints.from960'), 'The style table is in view');
-      });
-      await sleep(400);
+      await sleep(1000);
+      // The camera moves from the quick input straight to the style table, without zooming out: the
+      // jump lands on `styles`, and the editor scrolls on to the layout's breakpoint.
+      browser('press', 'Enter');
+      await sleep(500);
+      await smoothScroll(lineOf('StyleX.conditionalCase breakpoints.from960'), 0.45, 450);
+      await expect(shown('StyleX.conditionalCase breakpoints.from960'), 'The style table is in view',
+        region('layout:', 'StyleX.conditionalCase breakpoints.from960'));
+      await sleep(900);
 
       await beat('find-references');
       await token('StyleX.conditionalCase breakpoints.from960', 'breakpoints', 'click');
@@ -589,12 +592,23 @@ const cases = {
       await expect(`['SiteNav.purs', 'Benchmarks.purs'].every(file => document.querySelector('.peekview-widget')?.innerText.includes(file))`,
         'References to breakpoints span the workspace');
       await sleep(1000);
-      for (let i = 0; i < 3; i++) {
-        press('Down');
-        await sleep(550);
+      // Each module's references are listed under its collapsed entry. Open the next modules' entries
+      // in turn and step onto their first reference, so that the preview shows it, then close them.
+      for (const file of ['Code.purs', 'JavaScript.purs']) {
+        for (const key of ['Down', 'Right', 'Down']) {
+          browser('press', key);
+          await sleep(300);
+        }
+        await expect(`document.querySelector('.peekview-widget .peekview-title')?.innerText.includes(${JSON.stringify(file)})
+          && [...document.querySelectorAll('.peekview-widget .view-line')].some(line => line.textContent.includes('breakpoints.'))`,
+          `The preview shows a reference to breakpoints in ${file}`);
+        await sleep(1300);
+        for (const key of ['Left', 'Left']) {
+          browser('press', key);
+          await sleep(250);
+        }
       }
-      await expect(`document.querySelector('.peekview-widget') !== null`, 'The peek view previews other modules');
-      await sleep(400);
+      await sleep(300);
       press('Escape');
       await sleep(300);
 
@@ -612,12 +626,13 @@ const cases = {
           'Workspace-symbol selection opens Measured in Benchmarks.purs');
         await sleep(400);
       });
+      // The framing leaves room below the declaration for the rename box, so that rename continues in it.
       await expect(shown('type Measured a'), 'The Measured declaration is in view',
-        region('-- | A value for each measurement', 'type Measured a'));
+        region('-- | A value for each measurement', 'tool :: Measured String'));
       await sleep(900);
 
       // Act II: Writing code.
-      await beat('rename');
+      await beat('rename', { continues: true });
       // Type variables rename within their own declaration.
       await token('type Measured a = { cold :: a, hot :: a }', 'a', 'click', 1);
       press('F2');
@@ -667,15 +682,14 @@ const cases = {
       press('Escape');
       await sleep(300);
 
-      // Back to the component's stub.
-      const stub = readFileSync(`${tools}/iris-website/src/Website/${demos}`, 'utf8').split('\n')
-        .findIndex(line => line.includes('select _ = pure unit')) + 1;
-      await clickOn(`document.querySelector('[role="tab"][data-resource-name="Demos.purs"]')`);
-      await expect(activeTab('Demos.purs'), 'The Demos.purs tab returns to the component');
-      await quickInput('Control+g');
-      await keys(String(stub), 60);
-      press('Enter');
-      await expect(shown('select _ = pure unit'), 'The stub handler is in view');
+      // Back to the component's stub, below the style table where Demos.purs was left: the camera shows
+      // the whole editor while the tab returns and the editor scrolls down to it.
+      await overview(async () => {
+        await clickOn(`document.querySelector('[role="tab"][data-resource-name="Demos.purs"]')`);
+        await expect(activeTab('Demos.purs'), 'The Demos.purs tab returns to the component');
+        await smoothScroll(lineOf('select _ = pure unit'), 0.5);
+        await expect(shown('select _ = pure unit'), 'The stub handler is in view');
+      });
       await sleep(400);
 
       // From here to the end the handler is written in place, so one framing holds throughout: the
@@ -709,10 +723,10 @@ const cases = {
         // The import is added after the existing ones, near the top of the file. It scrolls into the
         // same framing, and the handler scrolls back to where it was.
         const staged = readFileSync(`${tools}/iris-website/src/Website/${demos}`, 'utf8').split('\n');
-        await dragScroll(staged.findLastIndex(line => line.startsWith('import ')) + 2, fractionAt(top + frameHeight / 2));
+        await smoothScroll(staged.findLastIndex(line => line.startsWith('import ')) + 2, fractionAt(top + frameHeight / 2));
         await expect(`${lines('import Data.Foldable (for_)')}.length === 1`, 'Completion adds the Data.Foldable import');
         await sleep(1200);
-        await dragScroll(lineOf('select _ = pure unit') + 1, fractionAt(stubAt));
+        await smoothScroll(lineOf('select _ = pure unit') + 1, fractionAt(stubAt));
         await expect(shown('select number = for_'), 'The handler is back in view');
         await keys(' (index chapters number) \\{ at } -> do', 55);
 

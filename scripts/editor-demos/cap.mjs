@@ -92,8 +92,8 @@ export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, m
     }
     const b = box(a);
     if (!b) {
-      // An action with nothing to show, such as `overview`, zooms out on purpose.
-      if (last) Object.assign(last, { end: Math.min(last.end, a.t), closed: true });
+      // `overview` zooms out on purpose. A check that found nothing in view leaves the framing alone.
+      if (a.action === 'overview' && last) Object.assign(last, { end: Math.min(last.end, a.t), closed: true });
       continue;
     }
     // Overlays are logged once visible; the pointer is logged on arrival, after its move began.

@@ -4,6 +4,7 @@
 //   node render.mjs --still 240,1200  single frames, for checking a design
 //   node render.mjs --frames 0-600  a range of frames, for checking motion
 //   node render.mjs --encode        the published encodes again, from the last master
+//   node render.mjs --review rename,completion  review clips of those features, from the last encode
 import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { cpus } from "node:os";
@@ -28,6 +29,9 @@ const { values } = parseArgs({
     "av1-crf": { type: "string", default: "52" },
     // Re-encode the published files from an existing master without rendering it again.
     encode: { type: "boolean", default: false },
+    // Cut the named features, by slug, from the last H.264 encode into out/review, for reviewing
+    // changes to them without watching the whole trailer.
+    review: { type: "string" },
   },
 });
 
@@ -44,6 +48,26 @@ const [takeWidth] = probe("stream=width,height").split(",").map(Number);
 const pace = JSON.parse(readFileSync(`${recordings}/trailer.pace.json`, "utf8"));
 const manifest = { take: { src: "take.mp4", width: takeWidth, duration, ...pace } };
 writeFileSync(`${here}/public/manifest.json`, JSON.stringify(manifest, null, 2));
+
+if (values.review) {
+  const marks = chapters(plan(manifest).markers);
+  const total = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+    `${values.output}/trailer.mp4`], { encoding: "utf8" }));
+  mkdirSync(`${values.output}/review`, { recursive: true });
+  for (const slug of values.review.split(",")) {
+    const index = marks.findIndex((mark) => mark.slug === slug);
+    if (index < 0) throw new Error(`No feature ${slug}; choose from ${marks.map((mark) => mark.slug).join(", ")}`);
+    // From a second before the feature's caption to a second into the next feature.
+    const from = Math.max(0, marks[index].at - 1);
+    const to = Math.min(total, (marks[index + 1]?.at ?? total) + 1);
+    const output = `${values.output}/review/${String(index + 1).padStart(2, "0")}-${slug}.mp4`;
+    execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-ss", String(from), "-to", String(to),
+      "-i", `${values.output}/trailer.mp4`, "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+      "-pix_fmt", "yuv420p", "-movflags", "+faststart", output]);
+    console.log(output);
+  }
+  process.exit(0);
+}
 
 const serveUrl = await bundle({ entryPoint: `${here}/src/index.ts` });
 const inputProps = { manifest };

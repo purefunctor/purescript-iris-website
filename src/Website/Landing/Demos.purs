@@ -60,11 +60,11 @@ reading =
     }
   , { title: "Find references"
     , description: "Every use of a name is found across the workspace."
-    , at: 40.8
+    , at: 41.1
     }
   , { title: "Workspace symbols"
     , description: "Declarations across the whole project are searchable by name."
-    , at: 46.4
+    , at: 50.4
     }
   ]
 
@@ -73,24 +73,24 @@ writing =
   [ { title: "Rename"
     , description:
         "Renames follow scope, and update a constructor, type or value in every module that uses it, qualified or not."
-    , at: 51.0
+    , at: 55.3
     }
   , { title: "Automatic imports"
     , description: "Completing a name from another module adds its import."
-    , at: 69.0
+    , at: 73.7
     }
   , { title: "Completion"
     , description: "Completion offers every name in scope, including local bindings."
-    , at: 79.5
+    , at: 83.5
     }
   , { title: "Typed holes"
     , description: "Typed holes suggest names in scope that fit the expected type."
-    , at: 82.3
+    , at: 86.3
     }
   , { title: "Diagnostics"
     , description:
         "Type errors appear and clear on unsaved edits; on-change diagnostics are opt-in."
-    , at: 87.9
+    , at: 91.9
     }
   ]
 
