@@ -43,6 +43,7 @@ This repository is the Iris website: Astro handles routing and server rendering 
 ### Deployment
 
 - Production is a static Astro build deployed as Cloudflare Workers Static Assets without a Worker script. `public/_headers` owns the static security and cache headers.
+- Static Assets answer Range requests with the whole file, so browsers cannot seek media streamed from it, and Safari does not play it. `Website.Components.VideoPlayer` plays an in-memory copy fetched on demand; development serves ranges, so verify seeking in the production preview.
 
 ## Design constraints
 

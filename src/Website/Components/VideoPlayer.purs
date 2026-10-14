@@ -36,13 +36,15 @@ foreign import observePlayer ::
   , onToggle :: Effect Unit
   , onVisible :: Boolean -> Effect Unit
   , slider :: Ref (Nullable Element)
+  , sources :: Array { src :: String, type :: String }
   , video :: Ref (Nullable Element)
   } -> Effect (Effect Unit)
 
 -- | A muted recording with custom controls. The caller owns the playing intent so that it can
 -- | reflect it elsewhere; playback also waits until the player is on screen. `onTime` reports the
--- | playback position, and each new `seek.request` moves it to `seek.time`. The browser plays the
--- | first of `sources` whose `type` it supports, so list the most efficient encoding first.
+-- | playback position, and each new `seek.request` moves it to `seek.time`. The player plays the
+-- | first of `sources` whose `type` the browser supports, so list the most efficient encoding first.
+-- | It fetches the recording into memory on demand, so that it can seek without Range requests.
 type VideoPlayer =
   { label :: String
   , onEnded :: Effect Unit
@@ -222,6 +224,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
       , onToggle: toggle
       , onVisible: setVisible
       , slider
+      , sources: props.sources
       , video
       }
 
@@ -249,15 +252,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "VideoPlayer" \props -> H
             , "aria-label": props.label
             , onClick: handler_ toggle
             }
-            ( map
-                ( \source ->
-                    createBuiltinElement
-                      "source"
-                      { key: source.src, src: source.src, type: source.type }
-                      []
-                )
-                props.sources
-            )
+            []
         , DOM.div
             controls
             [ mediaButton
