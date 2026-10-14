@@ -135,25 +135,22 @@ styles =
         , transitionTimingFunction: "var(--ease-out)"
         , whiteSpace: "nowrap"
         }
+    -- The current page keeps the base background; only an underline marks it.
     , current:
-        { backgroundColor: { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
-        , color: "var(--signal-200)"
+        { color: "var(--text-primary)"
+        , textDecorationLine: "underline"
+        , textDecorationColor: "var(--accent)"
+        , textDecorationThickness: 1
+        , textUnderlineOffset: 6
         }
     -- Share interaction states; size related controls together rather than every item alike.
     , landingItem:
         { alignSelf: "stretch"
         , backgroundColor:
-            { default: "transparent"
-            , ":hover": "var(--surface-2)"
-            , ":active": "var(--accent-soft)"
-            }
+            { default: "transparent", ":hover": "var(--surface-2)", ":active": "transparent" }
         , borderRadius: 0
         , boxShadow: "none"
-        , color:
-            { default: "var(--text-secondary)"
-            , ":hover": "var(--text-primary)"
-            , ":active": "var(--signal-200)"
-            }
+        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
         , outlineColor: "var(--focus-ring)"
         , outlineOffset: -2
         , outlineStyle: { default: "none", ":focus-visible": "solid" }

@@ -257,8 +257,11 @@ styles =
         }
     -- Keep the regular weight so marking a section never rewraps its title.
     , current:
-        { backgroundColor: { default: "var(--accent-soft)", ":hover": "var(--surface-2)" }
-        , color: "var(--signal-200)"
+        { color: "var(--text-primary)"
+        , textDecorationLine: "underline"
+        , textDecorationColor: "var(--accent)"
+        , textDecorationThickness: 1
+        , textUnderlineOffset: 6
         }
     , resourceIcon:
         { display: "inline-flex", flexShrink: 0, fontSize: 11, color: "var(--text-tertiary)" }
