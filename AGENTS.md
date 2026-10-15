@@ -1,49 +1,52 @@
 # Agent guide
 
-This repository is the Iris website: Astro handles routing and server rendering on Node.js; React components are implemented in PureScript and compiled with Iris.
+The repository contains the Iris website, iris-lang.com. Astro prerenders every page to static files, which Cloudflare serves as static assets. The site's React components are written in PureScript and compiled with Iris.
+
+The site presents Iris to new users, so its claims must match the compiler. Its pages should also load and switch quickly, and its design follows the direction in [Design constraints](#design-constraints).
+
+AGENTS.md records the project's intent and the constraints that are easy to break. Read the code for how things work. Areas with their own rules keep an `AGENTS.md` beside their code, and the sections below link to them.
 
 ## Sources of truth
 
-- Treat `purefunctor/purescript-iris` as the source of truth for compiler behaviour, architecture, compatibility, and performance claims. In Amp, inspect the additional checkout at `../repos/purescript-iris`; if it is unavailable, use Librarian to research that repository instead of inferring from website-local code.
-- Substantiate product copy before weakening it. Evaluate build-speed claims with the release compiler against an official `purs` release, using the [build benchmark](#build-benchmarks); this website cannot be compiled by `purs` because it uses Iris StyleX. Separate compiler time from Spago and Vite overhead.
-- References to existing PureScript libraries and projects describe Iris's compatibility testing against the PureScript Registry package set. Consult `tests-compatibility` and its CI workflows in the compiler repository for the current scope and evidence.
+- Treat `purefunctor/purescript-iris` as the source of truth for compiler behaviour, architecture, compatibility and performance claims. In Amp, read the checkout at `../repos/purescript-iris`. If it is unavailable, use Librarian to research that repository instead of inferring from website code.
+- Check a claim in product copy before you weaken it. Evaluate build speed claims with the release compiler against an official `purs` release, using the [build benchmark](#build-benchmarks), and report compiler time separately from Spago and Vite overhead. `purs` cannot compile this website, because it uses Iris StyleX.
+- References to existing PureScript libraries and projects describe Iris's compatibility testing against the PureScript Registry package set. The compiler repository's `tests-compatibility` crate and its CI workflows define the current scope and evidence.
 
-## Implementation conventions
+## Project structure
 
-### Routing
+All first-party PureScript lives in the `Website` namespace, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`, and page-specific modules belong in `Website.Landing` or `Website.Documentation`. Keep each FFI companion, in `.js` or `.jsx`, beside its PureScript module. Astro pages in `src/pages` render a module's `component` as an island inside `SiteLayout` or `DocumentationLayout`.
 
-- Astro server-renders routes by default. Add `export const prerender = true` to an Astro page when it can be generated as a static asset instead.
+- Documentation pages, including how readers switch between them, follow [`src/Website/Documentation/AGENTS.md`](src/Website/Documentation/AGENTS.md).
+- The landing page's editor trailer is recorded and rendered by `scripts/editor-demos`. Read [`scripts/editor-demos/AGENTS.md`](scripts/editor-demos/AGENTS.md) before you change the take, the trailer, or the code that the take reads and edits in `Website.Landing.Index`, `Website.Landing.Demos`, `Website.Landing.Benchmarks` and `Website.Components.CopyButton`.
 
-### PureScript and JavaScript boundaries
+## Code conventions
 
-- Keep all first-party PureScript modules under `Website`, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`; page-specific modules belong in `Website.Landing` or `Website.Documentation`. Keep FFI companions alongside their PureScript modules.
-- Use the package import aliases `#src/*` and `#output/*` for cross-directory imports. FFI companions are copied into `output`, so imports of colocated JavaScript helpers must use `#src/Website/...` rather than paths relative to either the source or output directory. The aliases are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so Astro also resolves client hydration URLs in development.
-- Import `react-aria-components` by component subpath, such as `react-aria-components/Button`, never from the package root, and list each subpath in Astro's Vite `optimizeDeps.include`. The root barrel prebundles the entire library, about 2 MB, into every development page.
-- Author component StyleX declarations in PureScript using `Iris.StyleX`. Iris emits statically analyzable StyleX calls for the Vite plugin; JavaScript FFI is not required for styling.
-- Keep component-local styles inline. Extract styles into colocated modules when shared by multiple consumers, such as `Website.Components.IconButton.Styles`. Use `StyleX.recordProps` instead of repetitive individual `StyleX.props` bindings; retain `StyleX.props` for compositions and conditional styles.
-- Before changing StyleX, read `iris skills get stylex` and the upstream authoring and installation guides it links for the installed StyleX version. Nest media queries and pseudo-classes inside property values with explicit defaults, and prefer longhands or single-value shorthands. Keep static styles in StyleX rather than FFI DOM style assignments. Dynamic styles return inline CSS variables and must not be server-rendered under the site's current CSP.
-- Define shared viewport queries with `StyleX.defineConsts` in `Website.Breakpoints` and consume them through `StyleX.conditionalValue` / `StyleX.conditionalCase`. Preserve exact bounds when refactoring; preference queries are not viewport breakpoints. Iris writes exported theme definitions to `output/<Module>/index.stylex.js`, so the Vite StyleX plugin resolves cross-module constants at build time without module-resolution overrides. `Website.SiteLayout` supplies the document's responsive styles to Astro.
+### Imports and dependencies
+
+- Use the package import aliases `#src/*` and `#output/*` for imports across directories. They are defined in `package.json` and resolve in both Node and Vite. Mirror `#output/*` in `tsconfig.json` so that Astro also resolves client hydration URLs in development.
+- Iris copies FFI companions into `output`, so a companion that imports a colocated JavaScript helper must use `#src/Website/...` rather than a relative path.
+- Import `react-aria-components` by component subpath, such as `react-aria-components/Button`, and never from the package root. The root barrel prebundles the whole library, about 2 MB, into every development page.
+- List every dependency that generated modules import, including each `react-aria-components` subpath, in `optimizeDeps.include` in `astro.config.mjs`. Vite's first dependency scan cannot see all generated PureScript, and a dependency it misses reloads the page on first navigation.
+
+### Styles
+
+- Write component styles in PureScript with `Iris.StyleX`. Iris emits StyleX calls that the Vite plugin can analyze, so styling needs no JavaScript FFI. Before you change styles, read `iris skills get stylex` and the upstream authoring and installation guides that it links for the installed StyleX version.
+- Keep a component's styles inline in its module. Move styles into a colocated module, such as `Website.Components.IconButton.Styles`, only when several consumers share them. Use `StyleX.recordProps` instead of a separate `StyleX.props` binding for each style, and keep `StyleX.props` for compositions and conditional styles.
+- Nest media queries and pseudo-classes inside property values with explicit defaults, and prefer longhands or single-value shorthands. Keep static styles in StyleX rather than in FFI DOM style assignments. Dynamic styles return inline CSS variables, so they must not be server-rendered under the site's CSP.
+- Define shared viewport queries with `StyleX.defineConsts` in `Website.Breakpoints`, and use them through `StyleX.conditionalValue` and `StyleX.conditionalCase`. Preserve their exact bounds when refactoring. Preference queries, such as reduced motion, are not viewport breakpoints. `Website.SiteLayout` supplies the document's responsive styles.
 
 ### Component exports
 
-- Name a module's single, directly consumable `ReactComponent` export `component`, and consume it through the qualified module name, such as `Index.component`. This fluent module style is the intended boundary for Astro and JavaScript consumers.
-- Use a descriptive component name, such as `header`, for an effectful `Component props` constructor that callers must instantiate during component construction.
-- When a module exports multiple peer `ReactComponent` values and none is the canonical module component, give each value a descriptive name rather than using `component`.
+- Name a module's single, directly consumable `ReactComponent` export `component`, and use it through the qualified module name, such as `Index.component`. Astro pages and JavaScript consumers rely on this module boundary.
+- Give an effectful `Component props` constructor, which callers instantiate while constructing their own component, a descriptive name such as `header`.
+- When a module exports several `ReactComponent` values and none of them is the module's main component, give each one a descriptive name instead of `component`.
 
-### Documentation pages
+### Static output and the CSP
 
-- Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs` that uses `DocumentationLayout`. Add it to `Page` in `Website.Components.Documentation`, which orders the header navigation and previous/next links, and build its body from `Website.Documentation.Prose`.
-- `DocumentationLayout` adds Astro's `<ClientRouter />`, so links between documentation pages fetch the next page, swap the document and hydrate its island without a full reload. Astro documents the client router as unsupported with `security.csp`. It works here because Astro emits the same script and style hashes on every page, and the first page's CSP stays in force after a swap. Do not add page-specific inline scripts or styles to these pages. Verify router changes in the production preview, because development does not enforce the CSP.
-- Link to documentation pages by their trailing-slash URLs, such as `/docs/installation/`. Production serves each page's `index.html` there and answers the bare form with an uncacheable 307, which would add a round trip to every swap.
-- In production, [`documentationPageCache`](src/lib/documentationPageCache.ts) keeps documentation pages in memory for the rest of a visit and supplies them to the router through the `astro:before-preparation` loader, so swaps to cached pages make no request. It fetches every linked documentation page once the current page is idle, and sooner on hover, focus or press, along with each page's island modules. It does not prefetch under Save-Data or 2G. Astro's `prefetch` is disabled so that pages are not fetched twice. Development fetches every page so that edits appear.
-- Swaps cut straight to the next page, matching the switching speed of sites such as react.dev: `global.css` sets `view-transition-name: none` on the root, so the browser captures nothing to animate, and the router's `fallback="swap"` does the same where view transitions are unsupported.
-- The development StyleX runtime fills `#__stylex_virtual__` once and disables the `/virtual:stylex.css` link. `DocumentationLayout` declares that element with `transition:persist` so swaps keep it; without it, swapped pages lose StyleX rules until the next HMR update.
-- The compiler README links to these routes. Keep their slugs stable, or update those links when renaming a page.
-
-### Deployment
-
-- Production is a static Astro build deployed as Cloudflare Workers Static Assets without a Worker script. `public/_headers` owns the static security and cache headers.
-- Static Assets answer Range requests with the whole file, so browsers cannot seek media streamed from it, and Safari does not play it. `Website.Components.VideoPlayer` plays an in-memory copy fetched on demand; development serves ranges, so verify seeking in the production preview.
+- Production is a static Astro build served by Cloudflare Workers Static Assets without a Worker script, so no code runs per request. Every page and endpoint exports `prerender = true`. The [README](README.md#publishing) explains the hosting limits.
+- Static Assets answer Range requests with the whole file, so browsers cannot seek media streamed from it, and Safari does not play it. `Website.Components.VideoPlayer` plays an in-memory copy fetched on demand; development serves ranges, so verify seeking in the [production preview](#production-preview).
+- `public/_headers` owns the static security and cache headers. Astro adds the CSP from `security.csp` in `astro.config.mjs` to each page as a meta tag.
+- Documentation pages use Astro's client router, which Astro documents as unsupported with `security.csp`. It works here because every page emits the same script and style hashes, and the first page's CSP stays in force after a swap. Do not add page-specific inline scripts or styles to documentation pages, and verify router changes in the [production preview](#production-preview), because development does not enforce the CSP.
 
 ## Design constraints
 
@@ -52,7 +55,7 @@ Apply design feedback to what it names. When it points to an existing treatment,
 ### Visual direction and composition
 
 - Treat 2000s web and graphic design as the primary visual direction, rebuilt with contemporary responsiveness and accessibility. Lean into expressive asymmetry, compressed editorial lockups, stark contrast, hard flat color, and controlled tension rather than merely quoting the period through nostalgic effects.
-- Use whitespace, negative space, and sharp, corner-led composition to separate large content regions. "Edgy" means angular, hard-edged geometry—not literal borders around sections. Keep large blocks square and avoid enclosing every section in a rounded card.
+- Use whitespace, negative space, and sharp, corner-led composition to separate large content regions. "Edgy" means angular, hard-edged geometry, not literal borders around sections. Keep large blocks square and avoid enclosing every section in a rounded card.
 
 ### Headings
 
@@ -64,67 +67,76 @@ Apply design feedback to what it names. When it points to an existing treatment,
 - Reserve full rounding for focused interactive elements such as calls to action and status pills.
 - Give transparent actions a subtle background fill so they remain identifiable beside prose, then strengthen that fill on hover. Do not add a persistent border.
 - Set status pills in the sans-serif typeface with high-contrast colors. Add a border only when a light treatment needs separation from its background.
-- Use macOS cursor semantics on every platform: controls such as buttons, toggles and tabs, and button-styled links, use the regular arrow cursor; only text-styled links use the pointing-hand cursor. Do not detect the platform for cursors. Continue to communicate interactivity through shape, contrast, hover, and focus treatments.
+- Use macOS cursor semantics on every platform. Controls such as buttons, toggles, tabs and button-styled links use the regular arrow cursor, and only text-styled links use the pointing-hand cursor. Do not detect the platform for cursors, and keep communicating interactivity through shape, contrast, hover and focus treatments.
 
 ### Color tokens
 
 - Define shared color tokens in `src/global.css` using OKLCH, then reference those tokens from StyleX declarations. Create related states by varying OKLCH lightness or chroma while preserving hue instead of introducing disconnected hex values.
 
-## Local workflow
+## Development
 
-See [README.md](README.md) for installation prerequisites and standard development commands.
+See the [README](README.md) for prerequisites and the standard commands.
 
-Use `iris format` to format the workspace's PureScript sources and `iris format --check` to verify them. Keep workspace-wide formatting separate from refactoring commits.
+### Working on the site
+
+- `pnpm dev` compiles the site's PureScript with `pnpm prepare:dev`, then runs `iris watch` and Astro with live updates. Both processes stop if either exits.
+- Use the running development server for feature work and visual checks. Do not run `pnpm build` for UI iterations or as a default completion check.
+- After editing PureScript, ask the running watcher instead of starting another compiler. Run `iris watch query wait`, then `iris watch query diagnostics`. `iris skills get watch` describes the other queries, such as signatures, references and generated JavaScript.
+- Format PureScript with `iris format`, and check it with `iris format --check`. Keep workspace-wide formatting separate from refactoring commits.
 
 ### Orb setup and preview
 
-- `.agents/setup` uses fnm for the Node version in `.node-version` and bootstraps standalone pnpm, which manages the version pinned in `package.json`. It installs the latest stable Iris release using the reviewed `public/install.sh` copy with `IRIS_VERSION=latest` and `IRIS_SKIP_ATTESTATION=1`, then installs locked dependencies and runs `pnpm prepare:dev`. `.github/workflows/deploy.yml` uses the same installer and release selection but requires GitHub attestation verification. Do not pin either installation to a release version. The tool paths are persisted for login shells. Snapshots contain the installed compiler and PureScript output, so cached orbs retain that compiler until setup runs again. Do not build production Astro output or start a persistent server during setup.
-- `pnpm prepare:dev` compiles the site's PureScript with the installed `iris` on PATH. Use Iris's incremental cache; there is no separate preparation fingerprint, success stamp, or Vite warmup script.
-- `.agents/resume` runs `amp orb services ensure`. The declared `website` service checks the development inputs before starting the compiler watcher and Astro, and checks `/` before reporting ready. It generates Website and Documentation shortcuts in the gitignored `.amp/portals/website.json`; both use the same watch-mode server. Never commit orb-specific URLs.
-- To recover an orb whose setup did not finish, run these from the website root before starting the service:
+- In an orb, `.agents/resume` starts the `website` service from `.amp/services.yaml`, which runs `pnpm dev` behind the Website and Documentation portals. Inspect it with `amp orb service status website` or `amp orb service logs website`, and restart it after configuration changes with `amp orb service restart website`. Never commit orb-specific URLs, such as the portal URLs in the gitignored `.amp/portals/`.
+- `.agents/setup` and the deploy workflow both install the latest stable Iris release with the reviewed `public/install.sh`. Do not pin either installation to a release version. Setup skips GitHub attestation verification with `IRIS_SKIP_ATTESTATION=1`, and `.github/workflows/deploy.yml` requires it.
+- Setup prepares development inputs only, so do not build production Astro output or start a persistent server there. Snapshots contain the installed compiler and PureScript output, so a cached orb keeps its compiler until setup runs again.
+- `pnpm prepare:dev` relies on Iris's incremental cache. Do not add a preparation fingerprint, a success stamp, or a Vite warmup script.
+- To recover an orb whose setup did not finish, run these from the website root before starting the service. Rerun the locked install after changing dependencies, and do not install dependencies from resume.
 
-```sh
-pnpm install --frozen-lockfile
-pnpm prepare:dev
-amp orb services ensure
-```
+  ```sh
+  pnpm install --frozen-lockfile
+  pnpm prepare:dev
+  amp orb services ensure
+  ```
 
-- Share the returned portal URL, not localhost. Inspect with `amp orb service status website` or `amp orb service logs website`; stop with `amp orb service stop website`. Rerun locked dependency installation after changing dependencies; do not install them from resume.
-- `pnpm dev` runs `prepare:dev` before starting the compiler watcher and Astro with live updates. Both processes stop if either exits. Keep dependencies discovered through generated modules in Astro's Vite prebundle list to avoid reloads on first navigation. Keep production/sync and development Vite caches separate: a build must not replace prebundles used by the running server. Restart after service configuration changes with:
+### Development server performance
 
-```sh
-amp orb service restart website
-```
+Development page loads are bounded by portal round trips, not rendering. [`devLibraryBundle`](src/lib/devLibraryBundle.ts) serves all Registry library output as one client module, and [`devModulePreload`](src/lib/devModulePreload.ts) preloads each page's whole static module graph, so the browser fetches a page in about one round trip. Keep these guardrails when you change the Astro or Vite configuration:
 
-- Development page loads are bounded by portal round trips, not rendering. [`devLibraryBundle`](src/lib/devLibraryBundle.ts) serves all Registry library output (every `output` module outside `Website`) as one client module, and reloads the page if that output changes. [`devModulePreload`](src/lib/devModulePreload.ts) adds `modulepreload` links for each page's whole static client graph, so the browser fetches it in one round trip; the service health check warms `/` this way. Do not add Vite `server.warmup`: StyleX loads optimized dependencies while transforming, which deadlocks the initial dependency crawl on a cold cache. Astro's dev toolbar is disabled because it adds about 1.3 MB of client modules to every page.
-- Use the running Website watch-mode portal for routine feature development and visual verification; do not run `pnpm build` for UI iterations or as a default completion check. Do not start `website-production` for every feature or add it to the automatically started services.
-- Start `website-production`, titled Website (Production) in the portal, only when verification needs the actual production build, such as generated assets or Cloudflare's `_headers` behavior. Development uses Astro on Node.js; production is served as static assets. For these production-specific checks, use Wrangler's static asset server (`astro preview` does not exercise Cloudflare's `_headers` rules):
+- Do not add Vite `server.warmup`. StyleX loads optimized dependencies while transforming, which deadlocks the initial dependency crawl on a cold cache.
+- Keep the development and production Vite caches separate, so that a build never replaces the prebundles of a running server.
+- Keep Astro's dev toolbar disabled. It adds about 1.3 MB of client modules to every page.
+
+## Verification
+
+Choose checks by what the change affects.
+
+- For visual changes, use the running Website portal, and capture and inspect representative mobile and desktop viewports together. Do not write bespoke browser test scripts for transient design choices, and reserve new automated checks for durable behaviour.
+- For generated assets, `_headers`, the CSP, the documentation router or video seeking, use the [production preview](#production-preview).
+- For the Vite configuration and the development plugins, run the [development cache](#development-cache) check.
+- For build speed claims, run the [build benchmark](#build-benchmarks).
+
+### Production preview
+
+Development runs Astro on Node.js, while production serves static assets, so check production-only behaviour in a production build. Wrangler's static asset server applies `public/_headers`, which `astro preview` does not:
 
 ```sh
 pnpm build
 amp orb service start website-production --command 'pnpm preview' --port 8787 --portal --title 'Website (Production)'
 ```
 
-- Stop the opt-in preview after verification with `amp orb service stop website-production`.
+Stop it afterwards with `amp orb service stop website-production`. Do not start it for every feature or add it to the automatically started services.
 
-### Editor demo recordings
+### Development cache
 
-The landing page's editor trailer is recorded and rendered by [`scripts/editor-demos`](scripts/editor-demos). Its workflow, recording environment and conventions are in [`scripts/editor-demos/AGENTS.md`](scripts/editor-demos/AGENTS.md); read it before changing the take, the trailer, or the code that the take edits (`Website.Landing.Index`, `Website.Landing.Demos`, `Website.Landing.Benchmarks` and `Website.Components.CopyButton`).
+With agent-browser installed and a dev server running, the following check runs a production build next to the dev server, then confirms that the build kept the dev server's prebundles and that the landing page still hydrates without reoptimization:
 
-## Verification
-
-### Documentation
-
-Use the running watch-mode preview for documentation UI iterations, with targeted browser checks and visual inspection. Do not run production builds or add a documentation-specific test harness for visual tweaks. Verify changes to onboarding commands in a disposable workspace.
-
-### Visual changes
-
-- When visually reviewing a change with screenshots, capture and inspect representative mobile and desktop viewports so responsive regressions are considered together.
-- Do not write bespoke browser test scripts to verify transient design choices; check them in the running preview and reserve new automated checks for durable behaviour.
+```sh
+node scripts/test-dev-cache.mjs http://localhost:4321
+```
 
 ### Build benchmarks
 
-The landing page's build times come from `scripts/benchmark-builds.ts`, which needs Bun, Spago and network access for the first setup. It creates acme, a project depending on every package in a pinned Registry package set, then compares `spago build`, `purs compile` and `iris build`, plus `iris watch` rebuilds. Pass an official `purs` release, not a locally modified build, and the Iris release being described:
+The landing page's build times come from [`scripts/benchmark-builds.ts`](scripts/benchmark-builds.ts), whose header explains what it measures. It needs Bun, Spago and network access for the first setup. Pass an official `purs` release, not a locally modified build, and the Iris release being described:
 
 ```sh
 bun scripts/benchmark-builds.ts --purs node_modules/purescript/purs.bin --iris "$(command -v iris)"
@@ -132,16 +144,9 @@ bun scripts/benchmark-builds.ts --purs node_modules/purescript/purs.bin --iris "
 
 Update the figures, versions and bar widths in `src/Website/Landing/Benchmarks.purs` from its output.
 
-### Development cache
+## Maintaining agent guidance
 
-Production builds must not replace the prebundles of a running dev server. With agent-browser installed and a dev server running, this builds production concurrently and checks that the landing page still hydrates without reoptimization:
-
-```sh
-node scripts/test-dev-cache.mjs http://localhost:4321
-```
-
-## Maintaining this guide
-
-- Keep agent-facing implementation conventions, verification commands and orb workflows in `AGENTS.md`, and update them when those practices change. Keep `README.md` focused on the project overview, setup, usage and documented limitations; link to guidance rather than duplicating it.
-- Keep guidance for a self-contained tool in an `AGENTS.md` beside it, as [`scripts/editor-demos/AGENTS.md`](scripts/editor-demos/AGENTS.md) does for the editor trailer, and link it from the owning section here.
-- Put each rule in its owning section. Keep commands with their prerequisites, and link to detailed contracts rather than copying them into this guide.
+- Record intent and constraints, with the reason when it is not obvious. Do not restate how code works; link to the file instead.
+- Put each rule in its owning section, and update it when the practice changes. Keep commands with their prerequisites, and link to detailed contracts rather than copying them.
+- Keep guidance for a self-contained area or tool in an `AGENTS.md` beside it, as [`src/Website/Documentation/AGENTS.md`](src/Website/Documentation/AGENTS.md) and [`scripts/editor-demos/AGENTS.md`](scripts/editor-demos/AGENTS.md) do, and link it from the owning section here.
+- Keep `README.md` focused on the project overview, setup, usage and documented limitations, and link to guidance rather than duplicating it.
