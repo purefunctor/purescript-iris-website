@@ -1,0 +1,13 @@
+---
+import DocumentationLayout from "#src/layouts/DocumentationLayout.astro";
+import * as ModuleMetadata from "#output/Website.Documentation.ModuleMetadata/index.js";
+
+export const prerender = true;
+---
+
+<DocumentationLayout
+  title="Module metadata"
+  description="Read output/<Module>/metadata.json to find the package, source file, and foreign module of each module that an Iris build compiled."
+>
+  <ModuleMetadata.component client:load />
+</DocumentationLayout>
