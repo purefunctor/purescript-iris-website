@@ -76,7 +76,7 @@ sections =
             ]
         , paragraph
             [ DOM.text
-                "A build with errors writes nothing, so it leaves every earlier record as it was. If a write fails, Iris reports the error, and the record may be missing or partial until the next successful build writes it again. Iris writes records in parallel, so other records from the same build may already be replaced."
+                "A build with errors writes nothing, so it leaves every earlier record as it was. If a write fails, Iris reports the error, and the module keeps its previous record, or stays without one, until a later build writes it. Iris writes records in parallel, so other records from the same build may already be replaced."
             ]
         , paragraph
             [ inlineCode "--package NAME"
@@ -114,9 +114,10 @@ sections =
     , body:
         [ paragraph
             [ DOM.text
-                "Iris writes each record in place, the same way it writes the module files, and skips a record whose content hasn't changed. A reader that runs during a build can see a partially written file. If "
+                "Iris replaces each record atomically. It writes the new record to a temporary file in the module's directory and renames it over "
             , inlineCode "metadata.json"
-            , DOM.text " doesn't parse, wait a moment and read it again."
+            , DOM.text
+                ", so a reader sees either the previous record or the new one, never a partial file. Iris skips a record whose content hasn't changed. The module's other files are written in place, so a reader can see them partially written while a build runs."
             ]
         , paragraph
             [ inlineCode "iris build"
