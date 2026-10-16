@@ -8,7 +8,7 @@ import React.Basic (JSX, ReactComponent)
 import React.Basic.Hooks as Hooks
 import Website.Components.CodeBlock as CodeBlock
 import Website.Components.Documentation as Documentation
-import Website.Documentation.Prose (inlineCode, item, list, paragraph)
+import Website.Documentation.Prose (inlineCode, item, list, note, paragraph)
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
@@ -29,7 +29,11 @@ sections =
   [ { id: "where-the-metadata-lives"
     , title: "Where the metadata lives"
     , body:
-        [ paragraph
+        [ note
+            [ DOM.strong {} "Requires Iris 0.1.8 or later"
+            , DOM.p {} [ DOM.text "Iris 0.1.7 and earlier do not write module metadata." ]
+            ]
+        , paragraph
             [ DOM.text "The build that writes "
             , inlineCode "output/<Module>/index.js"
             , DOM.text " also writes "
@@ -152,7 +156,7 @@ sections =
                 [ DOM.text "is the version of Iris that wrote the record, as "
                 , inlineCode "iris --version"
                 , DOM.text " prints it, including suffixes like "
-                , inlineCode "0.1.7-dev.0123abc"
+                , inlineCode "0.1.8-dev.0123abc"
                 , DOM.text "."
                 ]
             , field "package"
@@ -214,7 +218,7 @@ sections =
 example :: String
 example = """{
   "version": 1,
-  "iris": "0.1.7",
+  "iris": "0.1.8",
   "package": "library",
   "editable": true,
   "source": "/home/user/project/packages/library/src/Library.purs",
