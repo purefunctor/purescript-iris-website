@@ -14,18 +14,13 @@ import Website.Documentation.Prose (inlineCode, item, link, list, note, paragrap
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
-component =
-  unsafePerformEffect
-    $ Hooks.reactComponent
-        "GettingStarted"
-        \_ ->
-          pure
-            $ Documentation.documentation
-                { page: Documentation.GettingStarted
-                , intro:
-                    "This guide covers installing Iris, creating a project, and running a small program that prints a greeting."
-                , sections
-                }
+component = unsafePerformEffect $ Hooks.reactComponent "GettingStarted" \_ ->
+  pure $ Documentation.documentation
+    { page: Documentation.GettingStarted
+    , intro:
+        "This guide covers installing Iris, creating a project, and running a small program that prints a greeting."
+    , sections
+    }
 
 sections :: Array Documentation.Section
 sections =
@@ -99,13 +94,11 @@ sections =
             ]
         , note
             [ DOM.strong {} "If your shell cannot find Iris"
-            , DOM.p
-                {}
+            , DOM.p {}
                 [ DOM.text
                     "The install script does not modify your PATH. If the installation directory is not already on your PATH, the script prints a reminder, and you must add the directory yourself."
                 ]
-            , DOM.p
-                {}
+            , DOM.p {}
                 [ DOM.text "On macOS and Linux, Iris is installed in "
                 , inlineCode "~/.local/bin"
                 , DOM.text
@@ -113,8 +106,7 @@ sections =
                 ]
             , Terminal.terminal
                 [ { command: "export PATH=\"$HOME/.local/bin:$PATH\"", output: "" } ]
-            , DOM.p
-                {}
+            , DOM.p {}
                 [ DOM.text
                     "To make the change permanent, add the same line to your shell's startup file, such as "
                 , inlineCode "~/.bashrc"
@@ -122,8 +114,7 @@ sections =
                 , inlineCode "~/.zshrc"
                 , DOM.text "."
                 ]
-            , DOM.p
-                {}
+            , DOM.p {}
                 [ DOM.text "On Windows, Iris is installed in "
                 , inlineCode "%LOCALAPPDATA%\\Iris\\bin"
                 , DOM.text

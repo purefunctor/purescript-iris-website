@@ -2,8 +2,7 @@ module Website.Landing.Example (source) where
 
 -- | The example shown in the hero and the features section.
 source :: String
-source =
-  """module Main where
+source = """module Main where
 
 import Prelude
 

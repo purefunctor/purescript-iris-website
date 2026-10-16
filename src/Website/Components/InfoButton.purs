@@ -9,10 +9,8 @@ foreign import infoButtonImpl ::
 
 -- | A small information button whose tooltip carries a short note.
 infoButton :: String -> JSX
-infoButton text =
-  element
-    infoButtonImpl
-    { className: (StyleX.props [ iconButtonStyles.button, iconButtonStyles.small ]).className
-    , text
-    , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className
-    }
+infoButton text = element infoButtonImpl
+  { className: (StyleX.props [ iconButtonStyles.button, iconButtonStyles.small ]).className
+  , text
+  , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className
+  }

@@ -4,33 +4,32 @@ import Iris.StyleX as StyleX
 import React.Basic (JSX)
 import Yoga.React.DOM as DOM
 
-styles =
-  StyleX.create
-    { inlineCode:
-        { fontFamily: "var(--font-mono)"
-        , fontSize: "0.86em"
-        , color: "var(--text-primary)"
-        , backgroundColor: "var(--surface-1)"
-        , paddingInline: 5
-        , paddingBlock: 2
-        }
-    , list: { paddingInlineStart: 22, display: "flex", flexDirection: "column", gap: 10 }
-    , link:
-        { color: { default: "var(--accent-text)", ":hover": "var(--signal-200)" }
-        , textUnderlineOffset: 4
-        , outlineColor: "var(--focus-ring)"
-        }
-    , note:
-        { backgroundColor: "var(--surface-1)"
-        , display: "flex"
-        , flexDirection: "column"
-        , gap: 12
-        , padding: 20
-        , fontSize: "0.875em"
-        , lineHeight: 1.7
-        , color: "var(--text-secondary)"
-        }
-    }
+styles = StyleX.create
+  { inlineCode:
+      { fontFamily: "var(--font-mono)"
+      , fontSize: "0.86em"
+      , color: "var(--text-primary)"
+      , backgroundColor: "var(--surface-1)"
+      , paddingInline: 5
+      , paddingBlock: 2
+      }
+  , list: { paddingInlineStart: 22, display: "flex", flexDirection: "column", gap: 10 }
+  , link:
+      { color: { default: "var(--accent-text)", ":hover": "var(--signal-200)" }
+      , textUnderlineOffset: 4
+      , outlineColor: "var(--focus-ring)"
+      }
+  , note:
+      { backgroundColor: "var(--surface-1)"
+      , display: "flex"
+      , flexDirection: "column"
+      , gap: 12
+      , padding: 20
+      , fontSize: "0.875em"
+      , lineHeight: 1.7
+      , color: "var(--text-secondary)"
+      }
+  }
 
 styleProps = StyleX.recordProps styles
 

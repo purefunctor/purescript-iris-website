@@ -12,18 +12,13 @@ import Website.Documentation.Prose (inlineCode, item, link, list, note, paragrap
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
-component =
-  unsafePerformEffect
-    $ Hooks.reactComponent
-        "Installation"
-        \_ ->
-          pure
-            $ Documentation.documentation
-                { page: Documentation.Installation
-                , intro:
-                    "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build. Iris 0.1.7 and later can also update themselves."
-                , sections
-                }
+component = unsafePerformEffect $ Hooks.reactComponent "Installation" \_ ->
+  pure $ Documentation.documentation
+    { page: Documentation.Installation
+    , intro:
+        "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build. Iris 0.1.7 and later can also update themselves."
+    , sections
+    }
 
 sections :: Array Documentation.Section
 sections =
@@ -136,8 +131,7 @@ sections =
     , body:
         [ note
             [ DOM.strong {} "Requires Iris 0.1.7 or later"
-            , DOM.p
-                {}
+            , DOM.p {}
                 [ DOM.text "Iris 0.1.6 and earlier do not include "
                 , inlineCode "iris self update"
                 , DOM.text

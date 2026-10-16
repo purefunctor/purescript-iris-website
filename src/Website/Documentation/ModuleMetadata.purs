@@ -12,18 +12,13 @@ import Website.Documentation.Prose (inlineCode, item, list, paragraph)
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
-component =
-  unsafePerformEffect
-    $ Hooks.reactComponent
-        "ModuleMetadata"
-        \_ ->
-          pure
-            $ Documentation.documentation
-                { page: Documentation.ModuleMetadata
-                , intro:
-                    "Next to each module's generated JavaScript, Iris writes a metadata.json file. It records the package the module belongs to, whether that package is editable, where the module's source file is, and the name of its foreign file. Tools such as bundler plugins can read it instead of guessing which package a module comes from."
-                , sections
-                }
+component = unsafePerformEffect $ Hooks.reactComponent "ModuleMetadata" \_ ->
+  pure $ Documentation.documentation
+    { page: Documentation.ModuleMetadata
+    , intro:
+        "Next to each module's generated JavaScript, Iris writes a metadata.json file. It records the package the module belongs to, whether that package is editable, where the module's source file is, and the name of its foreign file. Tools such as bundler plugins can read it instead of guessing which package a module comes from."
+    , sections
+    }
 
 -- | A list item that describes a metadata field.
 field :: String -> Array JSX -> JSX
@@ -149,37 +144,31 @@ sections =
                 "The record is indented JSON. It has no timestamp or build counter, so the same module and Iris version always produce the same record. Its fields are:"
             ]
         , list
-            [ field
-                "version"
+            [ field "version"
                 [ DOM.text
                     "is the schema version, currently 1. It only changes when a change could break existing readers, so check it first."
                 ]
-            , field
-                "iris"
+            , field "iris"
                 [ DOM.text "is the version of Iris that wrote the record, as "
                 , inlineCode "iris --version"
                 , DOM.text " prints it, including suffixes like "
                 , inlineCode "0.1.7-dev.0123abc"
                 , DOM.text "."
                 ]
-            , field
-                "package"
+            , field "package"
                 [ DOM.text "is the name of the package that owns the module's source file." ]
-            , field
-                "editable"
+            , field "editable"
                 [ DOM.text "is "
                 , inlineCode "true"
                 , DOM.text " for workspace and local packages, and "
                 , inlineCode "false"
                 , DOM.text " for registry and git packages."
                 ]
-            , field
-                "source"
+            , field "source"
                 [ DOM.text
                     "is the absolute path of the PureScript source file, in the platform's native format."
                 ]
-            , field
-                "foreign"
+            , field "foreign"
                 [ DOM.text
                     "is the name of the foreign module in the module's output directory, such as "
                 , inlineCode "foreign.js"
@@ -223,8 +212,7 @@ sections =
   ]
 
 example :: String
-example =
-  """{
+example = """{
   "version": 1,
   "iris": "0.1.7",
   "package": "library",

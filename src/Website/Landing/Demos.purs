@@ -97,67 +97,64 @@ writing =
 chapters :: Array Chapter
 chapters = reading <> writing
 
-styles =
-  StyleX.create
-    { introduction:
-        { display: "flex", flexDirection: "column", gap: 14, marginBlockEnd: 40, maxWidth: 640 }
-    -- The playlist keeps a narrow column beside the player and moves below it on smaller screens.
-    , layout:
-        { alignItems: "start"
-        , display: "grid"
-        , gap: 40
-        , gridTemplateColumns:
-            StyleX.conditionalValue
-              "minmax(0, 1fr)"
-              [ StyleX.conditionalCase breakpoints.from960 "minmax(0, 1fr) 260px" ]
-        }
-    , playerColumn: { display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }
-    , caption: { display: "flex", flexDirection: "column", gap: 6, maxWidth: "68ch" }
-    , captionTitle: { fontSize: 20, fontWeight: 500, letterSpacing: "-0.015em", lineHeight: 1.25 }
-    , captionDescription:
-        { color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.65, textWrap: "pretty" }
-    , groups: { display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }
-    , groupTitle:
-        { color: "var(--text-tertiary)"
-        , fontSize: 13
-        , fontWeight: 500
-        , lineHeight: 1.3
-        , paddingBlockEnd: 8
-        , paddingInline: 12
-        }
-    , list: { display: "flex", flexDirection: "column", gap: 2, listStyle: "none", padding: 0 }
-    , choice:
-        { alignItems: "center"
-        , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
-        , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
-        , cursor: "default"
-        , display: "grid"
-        , fontSize: 15
-        , gap: 12
-        , gridTemplateColumns: "24px minmax(0, 1fr)"
-        , lineHeight: 1.65
-        , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
-        , outline: { default: "revert", ":focus-visible": "none" }
-        , paddingBlock: 10
-        , paddingInline: 12
-        , textAlign: "start"
-        , transitionDuration: "140ms"
-        , transitionProperty: "background-color, color"
-        , transitionTimingFunction: "var(--ease-out)"
-        , width: "100%"
-        }
-    , selected:
-        { backgroundColor: { default: "var(--surface-2)", ":hover": "var(--surface-2)" }
-        , color: { default: "var(--text-primary)", ":hover": "var(--text-primary)" }
-        }
-    , number:
-        { color: "var(--text-tertiary)"
-        , fontFamily: "var(--font-mono)"
-        , fontSize: 12
-        , fontVariantNumeric: "tabular-nums"
-        }
-    , title: { overflowWrap: "break-word" }
-    }
+styles = StyleX.create
+  { introduction:
+      { display: "flex", flexDirection: "column", gap: 14, marginBlockEnd: 40, maxWidth: 640 }
+  -- The playlist keeps a narrow column beside the player and moves below it on smaller screens.
+  , layout:
+      { alignItems: "start"
+      , display: "grid"
+      , gap: 40
+      , gridTemplateColumns: StyleX.conditionalValue "minmax(0, 1fr)"
+          [ StyleX.conditionalCase breakpoints.from960 "minmax(0, 1fr) 260px" ]
+      }
+  , playerColumn: { display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }
+  , caption: { display: "flex", flexDirection: "column", gap: 6, maxWidth: "68ch" }
+  , captionTitle: { fontSize: 20, fontWeight: 500, letterSpacing: "-0.015em", lineHeight: 1.25 }
+  , captionDescription:
+      { color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.65, textWrap: "pretty" }
+  , groups: { display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }
+  , groupTitle:
+      { color: "var(--text-tertiary)"
+      , fontSize: 13
+      , fontWeight: 500
+      , lineHeight: 1.3
+      , paddingBlockEnd: 8
+      , paddingInline: 12
+      }
+  , list: { display: "flex", flexDirection: "column", gap: 2, listStyle: "none", padding: 0 }
+  , choice:
+      { alignItems: "center"
+      , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
+      , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
+      , cursor: "default"
+      , display: "grid"
+      , fontSize: 15
+      , gap: 12
+      , gridTemplateColumns: "24px minmax(0, 1fr)"
+      , lineHeight: 1.65
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , paddingBlock: 10
+      , paddingInline: 12
+      , textAlign: "start"
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
+      , width: "100%"
+      }
+  , selected:
+      { backgroundColor: { default: "var(--surface-2)", ":hover": "var(--surface-2)" }
+      , color: { default: "var(--text-primary)", ":hover": "var(--text-primary)" }
+      }
+  , number:
+      { color: "var(--text-tertiary)"
+      , fontFamily: "var(--font-mono)"
+      , fontSize: 12
+      , fontVariantNumeric: "tabular-nums"
+      }
+  , title: { overflowWrap: "break-word" }
+  }
 
 styleProps = StyleX.recordProps styles
 
@@ -178,21 +175,16 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
   pure
     $ DOM.section
         { className: Section.section.className, id: "editor", "aria-labelledby": "editor-heading" }
-        [ DOM.div
-            ContentShell.contentShell
-            [ DOM.div
-                styleProps.introduction
+        [ DOM.div ContentShell.contentShell
+            [ DOM.div styleProps.introduction
                 [ Section.heading
                     { id: "editor-heading", text: "Language analysis in the editor.", emphasis: "" }
                 , Section.lead
                     "The IRIS language server provides completion, navigation, diagnostics and code actions via the Language Server Protocol. See the demo on Visual Studio Code:"
                 ]
-            , DOM.div
-                styleProps.layout
-                [ DOM.div
-                    styleProps.playerColumn
-                    [ element
-                        VideoPlayer.component
+            , DOM.div styleProps.layout
+                [ DOM.div styleProps.playerColumn
+                    [ element VideoPlayer.component
                         { label: "Iris language server demo in Visual Studio Code"
                         , onEnded: setPlaying (const false)
                         , onTime: setTime
@@ -202,14 +194,12 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
                         , setPlaying
                         , sources: trailer
                         }
-                    , DOM.div
-                        styleProps.caption
+                    , DOM.div styleProps.caption
                         [ DOM.h3 styleProps.captionTitle chapter.title
                         , DOM.p styleProps.captionDescription chapter.description
                         ]
                     ]
-                , DOM.div
-                    styleProps.groups
+                , DOM.div styleProps.groups
                     [ group "Reading code" 0 reading selected select
                     , group "Writing code" (length reading) writing selected select
                     ]
@@ -218,32 +208,27 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
         ]
 
 group :: String -> Int -> Array Chapter -> Int -> (Int -> Effect Unit) -> JSX
-group title offset items selected select =
-  DOM.div
-    {}
-    [ DOM.h3 styleProps.groupTitle title
-    , DOM.ol styleProps.list
-        $ mapWithIndex
-            ( \position chapter ->
-                let
-                  number = offset + position
-                  current = number == selected
-                in
-                  DOM.li
-                    {}
-                    [ DOM.button
-                        { type: "button"
-                        , className:
-                            ( StyleX.props
-                                [ styles.choice, StyleX.conditional current styles.selected ]
-                            ).className
-                        , "aria-current": if current then "true" else "false"
-                        , onClick: handler_ (select number)
-                        }
-                        [ DOM.span styleProps.number (show (number + 1))
-                        , DOM.span styleProps.title chapter.title
-                        ]
-                    ]
-            )
-            items
-    ]
+group title offset items selected select = DOM.div {}
+  [ DOM.h3 styleProps.groupTitle title
+  , DOM.ol styleProps.list $ mapWithIndex
+      ( \position chapter ->
+          let
+            number = offset + position
+            current = number == selected
+          in
+            DOM.li {}
+              [ DOM.button
+                  { type: "button"
+                  , className:
+                      ( StyleX.props [ styles.choice, StyleX.conditional current styles.selected ]
+                      ).className
+                  , "aria-current": if current then "true" else "false"
+                  , onClick: handler_ (select number)
+                  }
+                  [ DOM.span styleProps.number (show (number + 1))
+                  , DOM.span styleProps.title chapter.title
+                  ]
+              ]
+      )
+      items
+  ]

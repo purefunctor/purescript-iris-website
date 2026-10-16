@@ -13,28 +13,27 @@ foreign import navigationLinkImpl ::
     , content :: JSX
     }
 
-styles =
-  StyleX.create
-    { canvas:
-        { position: "absolute"
-        , inset: 0
-        , width: "100%"
-        , height: "100%"
-        , zIndex: 0
-        , pointerEvents: "none"
-        , opacity: { default: 0.0, "[data-ocean]": 1.0 }
-        }
-    , content:
-        { position: "relative"
-        , zIndex: 1
-        , display: "flex"
-        , alignItems: "center"
-        , justifyContent: "space-between"
-        , gap: 10
-        , width: "100%"
-        , minWidth: 0
-        }
-    }
+styles = StyleX.create
+  { canvas:
+      { position: "absolute"
+      , inset: 0
+      , width: "100%"
+      , height: "100%"
+      , zIndex: 0
+      , pointerEvents: "none"
+      , opacity: { default: 0.0, "[data-ocean]": 1.0 }
+      }
+  , content:
+      { position: "relative"
+      , zIndex: 1
+      , display: "flex"
+      , alignItems: "center"
+      , justifyContent: "space-between"
+      , gap: 10
+      , width: "100%"
+      , minWidth: 0
+      }
+  }
 
 styleProps = StyleX.recordProps styles
 
@@ -46,13 +45,11 @@ classNames = { canvas: styleProps.canvas.className, content: styleProps.content.
 -- | current page. Its `className` must position and isolate the link so the ocean stays behind
 -- | its content.
 navigationLink :: { href :: String, className :: String, current :: Boolean, content :: JSX } -> JSX
-navigationLink { href, className, current, content } =
-  element
-    navigationLinkImpl
-    { href
-    , className
-    , canvasClassName: classNames.canvas
-    , contentClassName: classNames.content
-    , current
-    , content
-    }
+navigationLink { href, className, current, content } = element navigationLinkImpl
+  { href
+  , className
+  , canvasClassName: classNames.canvas
+  , contentClassName: classNames.content
+  , current
+  , content
+  }

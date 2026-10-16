@@ -18,26 +18,25 @@ type Field = { ripple :: Ref (Nullable Element) -> Effect Unit, stop :: Effect U
 
 foreign import startField :: Ref (Nullable Element) -> Effect Field
 
-styles =
-  StyleX.create
-    { root:
-        { backgroundColor: "var(--bg-canvas)"
-        , backgroundImage: "var(--canvas-texture)"
-        , isolation: "isolate"
-        , overflow: "hidden"
-        , position: "relative"
-        }
-    , layer: { inset: 0, pointerEvents: "none", position: "absolute", zIndex: 0 }
-    -- The field fades out over its bottom 22% so the canvas texture continues beneath it.
-    , canvas:
-        { height: "100%"
-        , inset: 0
-        , maskImage: "linear-gradient(black 78%, transparent)"
-        , position: "absolute"
-        , width: "100%"
-        }
-    , content: { position: "relative", zIndex: 1 }
-    }
+styles = StyleX.create
+  { root:
+      { backgroundColor: "var(--bg-canvas)"
+      , backgroundImage: "var(--canvas-texture)"
+      , isolation: "isolate"
+      , overflow: "hidden"
+      , position: "relative"
+      }
+  , layer: { inset: 0, pointerEvents: "none", position: "absolute", zIndex: 0 }
+  -- The field fades out over its bottom 22% so the canvas texture continues beneath it.
+  , canvas:
+      { height: "100%"
+      , inset: 0
+      , maskImage: "linear-gradient(black 78%, transparent)"
+      , position: "absolute"
+      , width: "100%"
+      }
+  , content: { position: "relative", zIndex: 1 }
+  }
 
 styleProps = StyleX.recordProps styles
 
@@ -59,15 +58,10 @@ component = unsafePerformEffect $ Hooks.reactComponent "Backdrop" \props -> Hook
       current <- Hooks.readRef field
       for_ current \started -> started.ripple props.rippleOrigin
     pure (pure unit)
-  pure
-    $ DOM.div
-        styleProps.root
-        [ DOM.div
-            { className: styleProps.layer.className, "aria-hidden": true }
-            [ DOM.createBuiltinElement
-                "canvas"
-                { className: styleProps.canvas.className, ref: DOM.reactRef canvas }
-                []
-            ]
-        , DOM.div styleProps.content props.content
+  pure $ DOM.div styleProps.root
+    [ DOM.div { className: styleProps.layer.className, "aria-hidden": true }
+        [ DOM.createBuiltinElement "canvas"
+            { className: styleProps.canvas.className, ref: DOM.reactRef canvas } []
         ]
+    , DOM.div styleProps.content props.content
+    ]

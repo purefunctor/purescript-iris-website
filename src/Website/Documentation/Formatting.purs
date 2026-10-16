@@ -11,18 +11,13 @@ import Website.Documentation.Prose (inlineCode, link, paragraph)
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
-component =
-  unsafePerformEffect
-    $ Hooks.reactComponent
-        "Formatting"
-        \_ ->
-          pure
-            $ Documentation.documentation
-                { page: Documentation.Formatting
-                , intro:
-                    "Iris includes a code formatter for PureScript. It can be run from the command line, used to check formatting in CI, or invoked from your editor."
-                , sections
-                }
+component = unsafePerformEffect $ Hooks.reactComponent "Formatting" \_ ->
+  pure $ Documentation.documentation
+    { page: Documentation.Formatting
+    , intro:
+        "Iris includes a code formatter for PureScript. It can be run from the command line, used to check formatting in CI, or invoked from your editor."
+    , sections
+    }
 
 sections :: Array Documentation.Section
 sections =

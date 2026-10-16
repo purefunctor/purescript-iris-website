@@ -25,14 +25,12 @@ sizeStyle = case _ of
   Medium -> iconButtonStyles.medium
 
 copyButton :: { label :: String, size :: Size, text :: String } -> JSX
-copyButton { label, size, text } =
-  element
-    copyButtonImpl
-    { className: (StyleX.props [ iconButtonStyles.button, sizeStyle size ]).className
-    , copiedClassName:
-        (StyleX.props [ iconButtonStyles.button, sizeStyle size, styles.copied ]).className
-    , fallbackClassName: (StyleX.props styles.fallback).className
-    , label
-    , text
-    , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className
-    }
+copyButton { label, size, text } = element copyButtonImpl
+  { className: (StyleX.props [ iconButtonStyles.button, sizeStyle size ]).className
+  , copiedClassName:
+      (StyleX.props [ iconButtonStyles.button, sizeStyle size, styles.copied ]).className
+  , fallbackClassName: (StyleX.props styles.fallback).className
+  , label
+  , text
+  , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className
+  }
