@@ -98,14 +98,13 @@ sections =
             , DOM.text " nor "
             , inlineCode "iris watch"
             , DOM.text
-                " deletes anything in the output directory. After you delete or rename a module, its directory and its record stay behind, and nothing marks them as stale."
+                " deletes anything in the output directory, so a module directory and its record may be stale: left there by an earlier build. After you delete or rename a module, its directory and its record stay behind, and nothing marks them as stale."
             ]
         , paragraph
-            [ DOM.text
-                "A module is stale when your entry module can't reach it through imports. To find the live modules, start at the entry module, follow its imports through the generated JavaScript, and read the records of the modules you reach. Don't list "
+            [ DOM.text "Don't list "
             , inlineCode "output"
             , DOM.text
-                " to find modules, because that includes the stale ones. To clean up, delete the output directory and build again."
+                " to find modules, because that includes stale ones. Start at your entry module and follow its imports through the generated JavaScript instead. To clean up, delete the output directory and build again."
             ]
         ]
     }
