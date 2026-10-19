@@ -17,6 +17,7 @@ AGENTS.md records the project's intent and the constraints that are easy to brea
 All first-party PureScript lives in the `Website` namespace, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`, and page-specific modules belong in `Website.Landing` or `Website.Documentation`. Keep each FFI companion, in `.js` or `.jsx`, beside its PureScript module. Astro pages in `src/pages` render a module's `component` as an island inside `SiteLayout` or `DocumentationLayout`.
 
 - Documentation pages, including how readers switch between them, follow [`src/Website/Documentation/AGENTS.md`](src/Website/Documentation/AGENTS.md).
+- The playground's language server, which only playground work builds, and its Registry packages follow [`playground/AGENTS.md`](playground/AGENTS.md).
 - The landing page's editor trailer is recorded and rendered by `scripts/editor-demos`. Read [`scripts/editor-demos/AGENTS.md`](scripts/editor-demos/AGENTS.md) before you change the take, the trailer, or the code that the take reads and edits in `Website.Landing.Index`, `Website.Landing.Demos`, `Website.Landing.Benchmarks` and `Website.Components.CopyButton`.
 
 ## Code conventions
