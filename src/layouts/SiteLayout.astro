@@ -8,15 +8,17 @@ interface Props {
   description: string;
   image?: string;
   imageAlt?: string;
+  /** Fills the viewport instead of scrolling as a document. */
+  application?: boolean;
 }
 
-const { title, description, image = "/og.png", imageAlt = "The IRIS logo and wordmark over a field of spectrum-colored dots" } = Astro.props;
+const { title, description, image = "/og.png", imageAlt = "The IRIS logo and wordmark over a field of spectrum-colored dots", application = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site!);
 const imageUrl = new URL(image, Astro.site!);
 ---
 
 <!doctype html>
-<html lang="en" {...Layout.html}>
+<html lang="en" {...(application ? Layout.application : Layout.html)}>
   <head>
     <meta charset="UTF-8" />
     <style is:inline set:html={layerOrder} />

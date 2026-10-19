@@ -1,0 +1,90 @@
+module Website.Playground.Types
+  ( Actions
+  , Available
+  , File
+  , Line
+  , Packages
+  , Run
+  , Server
+  , State
+  , View
+  , Viewer
+  )
+  where
+
+import Prelude
+
+import Data.Nullable (Nullable)
+import Effect (Effect)
+import React.Basic (Ref)
+import Web.DOM.Element (Element)
+
+-- | What the playground's controller publishes. The UI renders it and calls `Actions`; it never
+-- | sees the editor, the language server or the runner.
+-- | `phase` is `loading` until the packages and the language server are ready and the editor
+-- | exists, `failed` when that did not work, and `ready` from then on.
+type State =
+  { phase :: String
+  , files :: Array File
+  , active :: Nullable String
+  , viewing :: Nullable Viewer
+  , server :: Server
+  , packages :: Packages
+  , run :: Run
+  , shared :: Boolean
+  }
+
+-- | A project file, such as `src/Main.purs`, with its diagnostic counts.
+type File = { path :: String, errors :: Int, warnings :: Int }
+
+-- | A read-only package or Prim source that navigation opened.
+type Viewer = { uri :: String, label :: String }
+
+-- | `kind` is `iris` or `mock`; `status` is `starting`, `ready`, `restarting` or `failed`.
+type Server =
+  { kind :: Nullable String
+  , version :: Nullable String
+  , status :: String
+  , message :: Nullable String
+  }
+
+-- | The package set, which the project can import from in full. `loaded` of `total` packages, and
+-- | `bytes` of `totalBytes` compressed, have been downloaded or read from the cache.
+type Packages =
+  { available :: Array Available
+  , packageSet :: Nullable String
+  , loaded :: Int
+  , total :: Int
+  , bytes :: Int
+  , totalBytes :: Int
+  }
+
+type Available = { name :: String, version :: String }
+
+-- | `status` is `idle`, `compiling`, `running`, `done`, `stopped` or `failed`. A line's `kind` is
+-- | `log`, `info`, `warning` or `error`.
+type Run = { status :: String, lines :: Array Line }
+
+type Line = { kind :: String, text :: String }
+
+type Actions =
+  { selectFile :: String -> Effect Unit
+  , closeViewer :: Effect Unit
+  , createFile :: Effect Unit
+  -- | Returns why the name was rejected, or null once the file is renamed.
+  , renameFile :: String -> String -> Effect (Nullable String)
+  , deleteFile :: String -> Effect Unit
+  , run :: Effect Unit
+  , stop :: Effect Unit
+  , clearOutput :: Effect Unit
+  , share :: Effect Unit
+  , reset :: Effect Unit
+  , retry :: Effect Unit
+  }
+
+type View =
+  { state :: State
+  , actions :: Actions
+  , editor :: Ref (Nullable Element)
+  , frames :: Ref (Nullable Element)
+  }

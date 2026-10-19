@@ -2,9 +2,19 @@ import react from "@astrojs/react";
 import stylex from "@stylexjs/unplugin";
 import icons from "unplugin-icons/vite";
 import { defineConfig } from "astro/config";
+import { readFileSync } from "node:fs";
 import { devLibraryBundle } from "./src/lib/devLibraryBundle.ts";
 import { devModulePreload } from "./src/lib/devModulePreload.ts";
 import { inlineStyleHashes } from "./src/lib/inlineStyles.ts";
+
+// The playground imports Monaco's editor features one module at a time. Prebundle each module it
+// lists, so that opening the playground never makes Vite reoptimize and reload the page.
+const monacoModules = Array.from(
+  readFileSync(new URL("./playground/client/monaco.js", import.meta.url), "utf8").matchAll(
+    /^import (?:\* as \w+ from )?"(monaco-editor\/[^"?]+\.js)";$/gm,
+  ),
+  (match) => match[1],
+);
 
 // Astro sets NODE_ENV before loading config.
 const development = process.env.NODE_ENV === "development";
@@ -55,6 +65,8 @@ export default defineConfig({
         "react-aria-components/Popover",
         "react-aria-components/Tabs",
         "react-aria-components/Tooltip",
+        "es-module-lexer/js",
+        ...monacoModules,
       ],
     },
     // StyleX aggregates all rules into one CSS asset.

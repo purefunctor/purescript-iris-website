@@ -22,9 +22,12 @@ module Website.Components.Icon
   , pause
   , play
   , pureScript
+  , rotateCcw
   , server
+  , share
   , shieldCheck
   , snowflake
+  , square
   , squareTerminal
   , x
   , xSocial
@@ -57,9 +60,12 @@ foreign import minimize :: ReactComponent IconProps
 foreign import pause :: ReactComponent IconProps
 foreign import play :: ReactComponent IconProps
 foreign import pureScript :: ReactComponent IconProps
+foreign import rotateCcw :: ReactComponent IconProps
 foreign import server :: ReactComponent IconProps
+foreign import share :: ReactComponent IconProps
 foreign import shieldCheck :: ReactComponent IconProps
 foreign import snowflake :: ReactComponent IconProps
+foreign import square :: ReactComponent IconProps
 foreign import squareTerminal :: ReactComponent IconProps
 foreign import x :: ReactComponent IconProps
 foreign import xSocial :: ReactComponent IconProps
