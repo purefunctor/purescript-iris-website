@@ -648,6 +648,7 @@ dependencies = [
  "prim-constants",
  "serde",
  "serde_json",
+ "syntax",
  "url",
  "wasm-bindgen",
 ]

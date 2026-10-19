@@ -16,6 +16,7 @@ files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9"
 iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
 javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
 prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+syntax = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
 # Match the version the Iris workspace pins.
 lsp-types = { package = "gen-lsp-types", version = "=0.11.0", features = ["url"] }
 serde = { version = "1.0.229", features = ["derive"] }

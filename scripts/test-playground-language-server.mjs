@@ -4,7 +4,9 @@
 // `--stress` also replays typing a module one character at a time, requesting diagnostics, hover
 // and completion along the way, so that incomplete code at every step goes through the analyzer.
 //
-// Usage: node scripts/test-playground-language-server.mjs [--stress]
+// `--all` loads the whole package set, as the playground does, instead of the starter closure.
+//
+// Usage: node scripts/test-playground-language-server.mjs [--stress] [--all]
 // Build the server first with `node scripts/build-playground-language-server.mjs`.
 
 import assert from "node:assert/strict";
@@ -17,6 +19,7 @@ const root = new URL("..", import.meta.url).pathname;
 const dist = join(root, "public/playground/language-server");
 const archives = join(root, "playground/.cache/archives");
 const stress = process.argv.includes("--stress");
+const all = process.argv.includes("--all");
 
 const ROOTS = ["prelude", "effect", "console", "arrays", "maybe", "either", "strings", "foldable-traversable", "aff"];
 const PROJECT = "file:///project/";
@@ -61,6 +64,21 @@ main = launchAff_ do
   liftEffect $ log $ show (fromMaybe 0 firstEven)
 `;
 
+// Maps `items` with at most 16 actions in flight, so the whole package set does not open hundreds
+// of connections at once.
+const pool = async (items, action) => {
+  const results = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await action(items[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: 16 }, worker));
+  return results;
+};
+
 const timings = [];
 const time = async (label, action) => {
   const started = performance.now();
@@ -103,10 +121,13 @@ notify("initialized", {});
 
 // Load the starter packages from the Registry, caching archives on disk.
 const index = JSON.parse(readFileSync(join(root, "playground/packages/index.json"), "utf8"));
-const closure = resolveClosure(index, ROOTS);
+const closure = all
+  ? Object.entries(index.packages).map(([name, entry]) => ({ name, ...entry }))
+  : resolveClosure(index, ROOTS);
 const packages = await time(`Fetch and unpack ${closure.length} packages`, () =>
-  Promise.all(
-    closure.map(async (entry) => {
+  pool(
+    closure,
+    async (entry) => {
       const cached = join(archives, `${entry.name}-${entry.version}.tar.gz`);
       let archive;
       if (existsSync(cached)) {
@@ -119,7 +140,7 @@ const packages = await time(`Fetch and unpack ${closure.length} packages`, () =>
         writeFileSync(cached, archive);
       }
       return { name: entry.name, files: await unpackPackage(entry, archive) };
-    }),
+    },
   ),
 );
 const files = packages.flatMap((pkg) => pkg.files);
@@ -130,6 +151,7 @@ console.log(
 );
 const loaded = await time("iris/setPackages", () => request("iris/setPackages", { packages }));
 assert.ok(loaded.sources > 200, `expected package sources, got ${loaded.sources}`);
+const packagesMemory = exports.memory.buffer.byteLength;
 
 // Open the project and collect its first diagnostics, which checks everything Main imports.
 const open = (path, text, languageId = "purescript") =>
@@ -196,6 +218,25 @@ change(2, "Array.foldl (+) 0 (Array.range 1 10)", '"ten"');
 const broken = await time("Diagnostics after an edit", drainDiagnostics);
 assert.ok(errors(broken.get(main)).length > 0, "a String total should not type check");
 notify("textDocument/didChange", { textDocument: { uri: main, version: 3 }, contentChanges: [{ text: MAIN }] });
+assert.deepEqual(errors(drainDiagnostics().get(main)), []);
+
+// Package sources load once an import reaches them, so an import that an edit adds loads modules
+// that nothing imported before.
+assert.ok(loaded.loaded < loaded.sources, "package sources should load on demand");
+const REGEX = MAIN.replace(
+  "import Util (answer, double)\n",
+  "import Util (answer, double)\nimport Data.String.Regex (test)\nimport Data.String.Regex.Flags (noFlags)\n" +
+    "import Data.String.Regex.Unsafe (unsafeRegex)\n",
+) + '\nmatches :: Boolean\nmatches = test (unsafeRegex "a+" noFlags) "aaa"\n';
+notify("textDocument/didChange", { textDocument: { uri: main, version: 4 }, contentChanges: [{ text: REGEX }] });
+const imported = await time("Diagnostics after a new import", drainDiagnostics);
+assert.deepEqual(errors(imported.get(main)), [], "a newly imported package module should resolve");
+const regexDefinition = request("textDocument/definition", {
+  textDocument: { uri: main },
+  position: at(REGEX, "unsafeRegex \"", 1),
+});
+assert.match(JSON.stringify(regexDefinition), /packages\/strings\/src\/Data\/String\/Regex\/Unsafe\.purs/);
+notify("textDocument/didChange", { textDocument: { uri: main, version: 5 }, contentChanges: [{ text: MAIN }] });
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 
 // The emitted JavaScript runs: write it out, import Main and capture what main logs.
@@ -267,6 +308,7 @@ const memory = exports.memory.buffer.byteLength;
 const wasmBytes = module.byteLength;
 console.log("");
 for (const [label, ms] of timings) console.log(`${label.padEnd(36)} ${ms.toFixed(1).padStart(8)} ms`);
+console.log(`${"WASM memory after iris/setPackages".padEnd(36)} ${(packagesMemory / 1024 / 1024).toFixed(1).padStart(8)} MiB`);
 console.log(`${"WASM memory".padEnd(36)} ${(memory / 1024 / 1024).toFixed(1).padStart(8)} MiB`);
 console.log(`${"Module size".padEnd(36)} ${(wasmBytes / 1024).toFixed(0).padStart(8)} KiB`);
 console.log("\nAll checks passed.");

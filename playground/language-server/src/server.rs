@@ -118,6 +118,17 @@ impl Server {
         }
     }
 
+    /// The text of a project or package source, including package sources the engine has not
+    /// loaded.
+    pub fn read_source(&self, uri: &str) -> Option<String> {
+        if let Some(file_id) = self.workspace.files.source_id(uri)
+            && let Ok(content) = self.workspace.engine.content(file_id)
+        {
+            return Some(content.to_string());
+        }
+        self.workspace.package_text(uri).map(|text| text.to_string())
+    }
+
     fn request(
         &mut self,
         method: &str,
@@ -149,16 +160,8 @@ impl Server {
                 });
                 let change = self.workspace.set_packages(packages.collect());
                 self.schedule(&change, None, outgoing);
-                let sources = self
-                    .workspace
-                    .files
-                    .source_ids()
-                    .filter(|file_id| {
-                        self.workspace.files.source_metadata(*file_id)
-                            == Some(&SourceMetadata::Package)
-                    })
-                    .count();
-                Ok(json!({ "sources": sources }))
+                let (sources, loaded) = self.workspace.package_counts();
+                Ok(json!({ "sources": sources, "loaded": loaded }))
             }
             "iris/emit" => {
                 let emitted = emit::emit(&self.workspace)

@@ -59,6 +59,16 @@ impl LanguageServer {
     }
 }
 
+#[wasm_bindgen]
+impl LanguageServer {
+    /// The text of any source the server knows, such as a package or Prim module that the editor
+    /// opens read-only, or `undefined`.
+    #[wasm_bindgen(js_name = readSource)]
+    pub fn read_source(&self, uri: &str) -> Option<String> {
+        self.server.read_source(uri)
+    }
+}
+
 impl Default for LanguageServer {
     fn default() -> LanguageServer {
         LanguageServer::new()
