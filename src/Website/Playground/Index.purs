@@ -25,6 +25,18 @@ import Yoga.React.DOM as DOM
 
 foreign import playgroundImpl :: ReactComponent { theme :: Foreign, render :: View -> JSX }
 
+foreign import sidebarImpl ::
+  ReactComponent
+    { id :: String
+    , open :: Boolean
+    , width :: Int
+    , resize :: Int -> Effect Unit
+    , close :: Effect Unit
+    , className :: String
+    , handleClassName :: String
+    , children :: JSX
+    }
+
 foreign import serverPillImpl ::
   ReactComponent
     { href :: String
@@ -131,9 +143,32 @@ styles = StyleX.create
       , insetInlineStart: 0
       , position: StyleX.conditionalValue "relative"
           [ StyleX.conditionalCase breakpoints.upTo720 "absolute" ]
-      , width: StyleX.conditionalValue "240px"
+      , width: StyleX.conditionalValue "var(--sidebar-width)"
           [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
       , zIndex: 3
+      }
+  -- The sidebar's edge, which drags to resize and closes it below a minimum width. Phones open
+  -- the sidebar over the editor instead, so they have no handle.
+  , handle:
+      { backgroundColor:
+          { default: "transparent"
+          , ":hover": "var(--accent)"
+          , ":focus-visible": "var(--focus-ring)"
+          , "[data-dragging]": "var(--accent)"
+          }
+      , backgroundClip: "content-box"
+      , cursor: "col-resize"
+      , display:
+          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
+      , insetBlock: 0
+      , outlineStyle: "none"
+      , paddingInline: 2
+      , position: "absolute"
+      , transitionDelay: { default: "0ms", ":hover": "150ms" }
+      , transitionDuration: "120ms"
+      , transitionProperty: "background-color"
+      , width: 6
+      , zIndex: 4
       }
   , editorColumn:
       { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0, minWidth: 0 }
@@ -388,6 +423,15 @@ styles = StyleX.create
       , justifyContent: "center"
       }
   , inactiveLabel: { visibility: "hidden" }
+  -- The panel toggle's icon shows where the panel sits: beside the editor, or below it.
+  , besidePanel:
+      { display: StyleX.conditionalValue "inline-flex"
+          [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
+      }
+  , belowPanel:
+      { display: StyleX.conditionalValue "none"
+          [ StyleX.conditionalCase breakpoints.upTo960 "inline-flex" ]
+      }
   , shareLabel:
       { display:
           StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
@@ -412,7 +456,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
   -- the controller fills once loading finishes.
   , DOM.main styleProps.workspace
       [ DOM.div styleProps.upper
-          [ if ready && state.sidebar then sidebar else mempty
+          [ if ready then sidebar else mempty
           , DOM.div styleProps.editorColumn
               [ if ready then tabs else mempty
               , DOM.div styleProps.editor
@@ -424,7 +468,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
                   ]
               ]
           ]
-      , if ready then panel else mempty
+      , if ready && state.panel then panel else mempty
       , if ready then mempty else loading state actions.retry
       , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef frames } []
       ]
@@ -465,10 +509,34 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , DOM.span styleProps.shareLabel (if state.shared then "Link copied" else "Share")
         ]
     , runButton state actions.run actions.stop
+    , DOM.button
+        { className:
+            ( StyleX.props
+                [ styles.action, styles.iconOnly, StyleX.conditional state.panel styles.toggled ]
+            ).className
+        , onClick: handler_ actions.togglePanel
+        , title: if state.panel then "Hide output" else "Show output"
+        , type: "button"
+        , "aria-controls": "playground-panel"
+        , "aria-expanded": state.panel
+        , "aria-label": "Output and packages"
+        }
+        [ DOM.span (StyleX.props [ styles.icon, styles.besidePanel ]) (icon Icon.panelRight)
+        , DOM.span (StyleX.props [ styles.icon, styles.belowPanel ]) (icon Icon.panelBottom)
+        ]
     ]
 
-  sidebar = DOM.div { className: styleProps.sidebar.className, id: "playground-sidebar" }
-    [ fileTree { files: state.files, active: state.active, viewing: state.viewing, actions } ]
+  sidebar = element sidebarImpl
+    { id: "playground-sidebar"
+    , open: state.sidebar
+    , width: state.sidebarWidth
+    , resize: actions.resizeSidebar
+    , close: actions.closeSidebar
+    , className: styleProps.sidebar.className
+    , handleClassName: styleProps.handle.className
+    , children:
+        fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
+    }
 
   tabs = DOM.div styleProps.tabsRow
     [ fileTabs
@@ -480,7 +548,11 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         }
     ]
 
-  panel = DOM.aside { className: styleProps.panel.className, "aria-label": "Output and packages" }
+  panel = DOM.aside
+    { className: styleProps.panel.className
+    , id: "playground-panel"
+    , "aria-label": "Output and packages"
+    }
     [ element panelTabsImpl
         { rootClassName: styleProps.tabs.className
         , tabListClassName: styleProps.tabList.className

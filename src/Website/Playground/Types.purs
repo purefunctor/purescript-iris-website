@@ -30,6 +30,10 @@ type State =
   , active :: Nullable String
   , viewing :: Nullable Viewer
   , sidebar :: Boolean
+  -- | The sidebar's width in pixels, which the reader sets by dragging its edge.
+  , sidebarWidth :: Int
+  -- | Whether the Output and Packages panel shows.
+  , panel :: Boolean
   , server :: Server
   , packages :: Packages
   , run :: Run
@@ -77,6 +81,10 @@ type Actions =
   , closeFile :: String -> Effect Unit
   , closeViewer :: Effect Unit
   , toggleSidebar :: Effect Unit
+  -- | Opens the sidebar at a width in pixels.
+  , resizeSidebar :: Int -> Effect Unit
+  , closeSidebar :: Effect Unit
+  , togglePanel :: Effect Unit
   , createFile :: Effect Unit
   -- | Returns why the name was rejected, or null once the file is renamed.
   , renameFile :: String -> String -> Effect (Nullable String)

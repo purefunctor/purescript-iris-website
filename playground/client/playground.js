@@ -17,6 +17,8 @@ const PROJECT = "file:///project/";
 // closes once a file opens.
 const NARROW = "(max-width: 720px)";
 const MAX_LINES = 1000;
+// The reader's sidebar width, kept apart from the project so that shared links do not carry it.
+const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
 
 export const DEFAULT_FILES = [
   {
@@ -72,6 +74,8 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     active,
     viewing: null,
     sidebar: !matchMedia(NARROW).matches,
+    sidebarWidth: Number(safely(() => localStorage.getItem(SIDEBAR_WIDTH))) || 240,
+    panel: true,
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [] },
@@ -295,6 +299,12 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       setState(() => ({ viewing: null }));
     },
     toggleSidebar: () => setState((current) => ({ sidebar: !current.sidebar })),
+    resizeSidebar: (width) => {
+      safely(() => localStorage.setItem(SIDEBAR_WIDTH, String(width)));
+      setState(() => ({ sidebar: true, sidebarWidth: width }));
+    },
+    closeSidebar: () => setState(() => ({ sidebar: false })),
+    togglePanel: () => setState((current) => ({ panel: !current.panel })),
     createFile: () => {
       let index = 1;
       while (models.has(`src/Module${index}.purs`)) index += 1;
@@ -379,6 +389,15 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       for (const model of monaco.editor.getModels()) model.dispose();
     },
   };
+}
+
+/** Storage can be unavailable, such as in some private windows; the layout then resets. */
+function safely(action) {
+  try {
+    return action();
+  } catch {
+    return null;
+  }
 }
 
 function readOnlyLabel(uri) {
