@@ -104,6 +104,7 @@ Development page loads are bounded by portal round trips, not rendering. [`devLi
 
 - Do not add Vite `server.warmup`. StyleX loads optimized dependencies while transforming, which deadlocks the initial dependency crawl on a cold cache.
 - Keep the development and production Vite caches separate, so that a build never replaces the prebundles of a running server.
+- Keep Iris's `index.js.map` files chained through every development transform so that browser stack frames show `.purs` locations. A transform that changes code must return a real map or `map: null`, never `{ mappings: "" }`, which drops the chain. `@stylexjs/unplugin` requests no source map from Babel, so `astro.config.mjs` passes a Babel preset that enables `sourceMaps`. Frames in library code point into `virtual:iris-library` by design.
 - Keep Astro's dev toolbar disabled. It adds about 1.3 MB of client modules to every page.
 
 ## Verification

@@ -201,10 +201,10 @@ export function devLibraryBundle(): Plugin {
             rewritten = rewritten.slice(0, ss) + replacement + rewritten.slice(se);
           }
         }
-        // Iris output is its own source. Skip Vite's fallback identity source map,
-        // which is larger than the module, unless StyleX will transform the code.
-        const map = code.includes("@stylexjs/stylex") ? null : { mappings: "" };
-        return rewritten === code && map === null ? null : { code: rewritten, map };
+        // Return no map: Vite then keeps the `index.js.map` that Iris writes beside
+        // each module, and chains StyleX's map after it. An empty `{ mappings: "" }`
+        // would drop that chain and leave the module without a map.
+        return rewritten === code ? null : { code: rewritten, map: null };
       },
     },
     async hotUpdate({ file }) {

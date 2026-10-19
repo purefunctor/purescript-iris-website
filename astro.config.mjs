@@ -66,6 +66,10 @@ export default defineConfig({
         dev: development,
         runtimeInjection: false,
         useCSSLayers: true,
+        // The plugin reprints modules with Babel but requests no source map and
+        // returns `map: null`, which Vite reads as unchanged positions. That would
+        // apply Iris's map to shifted code, so ask Babel for a map to chain.
+        babelConfig: { presets: [() => ({ sourceMaps: true })] },
       }),
     ],
     server: {
