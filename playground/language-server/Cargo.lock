@@ -644,6 +644,7 @@ dependencies = [
  "files",
  "gen-lsp-types",
  "iris-analysis",
+ "javascript",
  "prim-constants",
  "serde",
  "serde_json",

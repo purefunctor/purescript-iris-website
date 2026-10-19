@@ -8,7 +8,8 @@
 // Build the server first with `node scripts/build-playground-language-server.mjs`.
 
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { join } from "node:path";
 import { archiveUrl, resolveClosure, unpackPackage } from "../playground/packages/registry.js";
 
@@ -197,10 +198,35 @@ assert.ok(errors(broken.get(main)).length > 0, "a String total should not type c
 notify("textDocument/didChange", { textDocument: { uri: main, version: 3 }, contentChanges: [{ text: MAIN }] });
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 
+// The emitted JavaScript runs: write it out, import Main and capture what main logs.
+const emitted = await time("iris/emit", () => request("iris/emit", {}));
+assert.equal(emitted.status, "emitted");
+assert.deepEqual(emitted.modules.map((module) => module.name), ["Main", "Util"]);
+const output = join(root, "playground/.cache/emit");
+rmSync(output, { recursive: true, force: true });
+for (const file of emitted.files) {
+  mkdirSync(dirname(join(output, file.path)), { recursive: true });
+  writeFileSync(join(output, file.path), file.text);
+}
+writeFileSync(join(output, "package.json"), '{ "type": "module" }\n');
+const logged = [];
+const log = console.log;
+console.log = (...values) => logged.push(values.join(" "));
+try {
+  (await import(join(output, "Main/index.js"))).main();
+  await new Promise((resolve) => setTimeout(resolve, 100));
+} finally {
+  console.log = log;
+}
+assert.deepEqual(logged, ["SUM: 152", "4"]);
+
 // Removing Util breaks Main's import.
 notify("textDocument/didClose", { textDocument: { uri: PROJECT + "src/Util.purs" } });
 const removed = drainDiagnostics();
 assert.ok(errors(removed.get(main)).length > 0, "Main should report the missing Util module");
+const failed = request("iris/emit", {});
+assert.equal(failed.status, "failed");
+assert.ok(failed.errors.some((error) => error.uri === main));
 open("src/Util.purs", UTIL);
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 

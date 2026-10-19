@@ -4,6 +4,7 @@
 //! Worker. A panic aborts the instance, so the host restarts it and replays its documents.
 
 mod capabilities;
+mod emit;
 mod protocol;
 mod requests;
 mod server;

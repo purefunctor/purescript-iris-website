@@ -22,10 +22,10 @@ use crate::capabilities::{
     initialize_result, negotiate_analyzer_capabilities, negotiate_position_encoding,
 };
 use crate::protocol::{Rejection, notification, response};
-use crate::requests;
 use crate::workspace::{
     PROJECT_ROOT, Package, PackageFile, SourceMetadata, Workspace, document_unit,
 };
+use crate::{emit, requests};
 
 #[derive(Default)]
 pub struct Server {
@@ -159,6 +159,11 @@ impl Server {
                     })
                     .count();
                 Ok(json!({ "sources": sources }))
+            }
+            "iris/emit" => {
+                let emitted = emit::emit(&self.workspace)
+                    .map_err(|error| Rejection::RequestFailed(error.to_string()))?;
+                Ok(serde_json::to_value(emitted).expect("invariant violated: must serialize"))
             }
             method => requests::handle(&mut self.workspace, method, params),
         }
