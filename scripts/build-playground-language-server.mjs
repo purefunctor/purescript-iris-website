@@ -1,4 +1,5 @@
-// Builds the playground language server into `playground/language-server/dist`.
+// Builds the playground language server into `public/playground/language-server`, where the
+// playground loads it from instead of its mock server.
 //
 // Only needed when changing the Rust crate: the site never builds it, and the playground can run
 // against its mock server or a published canary instead. Needs rustup, which installs the
@@ -9,12 +10,12 @@
 // Usage: node scripts/build-playground-language-server.mjs
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, rmSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
 const crate = new URL("../playground/language-server/", import.meta.url).pathname;
-const dist = join(crate, "dist");
+const dist = new URL("../public/playground/language-server/", import.meta.url).pathname;
 
 const manifest = readFileSync(join(crate, "Cargo.toml"), "utf8");
 const pinned = /^wasm-bindgen = "=([^"]+)"/m.exec(manifest)[1];
@@ -39,8 +40,16 @@ rmSync(dist, { recursive: true, force: true });
 // Function names make up about half of the module and only improve panic backtraces.
 execFileSync(
   "wasm-bindgen",
-  ["--target", "web", "--remove-name-section", "--remove-producers-section", "--out-dir", dist, "--out-name", "language_server", wasm],
+  ["--target", "web", "--no-typescript", "--remove-name-section", "--remove-producers-section", "--out-dir", dist, "--out-name", "language_server", wasm],
   { stdio: "inherit" },
+);
+
+// The playground reads the manifest to decide whether a built server exists.
+const lock = readFileSync(join(crate, "Cargo.lock"), "utf8");
+const source = /name = "building"\nversion = "[^"]+"\nsource = "git\+[^?]+\?tag=([^#]+)#([0-9a-f]{12})/.exec(lock);
+writeFileSync(
+  join(dist, "manifest.json"),
+  `${JSON.stringify({ iris: source[1], revision: source[2], source: "local" }, null, 2)}\n`,
 );
 
 const output = readFileSync(join(dist, "language_server_bg.wasm"));

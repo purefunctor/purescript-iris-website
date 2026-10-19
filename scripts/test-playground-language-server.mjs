@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { archiveUrl, resolveClosure, unpackPackage } from "../playground/packages/registry.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const dist = join(root, "playground/language-server/dist");
+const dist = join(root, "public/playground/language-server");
 const archives = join(root, "playground/.cache/archives");
 const stress = process.argv.includes("--stress");
 
