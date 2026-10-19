@@ -14,6 +14,7 @@
     "dev": "pnpm prepare:dev && concurrently --kill-others --names compiler,astro --prefix-colors cyan,magenta \"iris watch --output output\" \"astro dev\"",
     "preview": "wrangler dev",
     "sources": "spago sources",
+    "playground:packages": "node scripts/generate-playground-packages.mjs",
     "playground:language-server": "node scripts/build-playground-language-server.mjs"
   },
   "dependencies": {
