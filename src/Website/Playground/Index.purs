@@ -55,10 +55,13 @@ foreign import panelImpl ::
 
 foreign import panelTabsImpl ::
   ReactComponent
-    { rootClassName :: String
+    { selected :: String
+    , select :: String -> Effect Unit
+    , rootClassName :: String
     , tabListClassName :: String
     , tabClassName :: String
     , panelClassName :: String
+    , switchedPanelClassName :: String
     , badgeClassName :: String
     , output :: JSX
     , outputBadge :: String
@@ -112,6 +115,12 @@ styles = StyleX.create
       , flexGrow: 1
       , minHeight: 0
       , position: "relative"
+      }
+  -- Switching between Output and Packages fades the new panel in.
+  , switched:
+      { animationDuration: "160ms"
+      , animationName: { default: fadeIn, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
       }
   , revealed:
       { animationDuration: "320ms"
@@ -263,12 +272,8 @@ styles = StyleX.create
       , paddingInline: 5
       , textAlign: "center"
       }
-  -- Switching between Output and Packages fades the new panel in.
   , tabPanel:
-      { animationDuration: "160ms"
-      , animationName: { default: fadeIn, "@media (prefers-reduced-motion: reduce)": "none" }
-      , animationTimingFunction: "var(--ease-out)"
-      , display: "flex"
+      { display: "flex"
       , flexDirection: "column"
       , flexGrow: 1
       , minHeight: 0
@@ -649,10 +654,13 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
     , label: "Output and packages"
     , className: styleProps.panel.className
     , children: element panelTabsImpl
-        { rootClassName: styleProps.tabs.className
+        { selected: state.panelTab
+        , select: actions.selectPanelTab
+        , rootClassName: styleProps.tabs.className
         , tabListClassName: styleProps.tabList.className
         , tabClassName: styleProps.tab.className
         , panelClassName: styleProps.tabPanel.className
+        , switchedPanelClassName: (StyleX.props [ styles.tabPanel, styles.switched ]).className
         , badgeClassName: styleProps.badge.className
         , output: output state.run actions.clearOutput
         , outputBadge: ""

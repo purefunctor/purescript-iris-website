@@ -76,6 +76,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     sidebar: !matchMedia(NARROW).matches,
     sidebarWidth: Number(safely(() => localStorage.getItem(SIDEBAR_WIDTH))) || 240,
     panel: true,
+    panelTab: "output",
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [] },
@@ -305,6 +306,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     closeSidebar: () => setState(() => ({ sidebar: false })),
     togglePanel: () => setState((current) => ({ panel: !current.panel })),
+    selectPanelTab: (tab) => setState(() => ({ panelTab: tab })),
     createFile: () => {
       let index = 1;
       while (models.has(`src/Module${index}.purs`)) index += 1;

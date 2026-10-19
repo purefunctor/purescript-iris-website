@@ -13,6 +13,7 @@ const initialState = {
   sidebar: false,
   sidebarWidth: 240,
   panel: true,
+  panelTab: "output",
   server: { kind: null, version: null, revision: null, status: "starting", message: null },
   packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
   run: { status: "idle", lines: [] },
@@ -69,6 +70,7 @@ export function playgroundImpl({ theme, render }) {
       resizeSidebar: (width) => () => call("resizeSidebar", width),
       closeSidebar: () => call("closeSidebar"),
       togglePanel: () => call("togglePanel"),
+      selectPanelTab: (tab) => () => call("selectPanelTab", tab),
       createFile: () => call("createFile"),
       renameFile: (from) => (to) => () => call("renameFile", from, to) ?? null,
       deleteFile: (path) => () => call("deleteFile", path),
@@ -85,20 +87,34 @@ export function playgroundImpl({ theme, render }) {
   return render({ state, actions, editor, frames });
 }
 
-// The side panel's Output and Packages tabs.
+// The side panel's Output and Packages tabs. The selection lives in the controller, so the panel
+// reopens on the tab it closed on, and a panel fades in only when the reader switches to it, not
+// when the whole panel opens.
 export function panelTabsImpl({
+  selected,
+  select,
   rootClassName,
   tabListClassName,
   tabClassName,
   panelClassName,
+  switchedPanelClassName,
   badgeClassName,
   output,
   outputBadge,
   packages,
   packagesBadge,
 }) {
+  const [switched, setSwitched] = useState(false);
+  const panelClass = switched ? switchedPanelClassName : panelClassName;
   return (
-    <Tabs className={rootClassName} defaultSelectedKey="output">
+    <Tabs
+      className={rootClassName}
+      onSelectionChange={(key) => {
+        setSwitched(true);
+        select(String(key))();
+      }}
+      selectedKey={selected}
+    >
       <TabList aria-label="Playground panels" className={tabListClassName}>
         <Tab className={tabClassName} id="output">
           Output
@@ -109,10 +125,10 @@ export function panelTabsImpl({
           {packagesBadge && <span className={badgeClassName}>{packagesBadge}</span>}
         </Tab>
       </TabList>
-      <TabPanel className={panelClassName} id="output">
+      <TabPanel className={panelClass} id="output">
         {output}
       </TabPanel>
-      <TabPanel className={panelClassName} id="packages">
+      <TabPanel className={panelClass} id="packages">
         {packages}
       </TabPanel>
     </Tabs>
