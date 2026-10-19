@@ -42,6 +42,7 @@ export function fileTreeImpl({
   newFileClassName,
   scrollClassName,
   listClassName,
+  folderClassName,
   itemClassName,
   rowClassName,
   activeRowClassName,
@@ -102,7 +103,7 @@ export function fileTreeImpl({
     const open = !collapsed.has(folder.path);
     const errors = open ? 0 : errorsIn(folder);
     return (
-      <li className={itemClassName} key={folder.path}>
+      <li className={folderClassName} key={folder.path}>
         <button aria-expanded={open} className={rowClassName} onClick={() => toggle(folder.path)} style={depth(level)} type="button">
           <ChevronRightIcon aria-hidden className={open ? openChevronClassName : chevronClassName} />
           <span className={nameClassName}>{name}</span>

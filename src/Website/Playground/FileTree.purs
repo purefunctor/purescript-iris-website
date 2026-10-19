@@ -20,6 +20,7 @@ foreign import fileTreeImpl ::
     , newFileClassName :: String
     , scrollClassName :: String
     , listClassName :: String
+    , folderClassName :: String
     , itemClassName :: String
     , rowClassName :: String
     , activeRowClassName :: String
@@ -201,6 +202,8 @@ fileTree { files, active, viewing, actions } = element fileTreeImpl
   , newFileClassName: styleProps.newFile.className
   , scrollClassName: styleProps.scroll.className
   , listClassName: styleProps.list.className
+  -- Only file items carry the marker, so hovering a file reveals that file's actions alone.
+  , folderClassName: styleProps.item.className
   , itemClassName: (StyleX.props [ styles.item, StyleX.defaultMarker ]).className
   , rowClassName: styleProps.row.className
   , activeRowClassName: (StyleX.props [ styles.row, styles.activeRow ]).className
