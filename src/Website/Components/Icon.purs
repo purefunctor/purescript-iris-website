@@ -20,6 +20,7 @@ module Website.Components.Icon
   , menu
   , minimize
   , pause
+  , panelLeft
   , play
   , pureScript
   , rotateCcw
@@ -58,6 +59,7 @@ foreign import maximize :: ReactComponent IconProps
 foreign import menu :: ReactComponent IconProps
 foreign import minimize :: ReactComponent IconProps
 foreign import pause :: ReactComponent IconProps
+foreign import panelLeft :: ReactComponent IconProps
 foreign import play :: ReactComponent IconProps
 foreign import pureScript :: ReactComponent IconProps
 foreign import rotateCcw :: ReactComponent IconProps

@@ -3,7 +3,7 @@ module Website.Playground.Index (component) where
 import Prelude
 
 import Data.Array (null)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
 import Data.Nullable (toMaybe)
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
@@ -14,8 +14,9 @@ import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import Website.Breakpoints (breakpoints)
 import Website.Components.Icon as Icon
-import Website.Components.SiteNav as SiteNav
+import Website.Components.Logo (logo)
 import Website.Playground.FileTabs (fileTabs)
+import Website.Playground.FileTree (fileTree)
 import Website.Playground.Loading (loading)
 import Website.Playground.Packages (packagesPanel)
 import Website.Playground.Types (Line, Run, State, View)
@@ -40,57 +41,113 @@ styles = StyleX.create
   { page:
       { backgroundColor: "var(--bg-canvas)"
       , color: "var(--text-primary)"
-      , display: "grid"
+      , display: "flex"
+      , flexDirection: "column"
       , fontFamily: "var(--font-sans)"
       , fontSize: 14
-      , gridTemplateRows: "var(--nav-height) minmax(0, 1fr)"
-      , height:
-          StyleX.conditionalValue "100dvh" [ StyleX.conditionalCase breakpoints.upTo960 "auto" ]
-      , minHeight: "100dvh"
+      , height: "100dvh"
       }
-  , navigation: { alignSelf: "stretch", display: "flex", flexGrow: 1, minWidth: 0 }
-  -- The editor and its panel meet at a hard edge; the panel drops below the editor on narrow
-  -- screens.
-  , workspace:
-      { display: "grid"
-      , gridTemplateColumns: StyleX.conditionalValue "minmax(0, 1fr) minmax(320px, 400px)"
-          [ StyleX.conditionalCase breakpoints.upTo960 "minmax(0, 1fr)" ]
-      , gridTemplateRows: StyleX.conditionalValue "auto minmax(0, 1fr)"
-          [ StyleX.conditionalCase breakpoints.upTo960 "auto 62dvh auto" ]
-      , minHeight: 0
-      , position: "relative"
-      }
-  , toolbar:
-      { alignItems: "stretch"
+  -- The playground's own header replaces the site navigation: the brand leads home, and the
+  -- project's controls take the rest of the row.
+  , header:
+      { alignItems: "center"
       , backgroundColor: "var(--granite-950)"
       , borderBlockEndColor: "var(--border-subtle)"
       , borderBlockEndStyle: "solid"
       , borderBlockEndWidth: 1
       , display: "flex"
-      , flexWrap:
-          StyleX.conditionalValue "nowrap" [ StyleX.conditionalCase breakpoints.upTo600 "wrap" ]
-      , gridColumn: "1 / -1"
-      , minHeight: 48
-      , minWidth: 0
+      , flexShrink: 0
+      , gap: StyleX.conditionalValue 10 [ StyleX.conditionalCase breakpoints.upTo600 6 ]
+      , height: "var(--nav-height)"
+      , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
       }
-  , actions:
+  , brand:
+      { alignItems: "center"
+      , color: "var(--text-primary)"
+      , cursor: "default"
+      , display: "inline-flex"
+      , gap: 7
+      , lineHeight: 1
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , marginInlineEnd: StyleX.conditionalValue 6 [ StyleX.conditionalCase breakpoints.upTo600 0 ]
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , textDecoration: "none"
+      }
+  , logo: { flexShrink: 0, height: 24, width: 24 }
+  , wordmark:
+      { display:
+          StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
+      , fontSize: 19
+      , fontWeight: 900
+      , letterSpacing: "-0.04em"
+      }
+  , controls:
       { alignItems: "center"
       , display: "flex"
+      , flexGrow: 1
+      , gap: StyleX.conditionalValue 8 [ StyleX.conditionalCase breakpoints.upTo600 6 ]
+      , minWidth: 0
+      }
+  , spacer: { flexGrow: 1 }
+  , toggled: { backgroundColor: { default: "var(--surface-3)", ":hover": "var(--surface-3)" } }
+  -- The editor and its panel meet at a hard edge; the panel drops below the editor on narrow
+  -- screens.
+  , workspace:
+      { display: "flex"
+      , flexDirection:
+          StyleX.conditionalValue "row" [ StyleX.conditionalCase breakpoints.upTo960 "column" ]
+      , flexGrow: 1
+      , minHeight: 0
+      , position: "relative"
+      }
+  , upper:
+      { display: "flex"
+      , flexBasis: 0
+      , flexGrow: 1
+      , minHeight: 0
+      , minWidth: 0
+      , position: "relative"
+      }
+  -- The sidebar sits beside the editor, and over it on phones.
+  , sidebar:
+      { borderInlineEndColor: StyleX.conditionalValue "var(--border-subtle)"
+          [ StyleX.conditionalCase breakpoints.upTo720 "var(--border-strong)" ]
+      , borderInlineEndStyle: "solid"
+      , borderInlineEndWidth: 1
       , flexShrink: 0
-      , gap: 8
-      , justifyContent: "flex-end"
-      , marginInlineStart: "auto"
-      , paddingBlock: 8
-      , paddingInline: 12
-      , width: StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo600 "100%" ]
-      , borderBlockStartColor: "var(--border-subtle)"
-      , borderBlockStartStyle:
-          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo600 "solid" ]
-      , borderBlockStartWidth: 1
+      , insetBlock: 0
+      , insetInlineStart: 0
+      , position: StyleX.conditionalValue "relative"
+          [ StyleX.conditionalCase breakpoints.upTo720 "absolute" ]
+      , width: StyleX.conditionalValue "240px"
+          [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
+      , zIndex: 3
+      }
+  , editorColumn:
+      { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0, minWidth: 0 }
+  , tabsRow:
+      { backgroundColor: "var(--granite-950)"
+      , borderBlockEndColor: "var(--border-subtle)"
+      , borderBlockEndStyle: "solid"
+      , borderBlockEndWidth: 1
+      , display: "flex"
+      , flexShrink: 0
+      , height: 36
+      , minWidth: 0
       }
   , editor:
-      { backgroundColor: "var(--granite-900)", minHeight: 0, minWidth: 0, position: "relative" }
+      { backgroundColor: "var(--granite-900)", flexGrow: 1, minHeight: 0, position: "relative" }
   , editorHost: { inset: 0, position: "absolute" }
+  , noFile:
+      { alignItems: "center"
+      , color: "var(--text-tertiary)"
+      , display: "flex"
+      , fontSize: 14
+      , inset: 0
+      , justifyContent: "center"
+      , margin: 0
+      , position: "absolute"
+      }
   , panel:
       { backgroundColor: "var(--granite-950)"
       , borderInlineStartColor: "var(--border-subtle)"
@@ -103,8 +160,12 @@ styles = StyleX.create
       , borderBlockStartWidth: 1
       , display: "flex"
       , flexDirection: "column"
-      , minHeight: StyleX.conditionalValue 0 [ StyleX.conditionalCase breakpoints.upTo960 360 ]
+      , flexShrink: 0
+      , height:
+          StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo960 "40dvh" ]
+      , minHeight: 0
       , minWidth: 0
+      , width: StyleX.conditionalValue "380px" [ StyleX.conditionalCase breakpoints.upTo960 "100%" ]
       }
   , tabs: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
   , tabList:
@@ -113,7 +174,7 @@ styles = StyleX.create
       , borderBlockEndWidth: 1
       , display: "flex"
       , flexShrink: 0
-      , height: 44
+      , height: 36
       }
   , tab:
       { alignItems: "center"
@@ -213,9 +274,9 @@ styles = StyleX.create
           , ":disabled": "var(--surface-2)"
           }
       , color: { default: "var(--text-on-accent)", ":disabled": "var(--text-tertiary)" }
-      , fontWeight: 600
-      , paddingInline: 16
       }
+  -- Stop keeps Run's weight and padding, so only the color changes.
+  , runShape: { fontWeight: 600, paddingInline: 16 }
   , icon: { display: "inline-flex", fontSize: 12 }
   , output:
       { display: "flex"
@@ -263,6 +324,25 @@ styles = StyleX.create
       , lineHeight: 1.6
       , paddingInline: 16
       }
+  , packageSet:
+      { backgroundColor: "var(--granite-100)"
+      , display: StyleX.conditionalValue "inline-flex"
+          [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
+      }
+  -- Run, Compiling and Stop share one grid cell, so the button keeps the widest label's width.
+  , runLabels: { display: "grid" }
+  , runLabel:
+      { alignItems: "center"
+      , display: "inline-flex"
+      , gap: 6
+      , gridArea: "1 / 1"
+      , justifyContent: "center"
+      }
+  , inactiveLabel: { visibility: "hidden" }
+  , shareLabel:
+      { display:
+          StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
+      }
   , frames: { height: 0, overflow: "hidden", position: "absolute", width: 0 }
   }
 
@@ -274,19 +354,27 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } -
 
 playground :: View -> JSX
 playground { state, actions, editor, frames } = DOM.div styleProps.page
-  [ SiteNav.siteHeader { contained: false }
-      [ DOM.nav { className: styleProps.navigation.className, "aria-label": "Iris" }
-          [ SiteNav.headerLink
-              { href: "/docs/getting-started/", label: "Documentation", current: false }
-          , SiteNav.headerLink { href: "/playground/", label: "Playground", current: true }
-          ]
+  [ DOM.header styleProps.header
+      [ DOM.a { className: styleProps.brand.className, href: "/", "aria-label": "Iris home" }
+          [ logo { className: styleProps.logo.className }, DOM.span styleProps.wordmark "IRIS" ]
+      , if ready then controls else mempty
       ]
   -- The children keep their positions in every phase, so that React keeps the editor host that
   -- the controller fills once loading finishes.
   , DOM.main styleProps.workspace
-      [ if ready then toolbar else mempty
-      , DOM.div styleProps.editor
-          [ DOM.div { className: styleProps.editorHost.className, ref: DOM.reactRef editor } [] ]
+      [ DOM.div styleProps.upper
+          [ if ready && state.sidebar then sidebar else mempty
+          , DOM.div styleProps.editorColumn
+              [ if ready then tabs else mempty
+              , DOM.div styleProps.editor
+                  [ DOM.div { className: styleProps.editorHost.className, ref: DOM.reactRef editor }
+                      []
+                  , if ready && noFile
+                    then DOM.p styleProps.noFile "Open a file from Files."
+                    else mempty
+                  ]
+              ]
+          ]
       , if ready then panel else mempty
       , if ready then mempty else loading state actions.retry
       , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef frames } []
@@ -294,22 +382,53 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
   ]
   where
   ready = state.phase == "ready"
+  noFile = isNothing (toMaybe state.active) && isNothing (toMaybe state.viewing)
 
-  toolbar = DOM.div styleProps.toolbar
-    [ fileTabs { files: state.files, active: state.active, viewing: state.viewing, actions }
-    , DOM.div styleProps.actions
-        [ status state
-        , iconAction "Reset to the example" Icon.rotateCcw actions.reset
-        , DOM.button
-            { className: styleProps.action.className
-            , onClick: handler_ actions.share
-            , type: "button"
-            }
-            [ DOM.span styleProps.icon (icon Icon.share)
-            , DOM.text (if state.shared then "Link copied" else "Share")
-            ]
-        , runButton state actions.run actions.stop
+  controls = DOM.div styleProps.controls
+    [ DOM.button
+        { className:
+            ( StyleX.props
+                [ styles.action, styles.iconOnly, StyleX.conditional state.sidebar styles.toggled ]
+            ).className
+        , onClick: handler_ actions.toggleSidebar
+        , title: if state.sidebar then "Hide files" else "Show files"
+        , type: "button"
+        , "aria-controls": "playground-sidebar"
+        , "aria-expanded": state.sidebar
+        , "aria-label": "Files"
+        }
+        (DOM.span styleProps.icon (icon Icon.panelLeft))
+    , DOM.div styleProps.spacer []
+    , status state
+    , case toMaybe state.packages.packageSet of
+        Just packageSet -> DOM.span (StyleX.props [ styles.status, styles.packageSet ])
+          ("Package set " <> packageSet)
+        Nothing -> mempty
+    , iconAction "Reset to the example" Icon.rotateCcw actions.reset
+    , DOM.button
+        { className: styleProps.action.className
+        , onClick: handler_ actions.share
+        , title: "Copy a link to this project"
+        , type: "button"
+        , "aria-label": if state.shared then "Link copied" else "Share"
+        }
+        [ DOM.span styleProps.icon (icon Icon.share)
+        , DOM.span styleProps.shareLabel (if state.shared then "Link copied" else "Share")
         ]
+    , runButton state actions.run actions.stop
+    ]
+
+  sidebar = DOM.div { className: styleProps.sidebar.className, id: "playground-sidebar" }
+    [ fileTree { files: state.files, active: state.active, viewing: state.viewing, actions } ]
+
+  tabs = DOM.div styleProps.tabsRow
+    [ fileTabs
+        { files: state.files
+        , open: state.open
+        , active: state.active
+        , viewing: state.viewing
+        , actions
+        }
     ]
 
   panel = DOM.aside { className: styleProps.panel.className, "aria-label": "Output and packages" }
@@ -340,29 +459,42 @@ iconAction label icon' onPress = DOM.button
   (DOM.span styleProps.icon (icon icon'))
 
 runButton :: State -> Effect Unit -> Effect Unit -> JSX
-runButton state run stop = case state.run.status of
-  "running" -> button false stop Icon.square "Stop" [ styles.action ]
-  "compiling" -> button true run Icon.play "Compiling" [ styles.action, styles.run ]
-  _ -> button (state.server.status /= "ready") run Icon.play "Run" [ styles.action, styles.run ]
+runButton state run stop = DOM.button
+  { className:
+      ( StyleX.props [ styles.action, styles.runShape, StyleX.conditional (not running) styles.run ]
+      ).className
+  , disabled: compiling || state.server.status /= "ready" && not running
+  , onClick: handler_ (if running then stop else run)
+  , type: "button"
+  }
+  ( DOM.span styleProps.runLabels
+      [ label "Run" Icon.play (not running && not compiling)
+      , label "Compiling" Icon.play compiling
+      , label "Stop" Icon.square running
+      ]
+  )
   where
-  button disabled onPress icon' label style = DOM.button
-    { className: (StyleX.props style).className
-    , disabled
-    , onClick: handler_ onPress
-    , type: "button"
+  running = state.run.status == "running"
+  compiling = state.run.status == "compiling"
+  label text icon' current = DOM.span
+    { className:
+        ( StyleX.props [ styles.runLabel, StyleX.conditional (not current) styles.inactiveLabel ]
+        ).className
+    , "aria-hidden": not current
     }
-    [ DOM.span styleProps.icon (icon icon'), DOM.text label ]
+    [ DOM.span styleProps.icon (icon icon'), DOM.text text ]
 
 status :: State -> JSX
 status state = DOM.span
   { className: (StyleX.props [ styles.status, tone ]).className
   , role: "status"
-  , title: fromMaybe label (toMaybe state.server.message)
+  , title: fromMaybe (label <> revision) (toMaybe state.server.message)
   }
   label
   where
   server = state.server
   version = fromMaybe "" (toMaybe server.version)
+  revision = maybe "" (\commit -> " (" <> commit <> ")") (toMaybe server.revision)
   { label, tone } = case server.status, toMaybe server.kind of
     "failed", _ -> { label: "Language server stopped", tone: styles.statusFailed }
     "restarting", _ -> { label: "Restarting the language server", tone: styles.statusBusy }

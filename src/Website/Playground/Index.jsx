@@ -4,9 +4,11 @@ import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
 const initialState = {
   phase: "loading",
   files: [],
+  open: [],
   active: null,
   viewing: null,
-  server: { kind: null, version: null, status: "starting", message: null },
+  sidebar: false,
+  server: { kind: null, version: null, revision: null, status: "starting", message: null },
   packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
   run: { status: "idle", lines: [] },
   shared: false,
@@ -55,8 +57,10 @@ export function playgroundImpl({ theme, render }) {
   const actions = useMemo(() => {
     const call = (name, ...args) => controller.current?.actions[name](...args);
     return {
-      selectFile: (path) => () => call("selectFile", path),
+      openFile: (path) => () => call("openFile", path),
+      closeFile: (path) => () => call("closeFile", path),
       closeViewer: () => call("closeViewer"),
+      toggleSidebar: () => call("toggleSidebar"),
       createFile: () => call("createFile"),
       renameFile: (from) => (to) => () => call("renameFile", from, to) ?? null,
       deleteFile: (path) => () => call("deleteFile", path),

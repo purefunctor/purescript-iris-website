@@ -18,6 +18,7 @@ export { default as maximize } from "~icons/lucide/maximize";
 export { default as menu } from "~icons/lucide/menu";
 export { default as minimize } from "~icons/lucide/minimize";
 export { default as pause } from "~icons/lucide/pause";
+export { default as panelLeft } from "~icons/lucide/panel-left";
 export { default as play } from "~icons/lucide/play";
 export { default as pureScript } from "~icons/simple-icons/purescript";
 export { default as rotateCcw } from "~icons/lucide/rotate-ccw";

@@ -7,7 +7,7 @@
 //   { type: "read", id, uri }                 the text of a package or Prim source
 // Worker to page:
 //   { type: "progress", packageSet, loaded, total, bytes, totalBytes }   packages downloaded so far
-//   { type: "started", server: { kind: "iris" | "mock", version }, packageSet, packages }
+//   { type: "started", server: { kind: "iris" | "mock", version, revision }, packageSet, packages }
 //   { type: "failed", error }                 the packages or the server could not be loaded
 //   { type: "lsp", message }
 //   { type: "read", id, text }
@@ -54,7 +54,7 @@ async function start(preference) {
     server = iris ?? new MockServer();
     self.postMessage({
       type: "started",
-      server: { kind: iris ? "iris" : "mock", version: iris?.version ?? null },
+      server: { kind: iris ? "iris" : "mock", version: iris?.version ?? null, revision: iris?.revision ?? null },
       packageSet: index.packageSet.version,
       packages: Object.entries(index.packages).map(([name, entry]) => ({ name, version: entry.version })),
     });
@@ -73,7 +73,8 @@ async function loadIris() {
   const bindings = await import(/* @vite-ignore */ `${SERVER_BASE}language_server.js`);
   await bindings.default({ module_or_path: `${SERVER_BASE}language_server_bg.wasm` });
   const instance = new bindings.LanguageServer();
-  instance.version = `${manifest.iris} (${manifest.revision})`;
+  instance.version = manifest.iris;
+  instance.revision = manifest.revision;
   return instance;
 }
 

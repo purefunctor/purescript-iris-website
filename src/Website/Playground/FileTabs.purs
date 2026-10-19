@@ -4,12 +4,14 @@ import Prelude
 
 import Data.Nullable (Nullable)
 import Iris.StyleX as StyleX
+import Iris.StyleX.When as When
 import React.Basic (JSX, ReactComponent, element)
 import Website.Playground.Types (Actions, File, Viewer)
 
 foreign import fileTabsImpl ::
   ReactComponent
     { files :: Array File
+    , open :: Array String
     , active :: Nullable String
     , viewing :: Nullable Viewer
     , actions :: Actions
@@ -19,10 +21,8 @@ foreign import fileTabsImpl ::
     , nameClassName :: String
     , errorCountClassName :: String
     , warningCountClassName :: String
-    , iconButtonClassName :: String
-    , inputClassName :: String
-    , errorClassName :: String
-    , addClassName :: String
+    , closeClassName :: String
+    , activeCloseClassName :: String
     }
 
 styles = StyleX.create
@@ -72,8 +72,8 @@ styles = StyleX.create
       , outlineOffset: -2
       , outlineStyle: { default: "none", ":focus-visible": "solid" }
       , outlineWidth: 2
-      , paddingInlineStart: 14
-      , paddingInlineEnd: 8
+      , paddingInlineStart: 12
+      , paddingInlineEnd: 6
       , whiteSpace: "nowrap"
       }
   , count:
@@ -88,7 +88,8 @@ styles = StyleX.create
       }
   , errorCount: { backgroundColor: "var(--red-300)", color: "var(--granite-950)" }
   , warningCount: { backgroundColor: "var(--yellow-400)", color: "var(--granite-950)" }
-  , iconButton:
+  -- Inactive tabs show their close button on hover or focus, and always on touch screens.
+  , close:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
       , borderRadius: 4
@@ -97,79 +98,43 @@ styles = StyleX.create
       , cursor: "default"
       , display: "inline-flex"
       , fontSize: 12
-      , height: 24
+      , height: 22
       , justifyContent: "center"
       , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , opacity: StyleX.conditionalValue 0.0
+          [ When.ancestor ":hover" 1.0
+          , When.ancestor ":focus-within" 1.0
+          , StyleX.conditionalCase "@media (hover: none)" 1.0
+          ]
       , outline: { default: "revert", ":focus-visible": "none" }
-      , width: 24
+      , width: 22
       }
-  , input:
-      { alignSelf: "center"
-      , backgroundColor: "var(--granite-950)"
-      , borderColor: "var(--accent)"
-      , borderRadius: 4
-      , borderStyle: "solid"
-      , borderWidth: 1
-      , color: "var(--text-primary)"
-      , fontFamily: "var(--font-mono)"
-      , fontSize: 13
-      , height: 28
-      , marginInline: 8
-      , outlineStyle: "none"
-      , paddingInline: 8
-      }
-  , error:
-      { backgroundColor: "var(--red-300)"
-      , color: "var(--granite-950)"
-      , fontSize: 12
-      , fontWeight: 500
-      , paddingBlock: 6
-      , paddingInline: 10
-      , position: "fixed"
-      , whiteSpace: "nowrap"
-      , zIndex: 10
-      }
-  , add:
-      { alignItems: "center"
-      , alignSelf: "stretch"
-      , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
-      , borderStyle: "none"
-      , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
-      , cursor: "default"
-      , display: "inline-flex"
-      , flexShrink: 0
-      , fontSize: 14
-      , justifyContent: "center"
-      , outlineColor: "var(--focus-ring)"
-      , outlineOffset: -2
-      , outlineStyle: { default: "none", ":focus-visible": "solid" }
-      , outlineWidth: 2
-      , width: 44
-      }
+  , activeClose: { opacity: 1 }
   }
 
 styleProps = StyleX.recordProps styles
 
--- | The project's files as tabs, with controls to add, rename and delete them.
+-- | The open files as tabs, with the read-only source that navigation opened.
 fileTabs ::
   { files :: Array File
+  , open :: Array String
   , active :: Nullable String
   , viewing :: Nullable Viewer
   , actions :: Actions
   } -> JSX
-fileTabs { files, active, viewing, actions } = element fileTabsImpl
+fileTabs { files, open, active, viewing, actions } = element fileTabsImpl
   { files
+  , open
   , active
   , viewing
   , actions
   , rootClassName: styleProps.root.className
-  , tabClassName: styleProps.tab.className
-  , activeTabClassName: (StyleX.props [ styles.tab, styles.activeTab ]).className
+  , tabClassName: (StyleX.props [ styles.tab, StyleX.defaultMarker ]).className
+  , activeTabClassName:
+      (StyleX.props [ styles.tab, styles.activeTab, StyleX.defaultMarker ]).className
   , nameClassName: styleProps.name.className
   , errorCountClassName: (StyleX.props [ styles.count, styles.errorCount ]).className
   , warningCountClassName: (StyleX.props [ styles.count, styles.warningCount ]).className
-  , iconButtonClassName: styleProps.iconButton.className
-  , inputClassName: styleProps.input.className
-  , errorClassName: styleProps.error.className
-  , addClassName: styleProps.add.className
+  , closeClassName: (StyleX.props [ styles.close ]).className
+  , activeCloseClassName: (StyleX.props [ styles.close, styles.activeClose ]).className
   }

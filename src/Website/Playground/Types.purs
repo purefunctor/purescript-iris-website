@@ -26,8 +26,10 @@ import Web.DOM.Element (Element)
 type State =
   { phase :: String
   , files :: Array File
+  , open :: Array String
   , active :: Nullable String
   , viewing :: Nullable Viewer
+  , sidebar :: Boolean
   , server :: Server
   , packages :: Packages
   , run :: Run
@@ -40,10 +42,12 @@ type File = { path :: String, errors :: Int, warnings :: Int }
 -- | A read-only package or Prim source that navigation opened.
 type Viewer = { uri :: String, label :: String }
 
--- | `kind` is `iris` or `mock`; `status` is `starting`, `ready`, `restarting` or `failed`.
+-- | `kind` is `iris` or `mock`; `status` is `starting`, `ready`, `restarting` or `failed`. `version`
+-- | is the Iris release, such as `v0.1.9`, and `revision` its commit.
 type Server =
   { kind :: Nullable String
   , version :: Nullable String
+  , revision :: Nullable String
   , status :: String
   , message :: Nullable String
   }
@@ -68,8 +72,11 @@ type Run = { status :: String, lines :: Array Line }
 type Line = { kind :: String, text :: String }
 
 type Actions =
-  { selectFile :: String -> Effect Unit
+  { openFile :: String -> Effect Unit
+  -- | Closes a file's tab; the file stays in the project.
+  , closeFile :: String -> Effect Unit
   , closeViewer :: Effect Unit
+  , toggleSidebar :: Effect Unit
   , createFile :: Effect Unit
   -- | Returns why the name was rejected, or null once the file is renamed.
   , renameFile :: String -> String -> Effect (Nullable String)

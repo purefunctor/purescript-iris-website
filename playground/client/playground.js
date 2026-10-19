@@ -13,6 +13,9 @@ import { link, Runner } from "./runner.js";
 import { decodeProject, encodeProject, loadSavedProject, saveProject } from "./storage.js";
 
 const PROJECT = "file:///project/";
+// The sidebar overlays the editor up to Website.Breakpoints' upTo720, so it starts closed there and
+// closes once a file opens.
+const NARROW = "(max-width: 720px)";
 const MAX_LINES = 1000;
 
 export const DEFAULT_FILES = [
@@ -59,12 +62,17 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   const project = shared ?? loadSavedProject() ?? { files: DEFAULT_FILES };
   if (shared) history.replaceState(null, "", location.pathname + location.search);
 
+  const paths = project.files.map(({ path }) => path);
+  const open = (project.open ?? paths).filter((path) => paths.includes(path));
+  const active = open.includes(project.active) ? project.active : open[0] ?? null;
   let state = {
     phase: "loading",
-    files: project.files.map(({ path }) => ({ path, errors: 0, warnings: 0 })),
-    active: project.active && project.files.some((file) => file.path === project.active) ? project.active : project.files[0]?.path ?? null,
+    files: paths.map((path) => ({ path, errors: 0, warnings: 0 })),
+    open,
+    active,
     viewing: null,
-    server: { kind: null, version: null, status: "starting", message: null },
+    sidebar: !matchMedia(NARROW).matches,
+    server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [] },
     shared: false,
@@ -87,6 +95,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
   const snapshot = () => ({
     files: state.files.map(({ path }) => ({ path, text: models.get(path).getValue() })),
+    open: state.open,
     active: state.active,
   });
 
@@ -164,17 +173,16 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
 
   const show = (path) => {
-    const model = models.get(path);
-    if (!model || !editor) return;
+    if (!editor) return;
     editor.updateOptions({ readOnly: false });
-    editor.setModel(model);
+    editor.setModel(models.get(path) ?? null);
   };
 
   const view = (uri, selection) => {
     const model = monaco.editor.getModel(monaco.Uri.parse(uri));
     if (!model) return false;
     if (uri.startsWith(PROJECT)) {
-      selectFile(uri.slice(PROJECT.length));
+      openFile(uri.slice(PROJECT.length));
     } else {
       editor.setModel(model);
       editor.updateOptions({ readOnly: true });
@@ -214,10 +222,26 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     setState(() => ({ phase: "ready" }));
   };
 
-  const selectFile = (path) => {
+  const openFile = (path) => {
     if (!models.has(path)) return;
     show(path);
-    setState(() => ({ active: path, viewing: null }));
+    setState((current) => ({
+      open: current.open.includes(path) ? current.open : [...current.open, path],
+      active: path,
+      viewing: null,
+      sidebar: current.sidebar && !matchMedia(NARROW).matches,
+    }));
+    save();
+  };
+
+  /** Closes `path`'s tab and shows its neighbour, without touching the file. */
+  const closeFile = (path) => {
+    const index = state.open.indexOf(path);
+    if (index === -1) return;
+    const open = state.open.filter((other) => other !== path);
+    const active = state.active === path ? open[Math.max(0, index - 1)] ?? null : state.active;
+    if (!state.viewing) show(active);
+    setState(() => ({ open, active }));
     save();
   };
 
@@ -264,8 +288,13 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   });
 
   const actions = {
-    selectFile,
-    closeViewer: () => selectFile(state.active),
+    openFile,
+    closeFile,
+    closeViewer: () => {
+      show(state.active);
+      setState(() => ({ viewing: null }));
+    },
+    toggleSidebar: () => setState((current) => ({ sidebar: !current.sidebar })),
     createFile: () => {
       let index = 1;
       while (models.has(`src/Module${index}.purs`)) index += 1;
@@ -273,7 +302,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       const model = addModel(path, `module Module${index} where\n\nimport Prelude\n\n`);
       openDocument(path, model);
       setState((current) => ({ files: [...current.files, { path, errors: 0, warnings: 0 }] }));
-      selectFile(path);
+      openFile(path);
       return path;
     },
     /** Returns an error message, or null when the file was renamed. */
@@ -289,6 +318,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       openDocument(target, model);
       setState((current) => ({
         files: current.files.map((file) => (file.path === from ? { path: target, errors: 0, warnings: 0 } : file)),
+        open: current.open.map((path) => (path === from ? target : path)),
         active: current.active === from ? target : current.active,
       }));
       if (state.active === target) show(target);
@@ -297,12 +327,12 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     deleteFile: (path) => {
       if (!models.has(path) || models.size === 1) return;
-      const index = state.files.findIndex((file) => file.path === path);
       removeModel(path);
-      const files = state.files.filter((file) => file.path !== path);
-      const active = state.active === path ? files[Math.max(0, index - 1)].path : state.active;
-      setState(() => ({ files, active }));
-      show(active);
+      const index = state.open.indexOf(path);
+      const open = state.open.filter((other) => other !== path);
+      const active = state.active === path ? open[Math.max(0, index - 1)] ?? null : state.active;
+      setState((current) => ({ files: current.files.filter((file) => file.path !== path), open, active }));
+      if (!state.viewing) show(active);
       save();
     },
     run,
@@ -325,6 +355,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       for (const file of DEFAULT_FILES) openDocument(file.path, addModel(file.path, file.text));
       setState(() => ({
         files: DEFAULT_FILES.map(({ path }) => ({ path, errors: 0, warnings: 0 })),
+        open: DEFAULT_FILES.map(({ path }) => path),
         active: DEFAULT_FILES[0].path,
         viewing: null,
       }));

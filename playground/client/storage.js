@@ -21,7 +21,7 @@ export function saveProject(project) {
 
 /** A `#project=` fragment holding the project, compressed and base64url-encoded. */
 export async function encodeProject(project) {
-  const json = JSON.stringify({ version: VERSION, files: project.files });
+  const json = JSON.stringify({ version: VERSION, files: project.files, open: project.open, active: project.active });
   const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw"));
   const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
   let binary = "";
@@ -44,5 +44,6 @@ function validate(project) {
     (file) => typeof file?.path === "string" && typeof file.text === "string" && /^src\/.+\.(purs|js)$/.test(file.path),
   );
   if (files.length === 0) return null;
-  return { files, active: typeof project.active === "string" ? project.active : undefined };
+  const open = Array.isArray(project.open) ? project.open.filter((path) => typeof path === "string") : undefined;
+  return { files, open, active: typeof project.active === "string" ? project.active : undefined };
 }
