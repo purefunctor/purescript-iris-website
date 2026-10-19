@@ -49,6 +49,10 @@ foreign import pillImpl ::
     , tooltipClassName :: String
     }
 
+foreign import panelImpl ::
+  ReactComponent
+    { open :: Boolean, id :: String, label :: String, className :: String, children :: JSX }
+
 foreign import panelTabsImpl ::
   ReactComponent
     { rootClassName :: String
@@ -85,8 +89,13 @@ styles = StyleX.create
       , height: "var(--nav-height)"
       , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
       }
+  -- Motion stays short and eases out, and reduced motion turns it off. The controls rise in once
+  -- the playground is ready, as the workspace fades in below them.
   , controls:
       { alignItems: "center"
+      , animationDuration: "260ms"
+      , animationName: { default: rise, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
       , display: "flex"
       , flexGrow: 1
       , gap: StyleX.conditionalValue 8 [ StyleX.conditionalCase breakpoints.upTo600 6 ]
@@ -103,6 +112,11 @@ styles = StyleX.create
       , flexGrow: 1
       , minHeight: 0
       , position: "relative"
+      }
+  , revealed:
+      { animationDuration: "320ms"
+      , animationName: { default: fadeIn, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
       }
   , upper:
       { display: "flex"
@@ -126,6 +140,12 @@ styles = StyleX.create
       , width: StyleX.conditionalValue "var(--sidebar-width)"
           [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
       , zIndex: 3
+      -- Opening and closing grow and shrink the sidebar, so the editor follows its edge.
+      , animationDuration: "200ms"
+      , animationFillMode: "forwards"
+      , animationName: { default: "none", "[data-entering]": widthIn, "[data-exiting]": widthOut }
+      , animationTimingFunction: "var(--ease-out)"
+      , overflow: "hidden"
       }
   -- The sidebar's edge, which drags to resize and closes it below a minimum width. Phones open
   -- the sidebar over the editor instead, so they have no handle.
@@ -187,12 +207,18 @@ styles = StyleX.create
       , borderBlockStartWidth: 1
       , display: "flex"
       , flexDirection: "column"
+      -- The panel's size is its flex basis, which runs along the workspace beside the editor and
+      -- down it below, so one animation opens the panel in both places.
+      , flexBasis:
+          StyleX.conditionalValue "380px" [ StyleX.conditionalCase breakpoints.upTo960 "40dvh" ]
       , flexShrink: 0
-      , height:
-          StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo960 "40dvh" ]
       , minHeight: 0
       , minWidth: 0
-      , width: StyleX.conditionalValue "380px" [ StyleX.conditionalCase breakpoints.upTo960 "100%" ]
+      , overflow: "hidden"
+      , animationDuration: "220ms"
+      , animationFillMode: "forwards"
+      , animationName: { default: "none", "[data-entering]": basisIn, "[data-exiting]": basisOut }
+      , animationTimingFunction: "var(--ease-out)"
       }
   , tabs: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
   , tabList:
@@ -237,8 +263,12 @@ styles = StyleX.create
       , paddingInline: 5
       , textAlign: "center"
       }
+  -- Switching between Output and Packages fades the new panel in.
   , tabPanel:
-      { display: "flex"
+      { animationDuration: "160ms"
+      , animationName: { default: fadeIn, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
+      , display: "flex"
       , flexDirection: "column"
       , flexGrow: 1
       , minHeight: 0
@@ -385,7 +415,14 @@ styles = StyleX.create
       , paddingInline: 10
       }
   , lines: { margin: 0, paddingBlockEnd: 16, paddingInline: 16 }
-  , line: { overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
+  -- Each printed line settles in as it arrives.
+  , line:
+      { animationDuration: "180ms"
+      , animationName: { default: rise, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
+      , overflowWrap: "anywhere"
+      , whiteSpace: "pre-wrap"
+      }
   , logLine: { color: "var(--text-secondary)" }
   , infoLine: { color: "var(--text-tertiary)" }
   , warningLine: { color: "var(--yellow-300)" }
@@ -421,8 +458,17 @@ styles = StyleX.create
       , gap: 6
       , gridArea: "1 / 1"
       , justifyContent: "center"
+      , transitionDuration: { default: "160ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "opacity, visibility"
+      , transitionTimingFunction: "var(--ease-out)"
       }
-  , inactiveLabel: { visibility: "hidden" }
+  -- Labels crossfade, and a hidden one stays in the grid to hold the button's width.
+  , inactiveLabel: { opacity: 0, visibility: "hidden" }
+  , popped:
+      { animationDuration: "240ms"
+      , animationName: { default: pop, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
+      }
   -- The panel toggle's icon shows where the panel sits: beside the editor, or below it.
   , besidePanel:
       { display: StyleX.conditionalValue "inline-flex"
@@ -451,6 +497,26 @@ styleProps = StyleX.recordProps styles
 
 spin = StyleX.keyframes { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } }
 
+fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
+
+rise = StyleX.keyframes
+  { from: { opacity: 0, transform: "translateY(4px)" }, to: { opacity: 1, transform: "none" } }
+
+pop = StyleX.keyframes
+  { from: { transform: "scale(0.5)" }
+  , "60%": { transform: "scale(1.15)" }
+  , to: { transform: "none" }
+  }
+
+-- Without a `to` frame, these open to the element's own size.
+widthIn = StyleX.keyframes { from: { width: 0 } }
+
+widthOut = StyleX.keyframes { to: { width: 0 } }
+
+basisIn = StyleX.keyframes { from: { flexBasis: 0 } }
+
+basisOut = StyleX.keyframes { to: { flexBasis: 0 } }
+
 component :: ReactComponent { theme :: Foreign }
 component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } ->
   pure $ element playgroundImpl { theme, render: playground }
@@ -460,7 +526,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
   [ DOM.header styleProps.header [ if ready then controls else mempty ]
   -- The children keep their positions in every phase, so that React keeps the editor host that
   -- the controller fills once loading finishes.
-  , DOM.main styleProps.workspace
+  , DOM.main (StyleX.props [ styles.workspace, StyleX.conditional ready styles.revealed ])
       [ DOM.div styleProps.upper
           [ if ready then sidebar else mempty
           , DOM.div styleProps.editorColumn
@@ -474,7 +540,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
                   ]
               ]
           ]
-      , if ready && state.panel then panel else mempty
+      , if ready then panel else mempty
       , if ready then mempty else loading state actions.retry
       , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef frames } []
       ]
@@ -518,7 +584,8 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , type: "button"
         , "aria-label": if state.shared then "Copied" else "Share"
         }
-        [ DOM.span styleProps.icon (icon (if state.shared then Icon.check else Icon.share))
+        [ DOM.span (StyleX.props [ styles.icon, StyleX.conditional state.shared styles.popped ])
+            (icon (if state.shared then Icon.check else Icon.share))
         , DOM.span (StyleX.props [ styles.labels, styles.shareLabels ])
             [ stackedLabel "Share" (not state.shared), stackedLabel "Copied" state.shared ]
         ]
@@ -562,12 +629,12 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         }
     ]
 
-  panel = DOM.aside
-    { className: styleProps.panel.className
+  panel = element panelImpl
+    { open: state.panel
     , id: "playground-panel"
-    , "aria-label": "Output and packages"
-    }
-    [ element panelTabsImpl
+    , label: "Output and packages"
+    , className: styleProps.panel.className
+    , children: element panelTabsImpl
         { rootClassName: styleProps.tabs.className
         , tabListClassName: styleProps.tabList.className
         , tabClassName: styleProps.tab.className
@@ -578,7 +645,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , packages: packagesPanel { packages: state.packages }
         , packagesBadge: ""
         }
-    ]
+    }
 
 icon :: ReactComponent Icon.IconProps -> JSX
 icon component' = element component' { "aria-hidden": true, focusable: false }

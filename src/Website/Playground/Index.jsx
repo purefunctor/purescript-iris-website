@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-aria-components/Link";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
 import { Focusable, Tooltip, TooltipTrigger } from "react-aria-components/Tooltip";
@@ -119,6 +119,51 @@ export function panelTabsImpl({
   );
 }
 
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Keeps an element mounted while it animates out, and marks its `data-entering` and
+// `data-exiting` phases for its styles to animate. The first render, changes while `animate` is
+// false, such as during a drag, and reduced motion all switch at once.
+function usePresence(open, animate) {
+  const [phase, setPhase] = useState(open ? "open" : "closed");
+  useLayoutEffect(() => {
+    const moving = animate && !reducedMotion();
+    setPhase((current) => {
+      if (open) return current === "closed" || current === "exiting" ? (moving ? "entering" : "open") : current;
+      return current === "closed" ? current : moving ? "exiting" : "closed";
+    });
+  }, [open, animate]);
+  // A style without an animation never ends one, so phases also settle on a timer.
+  useEffect(() => {
+    if (phase !== "entering" && phase !== "exiting") return undefined;
+    const timeout = setTimeout(() => setPhase((current) => settled(current)), 400);
+    return () => clearTimeout(timeout);
+  }, [phase]);
+  return {
+    rendered: phase !== "closed",
+    props: {
+      "data-entering": phase === "entering" || undefined,
+      "data-exiting": phase === "exiting" || undefined,
+      onAnimationEnd: (event) => {
+        if (event.target === event.currentTarget) setPhase(settled);
+      },
+    },
+  };
+}
+
+const settled = (phase) => (phase === "exiting" ? "closed" : phase === "entering" ? "open" : phase);
+
+// The Output and Packages panel, which animates as it opens and closes.
+export function panelImpl({ open, id, label, className, children }) {
+  const presence = usePresence(open, true);
+  if (!presence.rendered) return null;
+  return (
+    <aside aria-label={label} className={className} id={id} {...presence.props}>
+      {children}
+    </aside>
+  );
+}
+
 const MIN_WIDTH = 180;
 const MAX_WIDTH = 480;
 // Dragging the edge narrower than this closes the sidebar, and dragging past it opens it again.
@@ -132,6 +177,7 @@ export function sidebarImpl({ id, open, width, resize, close, className, handleC
   const [drag, setDrag] = useState(null);
   const shown = drag ? drag.open : open;
   const current = drag ? drag.width : width;
+  const presence = usePresence(shown, !drag);
   const clamp = (value) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(value)));
 
   const end = () => {
@@ -158,8 +204,8 @@ export function sidebarImpl({ id, open, width, resize, close, className, handleC
 
   return (
     <>
-      {shown && (
-        <div className={className} id={id} style={{ "--sidebar-width": `${current}px` }}>
+      {presence.rendered && (
+        <div className={className} id={id} style={{ "--sidebar-width": `${current}px` }} {...presence.props}>
           {children}
         </div>
       )}

@@ -37,6 +37,9 @@ foreign import fileTreeImpl ::
     , problemClassName :: String
     }
 
+listIn = StyleX.keyframes
+  { from: { opacity: 0, transform: "translateY(-3px)" }, to: { opacity: 1, transform: "none" } }
+
 styles = StyleX.create
   { root:
       { backgroundColor: "var(--granite-950)"
@@ -71,7 +74,15 @@ styles = StyleX.create
       , width: 26
       }
   , scroll: { flexGrow: 1, minHeight: 0, overflowY: "auto", paddingBlockEnd: 12 }
-  , list: { listStyle: "none", margin: 0, padding: 0 }
+  -- An expanded folder's files settle in below it.
+  , list:
+      { animationDuration: "180ms"
+      , animationName: { default: listIn, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
+      , listStyle: "none"
+      , margin: 0
+      , padding: 0
+      }
   , item: { position: "relative" }
   -- Rows indent by the depth that the tree sets as a variable on each row.
   , row:
@@ -92,6 +103,9 @@ styles = StyleX.create
       , paddingInlineEnd: 64
       , paddingInlineStart: "calc(10px + var(--depth) * 14px)"
       , textAlign: "start"
+      , transitionDuration: "120ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
       , width: "100%"
       }
   , activeRow:
@@ -136,6 +150,9 @@ styles = StyleX.create
           , StyleX.conditionalCase "@media (hover: none)" 1.0
           ]
       , position: "absolute"
+      , transitionDuration: { default: "120ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "opacity"
+      , transitionTimingFunction: "var(--ease-out)"
       }
   , action:
       { alignItems: "center"

@@ -25,6 +25,9 @@ foreign import fileTabsImpl ::
     , activeCloseClassName :: String
     }
 
+tabIn = StyleX.keyframes
+  { from: { opacity: 0, transform: "translateY(4px)" }, to: { opacity: 1, transform: "none" } }
+
 styles = StyleX.create
   { root:
       { alignItems: "stretch"
@@ -51,6 +54,10 @@ styles = StyleX.create
       , transitionDuration: "140ms"
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
+      -- A newly opened tab settles into the strip.
+      , animationDuration: "180ms"
+      , animationName: { default: tabIn, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
       }
   , activeTab:
       { backgroundColor: { default: "var(--granite-900)", ":hover": "var(--granite-900)" }
