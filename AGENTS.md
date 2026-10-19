@@ -17,7 +17,7 @@ AGENTS.md records the project's intent and the constraints that are easy to brea
 All first-party PureScript lives in the `Website` namespace, with matching paths in `src/Website`. Shared UI belongs in `Website.Components`, and page-specific modules belong in `Website.Landing` or `Website.Documentation`. Keep each FFI companion, in `.js` or `.jsx`, beside its PureScript module. Astro pages in `src/pages` render a module's `component` as an island inside `SiteLayout` or `DocumentationLayout`.
 
 - Documentation pages, including how readers switch between them, follow [`src/Website/Documentation/AGENTS.md`](src/Website/Documentation/AGENTS.md).
-- The playground's language server, which only playground work builds, and its Registry packages follow [`playground/AGENTS.md`](playground/AGENTS.md).
+- The playground at `/playground`, its client, its language server, which only playground work builds, and its Registry packages follow [`playground/AGENTS.md`](playground/AGENTS.md).
 - The landing page's editor trailer is recorded and rendered by `scripts/editor-demos`. Read [`scripts/editor-demos/AGENTS.md`](scripts/editor-demos/AGENTS.md) before you change the take, the trailer, or the code that the take reads and edits in `Website.Landing.Index`, `Website.Landing.Demos`, `Website.Landing.Benchmarks` and `Website.Components.CopyButton`.
 
 ## Code conventions
@@ -47,6 +47,7 @@ All first-party PureScript lives in the `Website` namespace, with matching paths
 - Production is a static Astro build served by Cloudflare Workers Static Assets without a Worker script, so no code runs per request. Every page and endpoint exports `prerender = true`. The [README](README.md#publishing) explains the hosting limits.
 - Static Assets answer Range requests with the whole file, so browsers cannot seek media streamed from it, and Safari does not play it. `Website.Components.VideoPlayer` plays an in-memory copy fetched on demand; development serves ranges, so verify seeking in the [production preview](#production-preview).
 - `public/_headers` owns the static security and cache headers. Astro adds the CSP from `security.csp` in `astro.config.mjs` to each page as a meta tag.
+- The playground page allows inline style elements and attributes, because Monaco creates them at run time. Keep that exception on that page, and keep hashed styles everywhere else.
 - Documentation pages use Astro's client router, which Astro documents as unsupported with `security.csp`. It works here because every page emits the same script and style hashes, and the first page's CSP stays in force after a swap. Do not add page-specific inline scripts or styles to documentation pages, and verify router changes in the [production preview](#production-preview), because development does not enforce the CSP.
 
 ## Design constraints
