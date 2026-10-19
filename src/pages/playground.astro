@@ -8,6 +8,12 @@ import geistMonoFont from "@fontsource-variable/geist-mono/files/geist-mono-lati
 export const prerender = true;
 
 const theme = await playgroundTheme();
+
+// Monaco adds style elements and style attributes at run time, which the site's hashed styles
+// cannot allow. The relaxation stays on this page, which loads no third-party styles.
+Astro.csp.insertStyleResource({ resource: "'self'", kind: "element" });
+Astro.csp.insertStyleResource({ resource: "'unsafe-inline'", kind: "element" });
+Astro.csp.insertStyleResource({ resource: "'unsafe-inline'", kind: "attribute" });
 ---
 
 <SiteLayout

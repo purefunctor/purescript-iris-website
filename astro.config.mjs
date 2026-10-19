@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { devLibraryBundle } from "./src/lib/devLibraryBundle.ts";
 import { devModulePreload } from "./src/lib/devModulePreload.ts";
 import { inlineStyleHashes } from "./src/lib/inlineStyles.ts";
+import { monacoStyles } from "./src/lib/monacoStyles.ts";
 
 // The playground imports Monaco's editor features one module at a time. Prebundle each module it
 // lists, so that opening the playground never makes Vite reoptimize and reload the page.
@@ -73,6 +74,7 @@ export default defineConfig({
     build: { cssCodeSplit: false },
     plugins: [
       devLibraryBundle(),
+      monacoStyles(),
       icons({ compiler: "jsx", jsx: "react" }),
       stylex.vite({
         dev: development,

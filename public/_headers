@@ -17,3 +17,13 @@
 /install.ps1
   Content-Type: text/plain; charset=utf-8
   Cache-Control: no-store
+
+# The playground runs programs in this frame. Its response carries the same sandbox as the frame
+# element, so the page stays in an opaque origin even when opened directly.
+/playground/sandbox.html
+  Content-Security-Policy: sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'
+  Cache-Control: no-cache
+
+# The language server is replaced in place when the playground updates its Iris release.
+/playground/language-server/*
+  Cache-Control: no-cache
