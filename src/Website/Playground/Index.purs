@@ -352,34 +352,48 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , iconOnly: { paddingInline: 0, justifyContent: "center", width: 32 }
-  -- Run is a raised key, as on audio equipment of the period: lit from above, with a lip below
-  -- and an engraved label, and it sinks while pressed. Disabled, it lies flat.
-  , run:
-      { backgroundColor: { default: "var(--accent)", ":disabled": "var(--surface-2)" }
-      , backgroundImage:
-          { default:
-              "linear-gradient(oklch(from var(--accent) calc(l + 0.05) c h), oklch(from var(--accent) calc(l - 0.035) c h))"
-          , ":hover":
-              "linear-gradient(oklch(from var(--accent) calc(l + 0.08) c h), oklch(from var(--accent) calc(l - 0.005) c h))"
-          , ":active":
-              "linear-gradient(oklch(from var(--accent) calc(l - 0.04) c h), oklch(from var(--accent) calc(l + 0.01) c h))"
-          , ":disabled": "none"
-          }
+  -- Run, Compiling and Stop are one raised key, as on audio equipment of the period: lit from
+  -- above by a translucent sheen, with a lip below and an engraved label, sinking while pressed.
+  -- Only its color changes between states, and colors and shadows interpolate, so the key eases
+  -- from one state to the next. Its shadows keep one shape for that reason.
+  , runShape:
+      { backgroundColor: "var(--surface-2)"
+      , backgroundImage: "linear-gradient(oklch(100% 0 0 / 12%), oklch(0% 0 0 / 10%))"
       , boxShadow:
           { default:
-              "inset 0 1px 0 oklch(from var(--signal-200) l c h / 65%), inset 0 -1px 0 oklch(from var(--signal-500) calc(l - 0.12) c h / 70%), 0 1px 2px oklch(0% 0 0 / 55%)"
-          , ":active": "inset 0 1px 3px oklch(from var(--signal-500) calc(l - 0.2) c h / 75%)"
+              "inset 0 1px 0 oklch(100% 0 0 / 22%), inset 0 -1px 0 oklch(0% 0 0 / 35%), 0 1px 2px oklch(0% 0 0 / 55%)"
+          , ":active":
+              "inset 0 1px 3px oklch(0% 0 0 / 45%), inset 0 0 0 oklch(0% 0 0 / 0%), 0 0 0 oklch(0% 0 0 / 0%)"
           , ":focus-visible":
-              "inset 0 1px 0 oklch(from var(--signal-200) l c h / 65%), inset 0 -1px 0 oklch(from var(--signal-500) calc(l - 0.12) c h / 70%), var(--shadow-focus)"
-          , ":disabled": "none"
+              "inset 0 1px 0 oklch(100% 0 0 / 22%), inset 0 -1px 0 oklch(0% 0 0 / 35%), var(--shadow-focus)"
+          , ":disabled":
+              "inset 0 1px 0 oklch(100% 0 0 / 10%), inset 0 -1px 0 oklch(0% 0 0 / 25%), 0 1px 2px oklch(0% 0 0 / 35%)"
           }
-      , color: { default: "var(--text-on-accent)", ":disabled": "var(--text-tertiary)" }
-      , textShadow:
-          { default: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)", ":disabled": "none" }
+      , color: "var(--text-tertiary)"
+      , fontWeight: 600
+      , paddingInline: 16
+      , textShadow: "0 -1px 0 oklch(0% 0 0 / 35%)"
       , transform: { default: "none", ":active": "translateY(1px)" }
+      , transitionDuration: "180ms, 180ms, 180ms, 180ms, 80ms"
+      , transitionProperty: "background-color, box-shadow, color, text-shadow, transform"
       }
-  -- Stop keeps Run's weight and padding, so only the color changes.
-  , runShape: { fontWeight: 600, paddingInline: 16 }
+  , run:
+      { backgroundColor:
+          { default: "var(--accent)"
+          , ":hover": "var(--accent-hover)"
+          , ":active": "var(--accent-press)"
+          }
+      , color: "var(--text-on-accent)"
+      , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
+      }
+  , stop:
+      { backgroundColor:
+          { default: "var(--surface-3)"
+          , ":hover": "oklch(from var(--surface-3) calc(l + 0.04) c h)"
+          , ":active": "var(--surface-2)"
+          }
+      , color: "var(--text-primary)"
+      }
   , icon: { display: "inline-flex", fontSize: 12 }
   , output:
       { display: "flex"
@@ -663,9 +677,13 @@ iconAction label icon' onPress = DOM.button
 runButton :: State -> Effect Unit -> Effect Unit -> JSX
 runButton state run stop = DOM.button
   { className:
-      ( StyleX.props [ styles.action, styles.runShape, StyleX.conditional (not running) styles.run ]
+      ( StyleX.props
+          [ styles.action
+          , styles.runShape
+          , if running then styles.stop else if disabled then styles.runShape else styles.run
+          ]
       ).className
-  , disabled: compiling || state.server.status /= "ready" && not running
+  , disabled
   , onClick: handler_ (if running then stop else run)
   , type: "button"
   , "aria-label": if running then "Stop" else if compiling then "Compiling" else "Run"
@@ -682,6 +700,7 @@ runButton state run stop = DOM.button
   where
   running = state.run.status == "running"
   compiling = state.run.status == "compiling"
+  disabled = compiling || state.server.status /= "ready" && not running
   label text current icons = DOM.span
     { className:
         ( StyleX.props [ styles.label, StyleX.conditional (not current) styles.inactiveLabel ]
