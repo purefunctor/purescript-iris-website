@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-aria-components/Link";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
-import { Tooltip, TooltipTrigger } from "react-aria-components/Tooltip";
+import { Focusable, Tooltip, TooltipTrigger } from "react-aria-components/Tooltip";
 import ExternalLinkIcon from "~icons/lucide/external-link";
 
 const initialState = {
@@ -198,27 +198,25 @@ export function sidebarImpl({ id, open, width, resize, close, className, handleC
   );
 }
 
-// The language server's pill, which links to its Iris release and explains itself in a tooltip.
-export function serverPillImpl({
-  href,
-  label,
-  accessibleLabel,
-  title,
-  detail,
-  className,
-  iconClassName,
-  tooltipClassName,
-  titleClassName,
-}) {
+// A status pill with a tooltip. With an `href` it links out and shows the external link icon;
+// without one it is a focusable label, so that keyboard readers reach its tooltip too.
+export function pillImpl({ href, label, accessibleLabel, tooltip, className, iconClassName, tooltipClassName }) {
   return (
     <TooltipTrigger closeDelay={100} delay={300}>
-      <Link aria-label={accessibleLabel} className={className} href={href} rel="noopener noreferrer" target="_blank">
-        {label}
-        <ExternalLinkIcon aria-hidden="true" className={iconClassName} focusable="false" />
-      </Link>
+      {href ? (
+        <Link aria-label={accessibleLabel} className={className} href={href} rel="noopener noreferrer" target="_blank">
+          {label}
+          <ExternalLinkIcon aria-hidden="true" className={iconClassName} focusable="false" />
+        </Link>
+      ) : (
+        <Focusable>
+          <span aria-label={accessibleLabel} className={className} role="img" tabIndex={0}>
+            {label}
+          </span>
+        </Focusable>
+      )}
       <Tooltip className={tooltipClassName} offset={8} placement="bottom">
-        <span className={titleClassName}>{title}</span>
-        {detail}
+        {tooltip}
       </Tooltip>
     </TooltipTrigger>
   );

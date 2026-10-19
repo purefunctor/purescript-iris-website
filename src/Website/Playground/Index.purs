@@ -3,7 +3,7 @@ module Website.Playground.Index (component) where
 import Prelude
 
 import Data.Array (null)
-import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Nullable (toMaybe)
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
@@ -16,7 +16,6 @@ import Website.Breakpoints (breakpoints)
 import Website.Components.ExternalLink (newTabLabel)
 import Website.Components.Icon as Icon
 import Website.Components.IconButton.Styles (iconButtonStyles)
-import Website.Components.Logo (logo)
 import Website.Playground.FileTabs (fileTabs)
 import Website.Playground.FileTree (fileTree)
 import Website.Playground.Loading (loading)
@@ -38,17 +37,16 @@ foreign import sidebarImpl ::
     , children :: JSX
     }
 
-foreign import serverPillImpl ::
+-- | A status pill with a tooltip. An empty `href` makes it a focusable label instead of a link.
+foreign import pillImpl ::
   ReactComponent
     { href :: String
     , label :: String
     , accessibleLabel :: String
-    , title :: String
-    , detail :: String
+    , tooltip :: String
     , className :: String
     , iconClassName :: String
     , tooltipClassName :: String
-    , titleClassName :: String
     }
 
 foreign import panelTabsImpl ::
@@ -74,8 +72,7 @@ styles = StyleX.create
       , fontSize: 14
       , height: "100dvh"
       }
-  -- The playground's own header replaces the site navigation: the brand leads home, and the
-  -- project's controls take the rest of the row.
+  -- The playground's own header replaces the site navigation with the project's controls.
   , header:
       { alignItems: "center"
       , backgroundColor: "var(--granite-950)"
@@ -87,26 +84,6 @@ styles = StyleX.create
       , gap: StyleX.conditionalValue 10 [ StyleX.conditionalCase breakpoints.upTo600 6 ]
       , height: "var(--nav-height)"
       , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
-      }
-  , brand:
-      { alignItems: "center"
-      , color: "var(--text-primary)"
-      , cursor: "default"
-      , display: "inline-flex"
-      , gap: 7
-      , lineHeight: 1
-      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
-      , marginInlineEnd: StyleX.conditionalValue 6 [ StyleX.conditionalCase breakpoints.upTo600 0 ]
-      , outline: { default: "revert", ":focus-visible": "none" }
-      , textDecoration: "none"
-      }
-  , logo: { flexShrink: 0, height: 24, width: 24 }
-  , wordmark:
-      { display:
-          StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
-      , fontSize: 19
-      , fontWeight: 900
-      , letterSpacing: "-0.04em"
       }
   , controls:
       { alignItems: "center"
@@ -286,27 +263,34 @@ styles = StyleX.create
       }
   , statusReady: { backgroundColor: "var(--green-400)" }
   -- The ready pill links to the release, so it brightens on hover like the other controls.
+  -- The version and package set pills are raised like the Run key, from their own hues. The
+  -- version links to its release, so it also brightens on hover and sinks while pressed.
   , statusLink:
-      { backgroundColor:
-          { default: "var(--green-400)"
-          , ":hover": "oklch(from var(--green-400) calc(l + 0.05) c h)"
+      { backgroundColor: "var(--green-400)"
+      , backgroundImage:
+          { default:
+              "linear-gradient(oklch(from var(--green-400) calc(l + 0.04) c h), oklch(from var(--green-400) calc(l - 0.04) c h))"
+          , ":hover":
+              "linear-gradient(oklch(from var(--green-400) calc(l + 0.07) c h), oklch(from var(--green-400) calc(l - 0.01) c h))"
+          , ":active":
+              "linear-gradient(oklch(from var(--green-400) calc(l - 0.04) c h), oklch(from var(--green-400) calc(l + 0.01) c h))"
           }
-      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , boxShadow:
+          { default:
+              "inset 0 1px 0 oklch(from var(--green-300) calc(l + 0.06) c h / 70%), inset 0 -1px 0 oklch(from var(--green-400) calc(l - 0.3) c h / 55%), 0 1px 2px oklch(0% 0 0 / 55%)"
+          , ":active": "inset 0 1px 3px oklch(from var(--green-400) calc(l - 0.35) c h / 65%)"
+          , ":focus-visible":
+              "inset 0 1px 0 oklch(from var(--green-300) calc(l + 0.06) c h / 70%), inset 0 -1px 0 oklch(from var(--green-400) calc(l - 0.3) c h / 55%), var(--shadow-focus)"
+          }
       , cursor: "default"
       , outline: { default: "revert", ":focus-visible": "none" }
       , textDecoration: "none"
+      , textShadow: "0 1px 0 oklch(from var(--green-300) calc(l + 0.06) c h / 45%)"
+      , transform: { default: "none", ":active": "translateY(1px)" }
       }
-  , tooltip:
-      { display: "flex"
-      , flexDirection: "column"
-      , gap: 2
-      , lineHeight: 1.45
-      , maxWidth: 260
-      , whiteSpace: "normal"
-      }
+  , commit: { fontFamily: "var(--font-mono)" }
   -- Lucide icons render at 1.2em, so the arrow sits a little smaller than the pill's label.
   , externalIcon: { flexShrink: 0, fontSize: 10, marginInlineStart: -1 }
-  , tooltipTitle: { color: "var(--text-primary)", fontWeight: 600 }
   , statusMock: { backgroundColor: "var(--yellow-400)" }
   , statusBusy:
       { backgroundColor: "var(--surface-2)"
@@ -415,6 +399,16 @@ styles = StyleX.create
       }
   , packageSet:
       { backgroundColor: "var(--blue-300)"
+      , backgroundImage:
+          "linear-gradient(oklch(from var(--blue-300) calc(l + 0.04) c h), oklch(from var(--blue-300) calc(l - 0.04) c h))"
+      , boxShadow:
+          { default:
+              "inset 0 1px 0 oklch(from var(--blue-300) calc(l + 0.1) calc(c - 0.04) h / 70%), inset 0 -1px 0 oklch(from var(--blue-300) calc(l - 0.32) c h / 55%), 0 1px 2px oklch(0% 0 0 / 55%)"
+          , ":focus-visible":
+              "inset 0 1px 0 oklch(from var(--blue-300) calc(l + 0.1) calc(c - 0.04) h / 70%), inset 0 -1px 0 oklch(from var(--blue-300) calc(l - 0.32) c h / 55%), var(--shadow-focus)"
+          }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , textShadow: "0 1px 0 oklch(from var(--blue-300) calc(l + 0.1) calc(c - 0.04) h / 45%)"
       , display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       }
@@ -463,11 +457,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } -
 
 playground :: View -> JSX
 playground { state, actions, editor, frames } = DOM.div styleProps.page
-  [ DOM.header styleProps.header
-      [ DOM.a { className: styleProps.brand.className, href: "/", "aria-label": "Iris home" }
-          [ logo { className: styleProps.logo.className }, DOM.span styleProps.wordmark "IRIS" ]
-      , if ready then controls else mempty
-      ]
+  [ DOM.header styleProps.header [ if ready then controls else mempty ]
   -- The children keep their positions in every phase, so that React keeps the editor host that
   -- the controller fills once loading finishes.
   , DOM.main styleProps.workspace
@@ -510,8 +500,15 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
     , DOM.div styleProps.spacer []
     , status state
     , case toMaybe state.packages.packageSet of
-        Just packageSet -> DOM.span (StyleX.props [ styles.status, styles.packageSet ])
-          ("Package set " <> packageSet)
+        Just packageSet -> element pillImpl
+          { href: ""
+          , label: packageSet
+          , accessibleLabel: "Package set " <> packageSet
+          , tooltip: "Package set"
+          , className: (StyleX.props [ styles.status, styles.packageSet ]).className
+          , iconClassName: ""
+          , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className
+          }
         Nothing -> mempty
     , iconAction "Reset to the example" Icon.rotateCcw actions.reset
     , DOM.button
@@ -643,18 +640,14 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
   "restarting", _, _ -> pill "Restarting the language server" styles.statusBusy
   "starting", _, _ -> pill "Starting the language server" styles.statusBusy
   _, Just "mock", _ -> pill "Mock language server" styles.statusMock
-  _, _, Just version -> element serverPillImpl
+  _, _, Just version -> element pillImpl
     { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
-    , label: "Iris " <> version
+    , label: version
     , accessibleLabel: "Iris " <> version <> " release" <> newTabLabel
-    , title: "Iris " <> version <> " language server"
-    , detail: "Built from the compiler's own crates"
-        <> maybe "" (\commit -> " at " <> commit) (toMaybe server.revision)
-        <> ". Opens the release on GitHub."
+    , tooltip: fromMaybe version (toMaybe server.revision)
     , className: (StyleX.props [ styles.status, styles.statusLink ]).className
     , iconClassName: styleProps.externalIcon.className
-    , tooltipClassName: (StyleX.props [ iconButtonStyles.tooltip, styles.tooltip ]).className
-    , titleClassName: styleProps.tooltipTitle.className
+    , tooltipClassName: (StyleX.props [ iconButtonStyles.tooltip, styles.commit ]).className
     }
   _, _, Nothing -> pill "Iris language server" styles.statusReady
   where
