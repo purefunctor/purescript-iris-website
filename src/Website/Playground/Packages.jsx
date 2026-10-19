@@ -37,10 +37,6 @@ export function packagesImpl({
           type="search"
           value={query}
         />
-        <p className={noteClassName}>
-          Every package in package set {packages.packageSet} is installed. Import its modules from
-          any file.
-        </p>
       </div>
       <ul aria-label="Packages" className={listClassName}>
         {matches.slice(0, LIMIT).map((entry) => (

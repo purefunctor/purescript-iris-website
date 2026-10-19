@@ -18,13 +18,14 @@ foreign import packagesImpl ::
     }
 
 styles = StyleX.create
-  { root: { display: "flex", flexDirection: "column", minHeight: 0 }
+  -- The list scrolls on its own, so the search and the count stay in place.
+  { root: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
   , search:
       { borderBlockEndColor: "var(--border-subtle)"
       , borderBlockEndStyle: "solid"
       , borderBlockEndWidth: 1
-      , paddingBlockStart: 12
-      , paddingInline: 12
+      , flexShrink: 0
+      , padding: 12
       }
   , input:
       { backgroundColor: "var(--granite-950)"
@@ -41,14 +42,26 @@ styles = StyleX.create
       , width: "100%"
       }
   , note:
-      { color: "var(--text-tertiary)"
+      { borderBlockStartColor: "var(--border-subtle)"
+      , borderBlockStartStyle: "solid"
+      , borderBlockStartWidth: 1
+      , color: "var(--text-tertiary)"
+      , flexShrink: 0
       , fontSize: 13
       , lineHeight: 1.5
       , margin: 0
-      , paddingBlock: 10
-      , paddingInline: 4
+      , paddingBlock: 8
+      , paddingInline: 16
       }
-  , list: { listStyle: "none", margin: 0, paddingBlock: 8, paddingInline: 0 }
+  , list:
+      { flexGrow: 1
+      , listStyle: "none"
+      , margin: 0
+      , minHeight: 0
+      , overflowY: "auto"
+      , paddingBlock: 8
+      , paddingInline: 0
+      }
   , row:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
