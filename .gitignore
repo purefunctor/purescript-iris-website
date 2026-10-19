@@ -5,3 +5,5 @@
 dist/
 node_modules/
 output/
+/playground/language-server/target/
+/playground/language-server/dist/
