@@ -413,9 +413,10 @@ styles = StyleX.create
       , display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       }
-  -- Run, Compiling and Stop share one grid cell, so the button keeps the widest label's width.
-  , runLabels: { display: "grid" }
-  , runLabel:
+  -- Run and Stop, and Share and Copied, share one grid cell, so each button keeps its widest
+  -- label's width. Compiling keeps the Run label and turns its icon into a spinner.
+  , labels: { display: "grid" }
+  , label:
       { alignItems: "center"
       , display: "inline-flex"
       , gap: 6
@@ -432,14 +433,24 @@ styles = StyleX.create
       { display: StyleX.conditionalValue "none"
           [ StyleX.conditionalCase breakpoints.upTo960 "inline-flex" ]
       }
-  , shareLabel:
+  , shareLabels:
       { display:
-          StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
+          StyleX.conditionalValue "grid" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
+      }
+  , spinner:
+      { animationDuration: "900ms"
+      , animationIterationCount: "infinite"
+      , animationName: { default: spin, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "linear"
+      , display: "inline-flex"
+      , fontSize: 12
       }
   , frames: { height: 0, overflow: "hidden", position: "absolute", width: 0 }
   }
 
 styleProps = StyleX.recordProps styles
+
+spin = StyleX.keyframes { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } }
 
 component :: ReactComponent { theme :: Foreign }
 component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } ->
@@ -503,10 +514,11 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , onClick: handler_ actions.share
         , title: "Copy a link to this project"
         , type: "button"
-        , "aria-label": if state.shared then "Link copied" else "Share"
+        , "aria-label": if state.shared then "Copied" else "Share"
         }
-        [ DOM.span styleProps.icon (icon Icon.share)
-        , DOM.span styleProps.shareLabel (if state.shared then "Link copied" else "Share")
+        [ DOM.span styleProps.icon (icon (if state.shared then Icon.check else Icon.share))
+        , DOM.span (StyleX.props [ styles.labels, styles.shareLabels ])
+            [ stackedLabel "Share" (not state.shared), stackedLabel "Copied" state.shared ]
         ]
     , runButton state actions.run actions.stop
     , DOM.button
@@ -587,23 +599,38 @@ runButton state run stop = DOM.button
   , disabled: compiling || state.server.status /= "ready" && not running
   , onClick: handler_ (if running then stop else run)
   , type: "button"
+  , "aria-label": if running then "Stop" else if compiling then "Compiling" else "Run"
   }
-  ( DOM.span styleProps.runLabels
-      [ label "Run" Icon.play (not running && not compiling)
-      , label "Compiling" Icon.play compiling
-      , label "Stop" Icon.square running
+  ( DOM.span styleProps.labels
+      [ label "Run" (not running)
+          [ if compiling
+            then DOM.span styleProps.spinner (icon Icon.loaderCircle)
+            else DOM.span styleProps.icon (icon Icon.play)
+          ]
+      , label "Stop" running [ DOM.span styleProps.icon (icon Icon.square) ]
       ]
   )
   where
   running = state.run.status == "running"
   compiling = state.run.status == "compiling"
-  label text icon' current = DOM.span
+  label text current icons = DOM.span
     { className:
-        ( StyleX.props [ styles.runLabel, StyleX.conditional (not current) styles.inactiveLabel ]
+        ( StyleX.props [ styles.label, StyleX.conditional (not current) styles.inactiveLabel ]
         ).className
     , "aria-hidden": not current
     }
-    [ DOM.span styleProps.icon (icon icon'), DOM.text text ]
+    (icons <> [ DOM.text text ])
+
+-- | One of several labels that share a grid cell, so that a button keeps its widest label's
+-- | width as the label changes.
+stackedLabel :: String -> Boolean -> JSX
+stackedLabel text current = DOM.span
+  { className:
+      ( StyleX.props [ styles.label, StyleX.conditional (not current) styles.inactiveLabel ]
+      ).className
+  , "aria-hidden": not current
+  }
+  text
 
 status :: State -> JSX
 status state = case server.status, toMaybe server.kind, toMaybe server.version of

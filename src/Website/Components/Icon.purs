@@ -20,6 +20,7 @@ module Website.Components.Icon
   , menu
   , minimize
   , pause
+  , loaderCircle
   , panelBottom
   , panelLeft
   , panelRight
@@ -61,6 +62,7 @@ foreign import maximize :: ReactComponent IconProps
 foreign import menu :: ReactComponent IconProps
 foreign import minimize :: ReactComponent IconProps
 foreign import pause :: ReactComponent IconProps
+foreign import loaderCircle :: ReactComponent IconProps
 foreign import panelBottom :: ReactComponent IconProps
 foreign import panelLeft :: ReactComponent IconProps
 foreign import panelRight :: ReactComponent IconProps

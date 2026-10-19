@@ -18,6 +18,7 @@ export { default as maximize } from "~icons/lucide/maximize";
 export { default as menu } from "~icons/lucide/menu";
 export { default as minimize } from "~icons/lucide/minimize";
 export { default as pause } from "~icons/lucide/pause";
+export { default as loaderCircle } from "~icons/lucide/loader-circle";
 export { default as panelBottom } from "~icons/lucide/panel-bottom";
 export { default as panelLeft } from "~icons/lucide/panel-left";
 export { default as panelRight } from "~icons/lucide/panel-right";
