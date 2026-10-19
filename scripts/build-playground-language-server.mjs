@@ -2,7 +2,8 @@
 // playground loads it from instead of its mock server.
 //
 // Only needed when changing the Rust crate: the site never builds it, and the playground can run
-// against its mock server or a published canary instead. Needs rustup, which installs the
+// against its mock server or a published canary instead, which
+// `scripts/download-playground-language-server.mjs` installs. Needs rustup, which installs the
 // toolchain in `rust-toolchain.toml`, and the wasm-bindgen CLI at the version `Cargo.toml` pins:
 //
 //   cargo binstall wasm-bindgen-cli@<version>
@@ -44,12 +45,14 @@ execFileSync(
   { stdio: "inherit" },
 );
 
-// The playground reads the manifest to decide whether a built server exists.
+// The playground reads the manifest to decide whether a built server exists. The canary workflow
+// records its release tag as the source.
 const lock = readFileSync(join(crate, "Cargo.lock"), "utf8");
 const source = /name = "building"\nversion = "[^"]+"\nsource = "git\+[^?]+\?tag=([^#]+)#([0-9a-f]{12})/.exec(lock);
+const release = process.env.PLAYGROUND_LANGUAGE_SERVER_RELEASE ?? "local";
 writeFileSync(
   join(dist, "manifest.json"),
-  `${JSON.stringify({ iris: source[1], revision: source[2], source: "local" }, null, 2)}\n`,
+  `${JSON.stringify({ iris: source[1], revision: source[2], source: release }, null, 2)}\n`,
 );
 
 const output = readFileSync(join(dist, "language_server_bg.wasm"));

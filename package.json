@@ -17,6 +17,7 @@
     "sources": "spago sources",
     "playground:packages": "node scripts/generate-playground-packages.mjs",
     "playground:language-server": "node scripts/build-playground-language-server.mjs",
+    "playground:language-server:download": "node scripts/download-playground-language-server.mjs",
     "test:playground-language-server": "node scripts/test-playground-language-server.mjs"
   },
   "dependencies": {
