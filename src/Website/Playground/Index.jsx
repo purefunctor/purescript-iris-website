@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-aria-components/Link";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
+import { Tooltip, TooltipTrigger } from "react-aria-components/Tooltip";
 
 const initialState = {
   phase: "loading",
@@ -108,5 +110,20 @@ export function panelTabsImpl({
         {packages}
       </TabPanel>
     </Tabs>
+  );
+}
+
+// The language server's pill, which links to its Iris release and explains itself in a tooltip.
+export function serverPillImpl({ href, label, title, detail, className, tooltipClassName, titleClassName }) {
+  return (
+    <TooltipTrigger closeDelay={100} delay={300}>
+      <Link className={className} href={href} rel="noreferrer" target="_blank">
+        {label}
+      </Link>
+      <Tooltip className={tooltipClassName} offset={8} placement="bottom end">
+        <span className={titleClassName}>{title}</span>
+        {detail}
+      </Tooltip>
+    </TooltipTrigger>
   );
 }

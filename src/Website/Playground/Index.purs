@@ -14,6 +14,7 @@ import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import Website.Breakpoints (breakpoints)
 import Website.Components.Icon as Icon
+import Website.Components.IconButton.Styles (iconButtonStyles)
 import Website.Components.Logo (logo)
 import Website.Playground.FileTabs (fileTabs)
 import Website.Playground.FileTree (fileTree)
@@ -23,6 +24,17 @@ import Website.Playground.Types (Line, Run, State, View)
 import Yoga.React.DOM as DOM
 
 foreign import playgroundImpl :: ReactComponent { theme :: Foreign, render :: View -> JSX }
+
+foreign import serverPillImpl ::
+  ReactComponent
+    { href :: String
+    , label :: String
+    , title :: String
+    , detail :: String
+    , className :: String
+    , tooltipClassName :: String
+    , titleClassName :: String
+    }
 
 foreign import panelTabsImpl ::
   ReactComponent
@@ -235,6 +247,26 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , statusReady: { backgroundColor: "var(--green-400)" }
+  -- The ready pill links to the release, so it brightens on hover like the other controls.
+  , statusLink:
+      { backgroundColor:
+          { default: "var(--green-400)"
+          , ":hover": "oklch(from var(--green-400) calc(l + 0.05) c h)"
+          }
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , cursor: "default"
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , textDecoration: "none"
+      }
+  , tooltip:
+      { display: "flex"
+      , flexDirection: "column"
+      , gap: 2
+      , lineHeight: 1.45
+      , maxWidth: 260
+      , whiteSpace: "normal"
+      }
+  , tooltipTitle: { color: "var(--text-primary)", fontWeight: 600 }
   , statusMock: { backgroundColor: "var(--yellow-400)" }
   , statusBusy:
       { backgroundColor: "var(--surface-2)"
@@ -266,14 +298,31 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , iconOnly: { paddingInline: 0, justifyContent: "center", width: 32 }
+  -- Run is a raised key, as on audio equipment of the period: lit from above, with a lip below
+  -- and an engraved label, and it sinks while pressed. Disabled, it lies flat.
   , run:
-      { backgroundColor:
-          { default: "var(--accent)"
-          , ":hover": "var(--accent-hover)"
-          , ":active": "var(--accent-press)"
-          , ":disabled": "var(--surface-2)"
+      { backgroundColor: { default: "var(--accent)", ":disabled": "var(--surface-2)" }
+      , backgroundImage:
+          { default:
+              "linear-gradient(oklch(from var(--accent) calc(l + 0.05) c h), oklch(from var(--accent) calc(l - 0.035) c h))"
+          , ":hover":
+              "linear-gradient(oklch(from var(--accent) calc(l + 0.08) c h), oklch(from var(--accent) calc(l - 0.005) c h))"
+          , ":active":
+              "linear-gradient(oklch(from var(--accent) calc(l - 0.04) c h), oklch(from var(--accent) calc(l + 0.01) c h))"
+          , ":disabled": "none"
+          }
+      , boxShadow:
+          { default:
+              "inset 0 1px 0 oklch(from var(--signal-200) l c h / 65%), inset 0 -1px 0 oklch(from var(--signal-500) calc(l - 0.12) c h / 70%), 0 1px 2px oklch(0% 0 0 / 55%)"
+          , ":active": "inset 0 1px 3px oklch(from var(--signal-500) calc(l - 0.2) c h / 75%)"
+          , ":focus-visible":
+              "inset 0 1px 0 oklch(from var(--signal-200) l c h / 65%), inset 0 -1px 0 oklch(from var(--signal-500) calc(l - 0.12) c h / 70%), var(--shadow-focus)"
+          , ":disabled": "none"
           }
       , color: { default: "var(--text-on-accent)", ":disabled": "var(--text-tertiary)" }
+      , textShadow:
+          { default: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)", ":disabled": "none" }
+      , transform: { default: "none", ":active": "translateY(1px)" }
       }
   -- Stop keeps Run's weight and padding, so only the color changes.
   , runShape: { fontWeight: 600, paddingInline: 16 }
@@ -325,7 +374,7 @@ styles = StyleX.create
       , paddingInline: 16
       }
   , packageSet:
-      { backgroundColor: "var(--granite-100)"
+      { backgroundColor: "var(--blue-300)"
       , display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       }
@@ -485,22 +534,31 @@ runButton state run stop = DOM.button
     [ DOM.span styleProps.icon (icon icon'), DOM.text text ]
 
 status :: State -> JSX
-status state = DOM.span
-  { className: (StyleX.props [ styles.status, tone ]).className
-  , role: "status"
-  , title: fromMaybe (label <> revision) (toMaybe state.server.message)
-  }
-  label
+status state = case server.status, toMaybe server.kind, toMaybe server.version of
+  "failed", _, _ -> pill "Language server stopped" styles.statusFailed
+  "restarting", _, _ -> pill "Restarting the language server" styles.statusBusy
+  "starting", _, _ -> pill "Starting the language server" styles.statusBusy
+  _, Just "mock", _ -> pill "Mock language server" styles.statusMock
+  _, _, Just version -> element serverPillImpl
+    { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
+    , label: "Iris " <> version
+    , title: "Iris " <> version <> " language server"
+    , detail: "Built from the compiler's own crates"
+        <> maybe "" (\commit -> " at " <> commit) (toMaybe server.revision)
+        <> ". Opens the release on GitHub."
+    , className: (StyleX.props [ styles.status, styles.statusLink ]).className
+    , tooltipClassName: (StyleX.props [ iconButtonStyles.tooltip, styles.tooltip ]).className
+    , titleClassName: styleProps.tooltipTitle.className
+    }
+  _, _, Nothing -> pill "Iris language server" styles.statusReady
   where
   server = state.server
-  version = fromMaybe "" (toMaybe server.version)
-  revision = maybe "" (\commit -> " (" <> commit <> ")") (toMaybe server.revision)
-  { label, tone } = case server.status, toMaybe server.kind of
-    "failed", _ -> { label: "Language server stopped", tone: styles.statusFailed }
-    "restarting", _ -> { label: "Restarting the language server", tone: styles.statusBusy }
-    "starting", _ -> { label: "Starting the language server", tone: styles.statusBusy }
-    _, Just "mock" -> { label: "Mock language server", tone: styles.statusMock }
-    _, _ -> { label: "Iris " <> version, tone: styles.statusReady }
+  pill label tone = DOM.span
+    { className: (StyleX.props [ styles.status, tone ]).className
+    , role: "status"
+    , title: fromMaybe label (toMaybe server.message)
+    }
+    label
 
 output :: Run -> Effect Unit -> JSX
 output run clear = DOM.div styleProps.output

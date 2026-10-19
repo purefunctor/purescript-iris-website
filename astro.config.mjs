@@ -62,6 +62,7 @@ export default defineConfig({
         "@stylexjs/stylex",
         "react-aria-components/Button",
         "react-aria-components/Dialog",
+        "react-aria-components/Link",
         "react-aria-components/Modal",
         "react-aria-components/Popover",
         "react-aria-components/Tabs",
