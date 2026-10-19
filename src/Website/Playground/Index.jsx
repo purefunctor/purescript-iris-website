@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-aria-components/Link";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
 import { Tooltip, TooltipTrigger } from "react-aria-components/Tooltip";
+import ExternalLinkIcon from "~icons/lucide/external-link";
 
 const initialState = {
   phase: "loading",
@@ -198,13 +199,24 @@ export function sidebarImpl({ id, open, width, resize, close, className, handleC
 }
 
 // The language server's pill, which links to its Iris release and explains itself in a tooltip.
-export function serverPillImpl({ href, label, title, detail, className, tooltipClassName, titleClassName }) {
+export function serverPillImpl({
+  href,
+  label,
+  accessibleLabel,
+  title,
+  detail,
+  className,
+  iconClassName,
+  tooltipClassName,
+  titleClassName,
+}) {
   return (
     <TooltipTrigger closeDelay={100} delay={300}>
-      <Link className={className} href={href} rel="noreferrer" target="_blank">
+      <Link aria-label={accessibleLabel} className={className} href={href} rel="noopener noreferrer" target="_blank">
         {label}
+        <ExternalLinkIcon aria-hidden="true" className={iconClassName} focusable="false" />
       </Link>
-      <Tooltip className={tooltipClassName} offset={8} placement="bottom end">
+      <Tooltip className={tooltipClassName} offset={8} placement="bottom">
         <span className={titleClassName}>{title}</span>
         {detail}
       </Tooltip>

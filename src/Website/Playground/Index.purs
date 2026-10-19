@@ -13,6 +13,7 @@ import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import Website.Breakpoints (breakpoints)
+import Website.Components.ExternalLink (newTabLabel)
 import Website.Components.Icon as Icon
 import Website.Components.IconButton.Styles (iconButtonStyles)
 import Website.Components.Logo (logo)
@@ -41,9 +42,11 @@ foreign import serverPillImpl ::
   ReactComponent
     { href :: String
     , label :: String
+    , accessibleLabel :: String
     , title :: String
     , detail :: String
     , className :: String
+    , iconClassName :: String
     , tooltipClassName :: String
     , titleClassName :: String
     }
@@ -301,6 +304,8 @@ styles = StyleX.create
       , maxWidth: 260
       , whiteSpace: "normal"
       }
+  -- Lucide icons render at 1.2em, so the arrow sits a little smaller than the pill's label.
+  , externalIcon: { flexShrink: 0, fontSize: 10, marginInlineStart: -1 }
   , tooltipTitle: { color: "var(--text-primary)", fontWeight: 600 }
   , statusMock: { backgroundColor: "var(--yellow-400)" }
   , statusBusy:
@@ -641,11 +646,13 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
   _, _, Just version -> element serverPillImpl
     { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
     , label: "Iris " <> version
+    , accessibleLabel: "Iris " <> version <> " release" <> newTabLabel
     , title: "Iris " <> version <> " language server"
     , detail: "Built from the compiler's own crates"
         <> maybe "" (\commit -> " at " <> commit) (toMaybe server.revision)
         <> ". Opens the release on GitHub."
     , className: (StyleX.props [ styles.status, styles.statusLink ]).className
+    , iconClassName: styleProps.externalIcon.className
     , tooltipClassName: (StyleX.props [ iconButtonStyles.tooltip, styles.tooltip ]).className
     , titleClassName: styleProps.tooltipTitle.className
     }
