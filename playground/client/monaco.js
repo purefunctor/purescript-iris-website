@@ -35,8 +35,11 @@ import "monaco-editor/editor/standalone/browser/quickAccess/standaloneGotoSymbol
 import "monaco-editor/editor/standalone/browser/referenceSearch/standaloneReferenceSearch.js";
 import "monaco-editor/editor/common/standaloneStrings.js";
 import "monaco-editor/languages/definitions/javascript/register.js";
+import { StandaloneServices } from "monaco-editor/editor/standalone/browser/standaloneServices.js";
+import { IStorageService } from "monaco-editor/platform/storage/common/storage.js";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import { LANGUAGE } from "./monaco-bridge.js";
+import "./monaco.css";
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
 
@@ -75,11 +78,20 @@ export function configure(theme) {
   monaco.editor.defineTheme("iris", theme);
 }
 
+// Monaco gives the references view's preview 70% of its width, which leaves the list of
+// references too narrow beside a sidebar. Readers can still drag the divider.
+function widenReferences() {
+  const storage = StandaloneServices.get(IStorageService);
+  const key = "peekViewLayout";
+  // Profile scope, machine target, as `ReferencesController` stores it.
+  if (!storage.get(key, 0)) storage.store(key, JSON.stringify({ ratio: 0.5, heightInLines: 18 }), 0, 1);
+}
+
 export function createEditor(element, options) {
   // The context menu mounts beside the editor, outside `.monaco-editor`, and reads the theme's
   // colors from variables that Monaco also defines for `.monaco-component`.
   element.classList.add("monaco-component");
-  return monaco.editor.create(element, {
+  const editor = monaco.editor.create(element, {
     theme: "iris",
     automaticLayout: true,
     fontFamily: '"Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace',
@@ -98,6 +110,8 @@ export function createEditor(element, options) {
     stickyScroll: { enabled: false },
     ...options,
   });
+  widenReferences();
+  return editor;
 }
 
 const grammar = {

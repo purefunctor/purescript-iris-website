@@ -12,7 +12,7 @@ import { monacoStyles } from "./src/lib/monacoStyles.ts";
 // lists, so that opening the playground never makes Vite reoptimize and reload the page.
 const monacoModules = Array.from(
   readFileSync(new URL("./playground/client/monaco.js", import.meta.url), "utf8").matchAll(
-    /^import (?:\* as \w+ from )?"(monaco-editor\/[^"?]+\.js)";$/gm,
+    /^import (?:\* as \w+ from |\{[^}]*\} from )?"(monaco-editor\/[^"?]+\.js)";$/gm,
   ),
   (match) => match[1],
 );
