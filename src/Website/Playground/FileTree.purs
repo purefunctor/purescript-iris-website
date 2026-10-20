@@ -58,21 +58,6 @@ styles = StyleX.create
       , paddingInlineStart: 14
       }
   , title: { color: "var(--text-tertiary)", fontSize: 12, fontWeight: 600, margin: 0 }
-  , newFile:
-      { alignItems: "center"
-      , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-3)" }
-      , borderRadius: 999
-      , borderStyle: "none"
-      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
-      , color: "var(--text-primary)"
-      , cursor: "default"
-      , display: "inline-flex"
-      , fontSize: 14
-      , height: 26
-      , justifyContent: "center"
-      , outline: { default: "revert", ":focus-visible": "none" }
-      , width: 26
-      }
   , scroll: { flexGrow: 1, minHeight: 0, overflowY: "auto", paddingBlockEnd: 12 }
   -- An expanded folder's files settle in below it.
   , list:
@@ -216,7 +201,7 @@ fileTree { files, active, viewing, actions } = element fileTreeImpl
   , rootClassName: styleProps.root.className
   , headerClassName: styleProps.header.className
   , titleClassName: styleProps.title.className
-  , newFileClassName: styleProps.newFile.className
+  , newFileClassName: styleProps.action.className
   , scrollClassName: styleProps.scroll.className
   , listClassName: styleProps.list.className
   -- Only file items carry the marker, so hovering a file reveals that file's actions alone.
