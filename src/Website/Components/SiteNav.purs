@@ -344,11 +344,11 @@ siteNav { onInstall } = siteHeader { contained: true }
   [ DOM.nav { className: styleProps.links.className, "aria-label": "Explore Iris" }
       [ link false "/#benchmarks" "Benchmarks"
       , link false "/#editor" "Editor"
-      , link false "/playground/" "Playground"
       , socialLink "https://github.com/purefunctor/purescript-iris" "Iris on GitHub" Icon.gitHub
       , socialLink "https://x.com/purefunctor" "purefunctor on X" Icon.xSocial
       , socialLink "https://bsky.app/profile/purefunctor.me" "purefunctor on Bluesky" Icon.bluesky
       , documentationLink
+      , link false "/playground/" "Playground"
       ]
   , DOM.div styleProps.actions
       [ element mobileNavigationImpl
