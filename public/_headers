@@ -19,10 +19,13 @@
   Cache-Control: no-store
 
 # The playground runs programs in this frame. Its response carries the same sandbox as the frame
-# element, so the page stays in an opaque origin even when opened directly.
-/playground/sandbox.html
+# element, so the page stays in an opaque origin even when opened directly. Static Assets redirect
+# /playground/sandbox.html here, so the rule names the served path. no-transform stops Cloudflare
+# from injecting its JavaScript Detections and Web Analytics scripts, which the frame's inline
+# script policy would run and whose errors would show as the program's.
+/playground/sandbox
   Content-Security-Policy: sandbox allow-scripts allow-forms; default-src 'none'; form-action 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'
-  Cache-Control: no-cache
+  Cache-Control: no-cache, no-transform
 
 # The language server is replaced in place when the playground updates its Iris release.
 /playground/language-server/*
