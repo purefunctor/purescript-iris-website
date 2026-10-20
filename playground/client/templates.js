@@ -1,6 +1,6 @@
 // Projects that the sidebar offers as starting points. The first is the default project, which a
 // new visit opens and Reset restores. Each one is a complete project that loads in place of the
-// current one. The program's frame gives it the site's background, text color and fonts; every
+// current one, and activates the core packages and its own `packages`. The program's frame gives it the site's background, text color and fonts; every
 // other color is written out in the module, so the code reads on its own.
 
 const COLORS = String.raw`-- The program runs in its own document, so it brings its own colors: the playground's.
@@ -173,9 +173,12 @@ import Web.HTML (window)
 import Web.HTML.HTMLDocument (toNonElementParentNode)
 import Web.HTML.Window (document)`;
 
+const REACT = ["react-basic", "react-basic-dom", "react-basic-hooks"];
+
 export const TEMPLATES = [
   {
     id: "console",
+    packages: [],
     name: "Console",
     description: "Logs to the output",
     files: [
@@ -211,6 +214,7 @@ greet name = "Hello, " <> name <> "!"
   },
   {
     id: "halogen-counter",
+    packages: ["halogen"],
     name: "Halogen counter",
     description: "A Halogen component styled with StyleX",
     files: [
@@ -263,6 +267,7 @@ main = HA.runHalogenAff do
   },
   {
     id: "halogen-todos",
+    packages: ["halogen"],
     name: "Halogen todos",
     description: "A Halogen todo list styled with StyleX",
     files: [
@@ -388,6 +393,7 @@ main = HA.runHalogenAff do
   },
   {
     id: "react-counter",
+    packages: REACT,
     name: "React counter",
     description: "A React component styled with StyleX",
     files: [
@@ -442,6 +448,7 @@ ${REACT_MAIN("counter")}
   },
   {
     id: "react-todos",
+    packages: REACT,
     name: "React todos",
     description: "A React todo list styled with StyleX",
     files: [

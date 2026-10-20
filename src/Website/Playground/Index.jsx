@@ -17,7 +17,7 @@ const initialState = {
   panelHeight: 320,
   panelTab: "output",
   server: { kind: null, version: null, revision: null, status: "starting", message: null },
-  packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
+  packages: { available: [], active: 0, packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
   run: { status: "idle", lines: [], view: false },
   templates: [],
   shared: false,
@@ -84,6 +84,8 @@ export function playgroundImpl({ theme, render }) {
       clearOutput: () => call("clearOutput"),
       share: () => call("share"),
       loadTemplate: (id) => () => call("loadTemplate", id),
+      activatePackage: (name) => () => call("activatePackage", name),
+      deactivatePackage: (name) => () => call("deactivatePackage", name),
       reset: () => call("reset"),
       // Without a controller, the page itself failed to load, so it loads again.
       retry: () => (controller.current ? call("retry") : location.reload()),

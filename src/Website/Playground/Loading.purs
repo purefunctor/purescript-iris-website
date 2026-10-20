@@ -82,7 +82,7 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | What the page shows while the package set downloads and the language server loads, and when
+-- | What the page shows while the active packages download and the language server loads, and when
 -- | either failed.
 loading :: State -> Effect Unit -> JSX
 loading state retry =

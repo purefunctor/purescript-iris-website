@@ -702,7 +702,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
         , packages: packagesPanel { packages: state.packages }
-        , packagesBadge: ""
+        , packagesBadge: if state.packages.active == 0 then "" else show state.packages.active
         }
     }
 

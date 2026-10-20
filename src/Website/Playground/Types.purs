@@ -64,10 +64,12 @@ type Server =
   , message :: Nullable String
   }
 
--- | The package set, which the project can import from in full. `loaded` of `total` packages, and
--- | `bytes` of `totalBytes` compressed, have been downloaded or read from the cache.
+-- | The package set, whose `active` packages the project can import. `loaded` of `total` active
+-- | packages, and `bytes` of `totalBytes` compressed, have been downloaded or read from the cache
+-- | since the language server last started.
 type Packages =
   { available :: Array Available
+  , active :: Int
   , packageSet :: Nullable String
   , loaded :: Int
   , total :: Int
@@ -75,7 +77,10 @@ type Packages =
   , totalBytes :: Int
   }
 
-type Available = { name :: String, version :: String }
+-- | `status` is `active` for a package the project activated, `dependency` for one that an active
+-- | package needs, listed in `requiredBy`, `installed` for an inactive package in the cache, and
+-- | `available` for one that activating would download.
+type Available = { name :: String, version :: String, status :: String, requiredBy :: String }
 
 -- | `status` is `idle`, `compiling`, `running`, `done`, `stopped` or `failed`. A line's `kind` is
 -- | `log`, `info`, `warning` or `error`. `view` is true once the program renders into its
@@ -112,6 +117,9 @@ type Actions =
   , share :: Effect Unit
   -- | Replaces the project with a template, by its `id`.
   , loadTemplate :: String -> Effect Unit
+  -- | Activates or deactivates a package by name, which restarts the language server.
+  , activatePackage :: String -> Effect Unit
+  , deactivatePackage :: String -> Effect Unit
   -- | Replaces the project with the first template.
   , reset :: Effect Unit
   , retry :: Effect Unit
