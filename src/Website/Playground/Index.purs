@@ -797,7 +797,8 @@ stackedLabel text current = DOM.span
 status :: State -> JSX
 status state = case server.status, toMaybe server.kind, toMaybe server.version of
   "failed", _, _ -> pill "Language server stopped" styles.statusFailed
-  "restarting", _, _ -> pill "Restarting the language server" styles.statusBusy
+  -- A restart keeps the same release, so a known version stays in place.
+  "restarting", _, Nothing -> pill "Restarting the language server" styles.statusBusy
   "starting", _, _ -> pill "Starting the language server" styles.statusBusy
   _, Just "mock", _ -> mempty
   _, _, Just version -> element pillImpl
