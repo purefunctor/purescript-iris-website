@@ -1,6 +1,7 @@
 // The page's side of the playground worker: JSON-RPC over postMessage, startup progress, and
-// restarts. When the server panics, the worker is replaced, which loads the packages again from
-// the cache, and `onRestart` replays the project's documents into the new one.
+// restarts. When the server panics or the active packages change, the worker is replaced, which
+// loads the packages from the cache and downloads new ones, and `onRestart` replays the project's
+// documents into the new one.
 
 const RESTART_LIMIT = 3;
 const RESTART_WINDOW = 60_000;
@@ -9,6 +10,7 @@ export class LanguageClient {
   #createWorker;
   #server;
   #handlers;
+  #packages = [];
   #worker;
   #nextId = 1;
   #pending = new Map();
@@ -29,8 +31,10 @@ export class LanguageClient {
     this.#handlers = handlers;
   }
 
-  async start() {
-    this.#handlers.onStatus({ status: "starting" });
+  /** Starts a worker with the named packages, which `restart` replaces. */
+  async start(packages = this.#packages) {
+    this.#packages = packages;
+    this.#handlers.onStatus({ status: this.info ? "restarting" : "starting" });
     const worker = this.#createWorker();
     this.#worker = worker;
     const started = new Promise((resolve, reject) => {
@@ -43,7 +47,7 @@ export class LanguageClient {
       };
       worker.onerror = (event) => reject(new Error(event.message || "The language server worker failed to load"));
     });
-    worker.postMessage({ type: "start", server: this.#server });
+    worker.postMessage({ type: "start", server: this.#server, packages });
     try {
       this.info = await started;
     } catch (error) {
@@ -99,6 +103,14 @@ export class LanguageClient {
     });
   }
 
+  /** Replaces the worker with one that loads `packages`, and replays the documents into it. */
+  async restart(packages) {
+    this.#stop();
+    const info = await this.start(packages);
+    if (info) await this.#handlers.onRestart();
+    return info;
+  }
+
   dispose() {
     this.#worker?.terminate();
     this.#worker = null;
@@ -139,8 +151,8 @@ export class LanguageClient {
     }
   }
 
-  async #crash(error) {
-    console.error("The playground language server stopped.", error);
+  /** Stops the worker and fails whatever waited on it. */
+  #stop() {
     this.dispose();
     const stopped = new Error("The language server restarted");
     stopped.code = -32800;
@@ -148,7 +160,11 @@ export class LanguageClient {
     for (const resolve of this.#reads.values()) resolve(null);
     this.#pending.clear();
     this.#reads.clear();
+  }
 
+  async #crash(error) {
+    console.error("The playground language server stopped.", error);
+    this.#stop();
     const now = Date.now();
     this.#crashes = [...this.#crashes.filter((time) => now - time < RESTART_WINDOW), now];
     if (this.#crashes.length > RESTART_LIMIT) {

@@ -701,8 +701,13 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , output: output state.run frames
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
-        , packages: packagesPanel { packages: state.packages }
-        , packagesBadge: ""
+        , packages: packagesPanel
+            { packages: state.packages
+            , busy: state.server.status == "starting" || state.server.status == "restarting"
+            , activate: actions.activatePackage
+            , deactivate: actions.deactivatePackage
+            }
+        , packagesBadge: if state.packages.active == 0 then "" else show state.packages.active
         }
     }
 
@@ -792,7 +797,8 @@ stackedLabel text current = DOM.span
 status :: State -> JSX
 status state = case server.status, toMaybe server.kind, toMaybe server.version of
   "failed", _, _ -> pill "Language server stopped" styles.statusFailed
-  "restarting", _, _ -> pill "Restarting the language server" styles.statusBusy
+  -- A restart keeps the same release, so a known version stays in place.
+  "restarting", _, Nothing -> pill "Restarting the language server" styles.statusBusy
   "starting", _, _ -> pill "Starting the language server" styles.statusBusy
   _, Just "mock", _ -> mempty
   _, _, Just version -> element pillImpl

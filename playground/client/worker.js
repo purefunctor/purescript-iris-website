@@ -1,19 +1,21 @@
 // The playground's Web Worker. It hosts a language server, either the WebAssembly build of the
-// Iris server or the JavaScript mock, and downloads the whole package set for it.
+// Iris server or the JavaScript mock, and downloads the project's active packages for it. The page
+// changes the active packages by starting a new worker.
 //
 // Page to worker:
-//   { type: "start", server: "auto" | "mock" }
+//   { type: "start", server: "auto" | "mock", packages }   the active packages' names
 //   { type: "lsp", message }                  a JSON-RPC message for the server
 //   { type: "read", id, uri }                 the text of a package or Prim source
 // Worker to page:
 //   { type: "progress", packageSet, loaded, total, bytes, totalBytes }   packages downloaded so far
-//   { type: "started", server: { kind: "iris" | "mock", version, revision }, packageSet, packages }
+//   { type: "started", server: { kind: "iris" | "mock", version, revision }, installed }
+//                                             installed: every package the cache holds
 //   { type: "failed", error }                 the packages or the server could not be loaded
 //   { type: "lsp", message }
 //   { type: "read", id, text }
 //   { type: "crashed", error }                the server panicked
 //
-// The server receives every package once the client sends `initialized`, before any document,
+// The server receives the active packages once the client sends `initialized`, before any document,
 // and loads the modules that the project imports.
 
 import index from "../packages/index.json";
@@ -35,7 +37,7 @@ let idle;
 self.onmessage = async ({ data }) => {
   switch (data.type) {
     case "start":
-      return start(data.server);
+      return start(data.server, data.packages);
     case "lsp":
       queue.push(data.message);
       return schedule();
@@ -44,19 +46,19 @@ self.onmessage = async ({ data }) => {
   }
 };
 
-async function start(preference) {
+async function start(preference, names) {
   try {
+    const cache = await caches.open(CACHE).catch(() => null);
     const [iris, downloaded] = await Promise.all([
       preference === "mock" ? null : loadIris(),
-      downloadPackageSet(),
+      downloadPackages(cache, names),
     ]);
     packages = downloaded;
     server = iris ?? new MockServer();
     self.postMessage({
       type: "started",
       server: { kind: iris ? "iris" : "mock", version: iris?.version ?? null, revision: iris?.revision ?? null },
-      packageSet: index.packageSet.version,
-      packages: Object.entries(index.packages).map(([name, entry]) => ({ name, version: entry.version })),
+      installed: await installedPackages(cache, names),
     });
     schedule();
   } catch (error) {
@@ -141,12 +143,11 @@ function fail(error) {
 }
 
 /**
- * Downloads every package in the package set, or reads it from the cache, and reports progress.
- * Each package is fetched and cached on its own, so that later visits, and a future playground
- * that downloads packages only when the project imports them, reuse the same entries.
+ * Downloads the named packages, or reads them from the cache, and reports progress. Each package
+ * is fetched and cached on its own, so that every project reuses the entries it shares with others.
  */
-async function downloadPackageSet() {
-  const entries = Object.entries(index.packages).map(([name, entry]) => ({ name, ...entry }));
+async function downloadPackages(cache, names) {
+  const entries = names.map((name) => ({ name, ...index.packages[name] }));
   const total = entries.length;
   const totalBytes = entries.reduce((sum, entry) => sum + entry.bytes, 0);
   let loaded = 0;
@@ -154,7 +155,6 @@ async function downloadPackageSet() {
   const packageSet = index.packageSet.version;
   const report = () => self.postMessage({ type: "progress", packageSet, loaded, total, bytes, totalBytes });
   report();
-  const cache = await caches.open(CACHE).catch(() => null);
   return mapConcurrently(entries, CONCURRENCY, async (entry) => {
     const files = await loadPackage(cache, entry);
     loaded += 1;
@@ -162,6 +162,18 @@ async function downloadPackageSet() {
     report();
     return { name: entry.name, files };
   });
+}
+
+/** The names of the packages the cache holds, which include `active` once they downloaded. */
+async function installedPackages(cache, active) {
+  const names = new Map(Object.entries(index.packages).map(([name, entry]) => [archiveUrl({ name, ...entry }), name]));
+  const requests = (await cache?.keys().catch(() => null)) ?? [];
+  const installed = new Set(active);
+  for (const request of requests) {
+    const name = names.get(request.url);
+    if (name) installed.add(name);
+  }
+  return [...installed];
 }
 
 async function loadPackage(cache, entry) {

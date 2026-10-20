@@ -2,10 +2,13 @@
 // runner, and publishes one plain state object for the UI to render. The UI never sees Monaco or
 // LSP: it calls the actions returned by `createPlayground`.
 //
-// The page starts in the `loading` phase while the worker downloads the package set and loads the
-// language server. The editor is created once both are ready, so the first thing it shows is a
-// checked project.
+// The page starts in the `loading` phase while the worker downloads the project's active packages
+// and loads the language server. The editor is created once both are ready, so the first thing it
+// shows is a checked project. The project activates packages by name, and the server loads them
+// with their dependencies; changing them restarts the server, which downloads what is missing.
 
+import index from "../packages/index.json";
+import { resolveClosure } from "../packages/registry.js";
 import { LanguageClient } from "./language-client.js";
 import { applyDiagnostics, LANGUAGE, registerProviders } from "./monaco-bridge.js";
 import { configure, createEditor, monaco } from "./monaco.js";
@@ -22,6 +25,9 @@ const MAX_LINES = 1000;
 const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
 // The panel's width beside the editor and its height below it, kept the same way.
 const PANEL_SIZE = "iris-playground-panel-size";
+// Every template activates what the `purescript` and `purescript-contrib` organizations publish.
+const CORE = Object.keys(index.packages).filter((name) => ["purescript", "purescript-contrib"].includes(index.packages[name].owner));
+const templatePackages = (template) => [...CORE, ...template.packages];
 
 
 /**
@@ -34,12 +40,15 @@ const PANEL_SIZE = "iris-playground-panel-size";
 export async function createPlayground({ editor: host, frames, theme, onChange }) {
   const query = new URLSearchParams(location.search);
   const shared = await decodeProject(location.hash).catch(() => null);
-  const project = shared ?? loadSavedProject() ?? { files: TEMPLATES[0].files };
+  const project = shared ?? loadSavedProject() ?? { files: TEMPLATES[0].files, packages: templatePackages(TEMPLATES[0]) };
   if (shared) history.replaceState(null, "", location.pathname + location.search);
 
   const paths = project.files.map(({ path }) => path);
   const open = (project.open ?? paths).filter((path) => paths.includes(path));
   const active = open.includes(project.active) ? project.active : open[0] ?? null;
+  // A project saved before it chose packages gets every template's, which its code may rely on.
+  let activated = (project.packages ?? TEMPLATES.flatMap(templatePackages)).filter((name, at, names) => index.packages[name] && names.indexOf(name) === at);
+  let installed = new Set();
   const panelSize = safely(() => JSON.parse(localStorage.getItem(PANEL_SIZE))) ?? {};
   let state = {
     phase: "loading",
@@ -54,7 +63,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     panelHeight: Number(panelSize.height) || Math.round(innerHeight * 0.4),
     panelTab: "output",
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
-    packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
+    packages: { available: [], active: 0, packageSet: index.packageSet.version, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [], view: false },
     templates: TEMPLATES.map(({ id, name, description }) => ({ id, name, description })),
     shared: false,
@@ -79,7 +88,31 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     files: state.files.map(({ path }) => ({ path, text: models.get(path).getValue() })),
     open: state.open,
     active: state.active,
+    packages: activated,
   });
+
+  /** The packages the server loads: the activated ones and their dependencies. */
+  const activePackages = () => resolveClosure(index, activated).map(({ name }) => name);
+  const publishPackages = () => {
+    const active = activePackages();
+    const loaded = new Set(active);
+    const dependents = new Map(active.map((name) => [name, []]));
+    for (const name of active) {
+      for (const dependency of index.packages[name].dependencies) dependents.get(dependency).push(name);
+    }
+    // Only what no other active package needs can be deactivated; the rest is a dependency.
+    const statusOf = (name) =>
+      !loaded.has(name)
+        ? installed.has(name) ? "installed" : "available"
+        : activated.includes(name) && dependents.get(name).length === 0 ? "active" : "dependency";
+    const available = Object.entries(index.packages).map(([name, { version }]) => ({
+      name,
+      version,
+      status: statusOf(name),
+      requiredBy: (dependents.get(name) ?? []).join(", "),
+    }));
+    setState((current) => ({ packages: { ...current.packages, available, active: active.length } }));
+  };
 
   const client = new LanguageClient({
     createWorker: () => new Worker(new URL("./worker.js", import.meta.url), { type: "module", name: "iris-language-server" }),
@@ -182,15 +215,22 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   for (const file of project.files) addModel(file.path, file.text);
   onChange(state);
 
+  // Starts and restarts run one at a time. `loaded` is the package list the server has, or null
+  // until it first starts.
+  let work = Promise.resolve();
+  let loaded = null;
+  const serially = (action) => (work = work.then(action));
+
   // Starts the worker, which downloads the packages and loads the server, then creates the editor
   // the first time it succeeds.
-  const start = async () => {
+  const start = () => serially(async () => {
     setState((current) => ({ phase: current.phase === "ready" ? "ready" : "loading" }));
-    const info = await client.start();
+    const names = activePackages();
+    const info = await client.start(names);
     if (!info) return;
-    setState((current) => ({
-      packages: { ...current.packages, available: info.packages, packageSet: info.packageSet },
-    }));
+    loaded = names.join();
+    installed = new Set(info.installed);
+    publishPackages();
     // Documents open before the editor asks for semantic tokens, which it does once per model.
     for (const [path, model] of models) openDocument(path, model);
     if (!editor) {
@@ -202,6 +242,22 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       show(state.active);
     }
     setState(() => ({ phase: "ready" }));
+  });
+
+  /** Activates `packages` in place of the current ones, and restarts the server when that changes what it loads. */
+  const activate = (packages) => {
+    activated = packages;
+    save();
+    publishPackages();
+    serially(async () => {
+      const names = activePackages();
+      if (loaded === null || names.join() === loaded) return;
+      const info = await client.restart(names);
+      if (!info) return;
+      loaded = names.join();
+      installed = new Set(info.installed);
+      publishPackages();
+    });
   };
 
   const openFile = (path) => {
@@ -244,7 +300,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       run: { status: "idle", lines: [], view: false },
     }));
     show(paths[0]);
-    save();
+    activate(templatePackages(template));
   };
 
   const run = async () => {
@@ -369,6 +425,8 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       setTimeout(() => setState(() => ({ shared: false })), 2500);
     },
     loadTemplate,
+    activatePackage: (name) => activate([...activated, name]),
+    deactivatePackage: (name) => activate(activated.filter((other) => other !== name)),
     reset: () => loadTemplate(TEMPLATES[0].id),
     retry: () => {
       start();
