@@ -276,7 +276,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
         }));
         return setState(() => ({ run: { status: "failed", lines } }));
       }
-      setState(() => ({ run: { status: "running", lines: [{ kind: "info", text: `Running ${entry.name}.main` }] } }));
+      setState(() => ({ run: { status: "running", lines: [] } }));
       runner.run(linked.files, entry.path);
     } catch (error) {
       setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }] } }));

@@ -94,12 +94,14 @@ export function panelTabsImpl({
   selected,
   select,
   rootClassName,
+  barClassName,
   tabListClassName,
   tabClassName,
   panelClassName,
   switchedPanelClassName,
   badgeClassName,
   output,
+  outputAction,
   outputBadge,
   packages,
   packagesBadge,
@@ -115,16 +117,19 @@ export function panelTabsImpl({
       }}
       selectedKey={selected}
     >
-      <TabList aria-label="Playground panels" className={tabListClassName}>
-        <Tab className={tabClassName} id="output">
-          Output
-          {outputBadge && <span className={badgeClassName}>{outputBadge}</span>}
-        </Tab>
-        <Tab className={tabClassName} id="packages">
-          Packages
-          {packagesBadge && <span className={badgeClassName}>{packagesBadge}</span>}
-        </Tab>
-      </TabList>
+      <div className={barClassName}>
+        <TabList aria-label="Playground panels" className={tabListClassName}>
+          <Tab className={tabClassName} id="output">
+            Output
+            {outputBadge && <span className={badgeClassName}>{outputBadge}</span>}
+          </Tab>
+          <Tab className={tabClassName} id="packages">
+            Packages
+            {packagesBadge && <span className={badgeClassName}>{packagesBadge}</span>}
+          </Tab>
+        </TabList>
+        {selected === "output" && outputAction}
+      </div>
       <TabPanel className={panelClass} id="output">
         {output}
       </TabPanel>

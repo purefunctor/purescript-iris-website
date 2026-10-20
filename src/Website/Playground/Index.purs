@@ -58,12 +58,14 @@ foreign import panelTabsImpl ::
     { selected :: String
     , select :: String -> Effect Unit
     , rootClassName :: String
+    , barClassName :: String
     , tabListClassName :: String
     , tabClassName :: String
     , panelClassName :: String
     , switchedPanelClassName :: String
     , badgeClassName :: String
     , output :: JSX
+    , outputAction :: JSX
     , outputBadge :: String
     , packages :: JSX
     , packagesBadge :: String
@@ -230,14 +232,20 @@ styles = StyleX.create
       , animationTimingFunction: "var(--ease-out)"
       }
   , tabs: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
-  , tabList:
-      { borderBlockEndColor: "var(--border-subtle)"
+  -- The panel's tabs share their row with the selected tab's actions, such as Clear.
+  , panelBar:
+      { alignItems: "center"
+      , borderBlockEndColor: "var(--border-subtle)"
       , borderBlockEndStyle: "solid"
       , borderBlockEndWidth: 1
       , display: "flex"
       , flexShrink: 0
+      , gap: 8
       , height: 36
+      , justifyContent: "space-between"
+      , paddingInlineEnd: 8
       }
+  , tabList: { alignSelf: "stretch", display: "flex" }
   , tab:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -409,17 +417,6 @@ styles = StyleX.create
       , lineHeight: 1.6
       , minHeight: 0
       }
-  , outputHeader:
-      { alignItems: "center"
-      , color: "var(--text-tertiary)"
-      , display: "flex"
-      , fontFamily: "var(--font-sans)"
-      , fontSize: 12
-      , gap: 8
-      , justifyContent: "space-between"
-      , paddingBlock: 8
-      , paddingInline: 16
-      }
   , clear:
       { backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
       , borderRadius: 999
@@ -433,7 +430,7 @@ styles = StyleX.create
       , outline: { default: "revert", ":focus-visible": "none" }
       , paddingInline: 10
       }
-  , lines: { margin: 0, paddingBlockEnd: 16, paddingInline: 16 }
+  , lines: { margin: 0, paddingBlock: 12, paddingInline: 16 }
   -- Each printed line settles in as it arrives.
   , line:
       { animationDuration: "180ms"
@@ -451,6 +448,8 @@ styles = StyleX.create
       , fontFamily: "var(--font-sans)"
       , fontSize: 13
       , lineHeight: 1.6
+      , margin: 0
+      , paddingBlock: 12
       , paddingInline: 16
       }
   , packageSet:
@@ -657,12 +656,14 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         { selected: state.panelTab
         , select: actions.selectPanelTab
         , rootClassName: styleProps.tabs.className
+        , barClassName: styleProps.panelBar.className
         , tabListClassName: styleProps.tabList.className
         , tabClassName: styleProps.tab.className
         , panelClassName: styleProps.tabPanel.className
         , switchedPanelClassName: (StyleX.props [ styles.tabPanel, styles.switched ]).className
         , badgeClassName: styleProps.badge.className
-        , output: output state.run actions.clearOutput
+        , output: output state.run
+        , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
         , packages: packagesPanel { packages: state.packages }
         , packagesBadge: ""
@@ -753,29 +754,23 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
     }
     label
 
-output :: Run -> Effect Unit -> JSX
-output run clear = DOM.div styleProps.output
-  [ DOM.div styleProps.outputHeader
-      [ DOM.span {} (runLabel run.status)
-      , if null run.lines
-        then mempty
-        else DOM.button
-          { className: styleProps.clear.className, onClick: handler_ clear, type: "button" } "Clear"
-      ]
-  , if null run.lines
-    then DOM.p styleProps.empty "Run the project to see what main prints."
-    else DOM.div { className: styleProps.lines.className, role: "log", "aria-live": "polite" }
-      (map outputLine run.lines)
+-- | What `main` printed. The Run key already shows whether the project is compiling or running,
+-- | and errors and stops arrive as lines, so the output has no status of its own.
+output :: Run -> JSX
+output run = DOM.div styleProps.output
+  [ case run.status, null run.lines of
+      "idle", true -> DOM.p styleProps.empty "Run the project to see what main prints."
+      "done", true -> DOM.p styleProps.empty "main finished without printing anything."
+      _, _ -> DOM.div { className: styleProps.lines.className, role: "log", "aria-live": "polite" }
+        (map outputLine run.lines)
   ]
 
-runLabel :: String -> String
-runLabel = case _ of
-  "compiling" -> "Compiling…"
-  "running" -> "Running"
-  "done" -> "main returned"
-  "stopped" -> "Stopped"
-  "failed" -> "Failed"
-  _ -> "Output"
+clearButton :: Run -> Effect Unit -> JSX
+clearButton run clear
+  | null run.lines = mempty
+  | otherwise =
+    DOM.button { className: styleProps.clear.className, onClick: handler_ clear, type: "button" }
+      "Clear"
 
 outputLine :: Line -> JSX
 outputLine line = DOM.div (StyleX.props [ styles.line, tone ]) line.text
