@@ -11,6 +11,7 @@ import { applyDiagnostics, LANGUAGE, registerProviders } from "./monaco-bridge.j
 import { configure, createEditor, monaco } from "./monaco.js";
 import { link, Runner } from "./runner.js";
 import { decodeProject, encodeProject, loadSavedProject, saveProject } from "./storage.js";
+import { TEMPLATES } from "./templates.js";
 
 const PROJECT = "file:///project/";
 // The sidebar overlays the editor up to Website.Breakpoints' upTo720, so it starts closed there and
@@ -22,36 +23,6 @@ const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
 // The panel's width beside the editor and its height below it, kept the same way.
 const PANEL_SIZE = "iris-playground-panel-size";
 
-export const DEFAULT_FILES = [
-  {
-    path: "src/Main.purs",
-    text: `module Main where
-
-import Prelude
-
-import Data.Array (range)
-import Data.Foldable (sum)
-import Effect (Effect)
-import Effect.Console (log)
-import Greeting (greet)
-
-main :: Effect Unit
-main = do
-  log (greet "Iris")
-  log ("The sum of 1 to 10 is " <> show (sum (range 1 10)))
-`,
-  },
-  {
-    path: "src/Greeting.purs",
-    text: `module Greeting (greet) where
-
-import Prelude
-
-greet :: String -> String
-greet name = "Hello, " <> name <> "!"
-`,
-  },
-];
 
 /**
  * @param {object} options
@@ -63,7 +34,7 @@ greet name = "Hello, " <> name <> "!"
 export async function createPlayground({ editor: host, frames, theme, onChange }) {
   const query = new URLSearchParams(location.search);
   const shared = await decodeProject(location.hash).catch(() => null);
-  const project = shared ?? loadSavedProject() ?? { files: DEFAULT_FILES };
+  const project = shared ?? loadSavedProject() ?? { files: TEMPLATES[0].files };
   if (shared) history.replaceState(null, "", location.pathname + location.search);
 
   const paths = project.files.map(({ path }) => path);
@@ -84,7 +55,8 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     panelTab: "output",
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
-    run: { status: "idle", lines: [] },
+    run: { status: "idle", lines: [], view: false },
+    templates: TEMPLATES.map(({ id, name, description }) => ({ id, name, description })),
     shared: false,
   };
   const setState = (update) => {
@@ -255,8 +227,28 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     save();
   };
 
+  /** Replaces the project with a template's files, and stops the previous project's program. */
+  const loadTemplate = (id) => {
+    const template = TEMPLATES.find((candidate) => candidate.id === id);
+    if (!template) return;
+    runner.stop();
+    for (const path of [...models.keys()]) removeModel(path);
+    for (const file of template.files) openDocument(file.path, addModel(file.path, file.text));
+    const paths = template.files.map(({ path }) => path);
+    setState((current) => ({
+      files: paths.map((path) => ({ path, errors: 0, warnings: 0 })),
+      open: paths,
+      active: paths[0],
+      viewing: null,
+      sidebar: current.sidebar && !matchMedia(NARROW).matches,
+      run: { status: "idle", lines: [], view: false },
+    }));
+    show(paths[0]);
+    save();
+  };
+
   const run = async () => {
-    setState(() => ({ run: { status: "compiling", lines: [] } }));
+    setState(() => ({ run: { status: "compiling", lines: [], view: false } }));
     try {
       const emitted = await client.request("iris/emit", {});
       if (emitted.status === "failed") {
@@ -264,14 +256,16 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
           kind: "error",
           text: `${uri.replace(PROJECT, "")}:${diagnostic.range.start.line + 1}:${diagnostic.range.start.character + 1}  ${diagnostic.message}`,
         }));
-        return setState(() => ({ run: { status: "failed", lines } }));
+        return setState(() => ({ run: { status: "failed", lines, view: false } }));
       }
       const entry =
         emitted.modules.find((module) => module.name === "Main") ??
         emitted.modules.find((module) => module.uri === uriOf(state.active)) ??
         emitted.modules[0];
       if (!entry) {
-        return setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: "There is no module to run." }] } }));
+        return setState(() => ({
+          run: { status: "failed", lines: [{ kind: "error", text: "There is no module to run." }], view: false },
+        }));
       }
       const linked = await link(emitted.files);
       if (linked.missing.length > 0) {
@@ -279,17 +273,19 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
           kind: "error",
           text: `The playground cannot load ${specifier}, which an FFI module imports.`,
         }));
-        return setState(() => ({ run: { status: "failed", lines } }));
+        return setState(() => ({ run: { status: "failed", lines, view: false } }));
       }
-      setState(() => ({ run: { status: "running", lines: [] } }));
-      runner.run(linked.files, entry.path);
+      setState(() => ({ run: { status: "running", lines: [], view: false } }));
+      runner.run(linked.files, entry.path, linked.css);
     } catch (error) {
-      setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }] } }));
+      setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }], view: false } }));
     }
   };
 
+  // A program's view stays until it runs again or stops, and opens the Output panel.
   const runner = new Runner(frames, (event) => {
     setState((current) => {
+      if (event.type === "view") return { run: { ...current.run, view: true }, panel: true, panelTab: "output" };
       if (event.type === "done") return { run: { ...current.run, status: "done" } };
       const kind = event.type === "error" || event.level === "error" ? "error" : event.level === "warn" ? "warning" : "log";
       const lines = [...current.run.lines, { kind, text: event.text }].slice(-MAX_LINES);
@@ -361,7 +357,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     stop: () => {
       runner.stop();
       setState((current) => ({
-        run: { ...current.run, status: "stopped", lines: [...current.run.lines, { kind: "info", text: "Stopped" }] },
+        run: { status: "stopped", lines: [...current.run.lines, { kind: "info", text: "Stopped" }], view: false },
       }));
     },
     clearOutput: () => setState((current) => ({ run: { ...current.run, lines: [] } })),
@@ -372,18 +368,8 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       setState(() => ({ shared: true }));
       setTimeout(() => setState(() => ({ shared: false })), 2000);
     },
-    reset: () => {
-      for (const path of [...models.keys()]) removeModel(path);
-      for (const file of DEFAULT_FILES) openDocument(file.path, addModel(file.path, file.text));
-      setState(() => ({
-        files: DEFAULT_FILES.map(({ path }) => ({ path, errors: 0, warnings: 0 })),
-        open: DEFAULT_FILES.map(({ path }) => path),
-        active: DEFAULT_FILES[0].path,
-        viewing: null,
-      }));
-      show(DEFAULT_FILES[0].path);
-      save();
-    },
+    loadTemplate,
+    reset: () => loadTemplate(TEMPLATES[0].id),
     retry: () => {
       start();
     },

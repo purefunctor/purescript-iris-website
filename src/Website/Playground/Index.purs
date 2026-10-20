@@ -4,16 +4,17 @@ import Prelude
 
 import Data.Array (null)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
-import Data.Nullable (toMaybe)
+import Data.Nullable (Nullable, toMaybe)
 import Effect (Effect)
 import Effect.Aff (Milliseconds(..), delay)
 import Effect.Unsafe (unsafePerformEffect)
 import Foreign (Foreign)
 import Iris.StyleX as StyleX
-import React.Basic (JSX, ReactComponent, element)
+import React.Basic (JSX, ReactComponent, Ref, element)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import React.Basic.Hooks.Aff (useAff)
+import Web.DOM.Element (Element)
 import Website.Breakpoints (breakpoints)
 import Website.Components.ExternalLink (newTabLabel)
 import Website.Components.Icon as Icon
@@ -23,6 +24,7 @@ import Website.Playground.FileTabs (fileTabs)
 import Website.Playground.FileTree (fileTree)
 import Website.Playground.Loading (loading)
 import Website.Playground.Packages (packagesPanel)
+import Website.Playground.Templates (templateList)
 import Website.Playground.Types (Line, Run, State, View)
 import Yoga.React.DOM as DOM
 
@@ -65,6 +67,10 @@ foreign import panelImpl ::
     , handleClassName :: String
     , children :: JSX
     }
+
+-- | Shows the program's frame, which lives in `frames`, where this renders.
+foreign import outputViewImpl ::
+  ReactComponent { frames :: Ref (Nullable Element), className :: String }
 
 foreign import panelTabsImpl ::
   ReactComponent
@@ -170,6 +176,8 @@ styles = StyleX.create
       , animationTimingFunction: "var(--ease-out)"
       , overflow: "hidden"
       }
+  -- Files take the sidebar's height above the templates.
+  , sidebarSections: { display: "flex", flexDirection: "column", height: "100%" }
   -- The sidebar's and the panel's edges, which drag to resize and close them below a minimum size.
   , handle:
       { backgroundColor:
@@ -419,6 +427,16 @@ styles = StyleX.create
       , paddingInline: 10
       }
   , lines: { margin: 0, paddingBlock: 12, paddingInline: 16 }
+  -- A program that renders fills the panel, and its log keeps to a strip below it.
+  , view: { flexGrow: 1, minHeight: 0 }
+  , viewLines:
+      { borderBlockStartColor: "var(--border-subtle)"
+      , borderBlockStartStyle: "solid"
+      , borderBlockStartWidth: 1
+      , flexShrink: 0
+      , maxHeight: "35%"
+      , overflowY: "auto"
+      }
   , line: { overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
   , logLine: { color: "var(--text-secondary)" }
   , infoLine: { color: "var(--text-tertiary)" }
@@ -614,8 +632,10 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
     , close: actions.closeSidebar
     , className: styleProps.sidebar.className
     , handleClassName: (StyleX.props [ styles.handle, styles.sidebarHandle ]).className
-    , children:
-        fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
+    , children: DOM.div styleProps.sidebarSections
+        [ fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
+        , templateList { templates: state.templates, actions }
+        ]
     }
 
   tabs = DOM.div styleProps.tabsRow
@@ -648,7 +668,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , panelClassName: styleProps.tabPanel.className
         , switchedPanelClassName: (StyleX.props [ styles.tabPanel, styles.switched ]).className
         , badgeClassName: styleProps.badge.className
-        , output: output state.run
+        , output: output state.run frames
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
         , packages: packagesPanel { packages: state.packages }
@@ -762,16 +782,25 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
     }
     label
 
--- | What `main` printed. The Run key already shows whether the project is compiling or running,
--- | and errors and stops arrive as lines, so the output has no status of its own.
-output :: Run -> JSX
-output run = DOM.div styleProps.output
-  [ case run.status, null run.lines of
-      "idle", true -> DOM.p styleProps.empty "Run the project to see what main prints."
-      "done", true -> DOM.p styleProps.empty "main finished without printing anything."
-      _, _ -> DOM.div { className: styleProps.lines.className, role: "log", "aria-live": "polite" }
-        (map outputLine run.lines)
-  ]
+-- | What `main` printed, below what it rendered, if it did. The Run key already shows whether the
+-- | project is compiling or running, and errors and stops arrive as lines, so the output has no
+-- | status of its own.
+output :: Run -> Ref (Nullable Element) -> JSX
+output run frames = DOM.div styleProps.output
+  if run.view
+  then
+    [ element outputViewImpl { frames, className: styleProps.view.className }
+    , if null run.lines then mempty else log (StyleX.props [ styles.lines, styles.viewLines ])
+    ]
+  else
+    [ case run.status, null run.lines of
+        "idle", true -> DOM.p styleProps.empty "Run the project to see what main prints or renders."
+        "done", true -> DOM.p styleProps.empty "main finished without printing anything."
+        _, _ -> log styleProps.lines
+    ]
+  where
+  log { className } =
+    DOM.div { className, role: "log", "aria-live": "polite" } (map outputLine run.lines)
 
 clearButton :: Run -> Effect Unit -> JSX
 clearButton run clear

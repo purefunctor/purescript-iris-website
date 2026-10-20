@@ -1,19 +1,30 @@
 <!doctype html>
 <!--
-  Runs a playground program. The page embeds it with sandbox="allow-scripts", so it has an opaque
-  origin, and public/_headers adds the same sandbox to its response. Its policy below blocks network
-  access; modules arrive from the page as text and load from blob URLs through an import map.
+  Runs a playground program. The page embeds it with sandbox="allow-scripts allow-forms", so it
+  has an opaque origin, and public/_headers adds the same sandbox to its response. Its policy below
+  blocks network access, and form-action keeps forms, which fire submit events only with
+  allow-forms, from submitting; modules arrive from the page as text and load from blob URLs
+  through an import map.
+
+  The page compiles a program's StyleX styles and sends their CSS with its modules, and sends the
+  site's tokens, base styles and fonts as the frame's theme. Fonts arrive as bytes, which FontFace
+  loads without a request, so the policy needs no font source.
+
+  Programs that render, such as Halogen and React applications, mount into #app or anywhere else
+  in the body. The first change to the body's content tells the page to show this frame as the
+  program's view instead of only its log.
 -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'"
+      content="default-src 'none'; form-action 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'"
     />
     <title>Iris playground program</title>
   </head>
   <body>
+    <div id="app"></div>
     <script>
       (() => {
         const send = (message) => parent.postMessage(message, "*");
@@ -34,7 +45,21 @@
 
         addEventListener("message", async (event) => {
           if (event.source !== parent || event.data?.type !== "run") return;
-          const { files, entry } = event.data;
+          const observer = new MutationObserver(() => {
+            observer.disconnect();
+            send({ type: "view" });
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+          const { files, entry, css, theme } = event.data;
+          for (const text of [theme?.css, css]) {
+            if (!text) continue;
+            const style = document.createElement("style");
+            style.textContent = text;
+            document.head.append(style);
+          }
+          const faces = (theme?.fonts ?? []).map(({ family, data }) => new FontFace(family, data, { weight: "100 900" }));
+          for (const face of faces) document.fonts.add(face);
+          await Promise.all(faces.map((face) => face.load().catch(() => {})));
           const imports = {};
           for (const [path, text] of Object.entries(files)) {
             imports[path] = URL.createObjectURL(new Blob([text], { type: "text/javascript" }));

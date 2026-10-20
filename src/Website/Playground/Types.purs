@@ -7,6 +7,7 @@ module Website.Playground.Types
   , Run
   , Server
   , State
+  , Template
   , View
   , Viewer
   )
@@ -43,6 +44,7 @@ type State =
   , server :: Server
   , packages :: Packages
   , run :: Run
+  , templates :: Array Template
   , shared :: Boolean
   }
 
@@ -76,10 +78,15 @@ type Packages =
 type Available = { name :: String, version :: String }
 
 -- | `status` is `idle`, `compiling`, `running`, `done`, `stopped` or `failed`. A line's `kind` is
--- | `log`, `info`, `warning` or `error`.
-type Run = { status :: String, lines :: Array Line }
+-- | `log`, `info`, `warning` or `error`. `view` is true once the program renders into its
+-- | document, such as a Halogen or React application, which then runs until it is stopped and
+-- | shows in the Output panel above its log.
+type Run = { status :: String, lines :: Array Line, view :: Boolean }
 
 type Line = { kind :: String, text :: String }
+
+-- | A starting project that replaces the current one, such as `halogen`.
+type Template = { id :: String, name :: String, description :: String }
 
 type Actions =
   { openFile :: String -> Effect Unit
@@ -103,6 +110,9 @@ type Actions =
   , stop :: Effect Unit
   , clearOutput :: Effect Unit
   , share :: Effect Unit
+  -- | Replaces the project with a template, by its `id`.
+  , loadTemplate :: String -> Effect Unit
+  -- | Replaces the project with the first template.
   , reset :: Effect Unit
   , retry :: Effect Unit
   }

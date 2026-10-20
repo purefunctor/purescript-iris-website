@@ -158,6 +158,9 @@ importers:
         specifier: 0.35.4
         version: 0.35.4
     devDependencies:
+      '@babel/standalone':
+        specifier: 7.29.8
+        version: 7.29.8
       '@iconify-json/lucide':
         specifier: 1.2.126
         version: 1.2.126
@@ -167,6 +170,9 @@ importers:
       '@iconify-json/simple-icons':
         specifier: 1.2.93
         version: 1.2.93
+      '@stylexjs/babel-plugin':
+        specifier: 0.19.0
+        version: 0.19.0(supports-color@10.2.2)
       '@stylexjs/unplugin':
         specifier: 0.19.0
         version: 0.19.0(supports-color@10.2.2)(unplugin@2.3.11)
@@ -179,6 +185,9 @@ importers:
       concurrently:
         specifier: 10.0.5
         version: 10.0.5
+      postcss-value-parser:
+        specifier: 4.2.0
+        version: 4.2.0
       purescript:
         specifier: 0.15.16
         version: 0.15.16(bluebird@3.7.2)(supports-color@10.2.2)
@@ -382,6 +391,10 @@ packages:
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
+
+  '@babel/standalone@7.29.8':
+    resolution: {integrity: sha512-XgbPNz+u6JzB7cKGnPDoS1U24J5td8yp3HFWbT/6f4/ASZ0PqaQGIvts1o5v5AI+f6i3jdVB/L/o2CYLCv101A==}
+    engines: {node: '>=6.9.0'}
 
   '@babel/template@7.29.7':
     resolution: {integrity: sha512-puq+Gf35oI24FeN11LkoUQFqv9uwNeWpxXZi/Ji3rRIoKAzKnxRaZ+Gkj0vKS9ZCiTESfng1N9LyOyXvo+m+Gg==}
@@ -3566,6 +3579,8 @@ snapshots:
     dependencies:
       '@babel/core': 7.29.7(supports-color@10.2.2)
       '@babel/helper-plugin-utils': 7.29.7
+
+  '@babel/standalone@7.29.8': {}
 
   '@babel/template@7.29.7':
     dependencies:
