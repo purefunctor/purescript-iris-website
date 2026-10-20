@@ -284,7 +284,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
         return setState(() => ({ run: { status: "failed", lines, view: false } }));
       }
       setState(() => ({ run: { status: "running", lines: [], view: false } }));
-      runner.run(linked.files, entry.path);
+      runner.run(linked.files, entry.path, linked.css);
     } catch (error) {
       setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }], view: false } }));
     }

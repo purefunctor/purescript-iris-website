@@ -4,6 +4,8 @@
   origin, and public/_headers adds the same sandbox to its response. Its policy below blocks network
   access; modules arrive from the page as text and load from blob URLs through an import map.
 
+  The page compiles a program's StyleX styles and sends their CSS with its modules.
+
   Programs that render, such as Halogen and React applications, mount into #app or anywhere else
   in the body. The first change to the body's content tells the page to show this frame as the
   program's view instead of only its log.
@@ -44,7 +46,12 @@
             send({ type: "view" });
           });
           observer.observe(document.body, { childList: true, subtree: true });
-          const { files, entry } = event.data;
+          const { files, entry, css } = event.data;
+          if (css) {
+            const style = document.createElement("style");
+            style.textContent = css;
+            document.head.append(style);
+          }
           const imports = {};
           for (const [path, text] of Object.entries(files)) {
             imports[path] = URL.createObjectURL(new Blob([text], { type: "text/javascript" }));

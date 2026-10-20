@@ -4,37 +4,69 @@
 // file's specifiers are rewritten to bare keys under iris-output/ that the frame's import map maps
 // to blob URLs. Keys must be bare, because a path such as /x.js cannot resolve against a blob
 // URL's base. The only bare specifiers provided are React's, which the Registry's React bindings
-// import: the page fetches the site's React, bundled by src/pages/playground/react.json.ts, only
-// when a program imports it. Other npm packages cannot be provided. The lexer's asm.js build needs
-// no WebAssembly, so the page's policy stays as is.
+// import, and StyleX's, which Iris.StyleX compiles to. The page fetches them, bundled from the
+// site's own packages by src/pages/playground/modules.json.ts, only when a program imports one.
+// StyleX calls must also be compiled to class names and CSS, as the site's bundler does, so the
+// page then loads the compiler from src/pages/playground/stylex.js.ts and runs it before linking,
+// and the frame adds the CSS. Other npm packages cannot be provided. The lexer's asm.js build
+// needs no WebAssembly, so the page's policy stays as is.
 
 import { parse } from "es-module-lexer/js";
 
 const PREFIX = "iris-output/";
 const SANDBOX = "/playground/sandbox.html";
-const REACT = /^react(-dom)?(\/|$)/;
+const STYLEX = "@stylexjs/stylex";
+const PROVIDED = /^(react(-dom)?(\/|$)|@stylexjs\/stylex$)/;
 // Generated modules live in directories named after PureScript modules, which are capitalized.
-const REACT_DIRECTORY = "npm/react/";
+const NPM_DIRECTORY = "npm/";
 
-let react = null;
+/** Loads once, and again after a failure. */
+const once = (load) => {
+  let promise = null;
+  return () =>
+    (promise ??= load().catch((error) => {
+      promise = null;
+      throw error;
+    }));
+};
 
-/** Rewrites imports between `files` and returns the frame's files, keyed by import map key. */
+const loadModules = once(async () => {
+  const response = await fetch("/playground/modules.json");
+  if (!response.ok) throw new Error(`Could not load npm modules: ${response.status}`);
+  return response.json();
+});
+// A literal specifier would make Vite resolve the endpoint as a source file.
+const STYLEX_COMPILER = "/playground/stylex.js";
+const loadStylex = once(() => import(/* @vite-ignore */ STYLEX_COMPILER));
+
+/**
+ * Rewrites imports between `files` and returns the frame's files, keyed by import map key, with
+ * the CSS of the program's StyleX styles.
+ */
 export async function link(files) {
   const first = rewrite(files, {});
-  if (!first.missing.some((specifier) => REACT.test(specifier))) return first;
-  react ??= fetch("/playground/react.json").then((response) => {
-    if (!response.ok) throw new Error(`Could not load React: ${response.status}`);
-    return response.json();
-  });
-  const bundle = await react.catch((error) => {
-    react = null;
-    throw error;
-  });
-  const vendor = Object.entries(bundle.files).map(([name, text]) => ({ path: `${REACT_DIRECTORY}${name}`, text }));
+  if (!first.missing.some((specifier) => PROVIDED.test(specifier))) return { ...first, css: "" };
+  const [bundle, compiler] = await Promise.all([
+    loadModules(),
+    first.missing.includes(STYLEX) ? loadStylex() : null,
+  ]);
+  let css = "";
+  if (compiler) {
+    // The compiler finds StyleX calls through their import, so it runs before the rewrite.
+    const rules = [];
+    files = files.map((file) => {
+      if (!file.path.endsWith(".js") || !file.text.includes(STYLEX)) return file;
+      const compiled = compiler.compile(file.text, `/${file.path}`);
+      rules.push(...compiled.rules);
+      return { path: file.path, text: compiled.code };
+    });
+    css = compiler.styleSheet(rules);
+  }
+  const vendor = Object.entries(bundle.files).map(([name, text]) => ({ path: `${NPM_DIRECTORY}${name}`, text }));
   const provided = Object.fromEntries(
-    Object.entries(bundle.entries).map(([specifier, name]) => [specifier, `${REACT_DIRECTORY}${name}`]),
+    Object.entries(bundle.entries).map(([specifier, name]) => [specifier, `${NPM_DIRECTORY}${name}`]),
   );
-  return rewrite([...files, ...vendor], provided);
+  return { ...rewrite([...files, ...vendor], provided), css };
 }
 
 /** `provided` maps bare specifiers to paths among `files`. */
@@ -92,7 +124,7 @@ export class Runner {
   }
 
   /** Starts a program in a new frame, stopping the previous one. */
-  run(files, entry) {
+  run(files, entry, css) {
     this.stop();
     const frame = document.createElement("iframe");
     frame.setAttribute("sandbox", "allow-scripts");
@@ -104,7 +136,7 @@ export class Runner {
     this.#listener = ({ source, data }) => {
       if (source !== frame.contentWindow || typeof data !== "object" || data === null) return;
       if (data.type === "ready") {
-        frame.contentWindow.postMessage({ type: "run", files, entry: `${PREFIX}${entry}` }, "*");
+        frame.contentWindow.postMessage({ type: "run", files, entry: `${PREFIX}${entry}`, css }, "*");
       } else if (data.type === "view") {
         frame.removeAttribute("aria-hidden");
         frame.tabIndex = 0;
