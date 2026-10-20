@@ -27,7 +27,25 @@
     <div id="app"></div>
     <script>
       (() => {
-        const send = (message) => parent.postMessage(message, "*");
+        const post = (message) => parent.postMessage(message, "*");
+        // Output waits until main has returned and the tasks it queued have run, so that a program
+        // that prints and then mounts shows as a view at once rather than briefly as a log. React
+        // mounts in a MessageChannel task, which runs before the one release() queues after it, and
+        // a view takes the held output with it, so the page lays both out together.
+        let held = [];
+        const send = (message) => (held ? held.push(message) : post(message));
+        const flush = () => {
+          for (const message of held ?? []) post(message);
+          held = null;
+        };
+        const release = () => {
+          const channel = new MessageChannel();
+          channel.port1.onmessage = () => {
+            channel.port1.close();
+            flush();
+          };
+          channel.port2.postMessage(null);
+        };
         const format = (value) => {
           if (typeof value === "string") return value;
           if (value instanceof Error) return value.stack || String(value);
@@ -47,7 +65,8 @@
           if (event.source !== parent || event.data?.type !== "run") return;
           const observer = new MutationObserver(() => {
             observer.disconnect();
-            send({ type: "view" });
+            post({ type: "view" });
+            flush();
           });
           observer.observe(document.body, { childList: true, subtree: true });
           const { files, entry, css, theme } = event.data;
@@ -79,9 +98,10 @@
           } catch (error) {
             send({ type: "error", text: format(error) });
           }
+          release();
         }, { once: false });
 
-        send({ type: "ready" });
+        post({ type: "ready" });
       })();
     </script>
   </body>
