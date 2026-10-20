@@ -107,7 +107,6 @@ styles = StyleX.create
       , minWidth: 0
       }
   , spacer: { flexGrow: 1 }
-  , toggled: { backgroundColor: { default: "var(--surface-3)", ":hover": "var(--surface-3)" } }
   -- The editor and its panel meet at a hard edge; the panel drops below the editor on narrow
   -- screens.
   , workspace:
@@ -569,10 +568,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
 
   controls = DOM.div styleProps.controls
     [ DOM.button
-        { className:
-            ( StyleX.props
-                [ styles.action, styles.iconOnly, StyleX.conditional state.sidebar styles.toggled ]
-            ).className
+        { className: (StyleX.props [ styles.action, styles.iconOnly ]).className
         , onClick: handler_ actions.toggleSidebar
         , title: if state.sidebar then "Hide files" else "Show files"
         , type: "button"
@@ -609,10 +605,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         ]
     , runButton state actions.run actions.stop
     , DOM.button
-        { className:
-            ( StyleX.props
-                [ styles.action, styles.iconOnly, StyleX.conditional state.panel styles.toggled ]
-            ).className
+        { className: (StyleX.props [ styles.action, styles.iconOnly ]).className
         , onClick: handler_ actions.togglePanel
         , title: if state.panel then "Hide output" else "Show output"
         , type: "button"
