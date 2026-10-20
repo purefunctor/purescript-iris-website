@@ -11,12 +11,12 @@ crate-type = ["cdylib", "rlib"]
 # The compiler crates are not published, so they come from the Iris repository at a release tag.
 # Bump every tag together, and regenerate `playground/packages/index.json` for the same tag.
 [dependencies]
-building = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
-files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
-iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
-javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
-prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
-syntax = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+building = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
+files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
+iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
+javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
+prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
+syntax = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
 # Match the version the Iris workspace pins.
 lsp-types = { package = "gen-lsp-types", version = "=0.11.0", features = ["url"] }
 serde = { version = "1.0.229", features = ["derive"] }
