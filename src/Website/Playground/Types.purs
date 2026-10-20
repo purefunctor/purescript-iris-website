@@ -76,8 +76,10 @@ type Packages =
 type Available = { name :: String, version :: String }
 
 -- | `status` is `idle`, `compiling`, `running`, `done`, `stopped` or `failed`. A line's `kind` is
--- | `log`, `info`, `warning` or `error`.
-type Run = { status :: String, lines :: Array Line }
+-- | `log`, `info`, `warning` or `error`. `view` is true once the program renders into its
+-- | document, such as a Halogen or React application, which then runs until it is stopped and
+-- | shows in the Output panel above its log.
+type Run = { status :: String, lines :: Array Line, view :: Boolean }
 
 type Line = { kind :: String, text :: String }
 

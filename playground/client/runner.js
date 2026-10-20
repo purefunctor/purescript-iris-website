@@ -75,8 +75,12 @@ export class Runner {
   #listener = null;
 
   /**
-   * @param {HTMLElement} container where the hidden frame lives
-   * @param {(event: { type: "console" | "error" | "done", level?: string, text?: string }) => void} onEvent
+   * The frame stays hidden until the program changes its document, such as when Halogen or React
+   * mounts into it. The runner then shows the frame, filling `container`, and reports a `view`
+   * event, so the output becomes the program's page instead of its log.
+   *
+   * @param {HTMLElement} container where the frame lives
+   * @param {(event: { type: "console" | "error" | "done" | "view", level?: string, text?: string }) => void} onEvent
    */
   constructor(container, onEvent) {
     this.#container = container;
@@ -96,11 +100,17 @@ export class Runner {
     frame.setAttribute("aria-hidden", "true");
     frame.tabIndex = -1;
     frame.title = "Program sandbox";
-    frame.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
+    frame.style.cssText = "display:block;width:100%;height:100%;border:0;background:white;visibility:hidden";
     this.#listener = ({ source, data }) => {
       if (source !== frame.contentWindow || typeof data !== "object" || data === null) return;
       if (data.type === "ready") {
         frame.contentWindow.postMessage({ type: "run", files, entry: `${PREFIX}${entry}` }, "*");
+      } else if (data.type === "view") {
+        frame.removeAttribute("aria-hidden");
+        frame.tabIndex = 0;
+        frame.title = "Program view";
+        frame.style.visibility = "visible";
+        this.#onEvent({ type: "view" });
       } else if (["console", "error", "done"].includes(data.type)) {
         this.#onEvent({ type: data.type, level: String(data.level ?? ""), text: String(data.text ?? "") });
       }

@@ -3,6 +3,10 @@
   Runs a playground program. The page embeds it with sandbox="allow-scripts", so it has an opaque
   origin, and public/_headers adds the same sandbox to its response. Its policy below blocks network
   access; modules arrive from the page as text and load from blob URLs through an import map.
+
+  Programs that render, such as Halogen and React applications, mount into #app or anywhere else
+  in the body. The first change to the body's content tells the page to show this frame as the
+  program's view instead of only its log.
 -->
 <html lang="en">
   <head>
@@ -14,6 +18,7 @@
     <title>Iris playground program</title>
   </head>
   <body>
+    <div id="app"></div>
     <script>
       (() => {
         const send = (message) => parent.postMessage(message, "*");
@@ -34,6 +39,11 @@
 
         addEventListener("message", async (event) => {
           if (event.source !== parent || event.data?.type !== "run") return;
+          const observer = new MutationObserver(() => {
+            observer.disconnect();
+            send({ type: "view" });
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
           const { files, entry } = event.data;
           const imports = {};
           for (const [path, text] of Object.entries(files)) {

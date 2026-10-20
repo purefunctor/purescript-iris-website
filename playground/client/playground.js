@@ -84,7 +84,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     panelTab: "output",
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
-    run: { status: "idle", lines: [] },
+    run: { status: "idle", lines: [], view: false },
     shared: false,
   };
   const setState = (update) => {
@@ -256,7 +256,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
 
   const run = async () => {
-    setState(() => ({ run: { status: "compiling", lines: [] } }));
+    setState(() => ({ run: { status: "compiling", lines: [], view: false } }));
     try {
       const emitted = await client.request("iris/emit", {});
       if (emitted.status === "failed") {
@@ -264,14 +264,16 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
           kind: "error",
           text: `${uri.replace(PROJECT, "")}:${diagnostic.range.start.line + 1}:${diagnostic.range.start.character + 1}  ${diagnostic.message}`,
         }));
-        return setState(() => ({ run: { status: "failed", lines } }));
+        return setState(() => ({ run: { status: "failed", lines, view: false } }));
       }
       const entry =
         emitted.modules.find((module) => module.name === "Main") ??
         emitted.modules.find((module) => module.uri === uriOf(state.active)) ??
         emitted.modules[0];
       if (!entry) {
-        return setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: "There is no module to run." }] } }));
+        return setState(() => ({
+          run: { status: "failed", lines: [{ kind: "error", text: "There is no module to run." }], view: false },
+        }));
       }
       const linked = await link(emitted.files);
       if (linked.missing.length > 0) {
@@ -279,17 +281,19 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
           kind: "error",
           text: `The playground cannot load ${specifier}, which an FFI module imports.`,
         }));
-        return setState(() => ({ run: { status: "failed", lines } }));
+        return setState(() => ({ run: { status: "failed", lines, view: false } }));
       }
-      setState(() => ({ run: { status: "running", lines: [] } }));
+      setState(() => ({ run: { status: "running", lines: [], view: false } }));
       runner.run(linked.files, entry.path);
     } catch (error) {
-      setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }] } }));
+      setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }], view: false } }));
     }
   };
 
+  // A program's view stays until it runs again or stops, and opens the Output panel.
   const runner = new Runner(frames, (event) => {
     setState((current) => {
+      if (event.type === "view") return { run: { ...current.run, view: true }, panel: true, panelTab: "output" };
       if (event.type === "done") return { run: { ...current.run, status: "done" } };
       const kind = event.type === "error" || event.level === "error" ? "error" : event.level === "warn" ? "warning" : "log";
       const lines = [...current.run.lines, { kind, text: event.text }].slice(-MAX_LINES);
@@ -361,7 +365,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     stop: () => {
       runner.stop();
       setState((current) => ({
-        run: { ...current.run, status: "stopped", lines: [...current.run.lines, { kind: "info", text: "Stopped" }] },
+        run: { status: "stopped", lines: [...current.run.lines, { kind: "info", text: "Stopped" }], view: false },
       }));
     },
     clearOutput: () => setState((current) => ({ run: { ...current.run, lines: [] } })),

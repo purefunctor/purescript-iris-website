@@ -18,7 +18,7 @@ const initialState = {
   panelTab: "output",
   server: { kind: null, version: null, revision: null, status: "starting", message: null },
   packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
-  run: { status: "idle", lines: [] },
+  run: { status: "idle", lines: [], view: false },
   shared: false,
 };
 
@@ -142,6 +142,38 @@ export function panelTabsImpl({
       </TabPanel>
     </Tabs>
   );
+}
+
+// Where the program's view shows in the Output panel. Moving a frame in the document reloads it, so
+// the program's frame stays in the workspace's `frames` container, which this places over the slot
+// while it is mounted, and shrinks to nothing once the panel closes or switches tabs.
+export function outputViewImpl({ frames, className }) {
+  const slot = useRef(null);
+  useLayoutEffect(() => {
+    const container = frames.current;
+    const element = slot.current;
+    if (!container || !element) return undefined;
+    const place = () => {
+      const outer = container.parentElement.getBoundingClientRect();
+      const inner = element.getBoundingClientRect();
+      container.style.insetInlineStart = `${inner.left - outer.left}px`;
+      container.style.insetBlockStart = `${inner.top - outer.top}px`;
+      container.style.width = `${inner.width}px`;
+      container.style.height = `${inner.height}px`;
+    };
+    place();
+    // The slot's size changes whenever its position does, as the panel resizes or the window does.
+    const observer = new ResizeObserver(place);
+    observer.observe(element);
+    observer.observe(container.parentElement);
+    return () => {
+      observer.disconnect();
+      for (const property of ["inset-inline-start", "inset-block-start", "width", "height"]) {
+        container.style.removeProperty(property);
+      }
+    };
+  }, [frames]);
+  return <div className={className} ref={slot} />;
 }
 
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
