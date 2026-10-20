@@ -701,7 +701,12 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , output: output state.run frames
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
-        , packages: packagesPanel { packages: state.packages }
+        , packages: packagesPanel
+            { packages: state.packages
+            , busy: state.server.status == "starting" || state.server.status == "restarting"
+            , activate: actions.activatePackage
+            , deactivate: actions.deactivatePackage
+            }
         , packagesBadge: if state.packages.active == 0 then "" else show state.packages.active
         }
     }
