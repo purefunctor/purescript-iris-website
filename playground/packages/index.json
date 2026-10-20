@@ -7,6 +7,7 @@
   "packages": {
     "abc-parser": {
       "version": "2.1.0",
+      "owner": "newlandsvalley",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -38,6 +39,7 @@
     },
     "ace": {
       "version": "9.1.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "effect",
@@ -59,6 +61,7 @@
     },
     "address-rfc2821": {
       "version": "0.1.1",
+      "owner": "garganscript",
       "dependencies": [
         "either",
         "exceptions",
@@ -70,6 +73,7 @@
     },
     "aff": {
       "version": "8.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "control",
         "datetime",
@@ -91,6 +95,7 @@
     },
     "aff-bus": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "avar",
@@ -107,6 +112,7 @@
     },
     "aff-coroutines": {
       "version": "9.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "avar",
@@ -123,6 +129,7 @@
     },
     "aff-promise": {
       "version": "4.0.0",
+      "owner": "nwolverson",
       "dependencies": [
         "aff",
         "control",
@@ -138,6 +145,7 @@
     },
     "aff-retry": {
       "version": "2.0.0",
+      "owner": "Unisay",
       "dependencies": [
         "aff",
         "arrays",
@@ -158,6 +166,7 @@
     },
     "affjax": {
       "version": "13.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "argonaut-core",
@@ -188,6 +197,7 @@
     },
     "affjax-node": {
       "version": "1.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "affjax",
@@ -200,6 +210,7 @@
     },
     "affjax-web": {
       "version": "1.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "affjax",
@@ -212,6 +223,7 @@
     },
     "ansi": {
       "version": "7.0.0",
+      "owner": "hdgarrood",
       "dependencies": [
         "foldable-traversable",
         "lists",
@@ -222,6 +234,7 @@
     },
     "apexcharts": {
       "version": "0.5.0",
+      "owner": "timdeputter",
       "dependencies": [
         "contravariant",
         "effect",
@@ -235,6 +248,7 @@
     },
     "applicative-phases": {
       "version": "1.0.0",
+      "owner": "artemisSystem",
       "dependencies": [
         "maybe",
         "prelude",
@@ -245,6 +259,7 @@
     },
     "argonaut": {
       "version": "9.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -255,6 +270,7 @@
     },
     "argonaut-aeson-generic": {
       "version": "0.4.1",
+      "owner": "coot",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -275,6 +291,7 @@
     },
     "argonaut-codecs": {
       "version": "9.1.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "argonaut-core",
         "arrays",
@@ -298,6 +315,7 @@
     },
     "argonaut-core": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "control",
@@ -316,6 +334,7 @@
     },
     "argonaut-generic": {
       "version": "8.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -332,6 +351,7 @@
     },
     "argonaut-traversals": {
       "version": "10.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -356,6 +376,7 @@
     },
     "argparse-basic": {
       "version": "2.0.0",
+      "owner": "natefaubion",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -378,6 +399,7 @@
     },
     "array-builder": {
       "version": "0.1.2",
+      "owner": "paluh",
       "dependencies": [
         "maybe",
         "nullable",
@@ -388,6 +410,7 @@
     },
     "array-search": {
       "version": "0.6.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -399,6 +422,7 @@
     },
     "arraybuffer": {
       "version": "13.2.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arraybuffer-types",
         "arrays",
@@ -418,6 +442,7 @@
     },
     "arraybuffer-builder": {
       "version": "3.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arraybuffer",
         "arraybuffer-types",
@@ -437,12 +462,14 @@
     },
     "arraybuffer-types": {
       "version": "3.0.2",
+      "owner": "purescript-contrib",
       "dependencies": [],
       "integrity": "sha256-p05cJnSkyeoB7VHzMyc2Eb1RwUaB7Nl0sQSqEGNEUD8=",
       "bytes": 2533
     },
     "arrays": {
       "version": "7.3.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "control",
@@ -464,6 +491,7 @@
     },
     "arrays-extra": {
       "version": "0.6.2",
+      "owner": "flip111",
       "dependencies": [
         "arrays",
         "either",
@@ -480,6 +508,7 @@
     },
     "arrays-zipper": {
       "version": "2.0.1",
+      "owner": "JordanMartinez",
       "dependencies": [
         "arrays",
         "control",
@@ -495,6 +524,7 @@
     },
     "ask": {
       "version": "1.0.0",
+      "owner": "prescientmoon",
       "dependencies": [
         "unsafe-coerce"
       ],
@@ -503,6 +533,7 @@
     },
     "assert": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "console",
         "effect",
@@ -513,6 +544,7 @@
     },
     "assert-multiple": {
       "version": "0.4.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "effect",
         "foldable-traversable",
@@ -523,6 +555,7 @@
     },
     "avar": {
       "version": "5.0.1",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "effect",
@@ -537,6 +570,7 @@
     },
     "axon": {
       "version": "0.0.3",
+      "owner": "cakekindel",
       "dependencies": [
         "aff",
         "argonaut-codecs",
@@ -586,6 +620,7 @@
     },
     "b64": {
       "version": "0.0.9",
+      "owner": "menelaos",
       "dependencies": [
         "arraybuffer-types",
         "either",
@@ -602,6 +637,7 @@
     },
     "barbies": {
       "version": "1.0.1",
+      "owner": "the-dr-lazy",
       "dependencies": [
         "const",
         "control",
@@ -613,6 +649,7 @@
     },
     "barlow-lens": {
       "version": "1.0.0",
+      "owner": "sigma-andex",
       "dependencies": [
         "either",
         "foldable-traversable",
@@ -630,6 +667,7 @@
     },
     "benchlib": {
       "version": "0.0.4",
+      "owner": "m-bock",
       "dependencies": [
         "aff",
         "argonaut",
@@ -662,6 +700,7 @@
     },
     "bifunctors": {
       "version": "6.1.1",
+      "owner": "purescript",
       "dependencies": [
         "const",
         "either",
@@ -674,6 +713,7 @@
     },
     "bigints": {
       "version": "7.0.1",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "integers",
@@ -687,6 +727,7 @@
     },
     "blessed": {
       "version": "1.0.0",
+      "owner": "shamansir",
       "dependencies": [
         "aff",
         "argonaut-codecs",
@@ -725,6 +766,7 @@
     },
     "bolson": {
       "version": "0.3.9",
+      "owner": "mikesol",
       "dependencies": [
         "control",
         "effect",
@@ -745,6 +787,7 @@
     },
     "bookhound": {
       "version": "0.1.7",
+      "owner": "albertprz",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -770,6 +813,7 @@
     },
     "bower-json": {
       "version": "3.0.0",
+      "owner": "klntsky",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -787,6 +831,7 @@
     },
     "call-by-name": {
       "version": "4.0.1",
+      "owner": "natefaubion",
       "dependencies": [
         "control",
         "either",
@@ -800,6 +845,7 @@
     },
     "canvas": {
       "version": "6.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "arraybuffer-types",
         "effect",
@@ -813,6 +859,7 @@
     },
     "canvas-action": {
       "version": "9.0.0",
+      "owner": "artemisSystem",
       "dependencies": [
         "aff",
         "arrays",
@@ -842,6 +889,7 @@
     },
     "cartesian": {
       "version": "1.0.6",
+      "owner": "Ebmtranceboy",
       "dependencies": [
         "integers",
         "numbers",
@@ -852,6 +900,7 @@
     },
     "catenable-lists": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "foldable-traversable",
@@ -866,6 +915,7 @@
     },
     "cbor-stream": {
       "version": "1.3.0",
+      "owner": "cakekindel",
       "dependencies": [
         "aff",
         "arrays",
@@ -900,6 +950,7 @@
     },
     "chameleon": {
       "version": "1.0.0",
+      "owner": "m-bock",
       "dependencies": [
         "either",
         "foreign",
@@ -915,6 +966,7 @@
     },
     "chameleon-halogen": {
       "version": "1.0.3",
+      "owner": "m-bock",
       "dependencies": [
         "aff",
         "bifunctors",
@@ -940,6 +992,7 @@
     },
     "chameleon-react-basic": {
       "version": "1.1.0",
+      "owner": "m-bock",
       "dependencies": [
         "arrays",
         "chameleon",
@@ -961,6 +1014,7 @@
     },
     "chameleon-styled": {
       "version": "2.5.0",
+      "owner": "m-bock",
       "dependencies": [
         "arrays",
         "chameleon",
@@ -980,6 +1034,7 @@
     },
     "chameleon-transformers": {
       "version": "1.0.0",
+      "owner": "m-bock",
       "dependencies": [
         "chameleon",
         "foldable-traversable",
@@ -994,6 +1049,7 @@
     },
     "channel": {
       "version": "1.0.0",
+      "owner": "ConnorDillon",
       "dependencies": [
         "aff",
         "avar",
@@ -1015,6 +1071,7 @@
     },
     "chartjs": {
       "version": "0.2.0",
+      "owner": "philippedev101",
       "dependencies": [
         "argonaut-core",
         "arrays",
@@ -1035,6 +1092,7 @@
     },
     "chartjs-halogen": {
       "version": "0.2.0",
+      "owner": "philippedev101",
       "dependencies": [
         "aff",
         "chartjs",
@@ -1052,6 +1110,7 @@
     },
     "checked-exceptions": {
       "version": "3.1.1",
+      "owner": "natefaubion",
       "dependencies": [
         "either",
         "newtype",
@@ -1064,6 +1123,7 @@
     },
     "choku": {
       "version": "1.0.2",
+      "owner": "m15a",
       "dependencies": [
         "aff",
         "control",
@@ -1078,6 +1138,7 @@
     },
     "classless": {
       "version": "0.1.1",
+      "owner": "m-bock",
       "dependencies": [
         "heterogeneous",
         "prelude",
@@ -1089,6 +1150,7 @@
     },
     "classless-arbitrary": {
       "version": "0.1.1",
+      "owner": "m-bock",
       "dependencies": [
         "arrays",
         "classless",
@@ -1115,6 +1177,7 @@
     },
     "classless-decode-json": {
       "version": "0.1.1",
+      "owner": "m-bock",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -1136,6 +1199,7 @@
     },
     "classless-encode-json": {
       "version": "0.1.3",
+      "owner": "m-bock",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -1154,6 +1218,7 @@
     },
     "classnames": {
       "version": "2.0.0",
+      "owner": "dewey92",
       "dependencies": [
         "maybe",
         "prelude",
@@ -1166,6 +1231,7 @@
     },
     "codec": {
       "version": "6.1.0",
+      "owner": "garyb",
       "dependencies": [
         "bifunctors",
         "control",
@@ -1179,6 +1245,7 @@
     },
     "codec-argonaut": {
       "version": "10.0.0",
+      "owner": "garyb",
       "dependencies": [
         "argonaut-core",
         "arrays",
@@ -1207,6 +1274,7 @@
     },
     "codec-json": {
       "version": "2.0.0",
+      "owner": "garyb",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -1237,6 +1305,7 @@
     },
     "colors": {
       "version": "7.0.1",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "control",
@@ -1255,6 +1324,7 @@
     },
     "compile-fail": {
       "version": "0.4.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arrays",
@@ -1277,6 +1347,7 @@
     },
     "concur-core": {
       "version": "0.5.0",
+      "owner": "purescript-concur",
       "dependencies": [
         "aff",
         "aff-bus",
@@ -1306,6 +1377,7 @@
     },
     "concur-react": {
       "version": "0.5.0",
+      "owner": "purescript-concur",
       "dependencies": [
         "aff",
         "arrays",
@@ -1330,6 +1402,7 @@
     },
     "concurrent-queues": {
       "version": "3.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "arrays",
@@ -1345,6 +1418,7 @@
     },
     "console": {
       "version": "6.1.1",
+      "owner": "purescript",
       "dependencies": [
         "effect",
         "prelude"
@@ -1354,6 +1428,7 @@
     },
     "const": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "invariant",
         "newtype",
@@ -1364,6 +1439,7 @@
     },
     "contravariant": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "const",
         "either",
@@ -1376,6 +1452,7 @@
     },
     "control": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "newtype",
         "prelude"
@@ -1385,6 +1462,7 @@
     },
     "convertable-options": {
       "version": "1.0.0",
+      "owner": "natefaubion",
       "dependencies": [
         "prelude",
         "record"
@@ -1394,6 +1472,7 @@
     },
     "coroutines": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "bifunctors",
         "either",
@@ -1413,6 +1492,7 @@
     },
     "css": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "colors",
@@ -1435,6 +1515,7 @@
     },
     "css-class-name-extractor": {
       "version": "0.0.4",
+      "owner": "himanoa",
       "dependencies": [
         "aff",
         "arrays",
@@ -1465,6 +1546,7 @@
     },
     "css-frameworks": {
       "version": "1.1.0",
+      "owner": "deemp",
       "dependencies": [
         "web-html"
       ],
@@ -1473,6 +1555,7 @@
     },
     "csv-stream": {
       "version": "2.3.0",
+      "owner": "cakekindel",
       "dependencies": [
         "aff",
         "arrays",
@@ -1510,6 +1593,7 @@
     },
     "currency": {
       "version": "0.1.0",
+      "owner": "philippedev101",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -1525,6 +1609,7 @@
     },
     "data-mvc": {
       "version": "0.0.2",
+      "owner": "m-bock",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -1543,6 +1628,7 @@
     },
     "datetime": {
       "version": "6.1.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "control",
@@ -1566,6 +1652,7 @@
     },
     "datetime-parsing": {
       "version": "0.2.0",
+      "owner": "flounders",
       "dependencies": [
         "arrays",
         "datetime",
@@ -1586,6 +1673,7 @@
     },
     "debounce": {
       "version": "0.1.2",
+      "owner": "garganscript",
       "dependencies": [
         "effect",
         "prelude"
@@ -1595,6 +1683,7 @@
     },
     "debug": {
       "version": "6.0.2",
+      "owner": "garyb",
       "dependencies": [
         "functions",
         "prelude"
@@ -1604,6 +1693,7 @@
     },
     "decimals": {
       "version": "7.1.0",
+      "owner": "sharkdp",
       "dependencies": [
         "maybe",
         "prelude"
@@ -1613,6 +1703,7 @@
     },
     "default-values": {
       "version": "1.0.1",
+      "owner": "imsaravana369",
       "dependencies": [
         "either",
         "foreign-object",
@@ -1627,6 +1718,7 @@
     },
     "deku": {
       "version": "0.9.24",
+      "owner": "mikesol",
       "dependencies": [
         "aff",
         "arrays",
@@ -1666,6 +1758,7 @@
     },
     "deno": {
       "version": "0.0.5",
+      "owner": "njaremko",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -1688,6 +1781,7 @@
     },
     "dissect": {
       "version": "1.0.0",
+      "owner": "PureFunctor",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -1707,6 +1801,7 @@
     },
     "distributive": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "identity",
         "newtype",
@@ -1719,6 +1814,7 @@
     },
     "dodo-printer": {
       "version": "2.2.3",
+      "owner": "natefaubion",
       "dependencies": [
         "ansi",
         "either",
@@ -1738,6 +1834,7 @@
     },
     "dom-filereader": {
       "version": "7.0.0",
+      "owner": "nwolverson",
       "dependencies": [
         "aff",
         "arraybuffer-types",
@@ -1756,6 +1853,7 @@
     },
     "dom-indexed": {
       "version": "13.0.0",
+      "owner": "purescript-halogen",
       "dependencies": [
         "datetime",
         "media-types",
@@ -1773,6 +1871,7 @@
     },
     "dom-simple": {
       "version": "0.4.0",
+      "owner": "garganscript",
       "dependencies": [
         "effect",
         "ffi-simple",
@@ -1786,6 +1885,7 @@
     },
     "dotenv": {
       "version": "4.0.3",
+      "owner": "nsaunders",
       "dependencies": [
         "aff",
         "arrays",
@@ -1817,6 +1917,7 @@
     },
     "droplet": {
       "version": "0.6.0",
+      "owner": "easafe",
       "dependencies": [
         "aff",
         "arrays",
@@ -1851,6 +1952,7 @@
     },
     "dts": {
       "version": "1.0.0",
+      "owner": "m-bock",
       "dependencies": [
         "arrays",
         "maybe",
@@ -1865,6 +1967,7 @@
     },
     "dual-numbers": {
       "version": "1.0.3",
+      "owner": "Ebmtranceboy",
       "dependencies": [
         "numbers",
         "prelude",
@@ -1875,6 +1978,7 @@
     },
     "dynamic-buffer": {
       "version": "3.0.1",
+      "owner": "kritzcreek",
       "dependencies": [
         "arraybuffer-types",
         "effect",
@@ -1886,6 +1990,7 @@
     },
     "echarts-simple": {
       "version": "0.0.1",
+      "owner": "lucasdicioccio",
       "dependencies": [
         "effect",
         "functions",
@@ -1897,6 +2002,7 @@
     },
     "effect": {
       "version": "4.0.1",
+      "owner": "purescript",
       "dependencies": [
         "prelude"
       ],
@@ -1905,6 +2011,7 @@
     },
     "either": {
       "version": "6.1.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "invariant",
@@ -1916,6 +2023,7 @@
     },
     "elmish": {
       "version": "0.16.0",
+      "owner": "collegevine",
       "dependencies": [
         "aff",
         "argonaut-core",
@@ -1945,6 +2053,7 @@
     },
     "elmish-enzyme": {
       "version": "0.1.1",
+      "owner": "collegevine",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -1965,6 +2074,7 @@
     },
     "elmish-hooks": {
       "version": "0.12.0",
+      "owner": "collegevine",
       "dependencies": [
         "aff",
         "debug",
@@ -1979,6 +2089,7 @@
     },
     "elmish-html": {
       "version": "0.14.0",
+      "owner": "collegevine",
       "dependencies": [
         "console",
         "effect",
@@ -1999,6 +2110,7 @@
     },
     "elmish-testing-library": {
       "version": "0.5.0",
+      "owner": "collegevine",
       "dependencies": [
         "aff",
         "arrays",
@@ -2020,6 +2132,7 @@
     },
     "email-validate": {
       "version": "7.0.0",
+      "owner": "cdepillabout",
       "dependencies": [
         "bifunctors",
         "control",
@@ -2037,6 +2150,7 @@
     },
     "encoding": {
       "version": "0.0.10",
+      "owner": "menelaos",
       "dependencies": [
         "arraybuffer-types",
         "either",
@@ -2049,6 +2163,7 @@
     },
     "enums": {
       "version": "6.0.2",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "either",
@@ -2066,6 +2181,7 @@
     },
     "env-names": {
       "version": "0.4.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "arrays",
         "prelude"
@@ -2075,6 +2191,7 @@
     },
     "environment": {
       "version": "2.0.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "effect",
         "exceptions",
@@ -2088,12 +2205,14 @@
     },
     "error": {
       "version": "2.0.0",
+      "owner": "bklaric",
       "dependencies": [],
       "integrity": "sha256-zckOqSU8UJnvOL2A4dQpbzzGVrsA021rFMNcXxWKWD0=",
       "bytes": 13713
     },
     "eta-conversion": {
       "version": "0.3.2",
+      "owner": "pujoheadsoft",
       "dependencies": [
         "prelude",
         "transformers",
@@ -2104,6 +2223,7 @@
     },
     "exceptions": {
       "version": "6.1.1",
+      "owner": "purescript",
       "dependencies": [
         "effect",
         "either",
@@ -2115,6 +2235,7 @@
     },
     "exists": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "unsafe-coerce"
       ],
@@ -2123,6 +2244,7 @@
     },
     "exitcodes": {
       "version": "4.0.0",
+      "owner": "Risto-Stevcev",
       "dependencies": [
         "enums",
         "maybe",
@@ -2133,6 +2255,7 @@
     },
     "expect-inferred": {
       "version": "3.0.0",
+      "owner": "justinwoo",
       "dependencies": [
         "prelude",
         "typelevel-prelude"
@@ -2142,6 +2265,7 @@
     },
     "express": {
       "version": "0.9.1",
+      "owner": "purescript-express",
       "dependencies": [
         "aff",
         "effect",
@@ -2168,6 +2292,7 @@
     },
     "ezfetch": {
       "version": "1.1.1",
+      "owner": "cakekindel",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -2205,6 +2330,7 @@
     },
     "fahrtwind": {
       "version": "2.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arrays",
         "colors",
@@ -2223,6 +2349,7 @@
     },
     "faker-ffi": {
       "version": "0.1.1",
+      "owner": "philippedev101",
       "dependencies": [
         "arrays",
         "effect",
@@ -2236,6 +2363,7 @@
     },
     "fakerjs": {
       "version": "0.0.1",
+      "owner": "purescript-open-community",
       "dependencies": [
         "arrays",
         "effect",
@@ -2251,6 +2379,7 @@
     },
     "fallback": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "either",
         "foldable-traversable",
@@ -2262,6 +2391,7 @@
     },
     "fast-vect": {
       "version": "1.2.0",
+      "owner": "sigma-andex",
       "dependencies": [
         "arrays",
         "distributive",
@@ -2281,6 +2411,7 @@
     },
     "fetch": {
       "version": "4.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arraybuffer-types",
@@ -2307,6 +2438,7 @@
     },
     "fetch-argonaut": {
       "version": "1.0.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "argonaut",
@@ -2321,6 +2453,7 @@
     },
     "fetch-core": {
       "version": "5.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arraybuffer-types",
         "arrays",
@@ -2346,6 +2479,7 @@
     },
     "fetch-yoga-json": {
       "version": "1.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "either",
@@ -2362,6 +2496,7 @@
     },
     "ffi-simple": {
       "version": "0.5.1",
+      "owner": "garganscript",
       "dependencies": [
         "functions",
         "maybe",
@@ -2374,6 +2509,7 @@
     },
     "fft": {
       "version": "0.3.0",
+      "owner": "Ebmtranceboy",
       "dependencies": [
         "arrays",
         "cartesian",
@@ -2391,6 +2527,7 @@
     },
     "fft-js": {
       "version": "0.1.0",
+      "owner": "jeslie0",
       "dependencies": [
         "arrays",
         "cartesian",
@@ -2403,6 +2540,7 @@
     },
     "filterable": {
       "version": "5.0.1",
+      "owner": "purescript",
       "dependencies": [
         "arrays",
         "control",
@@ -2422,6 +2560,7 @@
     },
     "fix-functor": {
       "version": "0.1.0",
+      "owner": "artemisSystem",
       "dependencies": [
         "prelude"
       ],
@@ -2430,6 +2569,7 @@
     },
     "fixed-points": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "control",
         "exists",
@@ -2443,6 +2583,7 @@
     },
     "fixed-precision": {
       "version": "5.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arrays",
         "bigints",
@@ -2459,6 +2600,7 @@
     },
     "flame": {
       "version": "1.6.0",
+      "owner": "easafe",
       "dependencies": [
         "aff",
         "argonaut-codecs",
@@ -2490,6 +2632,7 @@
     },
     "float32": {
       "version": "2.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "gen",
         "maybe",
@@ -2500,6 +2643,7 @@
     },
     "fmt": {
       "version": "0.2.1",
+      "owner": "m-bock",
       "dependencies": [
         "prelude",
         "record",
@@ -2511,6 +2655,7 @@
     },
     "foldable-traversable": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "const",
@@ -2529,6 +2674,7 @@
     },
     "foldable-traversable-extra": {
       "version": "0.0.6",
+      "owner": "flip111",
       "dependencies": [
         "arrays",
         "either",
@@ -2545,6 +2691,7 @@
     },
     "foreign": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "either",
         "functions",
@@ -2561,6 +2708,7 @@
     },
     "foreign-object": {
       "version": "4.1.1",
+      "owner": "purescript",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -2581,6 +2729,7 @@
     },
     "foreign-readwrite": {
       "version": "3.4.0",
+      "owner": "artemisSystem",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -2601,12 +2750,14 @@
     },
     "forgetmenot": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [],
       "integrity": "sha256-YYLWpHQwJ1zKmPxLo7sZOk+kYuKOpOpRhdz9vwI/p7Q=",
       "bytes": 2310
     },
     "fork": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "prelude",
@@ -2617,6 +2768,7 @@
     },
     "form-urlencoded": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "foldable-traversable",
         "js-uri",
@@ -2631,6 +2783,7 @@
     },
     "formatters": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -2657,6 +2810,7 @@
     },
     "framer-motion": {
       "version": "3.1.0",
+      "owner": "i-am-the-slime",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -2687,6 +2841,7 @@
     },
     "free": {
       "version": "7.1.1",
+      "owner": "purescript",
       "dependencies": [
         "catenable-lists",
         "control",
@@ -2708,6 +2863,7 @@
     },
     "freeap": {
       "version": "7.0.0",
+      "owner": "ethul",
       "dependencies": [
         "const",
         "either",
@@ -2725,6 +2881,7 @@
     },
     "freer-free": {
       "version": "0.0.1",
+      "owner": "mikesol",
       "dependencies": [
         "prelude",
         "record"
@@ -2734,6 +2891,7 @@
     },
     "freet": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "bifunctors",
@@ -2753,6 +2911,7 @@
     },
     "functions": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "prelude"
       ],
@@ -2761,6 +2920,7 @@
     },
     "functor1": {
       "version": "3.0.0",
+      "owner": "garyb",
       "dependencies": [
         "newtype",
         "prelude"
@@ -2770,6 +2930,7 @@
     },
     "functors": {
       "version": "5.0.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "const",
@@ -2790,6 +2951,7 @@
     },
     "fuzzy": {
       "version": "0.4.0",
+      "owner": "davezuch",
       "dependencies": [
         "arrays",
         "either",
@@ -2807,6 +2969,7 @@
     },
     "gen": {
       "version": "4.0.1",
+      "owner": "purescript",
       "dependencies": [
         "either",
         "foldable-traversable",
@@ -2824,6 +2987,7 @@
     },
     "generate-values": {
       "version": "1.0.1",
+      "owner": "jordanmartinez",
       "dependencies": [
         "arrays",
         "control",
@@ -2849,6 +3013,7 @@
     },
     "generic-router": {
       "version": "0.0.1",
+      "owner": "njaremko",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -2865,6 +3030,7 @@
     },
     "geojson": {
       "version": "0.0.5",
+      "owner": "sumew",
       "dependencies": [
         "argonaut",
         "argonaut-codecs",
@@ -2880,6 +3046,7 @@
     },
     "geometria": {
       "version": "2.2.0",
+      "owner": "Ebmtranceboy",
       "dependencies": [
         "arrays",
         "cartesian",
@@ -2900,6 +3067,7 @@
     },
     "gesso": {
       "version": "1.0.1",
+      "owner": "smilack",
       "dependencies": [
         "aff",
         "canvas",
@@ -2932,6 +3100,7 @@
     },
     "gojs": {
       "version": "0.1.1",
+      "owner": "AdaBeat",
       "dependencies": [
         "effect",
         "foldable-traversable",
@@ -2951,6 +3120,7 @@
     },
     "golden-test": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -2969,6 +3139,7 @@
     },
     "golem-fetch": {
       "version": "0.1.0",
+      "owner": "kalxd",
       "dependencies": [
         "aff",
         "argonaut-codecs",
@@ -2982,6 +3153,7 @@
     },
     "grain": {
       "version": "3.0.0",
+      "owner": "purescript-grain",
       "dependencies": [
         "arrays",
         "effect",
@@ -3006,6 +3178,7 @@
     },
     "grain-router": {
       "version": "3.0.0",
+      "owner": "purescript-grain",
       "dependencies": [
         "arrays",
         "control",
@@ -3030,6 +3203,7 @@
     },
     "grain-virtualized": {
       "version": "3.0.0",
+      "owner": "purescript-grain",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -3044,6 +3218,7 @@
     },
     "graphql-client": {
       "version": "10.1.1",
+      "owner": "OxfordAbstracts",
       "dependencies": [
         "aff",
         "affjax",
@@ -3088,6 +3263,7 @@
     },
     "graphs": {
       "version": "8.1.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "catenable-lists",
@@ -3103,6 +3279,7 @@
     },
     "group": {
       "version": "4.1.1",
+      "owner": "morganthomas",
       "dependencies": [
         "foldable-traversable",
         "lists",
@@ -3113,6 +3290,7 @@
     },
     "halogen": {
       "version": "7.0.0",
+      "owner": "purescript-halogen",
       "dependencies": [
         "aff",
         "bifunctors",
@@ -3160,6 +3338,7 @@
     },
     "halogen-bootstrap5": {
       "version": "5.3.2",
+      "owner": "tonicebrian",
       "dependencies": [
         "halogen"
       ],
@@ -3168,6 +3347,7 @@
     },
     "halogen-canvas": {
       "version": "1.0.0",
+      "owner": "grybiena",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -3195,6 +3375,7 @@
     },
     "halogen-css": {
       "version": "10.0.0",
+      "owner": "purescript-halogen",
       "dependencies": [
         "arrays",
         "css",
@@ -3213,6 +3394,7 @@
     },
     "halogen-declarative-canvas": {
       "version": "0.0.8",
+      "owner": "UnrelatedString",
       "dependencies": [
         "canvas",
         "effect",
@@ -3228,6 +3410,7 @@
     },
     "halogen-echarts-simple": {
       "version": "0.0.4",
+      "owner": "lucasdicioccio",
       "dependencies": [
         "aff",
         "echarts-simple",
@@ -3242,6 +3425,7 @@
     },
     "halogen-formless": {
       "version": "4.1.0",
+      "owner": "thomashoneyman",
       "dependencies": [
         "convertable-options",
         "effect",
@@ -3266,6 +3450,7 @@
     },
     "halogen-helix": {
       "version": "1.1.0",
+      "owner": "katsujukou",
       "dependencies": [
         "effect",
         "halogen-hooks",
@@ -3282,6 +3467,7 @@
     },
     "halogen-hooks": {
       "version": "0.6.4",
+      "owner": "thomashoneyman",
       "dependencies": [
         "aff",
         "arrays",
@@ -3314,6 +3500,7 @@
     },
     "halogen-hooks-extra": {
       "version": "0.9.0",
+      "owner": "jordanmartinez",
       "dependencies": [
         "aff",
         "avar",
@@ -3332,6 +3519,7 @@
     },
     "halogen-infinite-scroll": {
       "version": "1.1.0",
+      "owner": "grybiena",
       "dependencies": [
         "aff",
         "arrays",
@@ -3362,6 +3550,7 @@
     },
     "halogen-store": {
       "version": "0.5.5",
+      "owner": "thomashoneyman",
       "dependencies": [
         "aff",
         "distributive",
@@ -3383,6 +3572,7 @@
     },
     "halogen-storybook": {
       "version": "2.0.0",
+      "owner": "rnons",
       "dependencies": [
         "aff",
         "arrays",
@@ -3404,6 +3594,7 @@
     },
     "halogen-subscriptions": {
       "version": "2.0.0",
+      "owner": "purescript-halogen",
       "dependencies": [
         "arrays",
         "contravariant",
@@ -3421,6 +3612,7 @@
     },
     "halogen-svg-elems": {
       "version": "8.0.0",
+      "owner": "JordanMartinez",
       "dependencies": [
         "arrays",
         "halogen",
@@ -3438,6 +3630,7 @@
     },
     "halogen-typewriter": {
       "version": "1.0.4",
+      "owner": "qwbarch",
       "dependencies": [
         "aff",
         "css",
@@ -3462,6 +3655,7 @@
     },
     "halogen-use-trigger-hooks": {
       "version": "1.0.0",
+      "owner": "katsujukou",
       "dependencies": [
         "arrays",
         "effect",
@@ -3477,6 +3671,7 @@
     },
     "halogen-vdom": {
       "version": "8.0.0",
+      "owner": "purescript-halogen",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -3499,6 +3694,7 @@
     },
     "halogen-vdom-string-renderer": {
       "version": "0.5.0",
+      "owner": "purescript-halogen",
       "dependencies": [
         "arrays",
         "foreign",
@@ -3515,6 +3711,7 @@
     },
     "halogen-xterm": {
       "version": "2.0.0",
+      "owner": "grybiena",
       "dependencies": [
         "aff",
         "arrays",
@@ -3546,6 +3743,7 @@
     },
     "heckin": {
       "version": "2.0.1",
+      "owner": "maxdeviant",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -3560,6 +3758,7 @@
     },
     "heterogeneous": {
       "version": "0.7.0",
+      "owner": "natefaubion",
       "dependencies": [
         "either",
         "foldable-traversable",
@@ -3574,6 +3773,7 @@
     },
     "homogeneous": {
       "version": "0.4.0",
+      "owner": "paluh",
       "dependencies": [
         "control",
         "enums",
@@ -3593,6 +3793,7 @@
     },
     "http-methods": {
       "version": "6.1.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "either",
         "prelude",
@@ -3603,6 +3804,7 @@
     },
     "httpurple": {
       "version": "4.0.0",
+      "owner": "sigma-andex",
       "dependencies": [
         "aff",
         "arrays",
@@ -3648,6 +3850,7 @@
     },
     "huffman": {
       "version": "0.4.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -3665,6 +3868,7 @@
     },
     "humdrum": {
       "version": "0.0.1",
+      "owner": "lucasdicioccio",
       "dependencies": [
         "effect",
         "foldable-traversable",
@@ -3678,6 +3882,7 @@
     },
     "hylograph-canvas": {
       "version": "0.1.0",
+      "owner": "afcondon",
       "dependencies": [
         "effect",
         "prelude"
@@ -3687,6 +3892,7 @@
     },
     "hylograph-d3-kernel": {
       "version": "0.1.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "effect",
@@ -3707,6 +3913,7 @@
     },
     "hylograph-graph": {
       "version": "0.3.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "either",
@@ -3727,6 +3934,7 @@
     },
     "hylograph-layout": {
       "version": "0.3.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "either",
@@ -3750,6 +3958,7 @@
     },
     "hylograph-music": {
       "version": "0.4.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "effect",
@@ -3767,6 +3976,7 @@
     },
     "hylograph-optics": {
       "version": "0.1.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -3784,6 +3994,7 @@
     },
     "hylograph-selection": {
       "version": "0.5.3",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "colors",
@@ -3822,6 +4033,7 @@
     },
     "hylograph-simulation": {
       "version": "0.6.0",
+      "owner": "afcondon",
       "dependencies": [
         "aff",
         "arrays",
@@ -3848,6 +4060,7 @@
     },
     "hylograph-simulation-core": {
       "version": "0.1.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "effect",
@@ -3863,6 +4076,7 @@
     },
     "hylograph-simulation-halogen": {
       "version": "0.5.1",
+      "owner": "afcondon",
       "dependencies": [
         "effect",
         "halogen-subscriptions",
@@ -3877,6 +4091,7 @@
     },
     "hylograph-transitions": {
       "version": "0.1.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "control",
@@ -3896,6 +4111,7 @@
     },
     "hylograph-wasm-kernel": {
       "version": "0.1.0",
+      "owner": "afcondon",
       "dependencies": [
         "aff",
         "arrays",
@@ -3914,6 +4130,7 @@
     },
     "hyrule": {
       "version": "2.3.9",
+      "owner": "mikesol",
       "dependencies": [
         "arrays",
         "control",
@@ -3943,6 +4160,7 @@
     },
     "i18next": {
       "version": "0.1.0",
+      "owner": "philippedev101",
       "dependencies": [
         "aff",
         "effect",
@@ -3957,6 +4175,7 @@
     },
     "idb": {
       "version": "0.2.0",
+      "owner": "philippedev101",
       "dependencies": [
         "aff",
         "arrays",
@@ -3975,6 +4194,7 @@
     },
     "identity": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "invariant",
@@ -3986,6 +4206,7 @@
     },
     "identy": {
       "version": "4.0.1",
+      "owner": "oreshinya",
       "dependencies": [
         "arrays",
         "either",
@@ -4010,6 +4231,7 @@
     },
     "indexed-db": {
       "version": "1.0.0",
+      "owner": "iko-soy",
       "dependencies": [
         "aff",
         "control",
@@ -4035,6 +4257,7 @@
     },
     "indexed-monad": {
       "version": "3.0.0",
+      "owner": "garyb",
       "dependencies": [
         "newtype",
         "prelude"
@@ -4044,6 +4267,7 @@
     },
     "ink": {
       "version": "0.0.1",
+      "owner": "ricky0123",
       "dependencies": [
         "arrays",
         "effect",
@@ -4060,6 +4284,7 @@
     },
     "int64": {
       "version": "3.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "effect",
         "foreign",
@@ -4076,6 +4301,7 @@
     },
     "integers": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "maybe",
         "numbers",
@@ -4086,6 +4312,7 @@
     },
     "interpolate": {
       "version": "5.0.2",
+      "owner": "jordanmartinez",
       "dependencies": [
         "partial",
         "prelude"
@@ -4095,6 +4322,7 @@
     },
     "intersection-observer": {
       "version": "1.0.1",
+      "owner": "grybiena",
       "dependencies": [
         "css",
         "effect",
@@ -4109,6 +4337,7 @@
     },
     "invariant": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "prelude"
@@ -4118,6 +4347,7 @@
     },
     "jarilo": {
       "version": "1.0.1",
+      "owner": "bklaric",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -4139,6 +4369,7 @@
     },
     "jelly": {
       "version": "0.10.0",
+      "owner": "yukikurage",
       "dependencies": [
         "aff",
         "arrays",
@@ -4162,6 +4393,7 @@
     },
     "jelly-router": {
       "version": "0.3.0",
+      "owner": "yukikurage",
       "dependencies": [
         "effect",
         "foreign",
@@ -4179,6 +4411,7 @@
     },
     "jelly-signal": {
       "version": "0.4.0",
+      "owner": "yukikurage",
       "dependencies": [
         "aff",
         "effect",
@@ -4198,6 +4431,7 @@
     },
     "jest": {
       "version": "1.0.0",
+      "owner": "nonbili",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -4209,6 +4443,7 @@
     },
     "js-abort-controller": {
       "version": "1.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "effect",
         "foreign",
@@ -4221,6 +4456,7 @@
     },
     "js-bigints": {
       "version": "2.2.1",
+      "owner": "purescript-contrib",
       "dependencies": [
         "integers",
         "maybe",
@@ -4231,6 +4467,7 @@
     },
     "js-date": {
       "version": "8.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "datetime",
         "effect",
@@ -4246,6 +4483,7 @@
     },
     "js-fetch": {
       "version": "0.2.1",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arraybuffer-types",
         "arrays",
@@ -4271,6 +4509,7 @@
     },
     "js-fileio": {
       "version": "3.0.0",
+      "owner": "newlandsvalley",
       "dependencies": [
         "aff",
         "effect",
@@ -4281,6 +4520,7 @@
     },
     "js-intl": {
       "version": "1.3.0",
+      "owner": "pete-murphy",
       "dependencies": [
         "arrays",
         "convertable-options",
@@ -4304,6 +4544,7 @@
     },
     "js-iterators": {
       "version": "0.1.1",
+      "owner": "gbagan",
       "dependencies": [
         "foldable-traversable",
         "functions",
@@ -4320,6 +4561,7 @@
     },
     "js-maps": {
       "version": "0.1.2",
+      "owner": "gbagan",
       "dependencies": [
         "arrays",
         "either",
@@ -4340,6 +4582,7 @@
     },
     "js-promise": {
       "version": "1.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "effect",
         "exceptions",
@@ -4354,6 +4597,7 @@
     },
     "js-promise-aff": {
       "version": "1.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "aff",
         "control",
@@ -4371,6 +4615,7 @@
     },
     "js-temporal": {
       "version": "3.0.0",
+      "owner": "pete-murphy",
       "dependencies": [
         "convertable-options",
         "datetime",
@@ -4394,6 +4639,7 @@
     },
     "js-timers": {
       "version": "6.1.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "effect",
         "prelude"
@@ -4403,6 +4649,7 @@
     },
     "js-uri": {
       "version": "3.1.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "functions",
         "maybe",
@@ -4413,6 +4660,7 @@
     },
     "jsdom": {
       "version": "1.0.0",
+      "owner": "purescript-open-community",
       "dependencies": [
         "effect",
         "record",
@@ -4423,6 +4671,7 @@
     },
     "jsinc": {
       "version": "0.5.1",
+      "owner": "david-sledge",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -4452,6 +4701,7 @@
     },
     "json": {
       "version": "1.1.1",
+      "owner": "purescript",
       "dependencies": [
         "arrays",
         "control",
@@ -4473,6 +4723,7 @@
     },
     "json-codecs": {
       "version": "5.0.0",
+      "owner": "jordanmartinez",
       "dependencies": [
         "argonaut-core",
         "arrays",
@@ -4504,6 +4755,7 @@
     },
     "justifill": {
       "version": "0.5.0",
+      "owner": "i-am-the-slime",
       "dependencies": [
         "maybe",
         "prelude",
@@ -4515,6 +4767,7 @@
     },
     "jwt": {
       "version": "0.0.9",
+      "owner": "menelaos",
       "dependencies": [
         "argonaut-core",
         "arrays",
@@ -4530,6 +4783,7 @@
     },
     "labeled-data": {
       "version": "0.2.0",
+      "owner": "m-bock",
       "dependencies": [
         "either",
         "maybe",
@@ -4545,6 +4799,7 @@
     },
     "language-cst-parser": {
       "version": "0.14.1",
+      "owner": "natefaubion",
       "dependencies": [
         "arrays",
         "const",
@@ -4578,6 +4833,7 @@
     },
     "lazy": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "foldable-traversable",
@@ -4589,6 +4845,7 @@
     },
     "lazy-joe": {
       "version": "1.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -4602,6 +4859,7 @@
     },
     "lcg": {
       "version": "4.0.1",
+      "owner": "purescript",
       "dependencies": [
         "effect",
         "integers",
@@ -4616,6 +4874,7 @@
     },
     "leibniz": {
       "version": "5.0.0",
+      "owner": "paf31",
       "dependencies": [
         "prelude",
         "unsafe-coerce"
@@ -4625,6 +4884,7 @@
     },
     "leveldb": {
       "version": "1.0.1",
+      "owner": "grybiena",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -4651,6 +4911,7 @@
     },
     "liminal": {
       "version": "1.0.1",
+      "owner": "jstoxrocky",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -4663,6 +4924,7 @@
     },
     "linalg": {
       "version": "6.0.0",
+      "owner": "gbagan",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -4676,6 +4938,7 @@
     },
     "linear": {
       "version": "0.1.0",
+      "owner": "afcondon",
       "dependencies": [
         "foldable-traversable",
         "maybe",
@@ -4688,6 +4951,7 @@
     },
     "lists": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "control",
@@ -4707,6 +4971,7 @@
     },
     "literals": {
       "version": "1.0.2",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "integers",
         "maybe",
@@ -4721,6 +4986,7 @@
     },
     "logging": {
       "version": "3.0.0",
+      "owner": "rightfold",
       "dependencies": [
         "console",
         "contravariant",
@@ -4735,6 +5001,7 @@
     },
     "logging-journald": {
       "version": "0.4.0",
+      "owner": "paluh",
       "dependencies": [
         "effect",
         "logging",
@@ -4746,6 +5013,7 @@
     },
     "lumi-components": {
       "version": "18.0.0",
+      "owner": "purescript-react",
       "dependencies": [
         "aff",
         "aff-coroutines",
@@ -4808,6 +5076,7 @@
     },
     "machines": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "control",
@@ -4824,6 +5093,7 @@
     },
     "maps-eager": {
       "version": "0.5.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "arrays",
         "lists",
@@ -4836,6 +5106,7 @@
     },
     "marionette": {
       "version": "1.0.0",
+      "owner": "m-bock",
       "dependencies": [
         "aff",
         "datetime",
@@ -4857,6 +5128,7 @@
     },
     "marionette-react-basic-hooks": {
       "version": "0.1.1",
+      "owner": "m-bock",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -4873,12 +5145,14 @@
     },
     "markdown-it-js": {
       "version": "0.1.0",
+      "owner": "philippedev101",
       "dependencies": [],
       "integrity": "sha256-bjP2P1cW1rXCuJbrj7pB9PlYV2IXHTUxjLVCB1iUkIw=",
       "bytes": 5725
     },
     "marked": {
       "version": "0.1.0",
+      "owner": "m-bock",
       "dependencies": [
         "dts",
         "either",
@@ -4902,6 +5176,7 @@
     },
     "matrices": {
       "version": "5.0.1",
+      "owner": "kRITZCREEK",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -4916,6 +5191,7 @@
     },
     "matryoshka": {
       "version": "1.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "bifunctors",
         "control",
@@ -4937,6 +5213,7 @@
     },
     "maybe": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "invariant",
@@ -4948,6 +5225,7 @@
     },
     "media-types": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "newtype",
         "prelude"
@@ -4957,6 +5235,7 @@
     },
     "meowclient": {
       "version": "1.0.0",
+      "owner": "userfriendanonymous",
       "dependencies": [
         "aff",
         "argonaut",
@@ -4976,6 +5255,7 @@
     },
     "midi": {
       "version": "4.0.0",
+      "owner": "newlandsvalley",
       "dependencies": [
         "arrays",
         "control",
@@ -4998,6 +5278,7 @@
     },
     "milkdown": {
       "version": "0.1.0",
+      "owner": "philippedev101",
       "dependencies": [
         "aff",
         "effect",
@@ -5010,6 +5291,7 @@
     },
     "milkis": {
       "version": "9.0.0",
+      "owner": "justinwoo",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -5027,6 +5309,7 @@
     },
     "mimetype": {
       "version": "0.0.1",
+      "owner": "cakekindel",
       "dependencies": [
         "maybe",
         "prelude"
@@ -5036,6 +5319,7 @@
     },
     "minibench": {
       "version": "4.0.2",
+      "owner": "purescript",
       "dependencies": [
         "console",
         "effect",
@@ -5049,6 +5333,7 @@
     },
     "mmorph": {
       "version": "7.0.0",
+      "owner": "Thimoteus",
       "dependencies": [
         "bifunctors",
         "either",
@@ -5066,6 +5351,7 @@
     },
     "monad-control": {
       "version": "5.0.0",
+      "owner": "athanclark",
       "dependencies": [
         "aff",
         "effect",
@@ -5085,6 +5371,7 @@
     },
     "monad-logger": {
       "version": "1.3.1",
+      "owner": "cprussin",
       "dependencies": [
         "aff",
         "ansi",
@@ -5110,6 +5397,7 @@
     },
     "monad-loops": {
       "version": "0.5.0",
+      "owner": "mlang",
       "dependencies": [
         "lists",
         "maybe",
@@ -5122,6 +5410,7 @@
     },
     "monad-unlift": {
       "version": "1.0.1",
+      "owner": "athanclark",
       "dependencies": [
         "monad-control",
         "prelude"
@@ -5131,6 +5420,7 @@
     },
     "monoid-extras": {
       "version": "0.0.1",
+      "owner": "mikesol",
       "dependencies": [
         "foldable-traversable",
         "maybe",
@@ -5144,6 +5434,7 @@
     },
     "monoidal": {
       "version": "0.16.0",
+      "owner": "mcneissue",
       "dependencies": [
         "bifunctors",
         "contravariant",
@@ -5162,6 +5453,7 @@
     },
     "mote": {
       "version": "3.0.0",
+      "owner": "garyb",
       "dependencies": [
         "arrays",
         "effect",
@@ -5179,6 +5471,7 @@
     },
     "motsunabe": {
       "version": "2.0.0",
+      "owner": "justinwoo",
       "dependencies": [
         "lazy",
         "lists",
@@ -5192,6 +5485,7 @@
     },
     "mvc": {
       "version": "0.0.1",
+      "owner": "m-bock",
       "dependencies": [
         "heterogeneous",
         "maybe",
@@ -5205,6 +5499,7 @@
     },
     "mysql": {
       "version": "6.0.1",
+      "owner": "oreshinya",
       "dependencies": [
         "aff",
         "datetime",
@@ -5228,6 +5523,7 @@
     },
     "n3": {
       "version": "0.1.0",
+      "owner": "wintechis",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -5240,6 +5536,7 @@
     },
     "nano-id": {
       "version": "1.1.0",
+      "owner": "eikooc",
       "dependencies": [
         "effect",
         "maybe",
@@ -5253,6 +5550,7 @@
     },
     "nanoid": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "prelude",
@@ -5263,6 +5561,7 @@
     },
     "naturals": {
       "version": "3.0.0",
+      "owner": "LiamGoodacre",
       "dependencies": [
         "enums",
         "maybe",
@@ -5273,6 +5572,7 @@
     },
     "nested-functor": {
       "version": "0.2.1",
+      "owner": "acple",
       "dependencies": [
         "prelude",
         "type-equality"
@@ -5282,6 +5582,7 @@
     },
     "newtype": {
       "version": "5.0.1",
+      "owner": "purescript",
       "dependencies": [
         "prelude",
         "safe-coerce"
@@ -5291,6 +5592,7 @@
     },
     "next-purs-rsc": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -5320,6 +5622,7 @@
     },
     "nextjs": {
       "version": "0.1.1",
+      "owner": "purescript-react",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -5346,6 +5649,7 @@
     },
     "nextui": {
       "version": "0.2.0",
+      "owner": "purescript-react",
       "dependencies": [
         "effect",
         "prelude",
@@ -5356,6 +5660,7 @@
     },
     "node-buffer": {
       "version": "9.0.1",
+      "owner": "purescript-node",
       "dependencies": [
         "arraybuffer-types",
         "effect",
@@ -5372,6 +5677,7 @@
     },
     "node-child-process": {
       "version": "11.1.0",
+      "owner": "purescript-node",
       "dependencies": [
         "aff",
         "datetime",
@@ -5401,6 +5707,7 @@
     },
     "node-event-emitter": {
       "version": "3.0.1",
+      "owner": "purescript-node",
       "dependencies": [
         "effect",
         "either",
@@ -5415,6 +5722,7 @@
     },
     "node-execa": {
       "version": "5.0.0",
+      "owner": "jordanmartinez",
       "dependencies": [
         "aff",
         "arrays",
@@ -5460,6 +5768,7 @@
     },
     "node-fs": {
       "version": "9.2.1",
+      "owner": "purescript-node",
       "dependencies": [
         "aff",
         "datetime",
@@ -5484,6 +5793,7 @@
     },
     "node-glob-basic": {
       "version": "2.0.0",
+      "owner": "natefaubion",
       "dependencies": [
         "aff",
         "effect",
@@ -5506,6 +5816,7 @@
     },
     "node-http": {
       "version": "9.1.1",
+      "owner": "purescript-node",
       "dependencies": [
         "arrays",
         "datetime",
@@ -5529,6 +5840,7 @@
     },
     "node-http2": {
       "version": "1.1.2",
+      "owner": "purescript-node",
       "dependencies": [
         "arrays",
         "datetime",
@@ -5559,6 +5871,7 @@
     },
     "node-human-signals": {
       "version": "1.0.0",
+      "owner": "jordanmartinez",
       "dependencies": [
         "arrays",
         "control",
@@ -5572,6 +5885,7 @@
     },
     "node-net": {
       "version": "5.1.1",
+      "owner": "purescript-node",
       "dependencies": [
         "datetime",
         "effect",
@@ -5590,6 +5904,7 @@
     },
     "node-os": {
       "version": "5.1.1",
+      "owner": "purescript-node",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -5614,6 +5929,7 @@
     },
     "node-path": {
       "version": "5.0.1",
+      "owner": "purescript-node",
       "dependencies": [
         "effect"
       ],
@@ -5622,6 +5938,7 @@
     },
     "node-process": {
       "version": "11.3.0",
+      "owner": "purescript-node",
       "dependencies": [
         "effect",
         "exceptions",
@@ -5640,6 +5957,7 @@
     },
     "node-readline": {
       "version": "8.1.2",
+      "owner": "purescript-node",
       "dependencies": [
         "aff",
         "datetime",
@@ -5660,6 +5978,7 @@
     },
     "node-sqlite3": {
       "version": "8.0.0",
+      "owner": "justinwoo",
       "dependencies": [
         "aff",
         "effect",
@@ -5673,6 +5992,7 @@
     },
     "node-stream-pipes": {
       "version": "2.1.6",
+      "owner": "cakekindel",
       "dependencies": [
         "aff",
         "arrays",
@@ -5713,6 +6033,7 @@
     },
     "node-streams": {
       "version": "9.0.2",
+      "owner": "purescript-node",
       "dependencies": [
         "aff",
         "arrays",
@@ -5734,6 +6055,7 @@
     },
     "node-tls": {
       "version": "0.3.2",
+      "owner": "purescript-node",
       "dependencies": [
         "effect",
         "either",
@@ -5753,6 +6075,7 @@
     },
     "node-url": {
       "version": "7.0.2",
+      "owner": "purescript-node",
       "dependencies": [
         "effect",
         "foreign",
@@ -5767,6 +6090,7 @@
     },
     "node-workerbees": {
       "version": "0.3.1",
+      "owner": "natefaubion",
       "dependencies": [
         "aff",
         "argonaut-core",
@@ -5790,6 +6114,7 @@
     },
     "node-zlib": {
       "version": "0.4.1",
+      "owner": "purescript-node",
       "dependencies": [
         "aff",
         "effect",
@@ -5805,6 +6130,7 @@
     },
     "nonempty": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "foldable-traversable",
@@ -5818,6 +6144,7 @@
     },
     "now": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "datetime",
         "effect",
@@ -5828,6 +6155,7 @@
     },
     "npm-package-json": {
       "version": "2.0.0",
+      "owner": "maxdeviant",
       "dependencies": [
         "argonaut",
         "control",
@@ -5842,6 +6170,7 @@
     },
     "nqueens": {
       "version": "0.1.4",
+      "owner": "jrrom",
       "dependencies": [
         "control",
         "lists",
@@ -5852,6 +6181,7 @@
     },
     "nullable": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "functions",
         "maybe",
@@ -5862,6 +6192,7 @@
     },
     "numberfield": {
       "version": "0.2.2",
+      "owner": "Ebmtranceboy",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -5881,6 +6212,7 @@
     },
     "numbers": {
       "version": "9.0.2",
+      "owner": "purescript",
       "dependencies": [
         "functions",
         "maybe",
@@ -5891,6 +6223,7 @@
     },
     "oak": {
       "version": "3.1.1",
+      "owner": "ehrenmurdick",
       "dependencies": [
         "effect",
         "either",
@@ -5906,6 +6239,7 @@
     },
     "oak-debug": {
       "version": "1.2.2",
+      "owner": "ehrenmurdick",
       "dependencies": [
         "arrays",
         "effect",
@@ -5918,6 +6252,7 @@
     },
     "object-maps": {
       "version": "0.3.0",
+      "owner": "m-bock",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -5936,6 +6271,7 @@
     },
     "ocarina": {
       "version": "1.5.4",
+      "owner": "mikesol",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -5983,6 +6319,7 @@
     },
     "oooooooooorrrrrrrmm-lib": {
       "version": "0.0.1",
+      "owner": "mikesol",
       "dependencies": [
         "datetime",
         "foreign",
@@ -5997,6 +6334,7 @@
     },
     "open-colors-scales-and-schemes": {
       "version": "1.0.0",
+      "owner": "purescript-open-community",
       "dependencies": [
         "arrays",
         "colors",
@@ -6008,6 +6346,7 @@
     },
     "open-drawing": {
       "version": "6.0.4",
+      "owner": "purescript-open-community",
       "dependencies": [
         "canvas",
         "colors",
@@ -6024,6 +6363,7 @@
     },
     "open-folds": {
       "version": "6.4.0",
+      "owner": "purescript-open-community",
       "dependencies": [
         "control",
         "distributive",
@@ -6039,6 +6379,7 @@
     },
     "open-foreign-generic": {
       "version": "11.0.3",
+      "owner": "purescript-open-community",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -6066,6 +6407,7 @@
     },
     "open-memoize": {
       "version": "6.2.0",
+      "owner": "purescript-open-community",
       "dependencies": [
         "either",
         "integers",
@@ -6082,6 +6424,7 @@
     },
     "open-mkdirp-aff": {
       "version": "1.2.0",
+      "owner": "purescript-open-community",
       "dependencies": [
         "aff",
         "effect",
@@ -6095,6 +6438,7 @@
     },
     "open-pairing": {
       "version": "6.2.0",
+      "owner": "purescript-open-community",
       "dependencies": [
         "control",
         "either",
@@ -6111,6 +6455,7 @@
     },
     "open-smolder": {
       "version": "12.0.2",
+      "owner": "purescript-open-community",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -6132,6 +6477,7 @@
     },
     "options": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "contravariant",
         "foreign",
@@ -6146,6 +6492,7 @@
     },
     "optparse": {
       "version": "5.0.1",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -6180,6 +6527,7 @@
     },
     "ordered-collections": {
       "version": "3.3.0",
+      "owner": "purescript",
       "dependencies": [
         "arrays",
         "control",
@@ -6201,6 +6549,7 @@
     },
     "ordered-set": {
       "version": "0.5.2",
+      "owner": "flip111",
       "dependencies": [
         "argonaut-codecs",
         "arrays",
@@ -6217,6 +6566,7 @@
     },
     "orders": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "newtype",
         "prelude"
@@ -6226,6 +6576,7 @@
     },
     "org-doc": {
       "version": "0.1.0",
+      "owner": "shamansir",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -6257,6 +6608,7 @@
     },
     "owoify": {
       "version": "1.2.0",
+      "owner": "deadshot465",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -6279,6 +6631,7 @@
     },
     "pairs": {
       "version": "9.0.1",
+      "owner": "sharkdp",
       "dependencies": [
         "distributive",
         "foldable-traversable",
@@ -6290,6 +6643,7 @@
     },
     "parallel": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "effect",
@@ -6308,6 +6662,7 @@
     },
     "parsing": {
       "version": "11.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "control",
@@ -6340,6 +6695,7 @@
     },
     "parsing-dataview": {
       "version": "3.2.4",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arraybuffer",
         "arraybuffer-types",
@@ -6360,12 +6716,14 @@
     },
     "partial": {
       "version": "4.0.1",
+      "owner": "purescript",
       "dependencies": [],
       "integrity": "sha256-3dTok9eSKSelG5Ha5k7rorwFAIFbSYHkmDXbGXGP5eM=",
       "bytes": 5252
     },
     "pathy": {
       "version": "9.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "either",
@@ -6389,6 +6747,7 @@
     },
     "pha": {
       "version": "0.13.0",
+      "owner": "gbagan",
       "dependencies": [
         "aff",
         "bifunctors",
@@ -6417,6 +6776,7 @@
     },
     "phaser": {
       "version": "0.7.0",
+      "owner": "lfarroco",
       "dependencies": [
         "canvas",
         "effect",
@@ -6433,6 +6793,7 @@
     },
     "phylio": {
       "version": "1.1.2",
+      "owner": "vibbits",
       "dependencies": [
         "arrays",
         "control",
@@ -6458,6 +6819,7 @@
     },
     "pipes": {
       "version": "8.0.0",
+      "owner": "felixschl",
       "dependencies": [
         "aff",
         "control",
@@ -6479,6 +6841,7 @@
     },
     "pirates-charm": {
       "version": "0.0.1",
+      "owner": "mikesol",
       "dependencies": [
         "aff",
         "arrays",
@@ -6494,6 +6857,7 @@
     },
     "play": {
       "version": "1.0.0",
+      "owner": "shamansir",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -6512,6 +6876,7 @@
     },
     "pmock": {
       "version": "1.1.0",
+      "owner": "pujoheadsoft",
       "dependencies": [
         "arrays",
         "control",
@@ -6531,6 +6896,7 @@
     },
     "point-free": {
       "version": "1.0.0",
+      "owner": "ursi",
       "dependencies": [
         "prelude"
       ],
@@ -6539,6 +6905,7 @@
     },
     "pointed-list": {
       "version": "0.5.1",
+      "owner": "paluh",
       "dependencies": [
         "control",
         "foldable-traversable",
@@ -6553,6 +6920,7 @@
     },
     "polymorphic-vectors": {
       "version": "4.0.0",
+      "owner": "artemisSystem",
       "dependencies": [
         "distributive",
         "foldable-traversable",
@@ -6568,6 +6936,7 @@
     },
     "posix-types": {
       "version": "6.0.1",
+      "owner": "purescript-node",
       "dependencies": [
         "maybe",
         "newtype",
@@ -6578,6 +6947,7 @@
     },
     "postgresql": {
       "version": "2.0.21",
+      "owner": "cakekindel",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -6627,6 +6997,7 @@
     },
     "precise": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "exceptions",
         "foldable-traversable",
@@ -6646,6 +7017,7 @@
     },
     "precise-datetime": {
       "version": "7.0.0",
+      "owner": "awakesecurity",
       "dependencies": [
         "arrays",
         "control",
@@ -6669,12 +7041,14 @@
     },
     "prelude": {
       "version": "6.0.3",
+      "owner": "purescript",
       "dependencies": [],
       "integrity": "sha256-tb47YmbR/2YKyzLqgE+s5Ilz9LBOwpUA3/zse7sJahU=",
       "bytes": 31527
     },
     "prettier-printer": {
       "version": "3.0.0",
+      "owner": "paulyoung",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -6688,6 +7062,7 @@
     },
     "printf": {
       "version": "0.1.0",
+      "owner": "eternasuno",
       "dependencies": [
         "prelude"
       ],
@@ -6696,6 +7071,7 @@
     },
     "priority-queue": {
       "version": "0.1.2",
+      "owner": "f-f",
       "dependencies": [
         "arrays",
         "effect",
@@ -6711,6 +7087,7 @@
     },
     "profunctor": {
       "version": "6.0.2",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "distributive",
@@ -6726,6 +7103,7 @@
     },
     "profunctor-lenses": {
       "version": "8.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -6754,6 +7132,7 @@
     },
     "prospero": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arrays",
@@ -6811,6 +7190,7 @@
     },
     "protobuf": {
       "version": "4.4.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arraybuffer",
         "arraybuffer-builder",
@@ -6844,6 +7224,7 @@
     },
     "psa-utils": {
       "version": "8.0.0",
+      "owner": "natefaubion",
       "dependencies": [
         "ansi",
         "argonaut-codecs",
@@ -6869,6 +7250,7 @@
     },
     "psci-support": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "console",
         "effect",
@@ -6879,6 +7261,7 @@
     },
     "punycode": {
       "version": "1.0.0",
+      "owner": "crestonbunch",
       "dependencies": [
         "arrays",
         "either",
@@ -6895,6 +7278,7 @@
     },
     "pursfmt": {
       "version": "0.17.0",
+      "owner": "ad-si",
       "dependencies": [
         "arrays",
         "control",
@@ -6916,6 +7300,7 @@
     },
     "qualified-do": {
       "version": "2.2.0",
+      "owner": "artemisSystem",
       "dependencies": [
         "arrays",
         "control",
@@ -6929,6 +7314,7 @@
     },
     "quantities": {
       "version": "12.2.0",
+      "owner": "sharkdp",
       "dependencies": [
         "decimals",
         "either",
@@ -6947,6 +7333,7 @@
     },
     "quickcheck": {
       "version": "8.0.2",
+      "owner": "purescript",
       "dependencies": [
         "arrays",
         "console",
@@ -6980,6 +7367,7 @@
     },
     "quickcheck-combinators": {
       "version": "0.1.3",
+      "owner": "athanclark",
       "dependencies": [
         "foldable-traversable",
         "prelude",
@@ -6993,6 +7381,7 @@
     },
     "quickcheck-laws": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "console",
@@ -7010,6 +7399,7 @@
     },
     "quickcheck-utf8": {
       "version": "0.0.0",
+      "owner": "athanclark",
       "dependencies": [
         "control",
         "enums",
@@ -7022,6 +7412,7 @@
     },
     "random": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "effect",
         "integers",
@@ -7032,6 +7423,7 @@
     },
     "rationals": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "integers",
         "js-bigints",
@@ -7042,6 +7434,7 @@
     },
     "rdf": {
       "version": "0.1.0",
+      "owner": "wintechis",
       "dependencies": [
         "maybe",
         "ordered-collections",
@@ -7052,6 +7445,7 @@
     },
     "react": {
       "version": "11.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "effect",
         "exceptions",
@@ -7066,6 +7460,7 @@
     },
     "react-aria": {
       "version": "0.2.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -7087,6 +7482,7 @@
     },
     "react-basic": {
       "version": "17.0.0",
+      "owner": "purescript-react",
       "dependencies": [
         "effect",
         "prelude",
@@ -7097,6 +7493,7 @@
     },
     "react-basic-classic": {
       "version": "3.0.0",
+      "owner": "purescript-react",
       "dependencies": [
         "aff",
         "effect",
@@ -7111,6 +7508,7 @@
     },
     "react-basic-dnd": {
       "version": "10.1.0",
+      "owner": "purescript-react",
       "dependencies": [
         "effect",
         "maybe",
@@ -7124,6 +7522,7 @@
     },
     "react-basic-dom": {
       "version": "7.0.0",
+      "owner": "purescript-react",
       "dependencies": [
         "arrays",
         "effect",
@@ -7145,6 +7544,7 @@
     },
     "react-basic-dom-beta": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "datetime",
         "effect",
@@ -7168,6 +7568,7 @@
     },
     "react-basic-emotion": {
       "version": "7.1.0",
+      "owner": "purescript-react",
       "dependencies": [
         "arrays",
         "colors",
@@ -7190,6 +7591,7 @@
     },
     "react-basic-hooks": {
       "version": "9.1.1",
+      "owner": "purescript-react",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -7224,6 +7626,7 @@
     },
     "react-basic-storybook": {
       "version": "2.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -7243,6 +7646,7 @@
     },
     "react-dnd-kit": {
       "version": "0.6.0",
+      "owner": "i-am-the-slime",
       "dependencies": [
         "effect",
         "foreign",
@@ -7263,6 +7667,7 @@
     },
     "react-dom": {
       "version": "8.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "effect",
         "functions",
@@ -7277,6 +7682,7 @@
     },
     "react-halo": {
       "version": "3.0.0",
+      "owner": "robertdp",
       "dependencies": [
         "aff",
         "bifunctors",
@@ -7303,6 +7709,7 @@
     },
     "react-icons": {
       "version": "1.1.6",
+      "owner": "purescript-react",
       "dependencies": [
         "react-basic",
         "react-basic-dom",
@@ -7313,6 +7720,7 @@
     },
     "react-markdown": {
       "version": "0.1.0",
+      "owner": "purescript-react",
       "dependencies": [
         "react-basic-hooks"
       ],
@@ -7321,6 +7729,7 @@
     },
     "react-testing-library": {
       "version": "4.0.1",
+      "owner": "i-am-the-slime",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -7347,6 +7756,7 @@
     },
     "react-virtuoso": {
       "version": "1.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "functions",
@@ -7363,6 +7773,7 @@
     },
     "reactix": {
       "version": "0.6.1",
+      "owner": "garganscript",
       "dependencies": [
         "dom-simple",
         "effect",
@@ -7381,6 +7792,7 @@
     },
     "read": {
       "version": "1.0.1",
+      "owner": "truqu",
       "dependencies": [
         "maybe",
         "prelude",
@@ -7391,6 +7803,7 @@
     },
     "recharts": {
       "version": "1.1.0",
+      "owner": "tfc",
       "dependencies": [
         "maybe",
         "nullable",
@@ -7403,6 +7816,7 @@
     },
     "record": {
       "version": "4.0.1",
+      "owner": "purescript",
       "dependencies": [
         "functions",
         "prelude",
@@ -7413,6 +7827,7 @@
     },
     "record-extra": {
       "version": "5.0.1",
+      "owner": "justinwoo",
       "dependencies": [
         "arrays",
         "functions",
@@ -7427,6 +7842,7 @@
     },
     "record-extra-srghma": {
       "version": "0.2.8",
+      "owner": "srghma",
       "dependencies": [
         "arrays",
         "control",
@@ -7447,6 +7863,7 @@
     },
     "record-ptional-fields": {
       "version": "0.1.2",
+      "owner": "katsujukou",
       "dependencies": [
         "maybe",
         "partial",
@@ -7460,6 +7877,7 @@
     },
     "record-studio": {
       "version": "1.0.4",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "heterogeneous",
         "lists",
@@ -7473,6 +7891,7 @@
     },
     "ref-lifted": {
       "version": "0.0.2",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "prelude",
@@ -7483,6 +7902,7 @@
     },
     "refs": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "effect",
         "prelude"
@@ -7492,6 +7912,7 @@
     },
     "remotedata": {
       "version": "5.0.1",
+      "owner": "krisajenkins",
       "dependencies": [
         "bifunctors",
         "either",
@@ -7506,6 +7927,7 @@
     },
     "repr": {
       "version": "0.5.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -7521,6 +7943,7 @@
     },
     "resize-arrays": {
       "version": "0.0.1",
+      "owner": "m-bock",
       "dependencies": [
         "foldable-traversable",
         "lists",
@@ -7535,6 +7958,7 @@
     },
     "resize-observer": {
       "version": "1.0.0",
+      "owner": "grybiena",
       "dependencies": [
         "effect",
         "prelude",
@@ -7545,6 +7969,7 @@
     },
     "resource": {
       "version": "2.0.1",
+      "owner": "joneshf",
       "dependencies": [
         "aff",
         "control",
@@ -7556,6 +7981,7 @@
     },
     "resourcet": {
       "version": "1.0.0",
+      "owner": "robertdp",
       "dependencies": [
         "aff",
         "control",
@@ -7578,6 +8004,7 @@
     },
     "result": {
       "version": "1.0.3",
+      "owner": "ad-si",
       "dependencies": [
         "bifunctors",
         "control",
@@ -7592,6 +8019,7 @@
     },
     "return": {
       "version": "0.2.0",
+      "owner": "ursi",
       "dependencies": [
         "foldable-traversable",
         "point-free",
@@ -7602,6 +8030,7 @@
     },
     "ring-modules": {
       "version": "5.0.1",
+      "owner": "f-o-a-m",
       "dependencies": [
         "prelude"
       ],
@@ -7610,6 +8039,7 @@
     },
     "rito": {
       "version": "0.3.4",
+      "owner": "mikesol",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -7649,6 +8079,7 @@
     },
     "roman": {
       "version": "0.4.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "array-search",
         "arrays",
@@ -7667,6 +8098,7 @@
     },
     "rough-notation": {
       "version": "1.0.2",
+      "owner": "MitchStevens",
       "dependencies": [
         "aff",
         "datetime",
@@ -7683,6 +8115,7 @@
     },
     "routing": {
       "version": "11.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "control",
@@ -7713,6 +8146,7 @@
     },
     "routing-duplex": {
       "version": "0.7.0",
+      "owner": "natefaubion",
       "dependencies": [
         "arrays",
         "control",
@@ -7734,6 +8168,7 @@
     },
     "run": {
       "version": "5.0.0",
+      "owner": "natefaubion",
       "dependencies": [
         "aff",
         "control",
@@ -7756,6 +8191,7 @@
     },
     "safe-coerce": {
       "version": "2.0.1",
+      "owner": "purescript",
       "dependencies": [
         "unsafe-coerce"
       ],
@@ -7764,6 +8200,7 @@
     },
     "safely": {
       "version": "4.0.1",
+      "owner": "paf31",
       "dependencies": [
         "foldable-traversable",
         "freet",
@@ -7779,6 +8216,7 @@
     },
     "school-of-music": {
       "version": "1.3.0",
+      "owner": "newlandsvalley",
       "dependencies": [
         "arrays",
         "control",
@@ -7800,6 +8238,7 @@
     },
     "selection-foldable": {
       "version": "0.2.0",
+      "owner": "jamieyung",
       "dependencies": [
         "either",
         "filterable",
@@ -7813,6 +8252,7 @@
     },
     "selective-functors": {
       "version": "1.0.1",
+      "owner": "artemisSystem",
       "dependencies": [
         "aff",
         "arrays",
@@ -7839,6 +8279,7 @@
     },
     "semirings": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "foldable-traversable",
         "lists",
@@ -7850,6 +8291,7 @@
     },
     "shuffle": {
       "version": "2.0.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "arrays",
         "effect",
@@ -7864,6 +8306,7 @@
     },
     "sigil": {
       "version": "0.3.0",
+      "owner": "afcondon",
       "dependencies": [
         "arrays",
         "effect",
@@ -7882,6 +8325,7 @@
     },
     "sigil-hats": {
       "version": "0.3.0",
+      "owner": "afcondon",
       "dependencies": [
         "hylograph-selection",
         "maybe",
@@ -7893,6 +8337,7 @@
     },
     "signal": {
       "version": "13.0.0",
+      "owner": "bodil",
       "dependencies": [
         "aff",
         "effect",
@@ -7906,6 +8351,7 @@
     },
     "simple-emitter": {
       "version": "3.0.1",
+      "owner": "oreshinya",
       "dependencies": [
         "effect",
         "foldable-traversable",
@@ -7919,6 +8365,7 @@
     },
     "simple-i18n": {
       "version": "2.0.1",
+      "owner": "oreshinya",
       "dependencies": [
         "foreign-object",
         "maybe",
@@ -7933,6 +8380,7 @@
     },
     "simple-json": {
       "version": "9.0.0",
+      "owner": "justinwoo",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -7958,6 +8406,7 @@
     },
     "simple-json-generics": {
       "version": "0.2.1",
+      "owner": "justinwoo",
       "dependencies": [
         "control",
         "foreign",
@@ -7971,6 +8420,7 @@
     },
     "simple-ulid": {
       "version": "3.0.0",
+      "owner": "oreshinya",
       "dependencies": [
         "arrays",
         "datetime",
@@ -7989,6 +8439,7 @@
     },
     "sized-matrices": {
       "version": "1.0.0",
+      "owner": "csicar",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -8009,6 +8460,7 @@
     },
     "sized-vectors": {
       "version": "5.0.2",
+      "owner": "bodil",
       "dependencies": [
         "argonaut",
         "arrays",
@@ -8027,6 +8479,7 @@
     },
     "slug": {
       "version": "3.2.1",
+      "owner": "thomashoneyman",
       "dependencies": [
         "argonaut-codecs",
         "arrays",
@@ -8041,6 +8494,7 @@
     },
     "small-ffi": {
       "version": "4.0.1",
+      "owner": "lfarroco",
       "dependencies": [
         "prelude"
       ],
@@ -8049,6 +8503,7 @@
     },
     "soundfonts": {
       "version": "4.1.0",
+      "owner": "newlandsvalley",
       "dependencies": [
         "aff",
         "affjax",
@@ -8083,6 +8538,7 @@
     },
     "sparse-matrices": {
       "version": "2.0.1",
+      "owner": "Ebmtranceboy",
       "dependencies": [
         "arrays",
         "cartesian",
@@ -8099,6 +8555,7 @@
     },
     "sparse-polynomials": {
       "version": "3.0.1",
+      "owner": "Ebmtranceboy",
       "dependencies": [
         "arrays",
         "cartesian",
@@ -8119,6 +8576,7 @@
     },
     "spec": {
       "version": "8.1.2",
+      "owner": "purescript-spec",
       "dependencies": [
         "aff",
         "ansi",
@@ -8153,6 +8611,7 @@
     },
     "spec-discovery": {
       "version": "8.4.1",
+      "owner": "purescript-spec",
       "dependencies": [
         "aff",
         "effect",
@@ -8166,6 +8625,7 @@
     },
     "spec-mocha": {
       "version": "5.1.1",
+      "owner": "purescript-spec",
       "dependencies": [
         "aff",
         "effect",
@@ -8180,6 +8640,7 @@
     },
     "spec-node": {
       "version": "0.0.3",
+      "owner": "purescript-spec",
       "dependencies": [
         "aff",
         "argonaut-codecs",
@@ -8212,6 +8673,7 @@
     },
     "spec-quickcheck": {
       "version": "5.0.2",
+      "owner": "purescript-spec",
       "dependencies": [
         "aff",
         "arrays",
@@ -8228,6 +8690,7 @@
     },
     "spec-reporter-xunit": {
       "version": "0.7.1",
+      "owner": "purescript-spec",
       "dependencies": [
         "arrays",
         "effect",
@@ -8249,6 +8712,7 @@
     },
     "splitmix": {
       "version": "2.1.0",
+      "owner": "the-dr-lazy",
       "dependencies": [
         "int64",
         "integers",
@@ -8262,6 +8726,7 @@
     },
     "ssrs": {
       "version": "1.0.0",
+      "owner": "PureFunctor",
       "dependencies": [
         "dissect",
         "either",
@@ -8279,6 +8744,7 @@
     },
     "st": {
       "version": "6.2.1",
+      "owner": "purescript",
       "dependencies": [
         "effect",
         "partial",
@@ -8291,6 +8757,7 @@
     },
     "statistics": {
       "version": "0.3.2",
+      "owner": "jacereda",
       "dependencies": [
         "arrays",
         "control",
@@ -8308,6 +8775,7 @@
     },
     "strictlypositiveint": {
       "version": "1.0.1",
+      "owner": "jamieyung",
       "dependencies": [
         "prelude"
       ],
@@ -8316,6 +8784,7 @@
     },
     "string-parsers": {
       "version": "8.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "control",
@@ -8334,6 +8803,7 @@
     },
     "strings": {
       "version": "6.1.0",
+      "owner": "purescript",
       "dependencies": [
         "arrays",
         "control",
@@ -8357,6 +8827,7 @@
     },
     "strings-extra": {
       "version": "4.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -8369,6 +8840,7 @@
     },
     "stringutils": {
       "version": "0.0.13",
+      "owner": "menelaos",
       "dependencies": [
         "arrays",
         "functions",
@@ -8383,6 +8855,7 @@
     },
     "structured-logging": {
       "version": "1.0.0",
+      "owner": "joellefkowitz",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -8396,6 +8869,7 @@
     },
     "substitute": {
       "version": "0.2.3",
+      "owner": "ursi",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -8412,6 +8886,7 @@
     },
     "supply": {
       "version": "0.2.0",
+      "owner": "ajnsit",
       "dependencies": [
         "control",
         "effect",
@@ -8425,6 +8900,7 @@
     },
     "svg-parser": {
       "version": "3.0.0",
+      "owner": "rnons",
       "dependencies": [
         "arrays",
         "control",
@@ -8439,6 +8915,7 @@
     },
     "systemd-journald": {
       "version": "0.3.0",
+      "owner": "paluh",
       "dependencies": [
         "effect",
         "prelude"
@@ -8448,6 +8925,7 @@
     },
     "tagged": {
       "version": "4.0.2",
+      "owner": "LiamGoodacre",
       "dependencies": [
         "control",
         "foldable-traversable",
@@ -8462,6 +8940,7 @@
     },
     "tailrec": {
       "version": "6.1.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "effect",
@@ -8477,6 +8956,7 @@
     },
     "tanstack-query": {
       "version": "3.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arrays",
@@ -8509,6 +8989,7 @@
     },
     "tecton": {
       "version": "0.2.1",
+      "owner": "nsaunders",
       "dependencies": [
         "colors",
         "either",
@@ -8528,6 +9009,7 @@
     },
     "tecton-halogen": {
       "version": "0.2.0",
+      "owner": "nsaunders",
       "dependencies": [
         "halogen",
         "lists",
@@ -8540,6 +9022,7 @@
     },
     "temporal": {
       "version": "0.2.0",
+      "owner": "philippedev101",
       "dependencies": [
         "argonaut-codecs",
         "argonaut-core",
@@ -8559,6 +9042,7 @@
     },
     "test-unit": {
       "version": "17.0.0",
+      "owner": "bodil",
       "dependencies": [
         "aff",
         "avar",
@@ -8587,6 +9071,7 @@
     },
     "text-formatting": {
       "version": "0.1.0",
+      "owner": "shamansir",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -8615,6 +9100,7 @@
     },
     "thermite": {
       "version": "6.3.1",
+      "owner": "paf31",
       "dependencies": [
         "aff",
         "arrays",
@@ -8635,6 +9121,7 @@
     },
     "thermite-dom": {
       "version": "0.3.1",
+      "owner": "athanclark",
       "dependencies": [
         "effect",
         "foldable-traversable",
@@ -8649,6 +9136,7 @@
     },
     "these": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -8672,6 +9160,7 @@
     },
     "threading": {
       "version": "0.0.3",
+      "owner": "cakekindel",
       "dependencies": [
         "aff",
         "arrays",
@@ -8696,6 +9185,7 @@
     },
     "tidy": {
       "version": "0.11.1",
+      "owner": "natefaubion",
       "dependencies": [
         "arrays",
         "control",
@@ -8717,6 +9207,7 @@
     },
     "tidy-codegen": {
       "version": "4.0.1",
+      "owner": "natefaubion",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -8752,6 +9243,7 @@
     },
     "tldr": {
       "version": "0.0.0",
+      "owner": "mikesol",
       "dependencies": [
         "prelude"
       ],
@@ -8760,6 +9252,7 @@
     },
     "toestand": {
       "version": "0.9.0",
+      "owner": "garganscript",
       "dependencies": [
         "effect",
         "foldable-traversable",
@@ -8776,6 +9269,7 @@
     },
     "transformation-matrix": {
       "version": "1.0.1",
+      "owner": "jstoxrocky",
       "dependencies": [
         "arrays",
         "either",
@@ -8789,6 +9283,7 @@
     },
     "transformers": {
       "version": "6.1.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "distributive",
@@ -8811,6 +9306,7 @@
     },
     "transit": {
       "version": "1.0.0",
+      "owner": "m-bock",
       "dependencies": [
         "arrays",
         "colors",
@@ -8841,6 +9337,7 @@
     },
     "tree-rose": {
       "version": "4.0.2",
+      "owner": "jordanmartinez",
       "dependencies": [
         "control",
         "foldable-traversable",
@@ -8855,6 +9352,7 @@
     },
     "trivial-unfold": {
       "version": "0.5.0",
+      "owner": "UnrelatedString",
       "dependencies": [
         "bifunctors",
         "control",
@@ -8878,6 +9376,7 @@
     },
     "ts-bridge": {
       "version": "4.0.0",
+      "owner": "m-bock",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -8920,6 +9419,7 @@
     },
     "tuples": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "control",
         "invariant",
@@ -8930,6 +9430,7 @@
     },
     "two-or-more": {
       "version": "1.0.0",
+      "owner": "i-am-the-slime",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -8943,12 +9444,14 @@
     },
     "type-equality": {
       "version": "4.0.2",
+      "owner": "purescript",
       "dependencies": [],
       "integrity": "sha256-EECg/GFeU/SlM3ZVVj9aaSk/YSOpvb2l/rXjxtHs+dY=",
       "bytes": 2293
     },
     "typedenv": {
       "version": "2.0.1",
+      "owner": "nsaunders",
       "dependencies": [
         "either",
         "foreign-object",
@@ -8966,6 +9469,7 @@
     },
     "typelevel": {
       "version": "6.0.0",
+      "owner": "bodil",
       "dependencies": [
         "partial",
         "prelude",
@@ -8977,6 +9481,7 @@
     },
     "typelevel-lists": {
       "version": "2.1.0",
+      "owner": "PureFunctor",
       "dependencies": [
         "prelude",
         "tuples",
@@ -8989,6 +9494,7 @@
     },
     "typelevel-peano": {
       "version": "1.0.1",
+      "owner": "csicar",
       "dependencies": [
         "prelude",
         "typelevel-prelude",
@@ -8999,6 +9505,7 @@
     },
     "typelevel-prelude": {
       "version": "7.0.1",
+      "owner": "purescript",
       "dependencies": [
         "prelude",
         "type-equality"
@@ -9008,6 +9515,7 @@
     },
     "typelevel-regex": {
       "version": "0.0.3",
+      "owner": "m-bock",
       "dependencies": [
         "prelude",
         "typelevel-prelude"
@@ -9017,6 +9525,7 @@
     },
     "typelevel-rows": {
       "version": "0.1.0",
+      "owner": "jordanmartinez",
       "dependencies": [
         "prelude"
       ],
@@ -9025,6 +9534,7 @@
     },
     "typisch": {
       "version": "0.4.0",
+      "owner": "garganscript",
       "dependencies": [
         "prelude"
       ],
@@ -9033,6 +9543,7 @@
     },
     "uint": {
       "version": "7.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "enums",
         "gen",
@@ -9045,6 +9556,7 @@
     },
     "ulid": {
       "version": "3.0.1",
+      "owner": "maxdeviant",
       "dependencies": [
         "effect",
         "functions",
@@ -9057,6 +9569,7 @@
     },
     "uncurried-transformers": {
       "version": "1.1.0",
+      "owner": "PureFunctor",
       "dependencies": [
         "control",
         "effect",
@@ -9074,12 +9587,14 @@
     },
     "undefined": {
       "version": "2.0.0",
+      "owner": "bklaric",
       "dependencies": [],
       "integrity": "sha256-zb0jVO4SFkPlrCaGYFlOQk75ih1NEDk/loAF3Lm39/w=",
       "bytes": 13559
     },
     "undefined-is-not-a-problem": {
       "version": "1.1.0",
+      "owner": "paluh",
       "dependencies": [
         "effect",
         "either",
@@ -9096,6 +9611,7 @@
     },
     "unfoldable": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "foldable-traversable",
         "maybe",
@@ -9108,6 +9624,7 @@
     },
     "unicode": {
       "version": "6.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "enums",
@@ -9123,6 +9640,7 @@
     },
     "unique": {
       "version": "0.6.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "prelude",
@@ -9133,6 +9651,7 @@
     },
     "unlift": {
       "version": "1.0.1",
+      "owner": "tweag",
       "dependencies": [
         "aff",
         "effect",
@@ -9150,6 +9669,7 @@
     },
     "unordered-collections": {
       "version": "3.1.0",
+      "owner": "fehrenbach",
       "dependencies": [
         "arrays",
         "either",
@@ -9172,12 +9692,14 @@
     },
     "unsafe-coerce": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [],
       "integrity": "sha256-EWQVn1FKBk8WggRQhs+5oYkj5r9BNmb2j1gDITxhH6o=",
       "bytes": 2594
     },
     "unsafe-reference": {
       "version": "5.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "prelude"
       ],
@@ -9186,6 +9708,7 @@
     },
     "untagged-to-tagged": {
       "version": "0.1.4",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "either",
         "prelude",
@@ -9196,6 +9719,7 @@
     },
     "untagged-union": {
       "version": "1.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "either",
         "foreign",
@@ -9212,6 +9736,7 @@
     },
     "uri": {
       "version": "9.0.0",
+      "owner": "purescript-contrib",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -9239,6 +9764,7 @@
     },
     "url-immutable": {
       "version": "1.0.0",
+      "owner": "cakekindel",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -9264,6 +9790,7 @@
     },
     "url-regex-safe": {
       "version": "0.1.1",
+      "owner": "srghma",
       "dependencies": [
         "strings"
       ],
@@ -9272,6 +9799,7 @@
     },
     "uuid": {
       "version": "9.0.0",
+      "owner": "maddie927",
       "dependencies": [
         "effect",
         "maybe",
@@ -9282,6 +9810,7 @@
     },
     "uuidv4": {
       "version": "1.0.0",
+      "owner": "garyb",
       "dependencies": [
         "arrays",
         "control",
@@ -9299,6 +9828,7 @@
     },
     "validation": {
       "version": "6.0.1",
+      "owner": "purescript",
       "dependencies": [
         "bifunctors",
         "control",
@@ -9312,6 +9842,7 @@
     },
     "variant": {
       "version": "8.0.0",
+      "owner": "natefaubion",
       "dependencies": [
         "control",
         "enums",
@@ -9328,6 +9859,7 @@
     },
     "variant-encodings": {
       "version": "2.0.0",
+      "owner": "m-bock",
       "dependencies": [
         "prelude",
         "unsafe-coerce",
@@ -9338,6 +9870,7 @@
     },
     "variant-gen": {
       "version": "1.0.0",
+      "owner": "purescript-open-community",
       "dependencies": [
         "gen",
         "lists",
@@ -9353,6 +9886,7 @@
     },
     "vectorfield": {
       "version": "1.0.1",
+      "owner": "csicar",
       "dependencies": [
         "group",
         "prelude"
@@ -9362,6 +9896,7 @@
     },
     "vectors": {
       "version": "2.1.0",
+      "owner": "m-bock",
       "dependencies": [
         "foldable-traversable",
         "prelude",
@@ -9372,6 +9907,7 @@
     },
     "versions": {
       "version": "7.0.0",
+      "owner": "hdgarrood",
       "dependencies": [
         "control",
         "either",
@@ -9389,6 +9925,7 @@
     },
     "visx": {
       "version": "0.0.2",
+      "owner": "i-am-the-slime",
       "dependencies": [
         "arrays",
         "datetime",
@@ -9421,6 +9958,7 @@
     },
     "vitest": {
       "version": "2.0.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -9441,6 +9979,7 @@
     },
     "web-chain": {
       "version": "1.0.1",
+      "owner": "david-sledge",
       "dependencies": [
         "arrays",
         "effect",
@@ -9467,6 +10006,7 @@
     },
     "web-clipboard": {
       "version": "6.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "functions",
@@ -9483,6 +10023,7 @@
     },
     "web-cssom": {
       "version": "2.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "maybe",
@@ -9498,6 +10039,7 @@
     },
     "web-cssom-view": {
       "version": "0.2.1",
+      "owner": "purescript-web",
       "dependencies": [
         "aff",
         "effect",
@@ -9515,6 +10057,7 @@
     },
     "web-dom": {
       "version": "6.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "enums",
@@ -9530,6 +10073,7 @@
     },
     "web-dom-parser": {
       "version": "8.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "arrays",
         "effect",
@@ -9543,6 +10087,7 @@
     },
     "web-dom-xpath": {
       "version": "3.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "arrays",
         "effect",
@@ -9558,6 +10103,7 @@
     },
     "web-encoding": {
       "version": "3.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "arraybuffer-types",
         "effect",
@@ -9569,6 +10115,7 @@
     },
     "web-events": {
       "version": "4.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "datetime",
         "effect",
@@ -9586,6 +10133,7 @@
     },
     "web-fetch": {
       "version": "4.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "arraybuffer-types",
         "arrays",
@@ -9611,6 +10159,7 @@
     },
     "web-file": {
       "version": "4.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "datetime",
         "effect",
@@ -9633,12 +10182,14 @@
     },
     "web-geometry": {
       "version": "0.1.1",
+      "owner": "purescript-web",
       "dependencies": [],
       "integrity": "sha256-s0UD+IPqT3p/tXIZIINEvmpRafRnVBYOF1qgES+Kl/Q=",
       "bytes": 2079
     },
     "web-html": {
       "version": "4.1.1",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "enums",
@@ -9661,6 +10212,7 @@
     },
     "web-pointerevents": {
       "version": "2.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "maybe",
@@ -9676,6 +10228,7 @@
     },
     "web-proletarian": {
       "version": "1.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "prelude"
@@ -9685,6 +10238,7 @@
     },
     "web-promise": {
       "version": "3.2.0",
+      "owner": "purescript-deprecated",
       "dependencies": [
         "effect",
         "exceptions",
@@ -9699,6 +10253,7 @@
     },
     "web-resize-observer": {
       "version": "2.1.0",
+      "owner": "nsaunders",
       "dependencies": [
         "arrays",
         "control",
@@ -9716,6 +10271,7 @@
     },
     "web-router": {
       "version": "1.0.0",
+      "owner": "robertdp",
       "dependencies": [
         "aff",
         "effect",
@@ -9735,6 +10291,7 @@
     },
     "web-socket": {
       "version": "4.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "arraybuffer-types",
         "effect",
@@ -9753,6 +10310,7 @@
     },
     "web-storage": {
       "version": "5.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "maybe",
@@ -9766,6 +10324,7 @@
     },
     "web-streams": {
       "version": "4.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "arraybuffer-types",
         "effect",
@@ -9781,6 +10340,7 @@
     },
     "web-touchevents": {
       "version": "4.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "functions",
         "maybe",
@@ -9795,6 +10355,7 @@
     },
     "web-uievents": {
       "version": "5.0.0",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "enums",
@@ -9810,6 +10371,7 @@
     },
     "web-url": {
       "version": "2.0.0",
+      "owner": "mjepronk",
       "dependencies": [
         "maybe",
         "partial",
@@ -9821,6 +10383,7 @@
     },
     "web-workers": {
       "version": "2.0.1",
+      "owner": "purescript-web",
       "dependencies": [
         "effect",
         "foreign",
@@ -9836,6 +10399,7 @@
     },
     "web-xhr": {
       "version": "5.0.2",
+      "owner": "purescript-web",
       "dependencies": [
         "arraybuffer-types",
         "datetime",
@@ -9860,6 +10424,7 @@
     },
     "webb-aff-list": {
       "version": "0.0.2",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "effect",
@@ -9885,6 +10450,7 @@
     },
     "webb-array": {
       "version": "0.0.2",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -9896,6 +10462,7 @@
     },
     "webb-channel": {
       "version": "0.0.3",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "effect",
@@ -9916,6 +10483,7 @@
     },
     "webb-commandline": {
       "version": "0.0.3",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "arrays",
         "effect",
@@ -9928,6 +10496,7 @@
     },
     "webb-directory": {
       "version": "0.0.7",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "arrays",
@@ -9951,6 +10520,7 @@
     },
     "webb-file": {
       "version": "0.0.1",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "arrays",
@@ -9978,6 +10548,7 @@
     },
     "webb-map": {
       "version": "0.0.1",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "control",
         "ordered-collections",
@@ -9990,6 +10561,7 @@
     },
     "webb-monad": {
       "version": "0.0.2",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "arrays",
@@ -10011,6 +10583,7 @@
     },
     "webb-mutex": {
       "version": "0.0.7",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "arrays",
@@ -10029,6 +10602,7 @@
     },
     "webb-parsing": {
       "version": "0.0.5",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "arrays",
         "control",
@@ -10049,6 +10623,7 @@
     },
     "webb-random": {
       "version": "0.0.1",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "control",
         "effect",
@@ -10068,6 +10643,7 @@
     },
     "webb-refer": {
       "version": "0.0.3",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "effect",
         "prelude",
@@ -10081,6 +10657,7 @@
     },
     "webb-set": {
       "version": "0.0.1",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "ordered-collections",
         "prelude"
@@ -10090,6 +10667,7 @@
     },
     "webb-slot": {
       "version": "0.0.1",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "effect",
         "maybe",
@@ -10103,6 +10681,7 @@
     },
     "webb-stateful": {
       "version": "0.0.3",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "arrays",
         "effect",
@@ -10120,6 +10699,7 @@
     },
     "webb-string": {
       "version": "0.0.1",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "arrays",
         "maybe",
@@ -10136,6 +10716,7 @@
     },
     "webb-test": {
       "version": "0.0.1",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "effect",
@@ -10151,6 +10732,7 @@
     },
     "webb-thread": {
       "version": "0.0.2",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "aff",
         "effect",
@@ -10166,6 +10748,7 @@
     },
     "webb-writer": {
       "version": "0.0.3",
+      "owner": "mitchellandwebb",
       "dependencies": [
         "arrays",
         "foldable-traversable",
@@ -10188,6 +10771,7 @@
     },
     "webextension-polyfill": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -10207,6 +10791,7 @@
     },
     "webgpu": {
       "version": "0.0.2",
+      "owner": "purescript-web",
       "dependencies": [
         "arraybuffer-types",
         "effect",
@@ -10229,6 +10814,7 @@
     },
     "which": {
       "version": "2.0.0",
+      "owner": "maxdeviant",
       "dependencies": [
         "arrays",
         "effect",
@@ -10243,6 +10829,7 @@
     },
     "whine-core": {
       "version": "0.0.34",
+      "owner": "collegevine",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -10295,6 +10882,7 @@
     },
     "xterm": {
       "version": "1.0.0",
+      "owner": "grybiena",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -10321,6 +10909,7 @@
     },
     "yaml-next": {
       "version": "3.1.1",
+      "owner": "archaeron",
       "dependencies": [
         "argonaut-core",
         "arrays",
@@ -10338,6 +10927,7 @@
     },
     "yoga-acp-om": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arraybuffer-types",
         "arrays",
@@ -10365,6 +10955,7 @@
     },
     "yoga-better-auth": {
       "version": "0.2.2",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -10390,6 +10981,7 @@
     },
     "yoga-bun-yoga": {
       "version": "0.2.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -10411,6 +11003,7 @@
     },
     "yoga-config": {
       "version": "0.2.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "bifunctors",
@@ -10441,6 +11034,7 @@
     },
     "yoga-country": {
       "version": "3.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "enums",
         "foreign",
@@ -10454,6 +11048,7 @@
     },
     "yoga-docker-compose": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "newtype",
@@ -10465,6 +11060,7 @@
     },
     "yoga-dynamodb": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -10483,6 +11079,7 @@
     },
     "yoga-elasticsearch": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "datetime",
@@ -10500,6 +11097,7 @@
     },
     "yoga-fastify": {
       "version": "0.5.4",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arrays",
@@ -10527,6 +11125,7 @@
     },
     "yoga-fastify-om": {
       "version": "0.4.7",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "console",
@@ -10560,6 +11159,7 @@
     },
     "yoga-fetch": {
       "version": "1.0.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -10577,6 +11177,7 @@
     },
     "yoga-fetch-om": {
       "version": "0.8.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arraybuffer-types",
@@ -10606,6 +11207,7 @@
     },
     "yoga-http-api": {
       "version": "0.3.4",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arraybuffer-types",
@@ -10638,6 +11240,7 @@
     },
     "yoga-jaeger": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "datetime",
@@ -10658,6 +11261,7 @@
     },
     "yoga-json": {
       "version": "5.2.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -10697,6 +11301,7 @@
     },
     "yoga-language": {
       "version": "1.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "enums",
         "foreign",
@@ -10710,6 +11315,7 @@
     },
     "yoga-next-fastify": {
       "version": "0.2.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -10724,6 +11330,7 @@
     },
     "yoga-om": {
       "version": "2.2.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-retry",
@@ -10756,6 +11363,7 @@
     },
     "yoga-om-layer": {
       "version": "2.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-retry",
@@ -10785,6 +11393,7 @@
     },
     "yoga-om-strom": {
       "version": "0.4.3",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arrays",
@@ -10816,6 +11425,7 @@
     },
     "yoga-om-workerbees": {
       "version": "0.1.2",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arraybuffer-types",
@@ -10843,6 +11453,7 @@
     },
     "yoga-opentelemetry": {
       "version": "0.2.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "datetime",
@@ -10863,6 +11474,7 @@
     },
     "yoga-options": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "identity",
         "literals",
@@ -10874,6 +11486,7 @@
     },
     "yoga-pino": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "foreign-object",
@@ -10885,6 +11498,7 @@
     },
     "yoga-postgres": {
       "version": "6.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arrays",
@@ -10906,6 +11520,7 @@
     },
     "yoga-react": {
       "version": "1.0.2",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "prelude",
@@ -10917,6 +11532,7 @@
     },
     "yoga-react-dom": {
       "version": "2.0.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "datetime",
         "effect",
@@ -10940,6 +11556,7 @@
     },
     "yoga-react-native": {
       "version": "0.2.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -10961,6 +11578,7 @@
     },
     "yoga-react-om": {
       "version": "0.2.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "effect",
@@ -10982,6 +11600,7 @@
     },
     "yoga-redis": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "datetime",
@@ -10998,6 +11617,7 @@
     },
     "yoga-shadcn": {
       "version": "1.0.5",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arrays",
         "effect",
@@ -11021,6 +11641,7 @@
     },
     "yoga-sql-types": {
       "version": "0.2.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -11050,6 +11671,7 @@
     },
     "yoga-sqlite": {
       "version": "0.3.4",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "arraybuffer-types",
@@ -11086,6 +11708,7 @@
     },
     "yoga-sse": {
       "version": "0.1.1",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "effect",
         "foreign",
@@ -11096,6 +11719,7 @@
     },
     "yoga-subtlecrypto": {
       "version": "0.1.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "aff-promise",
@@ -11114,6 +11738,7 @@
     },
     "yoga-test-docker": {
       "version": "0.1.2",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "aff",
         "datetime",
@@ -11126,6 +11751,7 @@
     },
     "yoga-timezone": {
       "version": "1.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "datetime",
         "enums",
@@ -11143,6 +11769,7 @@
     },
     "yoga-tree": {
       "version": "1.0.0",
+      "owner": "rowtype-yoga",
       "dependencies": [
         "arrays",
         "control",
@@ -11157,6 +11784,7 @@
     },
     "yoga-tree-svg": {
       "version": "0.1.0",
+      "owner": "shamansir",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -11186,6 +11814,7 @@
     },
     "yoga-tree-utils": {
       "version": "1.0.0",
+      "owner": "shamansir",
       "dependencies": [
         "arrays",
         "bifunctors",
@@ -11209,6 +11838,7 @@
     },
     "z3": {
       "version": "0.0.2",
+      "owner": "gbagan",
       "dependencies": [
         "aff",
         "arrays",
@@ -11229,6 +11859,7 @@
     },
     "zipperarray": {
       "version": "2.0.0",
+      "owner": "jamieyung",
       "dependencies": [
         "arrays",
         "control",

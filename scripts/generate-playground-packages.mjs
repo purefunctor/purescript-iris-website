@@ -56,10 +56,13 @@ while (queue.length > 0) {
     .map((line) => JSON.parse(line))
     .find((manifest) => manifest.version === version);
   if (!manifest) throw new Error(`${name}@${version} is missing from the Registry index`);
-  const published = readJson(join(registry, "metadata", `${name}.json`)).published[version];
+  const metadata = readJson(join(registry, "metadata", `${name}.json`));
+  const published = metadata.published[version];
   if (!published) throw new Error(`${name}@${version} has no published metadata`);
   const dependencies = Object.keys(manifest.dependencies ?? {}).sort();
-  packages[name] = { version, dependencies, integrity: published.hash, bytes: published.bytes };
+  // The playground's core is what the `purescript` and `purescript-contrib` organizations publish.
+  const owner = metadata.location.githubOwner ?? null;
+  packages[name] = { version, owner, dependencies, integrity: published.hash, bytes: published.bytes };
   queue.push(...dependencies);
 }
 
