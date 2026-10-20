@@ -14,7 +14,7 @@ breakpoints = StyleX.defineConsts
   , from641To800: "@media (min-width: 641px) and (max-width: 800px)"
   -- Imported queries bypass StyleX's overlap normalization. Keep cases for one property
   -- disjoint, with a strict bound rather than a fractional min-width browsers may round.
-  , above720To960: "@media (720px < width <= 960px)"
+  , above720To1160: "@media (720px < width <= 1160px)"
   , above800To1160: "@media (800px < width <= 1160px)"
   , above960To1160: "@media (960px < width <= 1160px)"
   }

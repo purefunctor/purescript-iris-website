@@ -16,7 +16,7 @@ data Page = GettingStarted | Installation | LanguageServer | Formatting | Module
 
 derive instance Eq Page
 
--- | Pages in header navigation and previous/next order. The compiler README links to these
+-- | Pages in navigation and previous/next order. The compiler README links to these
 -- | routes.
 pages :: Array Page
 pages = [ GettingStarted, Installation, LanguageServer, Formatting, ModuleMetadata ]
@@ -51,126 +51,55 @@ type Links =
   , contentClassName :: String
   }
 
-foreign import pageNavigationImpl ::
-  ReactComponent { className :: String, label :: String, content :: JSX }
-
 foreign import sectionNavigationImpl ::
   ReactComponent { sections :: Array SectionLink, links :: Links }
 
-foreign import sectionMenuImpl ::
+foreign import navigationBarImpl ::
   ReactComponent
     { sections :: Array SectionLink
     , links :: Links
-    , rootClassName :: String
-    , triggerClassName :: String
-    , labelClassName :: String
-    , currentClassName :: String
-    , iconClassName :: String
-    , popoverClassName :: String
-    , dialogClassName :: String
-    , headingClassName :: String
-    , resources :: JSX
-    }
-
-foreign import sectionSidebarImpl ::
-  ReactComponent
-    { sections :: Array SectionLink
-    , links :: Links
-    , rootClassName :: String
-    , buttonClassName :: String
-    , closeClassName :: String
-    , overlayClassName :: String
-    , panelClassName :: String
-    , dialogClassName :: String
-    , labelClassName :: String
-    , resources :: JSX
+    , pages :: JSX
+    , classes ::
+        { bar :: String
+        , pagesTrigger :: String
+        , pagesIcon :: String
+        , sectionsTrigger :: String
+        , label :: String
+        , current :: String
+        , chevron :: String
+        , popover :: String
+        , pagesPopover :: String
+        , dialog :: String
+        }
     }
 
 fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
 fadeOut = StyleX.keyframes { from: { opacity: 1 }, to: { opacity: 0 } }
-slideIn =
-  StyleX.keyframes { from: { transform: "translateX(-100%)" }, to: { transform: "translateX(0)" } }
-slideOut =
-  StyleX.keyframes { from: { transform: "translateX(0)" }, to: { transform: "translateX(-100%)" } }
 
 styles = StyleX.create
   { page: { fontSize: 16, lineHeight: 1.75, color: "var(--text-secondary)" }
-  -- On narrow screens the page links scroll within the header, out to the viewport's edge.
-  , pageNavigation:
+  -- The header's links end where the rail's text does, matching the logo on the other side.
+  , headerLinks:
       { display: "flex"
-      , position: "relative"
       , alignSelf: "stretch"
-      , minWidth: 0
-      , marginInlineEnd: "calc(-1 * var(--gutter))"
-      , overflowX: "auto"
-      , scrollbarWidth: "none"
-      , maskImage:
-          { default: "none"
-          , "[data-fade=start]": "linear-gradient(to right, transparent, black 48px)"
-          , "[data-fade=end]": "linear-gradient(to left, transparent, black 48px)"
-          , "[data-fade=both]":
-              "linear-gradient(to right, transparent, black 48px, black calc(100% - 48px), transparent)"
-          }
+      , flexShrink: 0
+      , marginInlineStart: "auto"
+      , marginInlineEnd: -16
       }
-  , menu:
-      { display:
-          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo720 "block" ]
-      , position: "sticky"
-      , top: "var(--nav-height)"
-      , zIndex: 15
-      , backgroundColor: "var(--granite-900)"
-      }
-  , menuTrigger:
-      { display: "flex"
-      , alignItems: "center"
-      , gap: 12
-      , width: "100%"
-      , height: 48
-      , paddingInline: "var(--gutter)"
-      , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
-      , color: "var(--text-primary)"
-      , cursor: "default"
-      , fontSize: 14
-      , textAlign: "start"
-      , outlineColor: "var(--focus-ring)"
-      , outlineOffset: -2
-      }
-  , menuLabel: { flexShrink: 0, fontWeight: 600 }
-  , menuCurrent:
-      { minWidth: 0
-      , overflow: "hidden"
-      , textOverflow: "ellipsis"
-      , whiteSpace: "nowrap"
-      , color: "var(--text-tertiary)"
-      }
-  , menuIcon:
-      { flexShrink: 0, marginInlineStart: "auto", fontSize: 16, color: "var(--text-tertiary)" }
-  , popover:
-      { width: "var(--trigger-width)"
-      , overflowY: "auto"
-      , backgroundColor: "var(--granite-900)"
-      , boxShadow: "0 28px 40px -20px oklch(0% 0 0 / 70%)"
-      , outline: "none"
-      , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
-      , animationDuration: { default: "140ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
-      }
-  , popoverDialog:
-      { paddingInline: "calc(var(--gutter) - 12px)"
-      , paddingBlockStart: 8
-      , paddingBlockEnd: 16
-      , outline: "none"
-      }
+  -- Desktop frames the article with two rails of equal width. Tablets keep the page rail and move
+  -- the sections into a bar above the article; phones move both into that bar.
   , layout:
       { display: "grid"
-      , gridTemplateColumns: StyleX.conditionalValue "var(--rail-width) minmax(0, 1fr)"
-          [ StyleX.conditionalCase breakpoints.above720To960 "64px minmax(0, 1fr)"
-          , StyleX.conditionalCase breakpoints.upTo720 "minmax(0, 1fr)"
-          ]
+      , gridTemplateColumns:
+          StyleX.conditionalValue "var(--rail-width) minmax(0, 1fr) var(--rail-width)"
+            [ StyleX.conditionalCase breakpoints.above720To1160 "var(--rail-width) minmax(0, 1fr)"
+            , StyleX.conditionalCase breakpoints.upTo720 "minmax(0, 1fr)"
+            ]
       , alignItems: "start"
       }
   , rail:
       { display:
-          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
+          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       , position: "sticky"
       , top: "var(--nav-height)"
       , height: "calc(100dvh - var(--nav-height))"
@@ -180,52 +109,79 @@ styles = StyleX.create
       , paddingBlockStart: 64
       , paddingBlockEnd: 32
       }
-  -- On tablets the rail collapses to a floating button, in line with the brand, that slides it out
-  -- over the article.
-  , collapsedRail:
-      { display: StyleX.conditionalValue "none"
-          [ StyleX.conditionalCase breakpoints.above720To960 "block" ]
+  , sectionRail:
+      { display:
+          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo1160 "none" ]
+      }
+  , column: { minWidth: 0 }
+  , bar:
+      { display:
+          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo1160 "flex" ]
       , position: "sticky"
       , top: "var(--nav-height)"
-      , height: "calc(100dvh - var(--nav-height))"
-      , paddingInlineStart: "var(--gutter)"
-      , paddingBlockStart: 16
+      , zIndex: 15
+      , height: 48
+      , backgroundColor: "var(--granite-900)"
       }
-  , sidebarButton:
-      { display: "inline-flex"
+  , trigger:
+      { display: "flex"
       , alignItems: "center"
-      , justifyContent: "center"
-      , width: 40
-      , height: 40
-      , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
-      , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
-      , cursor: "default"
-      , fontSize: 18
-      , outlineColor: "var(--focus-ring)"
-      }
-  , sidebarClose: { marginInlineStart: 12, marginBlockEnd: 32 }
-  , sidebarOverlay:
-      { position: "fixed"
-      , insetBlockStart: "var(--nav-height)"
-      , insetBlockEnd: 0
-      , insetInline: 0
-      , zIndex: 40
-      , display: "flex"
-      , backgroundColor: "var(--overlay-scrim)"
-      , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
-      , animationDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
-      }
-  , sidebarPanel:
-      { width: "var(--rail-width)"
+      , gap: 12
       , height: "100%"
+      , paddingInline: 16
+      , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
+      , color: "var(--text-primary)"
+      , cursor: "default"
+      , fontSize: 14
+      , textAlign: "start"
+      , outlineColor: "var(--focus-ring)"
+      , outlineOffset: -2
+      }
+  -- The bar's text lines up with the article's, which uses the same clamped gutter.
+  , pagesTrigger:
+      { display:
+          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo720 "flex" ]
+      , flexShrink: 0
+      , gap: 8
+      , paddingInlineStart: "clamp(24px, 4.5vw, 72px)"
+      , borderInlineEndColor: "var(--border-subtle)"
+      , borderInlineEndStyle: "solid"
+      , borderInlineEndWidth: 1
+      }
+  , sectionsTrigger:
+      { flexGrow: 1
+      , minWidth: 0
+      , paddingInlineStart: StyleX.conditionalValue "clamp(24px, 4.5vw, 72px)"
+          [ StyleX.conditionalCase breakpoints.upTo720 "16px" ]
+      , paddingInlineEnd: "clamp(24px, 4.5vw, 72px)"
+      }
+  , barLabel: { flexShrink: 0, fontWeight: 600 }
+  , barCurrent:
+      { minWidth: 0
+      , overflow: "hidden"
+      , textOverflow: "ellipsis"
+      , whiteSpace: "nowrap"
+      , color: "var(--text-tertiary)"
+      }
+  , barIcon: { flexShrink: 0, fontSize: 16, color: "var(--text-tertiary)" }
+  , chevron: { marginInlineStart: "auto" }
+  , popover:
+      { width: "var(--trigger-width)"
       , overflowY: "auto"
       , backgroundColor: "var(--granite-900)"
-      , animationName: { default: "none", "[data-entering]": slideIn, "[data-exiting]": slideOut }
-      , animationDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
-      , animationTimingFunction: "var(--ease-out)"
+      , boxShadow: "0 28px 40px -20px oklch(0% 0 0 / 70%)"
+      , outline: "none"
+      , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
+      , animationDuration: { default: "140ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
       }
-  , sidebarDialog:
-      { paddingInline: 12, paddingBlockStart: 16, paddingBlockEnd: 32, outline: "none" }
+  -- The page list covers the article below the bar, like a page of its own.
+  , pagesPopover: { height: "calc(100dvh - var(--nav-height) - 48px)" }
+  , popoverDialog:
+      { paddingInline: "calc(clamp(24px, 4.5vw, 72px) - 12px)"
+      , paddingBlockStart: 8
+      , paddingBlockEnd: 16
+      , outline: "none"
+      }
   , label:
       { fontSize: 13
       , fontWeight: 600
@@ -233,7 +189,6 @@ styles = StyleX.create
       , paddingInline: 12
       , marginBlockEnd: 10
       }
-  , popoverLabel: { marginBlockStart: 20 }
   , links: { display: "flex", flexDirection: "column", gap: 2, marginBlockEnd: 32 }
   , link:
       { position: "relative"
@@ -252,7 +207,7 @@ styles = StyleX.create
       , textDecoration: "none"
       , outlineColor: "var(--focus-ring)"
       }
-  -- Keep the regular weight so marking a section never rewraps its title.
+  -- Keep the regular weight so marking a page or section never rewraps its title.
   , current:
       { color: "var(--text-primary)"
       , textDecorationLine: "underline"
@@ -265,9 +220,7 @@ styles = StyleX.create
   -- Text, terminals and code blocks share one 72ch measure. Text grows on wide screens so the
   -- article can widen without longer lines.
   , article:
-      { justifySelf: "center"
-      , width: "100%"
-      , minWidth: 0
+      { marginInline: "auto"
       , maxWidth: "calc(72ch + 2 * clamp(24px, 4.5vw, 72px))"
       , paddingInline: "clamp(24px, 4.5vw, 72px)"
       , fontSize: "clamp(16px, 0.25vw + 12.4px, 18px)"
@@ -285,11 +238,11 @@ styles = StyleX.create
       }
   , intro:
       { fontSize: "1.1875em", color: "var(--text-secondary)", lineHeight: 1.65, marginBlockEnd: 48 }
-  -- Clear the sticky header, and on narrow screens the section menu below it.
+  -- Clear the sticky header, and below the desktop layout the navigation bar under it.
   , section:
       { marginBlockEnd: 48
       , scrollMarginTop:
-          StyleX.conditionalValue 32 [ StyleX.conditionalCase breakpoints.upTo720 80 ]
+          StyleX.conditionalValue 32 [ StyleX.conditionalCase breakpoints.upTo1160 80 ]
       }
   , heading:
       { fontSize: "1.5625em"
@@ -344,56 +297,55 @@ documentation :: { page :: Page, intro :: String, sections :: Array Section } ->
 documentation { page, intro, sections } = DOM.div styleProps.page
   [ DOM.a { className: styleProps.skip.className, href: "#content" } "Skip to content"
   , SiteNav.siteHeader { contained: false }
-      [ element pageNavigationImpl
-          { className: styleProps.pageNavigation.className
-          , label: "Documentation"
-          , content: fragment (map pageLink pages)
-          }
+      [ DOM.nav { className: styleProps.headerLinks.className, "aria-label": "Site" }
+          [ SiteNav.headerLink { href: "/playground/", label: "Playground", current: false }
+          , SiteNav.headerLink
+              { href: "https://github.com/purefunctor/purescript-iris"
+              , label: "GitHub"
+              , current: false
+              }
+          ]
       ]
-  , element sectionMenuImpl
-      { sections: sectionLinks
-      , links
-      , rootClassName: styleProps.menu.className
-      , triggerClassName: styleProps.menuTrigger.className
-      , labelClassName: styleProps.menuLabel.className
-      , currentClassName: styleProps.menuCurrent.className
-      , iconClassName: styleProps.menuIcon.className
-      , popoverClassName: styleProps.popover.className
-      , dialogClassName: styleProps.popoverDialog.className
-      , headingClassName: (StyleX.props [ styles.label, styles.popoverLabel ]).className
-      , resources
-      }
   , DOM.div styleProps.layout
-      [ DOM.aside styleProps.rail
+      [ DOM.aside styleProps.rail pageNavigation
+      , DOM.div styleProps.column
+          [ element navigationBarImpl
+              { sections: sectionLinks
+              , links
+              , pages: pageNavigation
+              , classes:
+                  { bar: styleProps.bar.className
+                  , pagesTrigger: (StyleX.props [ styles.trigger, styles.pagesTrigger ]).className
+                  , pagesIcon: styleProps.barIcon.className
+                  , sectionsTrigger:
+                      (StyleX.props [ styles.trigger, styles.sectionsTrigger ]).className
+                  , label: styleProps.barLabel.className
+                  , current: styleProps.barCurrent.className
+                  , chevron: (StyleX.props [ styles.barIcon, styles.chevron ]).className
+                  , popover: styleProps.popover.className
+                  , pagesPopover: (StyleX.props [ styles.popover, styles.pagesPopover ]).className
+                  , dialog: styleProps.popoverDialog.className
+                  }
+              }
+          , DOM.main { className: styleProps.article.className, id: "content", tabIndex: -1 }
+              [ DOM.h1 styleProps.title (pageTitle page)
+              , DOM.p styleProps.intro intro
+              , DOM.div {} (map section sections)
+              , DOM.footer styleProps.footer
+                  [ DOM.nav
+                      { className: styleProps.pager.className
+                      , "aria-label": "Previous and next pages"
+                      }
+                      (pagerLink "Previous" false (offset (-1)) <> pagerLink "Next" true (offset 1))
+                  , DOM.p styleProps.notice
+                      "Iris is in alpha. Commands and APIs may change between releases."
+                  ]
+              ]
+          ]
+      , DOM.aside (StyleX.props [ styles.rail, styles.sectionRail ])
           [ DOM.nav { "aria-label": "On this page" }
               [ DOM.p styleProps.label "On this page"
               , element sectionNavigationImpl { sections: sectionLinks, links }
-              ]
-          , DOM.p styleProps.label "Resources"
-          , resources
-          ]
-      , element sectionSidebarImpl
-          { sections: sectionLinks
-          , links
-          , rootClassName: styleProps.collapsedRail.className
-          , buttonClassName: styleProps.sidebarButton.className
-          , closeClassName: (StyleX.props [ styles.sidebarButton, styles.sidebarClose ]).className
-          , overlayClassName: styleProps.sidebarOverlay.className
-          , panelClassName: styleProps.sidebarPanel.className
-          , dialogClassName: styleProps.sidebarDialog.className
-          , labelClassName: styleProps.label.className
-          , resources
-          }
-      , DOM.main { className: styleProps.article.className, id: "content", tabIndex: -1 }
-          [ DOM.h1 styleProps.title (pageTitle page)
-          , DOM.p styleProps.intro intro
-          , DOM.div {} (map section sections)
-          , DOM.footer styleProps.footer
-              [ DOM.nav
-                  { className: styleProps.pager.className, "aria-label": "Previous and next pages" }
-                  (pagerLink "Previous" false (offset (-1)) <> pagerLink "Next" true (offset 1))
-              , DOM.p styleProps.notice
-                  "Iris is in alpha. Commands and APIs may change between releases."
               ]
           ]
       ]
@@ -407,8 +359,19 @@ documentation { page, intro, sections } = DOM.div styleProps.page
     , canvasClassName: NavigationLink.classNames.canvas
     , contentClassName: NavigationLink.classNames.content
     }
-  pageLink entry =
-    SiteNav.headerLink { href: pageHref entry, label: pageTitle entry, current: entry == page }
+  pageNavigation = DOM.nav { "aria-label": "Documentation" }
+    [ DOM.p styleProps.label "Pages"
+    , DOM.div styleProps.links (map pageLink pages)
+    , DOM.p styleProps.label "Resources"
+    , resources
+    ]
+  pageLink entry = NavigationLink.navigationLink
+    { href: pageHref entry
+    , className:
+        (StyleX.props [ styles.link, StyleX.conditional (entry == page) styles.current ]).className
+    , current: entry == page
+    , content: DOM.text (pageTitle entry)
+    }
   offset by = findIndex (_ == page) pages >>= \index -> pages !! (index + by)
   pagerLink label next = maybe [] \entry ->
     [ DOM.a
