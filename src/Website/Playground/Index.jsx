@@ -237,7 +237,6 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
       onPointerDown: (event) => {
         if (event.button !== 0) return;
         event.preventDefault();
-        event.currentTarget.focus();
         event.currentTarget.setPointerCapture(event.pointerId);
         document.documentElement.style.cursor = vertical ? "row-resize" : "col-resize";
         setDrag({ bounds: event.currentTarget.parentElement.getBoundingClientRect(), size, open });
