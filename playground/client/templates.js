@@ -1,11 +1,29 @@
 // Projects that the sidebar offers as starting points. The first is the default project, which a
 // new visit opens and Reset restores. Each one is a complete project that loads in place of the
-// current one. The program's frame carries the site's tokens and fonts, so the styles below only
-// arrange elements and reuse the playground's raised keys.
+// current one. The program's frame gives it the site's background, text color and fonts; every
+// other color is written out in the module, so the code reads on its own.
+
+const COLORS = String.raw`-- The program runs in its own document, so it brings its own colors: the playground's.
+colors =
+  { surface1: "oklch(22% 0.005 255)"
+  , surface2: "oklch(25% 0.006 255)"
+  , surface3: "oklch(30.5% 0.007 255)"
+  , textMuted: "oklch(66% 0.008 255)"
+  , border: "oklch(91.5% 0.004 255 / 8%)"
+  , accent: "oklch(71% 0.19 44)"
+  , accentHover: "oklch(79% 0.15 52)"
+  , accentPress: "oklch(63% 0.2 38)"
+  , textOnAccent: "oklch(16% 0.004 255)"
+  , accentShadow: "0 1px 0 oklch(88% 0.08 58 / 45%)"
+  , danger: "oklch(76% 0.13 28)"
+  , focusRing: "0 0 0 2px oklch(19.2% 0.005 255), 0 0 0 4px oklch(86% 0.13 95)"
+  , easeOut: "cubic-bezier(0.2, 0.7, 0.2, 1)"
+  }`;
 
 const KEY = String.raw`  , key:
-      { backgroundColor:
-          { default: "var(--surface-2)", ":hover": "var(--surface-3)", ":active": "var(--surface-1)" }
+      { alignItems: "center"
+      , backgroundColor:
+          { default: colors.surface2, ":hover": colors.surface3, ":active": colors.surface1 }
       , backgroundImage: "linear-gradient(oklch(100% 0 0 / 12%), oklch(0% 0 0 / 10%))"
       , borderRadius: 999
       , borderStyle: "none"
@@ -13,11 +31,14 @@ const KEY = String.raw`  , key:
           { default:
               "inset 0 1px 0 oklch(100% 0 0 / 22%), inset 0 -1px 0 oklch(0% 0 0 / 35%), 0 1px 2px oklch(0% 0 0 / 55%)"
           , ":active": "inset 0 1px 3px oklch(0% 0 0 / 45%)"
-          , ":focus-visible": "var(--shadow-focus)"
+          , ":focus-visible": colors.focusRing
           }
       , cursor: "default"
+      , display: "inline-flex"
       , fontWeight: 600
+      , gap: 6
       , height: 32
+      , justifyContent: "center"
       -- As wide as the playground's Run key, which reads as a key rather than an icon.
       , minWidth: 72
       , outlineStyle: "none"
@@ -26,7 +47,9 @@ const KEY = String.raw`  , key:
       , transform: { default: "none", ":active": "translateY(1px)" }
       }`;
 
-const COUNTER_STYLES = String.raw`-- The number rises in whenever it changes; each value is a new element, so it plays again.
+const COUNTER_STYLES = String.raw`${COLORS}
+
+-- The number rises in whenever it changes; each value is a new element, so it plays again.
 bump = StyleX.keyframes
   { from: { opacity: 0, transform: "translateY(45%) scale(0.8)" }
   , to: { opacity: 1, transform: "none" }
@@ -48,7 +71,7 @@ styles = StyleX.create
   , count:
       { animationDuration: "240ms"
       , animationName: { default: bump, "@media (prefers-reduced-motion: reduce)": "none" }
-      , animationTimingFunction: "var(--ease-out)"
+      , animationTimingFunction: colors.easeOut
       , display: "inline-block"
       , fontSize: 20
       , fontWeight: 600
@@ -60,24 +83,26 @@ ${KEY}
   -- The playground's Run key: orange, with an engraved label.
   , accent:
       { backgroundColor:
-          { default: "var(--accent)", ":hover": "var(--accent-hover)", ":active": "var(--accent-press)" }
-      , color: "var(--text-on-accent)"
-      , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
+          { default: colors.accent, ":hover": colors.accentHover, ":active": colors.accentPress }
+      , color: colors.textOnAccent
+      , textShadow: colors.accentShadow
       }
   }
 
 styleProps = StyleX.recordProps styles`;
 
-const TODO_STYLES = String.raw`styles = StyleX.create
+const TODO_STYLES = String.raw`${COLORS}
+
+styles = StyleX.create
   { page: { display: "flex", flexDirection: "column", gap: 12, maxWidth: 480, padding: 24 }
   , title: { fontSize: 16, fontWeight: 600, margin: 0 }
   , form: { display: "flex", gap: 8 }
   , input:
-      { backgroundColor: "var(--surface-1)"
+      { backgroundColor: colors.surface1
       , borderRadius: 999
       , borderStyle: "none"
       , boxShadow:
-          { default: "inset 0 1px 2px oklch(0% 0 0 / 45%)", ":focus-visible": "var(--shadow-focus)" }
+          { default: "inset 0 1px 2px oklch(0% 0 0 / 45%)", ":focus-visible": colors.focusRing }
       , flexGrow: 1
       , height: 32
       , minWidth: 0
@@ -88,7 +113,7 @@ ${KEY}
   , list: { listStyle: "none", margin: 0, padding: 0 }
   , item:
       { alignItems: "center"
-      , borderBlockEndColor: "var(--border-subtle)"
+      , borderBlockEndColor: colors.border
       , borderBlockEndStyle: "solid"
       , borderBlockEndWidth: 1
       , display: "flex"
@@ -96,20 +121,24 @@ ${KEY}
       , minHeight: 40
       }
   , label: { alignItems: "center", display: "flex", flexGrow: 1, gap: 10, minWidth: 0 }
-  , checkbox: { accentColor: "var(--accent)", margin: 0 }
-  , done: { color: "var(--text-tertiary)", textDecorationLine: "line-through" }
+  , checkbox: { accentColor: colors.accent, margin: 0 }
+  , done: { color: colors.textMuted, textDecorationLine: "line-through" }
   , remove:
-      { backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-3)" }
+      { alignItems: "center"
+      , backgroundColor: { default: "transparent", ":hover": colors.surface2 }
       , borderRadius: 999
       , borderStyle: "none"
-      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
-      , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
+      , boxShadow: { default: "none", ":focus-visible": colors.focusRing }
+      , color: { default: colors.textMuted, ":hover": colors.danger }
       , cursor: "default"
-      , height: 24
+      , display: "inline-flex"
+      , height: 28
+      , justifyContent: "center"
       , outlineStyle: "none"
-      , width: 24
+      , width: 28
       }
-  , remaining: { color: "var(--text-tertiary)", fontSize: 12, margin: 0 }
+  , icon: { flexShrink: 0, height: 16, width: 16 }
+  , remaining: { color: colors.textMuted, fontSize: 12, margin: 0 }
   }
 
 styleProps = StyleX.recordProps styles`;
@@ -254,6 +283,30 @@ ${TODO_STYLES}
 
 ${HALOGEN_STYLE}
 
+-- | Lucide's plus and trash-2 paths. Programs cannot load icon packages, so icons are inline SVG.
+plusIcon :: String
+plusIcon = "M5 12h14m-7-7v14"
+
+trashIcon :: String
+trashIcon =
+  "M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+
+icon :: forall w i. String -> HH.HTML w i
+icon d = HH.elementNS svg (HH.ElemName "svg")
+  -- SVG elements take a class attribute; their className property is read-only.
+  [ HP.attr (HH.AttrName "class") styleProps.icon.className
+  , HP.attr (HH.AttrName "viewBox") "0 0 24 24"
+  , HP.attr (HH.AttrName "fill") "none"
+  , HP.attr (HH.AttrName "stroke") "currentColor"
+  , HP.attr (HH.AttrName "stroke-width") "2"
+  , HP.attr (HH.AttrName "stroke-linecap") "round"
+  , HP.attr (HH.AttrName "stroke-linejoin") "round"
+  , HP.attr (HH.AttrName "aria-hidden") "true"
+  ]
+  [ HH.elementNS svg (HH.ElemName "path") [ HP.attr (HH.AttrName "d") d ] [] ]
+  where
+  svg = HH.Namespace "http://www.w3.org/2000/svg"
+
 type Todo = { key :: Int, text :: String, done :: Boolean }
 
 type State = { todos :: Array Todo, draft :: String, next :: Int }
@@ -283,7 +336,7 @@ todos = H.mkComponent
             , HP.value state.draft
             , HE.onValueInput SetDraft
             ]
-        , HH.button [ style styleProps.key, HP.type_ HP.ButtonSubmit ] [ HH.text "Add" ]
+        , HH.button [ style styleProps.key, HP.type_ HP.ButtonSubmit ] [ icon plusIcon, HH.text "Add" ]
         ]
     , HH.ul [ style styleProps.list ] (map item state.todos)
     , HH.p [ style styleProps.remaining ]
@@ -303,7 +356,7 @@ todos = H.mkComponent
         ]
     , HH.button
         [ style styleProps.remove, HP.title "Remove", HE.onClick \_ -> Remove todo.key ]
-        [ HH.text "×" ]
+        [ icon trashIcon ]
     ]
 
   handleAction = case _ of
@@ -404,8 +457,10 @@ import Data.String (trim)
 import Effect (Effect)
 import Effect.Exception (throw)
 import Iris.StyleX as StyleX
-import React.Basic (keyed)
+import React.Basic (JSX, keyed)
+import Foreign.Object as Object
 import React.Basic.DOM as R
+import React.Basic.DOM.SVG as SVG
 import React.Basic.DOM.Events (preventDefault, targetValue)
 import React.Basic.Events (handler, handler_)
 import React.Basic.Hooks (Component, component, useState, (/\))
@@ -413,6 +468,27 @@ import React.Basic.Hooks as React
 ${REACT_ROOT_IMPORTS}
 
 ${TODO_STYLES}
+
+-- | Lucide's plus and trash-2 paths. Programs cannot load icon packages, so icons are inline SVG.
+plusIcon :: String
+plusIcon = "M5 12h14m-7-7v14"
+
+trashIcon :: String
+trashIcon =
+  "M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+
+icon :: String -> JSX
+icon d = SVG.svg
+  { className: styleProps.icon.className
+  , viewBox: "0 0 24 24"
+  , fill: "none"
+  , stroke: "currentColor"
+  , strokeWidth: "2"
+  , strokeLinecap: "round"
+  , strokeLinejoin: "round"
+  , _aria: Object.singleton "hidden" "true"
+  , children: [ SVG.path { d } ]
+  }
 
 type Todo = { key :: Int, text :: String, done :: Boolean }
 
@@ -457,7 +533,7 @@ mkTodos = component "Todos" \_ -> React.do
               { className: styleProps.remove.className
               , title: "Remove"
               , onClick: handler_ (remove todo.key)
-              , children: [ R.text "×" ]
+              , children: [ icon trashIcon ]
               }
           ]
       }
@@ -479,7 +555,7 @@ mkTodos = component "Todos" \_ -> React.do
                 , R.button
                     { className: styleProps.key.className
                     , type: "submit"
-                    , children: [ R.text "Add" ]
+                    , children: [ icon plusIcon, R.text "Add" ]
                     }
                 ]
             }

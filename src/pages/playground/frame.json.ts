@@ -5,10 +5,10 @@ import { layerOrder } from "#src/lib/inlineStyles";
 
 export const prerender = true;
 
-// The design system for the frame that playground programs run in, which is a separate document
-// without network access: the site's tokens, base styles for the elements programs render, and
-// its fonts. The runner sends this to every frame, so programs inherit the site's look, and their
-// StyleX styles can use its tokens. Base styles stay in the reset layer, below StyleX's layers.
+// The base look of the frame that playground programs run in, which is a separate document
+// without network access: the site's background, text color and fonts. It defines no tokens, so
+// a program's styles never depend on names it cannot see. The runner sends this to every frame;
+// base styles stay in the reset layer, below StyleX's layers.
 const FONTS = [
   { family: "Geist Variable", file: "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2" },
   {
@@ -18,19 +18,14 @@ const FONTS = [
 ];
 
 export const GET: APIRoute = async () => {
-  const global = await readFile(resolve("src/global.css"), "utf8");
-  // The token block is copied whole, since some values, such as data URLs, contain semicolons.
-  const start = global.indexOf(":root {");
-  const root = global.slice(start, global.indexOf("\n  }", start) + "\n  }".length);
   const css = `${layerOrder}
 @layer reset {
-  ${root}
   *, ::before, ::after { box-sizing: border-box; }
   html {
-    background-color: var(--granite-950);
-    color: var(--text-primary);
+    background-color: oklch(16% 0.004 255);
+    color: oklch(96.5% 0.002 255);
     color-scheme: dark;
-    font-family: var(--font-sans);
+    font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
     font-size: 14px;
     font-synthesis: none;
     line-height: 1.5;
@@ -38,7 +33,7 @@ export const GET: APIRoute = async () => {
   }
   body { margin: 0; }
   button, input, select, textarea { color: inherit; font: inherit; }
-  ::selection { background: var(--selection); }
+  ::selection { background: oklch(71% 0.19 44 / 30%); }
 }
 `;
   const fonts = await Promise.all(
