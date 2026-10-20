@@ -1,4 +1,5 @@
 // A small tokenizer for PureScript and JavaScript samples; returns lines of { kind, text } tokens.
+// Shell text has no pattern, so it stays plain.
 const keywords = {
   purescript: new Set("module where import data type newtype class instance derive let in case of if then else do ado forall foreign as hiding infixl infixr infix".split(" ")),
   javascript: new Set("const let var function return if else for while import export from default new class extends async await try catch throw typeof true false null undefined this".split(" ")),
@@ -35,6 +36,7 @@ function classify(language, match, source, end) {
 
 export const tokenizeImpl = language => code => {
   const source = code.replace(/\n$/, "");
+  if (!patterns[language]) return source.split("\n").map((line) => (line ? [{ kind: "text", text: line }] : []));
   const pattern = new RegExp(patterns[language].source, "g");
   const tokens = [];
   let last = 0;

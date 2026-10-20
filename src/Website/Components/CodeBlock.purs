@@ -17,7 +17,7 @@ type Token = { kind :: String, text :: String }
 
 foreign import tokenizeImpl :: String -> String -> Array (Array Token)
 
-data Language = PureScript | JavaScript | JSON
+data Language = PureScript | JavaScript | JSON | Shell
 
 data Surface = Flat | Glass
 
@@ -129,13 +129,13 @@ languageName = case _ of
   JavaScript -> "javascript"
   -- JSON values are JavaScript expressions, so the JavaScript tokenizer highlights them.
   JSON -> "javascript"
+  Shell -> "shell"
 
 codeBlock :: CodeBlock -> JSX
 codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =
   DOM.figure (StyleX.props [ styles.root, surfaceStyle surface ])
     [ DOM.figcaption styleProps.head
-        [ DOM.span styleProps.fileIcon
-            (element Icon.fileCode { "aria-hidden": true, focusable: false })
+        [ DOM.span styleProps.fileIcon (element icon { "aria-hidden": true, focusable: false })
         , DOM.span styleProps.filename filename
         , foldMap InfoButton.infoButton note
         , CopyButton.copyButton { label: "Copy " <> filename, size: CopyButton.Small, text: code }
@@ -146,6 +146,10 @@ codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =
         )
     ]
   where
+  icon = case language of
+    Shell -> Icon.squareTerminal
+    _ -> Icon.fileCode
+
   renderLine index tokens = DOM.span
     ( StyleX.props
         [ styles.line, StyleX.conditional (elem (index + 1) highlight) styles.highlighted ]

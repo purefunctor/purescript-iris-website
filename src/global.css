@@ -225,6 +225,14 @@
     font: inherit;
   }
 
+  /* Browsers set code elements in their generic monospace face, which they do not inherit. */
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-mono);
+  }
+
   button {
     background: none;
     border: 0;

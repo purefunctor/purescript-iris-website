@@ -2,38 +2,50 @@ module Website.Playground.Loading (loading) where
 
 import Prelude
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (toMaybe)
 import Effect (Effect)
 import Iris.StyleX as StyleX
-import React.Basic (JSX)
+import React.Basic (JSX, element)
 import React.Basic.Events (handler_)
-import Website.Breakpoints (breakpoints)
+import Website.Components.CodeBlock (Language(..), Surface(..), codeBlock)
+import Website.Components.Icon as Icon
+import Website.Components.Logo (logo)
+import Website.Playground.Button.Styles (buttonStyles)
 import Website.Playground.Types (State)
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
   -- Covers the workspace, whose editor host stays mounted underneath for the controller.
   { root:
-      { backgroundColor: "var(--bg-canvas)"
+      { alignItems: "center"
+      , backgroundColor: "var(--bg-canvas)"
       , display: "flex"
-      , flexDirection: "column"
       , inset: 0
-      , paddingBlock: "clamp(48px, 12vh, 140px)"
+      , justifyContent: "center"
       , paddingInline: "var(--gutter)"
       , position: "absolute"
       , zIndex: 1
       }
-  , content: { display: "flex", flexDirection: "column", gap: 28, maxWidth: 760, width: "100%" }
-  , heading:
-      { fontSize: "clamp(44px, 7vw, 88px)"
-      , fontWeight: 700
-      , letterSpacing: "-0.045em"
-      , lineHeight: 0.92
-      , margin: 0
-      , textWrap: "balance"
+  , content:
+      { alignItems: "center"
+      , display: "flex"
+      , flexDirection: "column"
+      , gap: 24
+      , maxWidth: 480
+      , width: "100%"
       }
-  , emphasis: { color: "var(--text-tertiary)", display: "block" }
+  , heading:
+      { alignItems: "center"
+      , display: "flex"
+      , fontSize: "clamp(32px, 5vw, 44px)"
+      , fontWeight: 600
+      , gap: "0.3em"
+      , letterSpacing: "-0.03em"
+      , lineHeight: 1
+      , margin: 0
+      }
+  , logo: { flexShrink: 0, height: "1em", width: "1em" }
   -- A native progress bar, so progress needs no inline style, which the site's policy would block
   -- on the server-rendered page.
   , progress:
@@ -42,7 +54,7 @@ styles = StyleX.create
       , borderStyle: "none"
       , color: "var(--accent)"
       , display: "block"
-      , height: 12
+      , height: 8
       , width: "100%"
       , "::-webkit-progress-bar": { backgroundColor: "var(--surface-2)" }
       , "::-webkit-progress-value":
@@ -56,54 +68,16 @@ styles = StyleX.create
   , figures:
       { color: "var(--text-secondary)"
       , display: "flex"
-      , flexWrap: "wrap"
       , fontFamily: "var(--font-mono)"
       , fontSize: 13
       , gap: 16
       , justifyContent: "space-between"
+      , marginTop: -12
+      , minHeight: "1.5em"
+      , width: "100%"
       }
-  , note:
-      { color: "var(--text-tertiary)"
-      , fontSize: 15
-      , lineHeight: 1.6
-      , margin: 0
-      , maxWidth: "56ch"
-      , textWrap: "pretty"
-      }
-  , error:
-      { backgroundColor: "var(--red-300)"
-      , color: "var(--granite-950)"
-      , fontFamily: "var(--font-mono)"
-      , fontSize: 13
-      , lineHeight: 1.6
-      , margin: 0
-      , overflowWrap: "anywhere"
-      , paddingBlock: 12
-      , paddingInline: 16
-      }
-  , retry:
-      { alignSelf: "flex-start"
-      , backgroundColor:
-          { default: "var(--accent)"
-          , ":hover": "var(--accent-hover)"
-          , ":active": "var(--accent-press)"
-          }
-      , borderRadius: 999
-      , borderStyle: "none"
-      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
-      , color: "var(--text-on-accent)"
-      , cursor: "default"
-      , fontFamily: "var(--font-sans)"
-      , fontSize: 14
-      , fontWeight: 600
-      , height: 40
-      , outline: { default: "revert", ":focus-visible": "none" }
-      , paddingInline: 20
-      }
-  , hiddenOnPhones:
-      { display:
-          StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
-      }
+  , error: { width: "100%" }
+  , icon: { display: "inline-flex", fontSize: 12 }
   }
 
 styleProps = StyleX.recordProps styles
@@ -116,11 +90,12 @@ loading state retry =
     [ DOM.div styleProps.content if state.phase == "failed" then failed else progress ]
   where
   packages = state.packages
-  packageSet = fromMaybe "" (toMaybe packages.packageSet)
+
+  heading text = DOM.h1 { className: styleProps.heading.className, id: "playground-loading" }
+    [ DOM.text text, logo styleProps.logo ]
 
   progress =
-    [ DOM.h1 { className: styleProps.heading.className, id: "playground-loading" }
-        [ DOM.text "Loading the ", DOM.span styleProps.emphasis "package set" ]
+    [ heading "Loading"
     , DOM.progress
         { className: styleProps.progress.className
         , "aria-label": "Packages downloaded"
@@ -128,33 +103,41 @@ loading state retry =
         , value: show packages.loaded
         }
         []
+    -- The worker reports the totals with its first message, so the row stays empty until then.
     , DOM.div styleProps.figures
-        [ DOM.span {}
-            if packages.total == 0
-            then "Starting…"
-            else show packages.loaded <> " of " <> show packages.total <> " packages"
-        , if packages.totalBytes == 0
-          then mempty
-          else DOM.span {}
-            (megabytes packages.bytes <> " of " <> megabytes packages.totalBytes <> " MB")
-        ]
-    , DOM.p styleProps.note
-        [ DOM.text "Every package in the PureScript Registry's package set"
-        , DOM.text (if packageSet == "" then "" else " " <> packageSet)
-        , DOM.text ", ready to import. "
-        , DOM.span styleProps.hiddenOnPhones
-            "Your browser keeps them, so later visits start sooner."
-        ]
+        if packages.total == 0
+        then []
+        else
+          [ DOM.span {} (show packages.loaded <> " of " <> show packages.total <> " packages")
+          , DOM.span {}
+              (megabytes packages.bytes <> " of " <> megabytes packages.totalBytes <> " MB")
+          ]
     ]
 
   failed =
-    [ DOM.h1 { className: styleProps.heading.className, id: "playground-loading" }
-        [ DOM.text "The playground ", DOM.span styleProps.emphasis "could not start" ]
-    , DOM.p styleProps.error (fromMaybe "Something went wrong." (toMaybe state.server.message))
-    , DOM.p styleProps.note
-        "Packages that finished downloading are kept, so trying again picks up where this stopped."
-    , DOM.button { className: styleProps.retry.className, onClick: handler_ retry, type: "button" }
-        "Try again"
+    [ heading "Could not load"
+    , DOM.div styleProps.error
+        [ codeBlock
+            { code: fromMaybe "Something went wrong." (toMaybe state.server.message)
+            , filename: "Error"
+            , highlight: []
+            , language: Shell
+            , lineNumbers: false
+            , note: Nothing
+            , surface: Flat
+            }
+        ]
+    , DOM.button
+        { className:
+            ( StyleX.props [ buttonStyles.action, buttonStyles.raised, buttonStyles.accent ]
+            ).className
+        , onClick: handler_ retry
+        , type: "button"
+        }
+        [ DOM.span styleProps.icon
+            (element Icon.rotateCcw { "aria-hidden": true, focusable: false })
+        , DOM.text "Try again"
+        ]
     ]
 
 -- | Bytes in megabytes, to one decimal place.
