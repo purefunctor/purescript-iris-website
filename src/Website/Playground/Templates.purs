@@ -14,14 +14,16 @@ styles = StyleX.create
       , borderBlockStartColor: "var(--border-subtle)"
       , borderBlockStartStyle: "solid"
       , borderBlockStartWidth: 1
-      , flexShrink: 0
-      , maxHeight: "45%"
+      -- Files and Templates share the sidebar's height equally, and each scrolls on its own.
+      , flexBasis: 0
+      , flexGrow: 1
+      , minHeight: 0
       , overflowY: "auto"
-      , paddingBlockEnd: 8
       }
   , header: { alignItems: "center", display: "flex", height: 36, paddingInlineStart: 14 }
   , title: { color: "var(--text-tertiary)", fontSize: 12, fontWeight: 600, margin: 0 }
-  , list: { listStyle: "none", margin: 0, padding: 0 }
+  , list:
+      { listStyle: "none", margin: 0, paddingBlockEnd: 8, paddingBlockStart: 0, paddingInline: 0 }
   , row:
       { backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
       , borderStyle: "none"
