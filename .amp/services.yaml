@@ -7,3 +7,5 @@ services:
     portals:
       - url: /docs/getting-started
         title: Documentation
+      - url: /playground
+        title: Playground

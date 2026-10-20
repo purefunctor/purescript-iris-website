@@ -88,7 +88,7 @@ See the [README](README.md) for prerequisites and the standard commands.
 
 ### Orb setup and preview
 
-- In an orb, `.agents/resume` starts the `website` service from `.amp/services.yaml`, which runs `pnpm dev` behind the Website and Documentation portals. Inspect it with `amp orb service status website` or `amp orb service logs website`, and restart it after configuration changes with `amp orb service restart website`. Never commit orb-specific URLs, such as the portal URLs in the gitignored `.amp/portals/`.
+- In an orb, `.agents/resume` starts the `website` service from `.amp/services.yaml`, which runs `pnpm dev` behind the Website, Documentation and Playground portals. Inspect it with `amp orb service status website` or `amp orb service logs website`, and restart it after configuration changes with `amp orb service restart website`. Never commit orb-specific URLs, such as the portal URLs in the gitignored `.amp/portals/`.
 - `.agents/setup` and the deploy workflow both install the latest stable Iris release with the reviewed `public/install.sh`. Do not pin either installation to a release version. Setup skips GitHub attestation verification with `IRIS_SKIP_ATTESTATION=1`, and `.github/workflows/deploy.yml` requires it.
 - Setup prepares development inputs only, so do not build production Astro output or start a persistent server there. Snapshots contain the installed compiler and PureScript output, so a cached orb keeps its compiler until setup runs again.
 - `pnpm prepare:dev` relies on Iris's incremental cache. Do not add a preparation fingerprint, a success stamp, or a Vite warmup script.
