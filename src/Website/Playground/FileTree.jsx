@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import ChevronRightIcon from "~icons/lucide/chevron-right";
 import FileIcon from "~icons/lucide/file";
 import FilePlusIcon from "~icons/lucide/file-plus";
+import PureScriptIcon from "~icons/simple-icons/purescript";
 import PencilIcon from "~icons/lucide/pencil";
 import TrashIcon from "~icons/lucide/trash-2";
 
@@ -156,7 +157,11 @@ export function fileTreeImpl({
           title={file.path}
           type="button"
         >
-          <FileIcon aria-hidden className={iconClassName} />
+          {file.path.endsWith(".purs") ? (
+            <PureScriptIcon aria-hidden className={iconClassName} />
+          ) : (
+            <FileIcon aria-hidden className={iconClassName} />
+          )}
           <span className={nameClassName}>{file.name}</span>
           {file.errors > 0 && (
             <span aria-label={`${file.errors} errors`} className={errorCountClassName}>
