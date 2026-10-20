@@ -1,6 +1,121 @@
 // Projects that the sidebar offers as starting points. The first is the default project, which a
 // new visit opens and Reset restores. Each one is a complete project that loads in place of the
-// current one.
+// current one. The program's frame carries the site's tokens and fonts, so the styles below only
+// arrange elements and reuse the playground's raised keys.
+
+const KEY = String.raw`  , key:
+      { backgroundColor:
+          { default: "var(--surface-2)", ":hover": "var(--surface-3)", ":active": "var(--surface-1)" }
+      , backgroundImage: "linear-gradient(oklch(100% 0 0 / 12%), oklch(0% 0 0 / 10%))"
+      , borderRadius: 999
+      , borderStyle: "none"
+      , boxShadow:
+          { default:
+              "inset 0 1px 0 oklch(100% 0 0 / 22%), inset 0 -1px 0 oklch(0% 0 0 / 35%), 0 1px 2px oklch(0% 0 0 / 55%)"
+          , ":active": "inset 0 1px 3px oklch(0% 0 0 / 45%)"
+          , ":focus-visible": "var(--shadow-focus)"
+          }
+      , cursor: "default"
+      , fontWeight: 600
+      , height: 32
+      , minWidth: 40
+      , outlineStyle: "none"
+      , paddingInline: 12
+      , textShadow: "0 -1px 0 oklch(0% 0 0 / 35%)"
+      , transform: { default: "none", ":active": "translateY(1px)" }
+      }`;
+
+const COUNTER_STYLES = String.raw`styles = StyleX.create
+  { page: { display: "flex", flexDirection: "column", gap: 12, padding: 24 }
+  , title: { fontSize: 16, fontWeight: 600, margin: 0 }
+  , row: { alignItems: "center", display: "flex", gap: 12 }
+  , count:
+      { fontFamily: "var(--font-mono)"
+      , fontSize: 16
+      , fontVariantNumeric: "tabular-nums"
+      , minWidth: "3ch"
+      , textAlign: "center"
+      }
+${KEY}
+  }
+
+styleProps = StyleX.recordProps styles`;
+
+const TODO_STYLES = String.raw`styles = StyleX.create
+  { page: { display: "flex", flexDirection: "column", gap: 12, maxWidth: 480, padding: 24 }
+  , title: { fontSize: 16, fontWeight: 600, margin: 0 }
+  , form: { display: "flex", gap: 8 }
+  , input:
+      { backgroundColor: "var(--surface-1)"
+      , borderRadius: 999
+      , borderStyle: "none"
+      , boxShadow:
+          { default: "inset 0 1px 2px oklch(0% 0 0 / 45%)", ":focus-visible": "var(--shadow-focus)" }
+      , flexGrow: 1
+      , height: 32
+      , minWidth: 0
+      , outlineStyle: "none"
+      , paddingInline: 14
+      }
+${KEY}
+  , list: { listStyle: "none", margin: 0, padding: 0 }
+  , item:
+      { alignItems: "center"
+      , borderBlockEndColor: "var(--border-subtle)"
+      , borderBlockEndStyle: "solid"
+      , borderBlockEndWidth: 1
+      , display: "flex"
+      , gap: 8
+      , minHeight: 40
+      }
+  , label: { alignItems: "center", display: "flex", flexGrow: 1, gap: 10, minWidth: 0 }
+  , checkbox: { accentColor: "var(--accent)", margin: 0 }
+  , done: { color: "var(--text-tertiary)", textDecorationLine: "line-through" }
+  , remove:
+      { backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-3)" }
+      , borderRadius: 999
+      , borderStyle: "none"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
+      , cursor: "default"
+      , height: 24
+      , outlineStyle: "none"
+      , width: 24
+      }
+  , remaining: { color: "var(--text-tertiary)", fontSize: 12, margin: 0 }
+  }
+
+styleProps = StyleX.recordProps styles`;
+
+const HALOGEN_IMPORTS = String.raw`import Effect (Effect)
+import Halogen as H
+import Halogen.Aff as HA
+import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
+import Halogen.VDom.Driver (runUI)
+import Iris.StyleX as StyleX`;
+
+const HALOGEN_STYLE = String.raw`-- | Halogen takes a StyleX class name as a class property.
+style :: forall r i. StyleX.Props -> HP.IProp (class :: String | r) i
+style { className } = HP.class_ (HH.ClassName className)`;
+
+const REACT_MAIN = (component) => String.raw`main :: Effect Unit
+main = do
+  -- The playground's frame offers #app as a mount point.
+  app <- getElementById "app" =<< (map toNonElementParentNode <<< document =<< window)
+  case app of
+    Nothing -> throw "There is no #app element."
+    Just element -> do
+      ${component} <- mk${component[0].toUpperCase()}${component.slice(1)}
+      root <- createRoot element
+      renderRoot root (${component} unit)`;
+
+const REACT_ROOT_IMPORTS = String.raw`import React.Basic.DOM.Client (createRoot, renderRoot)
+import Web.DOM.NonElementParentNode (getElementById)
+import Web.HTML (window)
+import Web.HTML.HTMLDocument (toNonElementParentNode)
+import Web.HTML.Window (document)`;
 
 export const TEMPLATES = [
   {
@@ -10,7 +125,7 @@ export const TEMPLATES = [
     files: [
       {
         path: "src/Main.purs",
-        text: `module Main where
+        text: String.raw`module Main where
 
 import Prelude
 
@@ -28,7 +143,7 @@ main = do
       },
       {
         path: "src/Greeting.purs",
-        text: `module Greeting (greet) where
+        text: String.raw`module Greeting (greet) where
 
 import Prelude
 
@@ -39,127 +154,37 @@ greet name = "Hello, " <> name <> "!"
     ],
   },
   {
-    id: "halogen",
+    id: "halogen-counter",
     name: "Halogen counter",
     description: "A Halogen component styled with StyleX",
     files: [
       {
         path: "src/Main.purs",
-        text: `module Main where
+        text: String.raw`module Main where
 
 import Prelude
 
-import Effect (Effect)
-import Halogen as H
-import Halogen.Aff as HA
-import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
-import Halogen.VDom.Driver (runUI)
-import Iris.StyleX as StyleX
+${HALOGEN_IMPORTS}
 
--- StyleX styles compile to class names and CSS when the project runs. The colors follow the
--- playground's own: granite neutrals, and raised keys lit from above that sink while pressed.
-styles = StyleX.create
-  { page:
-      { alignItems: "center"
-      , backgroundColor: "oklch(19.2% 0.005 255)"
-      , color: "oklch(96.5% 0.002 255)"
-      , display: "flex"
-      , fontFamily: "system-ui, sans-serif"
-      , inset: 0
-      , justifyContent: "center"
-      , position: "fixed"
-      }
-  , card:
-      { alignItems: "center"
-      , backgroundColor: "oklch(22% 0.005 255)"
-      , borderRadius: 20
-      , boxShadow:
-          "inset 0 1px 0 oklch(100% 0 0 / 8%), 0 1px 0 oklch(0% 0 0 / 40%), 0 16px 40px oklch(0% 0 0 / 45%)"
-      , display: "flex"
-      , flexDirection: "column"
-      , gap: 20
-      , paddingBlock: 28
-      , paddingInline: 36
-      }
-  , title: { color: "oklch(66% 0.008 255)", fontSize: 14, fontWeight: 600, margin: 0 }
-  , count:
-      { fontFamily: "ui-monospace, monospace"
-      , fontSize: 56
-      , fontVariantNumeric: "tabular-nums"
-      , fontWeight: 600
-      , lineHeight: 1
-      , minWidth: "3ch"
-      , textAlign: "center"
-      }
-  , keys: { display: "flex", gap: 12 }
-  , key:
-      { backgroundColor:
-          { default: "oklch(25% 0.006 255)"
-          , ":hover": "oklch(30.5% 0.007 255)"
-          , ":active": "oklch(22% 0.005 255)"
-          }
-      , backgroundImage: "linear-gradient(oklch(100% 0 0 / 12%), oklch(0% 0 0 / 10%))"
-      , borderRadius: 999
-      , borderStyle: "none"
-      , boxShadow:
-          { default:
-              "inset 0 1px 0 oklch(100% 0 0 / 22%), inset 0 -1px 0 oklch(0% 0 0 / 35%), 0 1px 2px oklch(0% 0 0 / 55%)"
-          , ":active":
-              "inset 0 1px 3px oklch(0% 0 0 / 45%), inset 0 0 0 oklch(0% 0 0 / 0%), 0 0 0 oklch(0% 0 0 / 0%)"
-          }
-      , color: "oklch(91.5% 0.004 255)"
-      , cursor: "default"
-      , fontSize: 20
-      , fontWeight: 700
-      , height: 44
-      , outlineColor: "oklch(86% 0.13 95)"
-      , outlineOffset: 3
-      , outlineStyle: { default: "none", ":focus-visible": "solid" }
-      , outlineWidth: 2
-      , textShadow: "0 -1px 0 oklch(0% 0 0 / 35%)"
-      , transform: { default: "none", ":active": "translateY(1px)" }
-      , transitionDuration: "180ms"
-      , transitionProperty: "background-color, box-shadow, transform"
-      , width: 64
-      }
-  , accent:
-      { backgroundColor:
-          { default: "oklch(71% 0.19 44)"
-          , ":hover": "oklch(79% 0.15 52)"
-          , ":active": "oklch(63% 0.2 38)"
-          }
-      , color: "oklch(16% 0.004 255)"
-      , textShadow: "0 1px 0 oklch(88% 0.08 58 / 45%)"
-      }
-  }
+${COUNTER_STYLES}
 
-styleProps = StyleX.recordProps styles
-
--- | Halogen takes a StyleX class name as a class property.
-style :: forall r i. StyleX.Props -> HP.IProp (class :: String | r) i
-style { className } = HP.class_ (HH.ClassName className)
+${HALOGEN_STYLE}
 
 data Action = Increment | Decrement
 
 counter :: forall query input output m. H.Component query input output m
 counter = H.mkComponent
-  { initialState: \\_ -> 0
+  { initialState: \_ -> 0
   , render
   , eval: H.mkEval H.defaultEval { handleAction = handleAction }
   }
   where
   render count = HH.div [ style styleProps.page ]
-    [ HH.div [ style styleProps.card ]
-        [ HH.h1 [ style styleProps.title ] [ HH.text "Halogen counter" ]
-        , HH.div [ style styleProps.count ] [ HH.text (show count) ]
-        , HH.div [ style styleProps.keys ]
-            [ HH.button [ style styleProps.key, HE.onClick \\_ -> Decrement ] [ HH.text "−" ]
-            , HH.button
-                [ style (StyleX.props [ styles.key, styles.accent ]), HE.onClick \\_ -> Increment ]
-                [ HH.text "+" ]
-            ]
+    [ HH.h1 [ style styleProps.title ] [ HH.text "Halogen counter" ]
+    , HH.div [ style styleProps.row ]
+        [ HH.button [ style styleProps.key, HE.onClick \_ -> Decrement ] [ HH.text "−" ]
+        , HH.span [ style styleProps.count ] [ HH.text (show count) ]
+        , HH.button [ style styleProps.key, HE.onClick \_ -> Increment ] [ HH.text "+" ]
         ]
     ]
 
@@ -176,13 +201,114 @@ main = HA.runHalogenAff do
     ],
   },
   {
-    id: "react",
+    id: "halogen-todos",
+    name: "Halogen todos",
+    description: "A Halogen todo list styled with StyleX",
+    files: [
+      {
+        path: "src/Main.purs",
+        text: String.raw`module Main where
+
+import Prelude
+
+import Data.Array (filter, length, snoc)
+import Data.String (trim)
+import Effect.Aff (Aff)
+import Effect.Class (liftEffect)
+${HALOGEN_IMPORTS}
+import Web.Event.Event (Event, preventDefault)
+
+${TODO_STYLES}
+
+${HALOGEN_STYLE}
+
+type Todo = { key :: Int, text :: String, done :: Boolean }
+
+type State = { todos :: Array Todo, draft :: String, next :: Int }
+
+data Action = SetDraft String | Add Event | Toggle Int | Remove Int
+
+todos :: forall query input output. H.Component query input output Aff
+todos = H.mkComponent
+  { initialState: \_ ->
+      { todos:
+          [ { key: 0, text: "Open the playground", done: true }
+          , { key: 1, text: "Write some PureScript", done: false }
+          ]
+      , draft: ""
+      , next: 2
+      }
+  , render
+  , eval: H.mkEval H.defaultEval { handleAction = handleAction }
+  }
+  where
+  render state = HH.div [ style styleProps.page ]
+    [ HH.h1 [ style styleProps.title ] [ HH.text "Halogen todos" ]
+    , HH.form [ style styleProps.form, HE.onSubmit Add ]
+        [ HH.input
+            [ style styleProps.input
+            , HP.placeholder "What needs doing?"
+            , HP.value state.draft
+            , HE.onValueInput SetDraft
+            ]
+        , HH.button [ style styleProps.key, HP.type_ HP.ButtonSubmit ] [ HH.text "Add" ]
+        ]
+    , HH.ul [ style styleProps.list ] (map item state.todos)
+    , HH.p [ style styleProps.remaining ]
+        [ HH.text (show (length (filter (not <<< _.done) state.todos)) <> " left") ]
+    ]
+
+  item todo = HH.li [ style styleProps.item ]
+    [ HH.label [ style styleProps.label ]
+        [ HH.input
+            [ style styleProps.checkbox
+            , HP.type_ HP.InputCheckbox
+            , HP.checked todo.done
+            , HE.onChange \_ -> Toggle todo.key
+            ]
+        , HH.span [ style (StyleX.props [ StyleX.conditional todo.done styles.done ]) ]
+            [ HH.text todo.text ]
+        ]
+    , HH.button
+        [ style styleProps.remove, HP.title "Remove", HE.onClick \_ -> Remove todo.key ]
+        [ HH.text "×" ]
+    ]
+
+  handleAction = case _ of
+    SetDraft draft -> H.modify_ _ { draft = draft }
+    Add event -> do
+      -- The form only collects the todo; it is never submitted.
+      liftEffect (preventDefault event)
+      H.modify_ \state -> case trim state.draft of
+        "" -> state
+        text -> state
+          { todos = snoc state.todos { key: state.next, text, done: false }
+          , draft = ""
+          , next = state.next + 1
+          }
+    Toggle key -> H.modify_ \state -> state
+      { todos = map (\todo -> if todo.key == key then todo { done = not todo.done } else todo)
+          state.todos
+      }
+    Remove key -> H.modify_ \state -> state
+      { todos = filter (\todo -> todo.key /= key) state.todos }
+
+main :: Effect Unit
+main = HA.runHalogenAff do
+  body <- HA.awaitBody
+  runUI todos unit body
+`,
+      },
+    ],
+  },
+  {
+    id: "react-counter",
     name: "React counter",
     description: "A React component styled with StyleX",
     files: [
       {
         path: "src/Main.purs",
-        text: `module Main where
+        text: String.raw`module Main where
 
 import Prelude
 
@@ -191,135 +317,147 @@ import Effect (Effect)
 import Effect.Exception (throw)
 import Iris.StyleX as StyleX
 import React.Basic.DOM as R
-import React.Basic.DOM.Client (createRoot, renderRoot)
 import React.Basic.Events (handler_)
-import React.Basic.Hooks (Component, component, useState, (/\\))
+import React.Basic.Hooks (Component, component, useState, (/\))
 import React.Basic.Hooks as React
-import Web.DOM.NonElementParentNode (getElementById)
-import Web.HTML (window)
-import Web.HTML.HTMLDocument (toNonElementParentNode)
-import Web.HTML.Window (document)
+${REACT_ROOT_IMPORTS}
 
--- StyleX styles compile to class names and CSS when the project runs. The colors follow the
--- playground's own: granite neutrals, and raised keys lit from above that sink while pressed.
-styles = StyleX.create
-  { page:
-      { alignItems: "center"
-      , backgroundColor: "oklch(19.2% 0.005 255)"
-      , color: "oklch(96.5% 0.002 255)"
-      , display: "flex"
-      , fontFamily: "system-ui, sans-serif"
-      , inset: 0
-      , justifyContent: "center"
-      , position: "fixed"
-      }
-  , card:
-      { alignItems: "center"
-      , backgroundColor: "oklch(22% 0.005 255)"
-      , borderRadius: 20
-      , boxShadow:
-          "inset 0 1px 0 oklch(100% 0 0 / 8%), 0 1px 0 oklch(0% 0 0 / 40%), 0 16px 40px oklch(0% 0 0 / 45%)"
-      , display: "flex"
-      , flexDirection: "column"
-      , gap: 20
-      , paddingBlock: 28
-      , paddingInline: 36
-      }
-  , title: { color: "oklch(66% 0.008 255)", fontSize: 14, fontWeight: 600, margin: 0 }
-  , count:
-      { fontFamily: "ui-monospace, monospace"
-      , fontSize: 56
-      , fontVariantNumeric: "tabular-nums"
-      , fontWeight: 600
-      , lineHeight: 1
-      , minWidth: "3ch"
-      , textAlign: "center"
-      }
-  , keys: { display: "flex", gap: 12 }
-  , key:
-      { backgroundColor:
-          { default: "oklch(25% 0.006 255)"
-          , ":hover": "oklch(30.5% 0.007 255)"
-          , ":active": "oklch(22% 0.005 255)"
-          }
-      , backgroundImage: "linear-gradient(oklch(100% 0 0 / 12%), oklch(0% 0 0 / 10%))"
-      , borderRadius: 999
-      , borderStyle: "none"
-      , boxShadow:
-          { default:
-              "inset 0 1px 0 oklch(100% 0 0 / 22%), inset 0 -1px 0 oklch(0% 0 0 / 35%), 0 1px 2px oklch(0% 0 0 / 55%)"
-          , ":active":
-              "inset 0 1px 3px oklch(0% 0 0 / 45%), inset 0 0 0 oklch(0% 0 0 / 0%), 0 0 0 oklch(0% 0 0 / 0%)"
-          }
-      , color: "oklch(91.5% 0.004 255)"
-      , cursor: "default"
-      , fontSize: 20
-      , fontWeight: 700
-      , height: 44
-      , outlineColor: "oklch(86% 0.13 95)"
-      , outlineOffset: 3
-      , outlineStyle: { default: "none", ":focus-visible": "solid" }
-      , outlineWidth: 2
-      , textShadow: "0 -1px 0 oklch(0% 0 0 / 35%)"
-      , transform: { default: "none", ":active": "translateY(1px)" }
-      , transitionDuration: "180ms"
-      , transitionProperty: "background-color, box-shadow, transform"
-      , width: 64
-      }
-  , accent:
-      { backgroundColor:
-          { default: "oklch(71% 0.19 44)"
-          , ":hover": "oklch(79% 0.15 52)"
-          , ":active": "oklch(63% 0.2 38)"
-          }
-      , color: "oklch(16% 0.004 255)"
-      , textShadow: "0 1px 0 oklch(88% 0.08 58 / 45%)"
-      }
-  }
-
-styleProps = StyleX.recordProps styles
+${COUNTER_STYLES}
 
 mkCounter :: Component Unit
-mkCounter = component "Counter" \\_ -> React.do
-  count /\\ setCount <- useState 0
+mkCounter = component "Counter" \_ -> React.do
+  count /\ setCount <- useState 0
+  let
+    key label change = R.button
+      { className: styleProps.key.className
+      , onClick: handler_ (setCount change)
+      , children: [ R.text label ]
+      }
   pure $ R.div
     { className: styleProps.page.className
     , children:
-        [ R.div
-            { className: styleProps.card.className
+        [ R.h1 { className: styleProps.title.className, children: [ R.text "React counter" ] }
+        , R.div
+            { className: styleProps.row.className
             , children:
-                [ R.h1 { className: styleProps.title.className, children: [ R.text "React counter" ] }
-                , R.div { className: styleProps.count.className, children: [ R.text (show count) ] }
-                , R.div
-                    { className: styleProps.keys.className
-                    , children:
-                        [ R.button
-                            { className: styleProps.key.className
-                            , onClick: handler_ (setCount (_ - 1))
-                            , children: [ R.text "−" ]
-                            }
-                        , R.button
-                            { className: (StyleX.props [ styles.key, styles.accent ]).className
-                            , onClick: handler_ (setCount (_ + 1))
-                            , children: [ R.text "+" ]
-                            }
-                        ]
-                    }
+                [ key "−" (_ - 1)
+                , R.span { className: styleProps.count.className, children: [ R.text (show count) ] }
+                , key "+" (_ + 1)
                 ]
             }
         ]
     }
 
-main :: Effect Unit
-main = do
-  -- The playground's frame offers #app as a mount point.
-  app <- getElementById "app" =<< (map toNonElementParentNode <<< document =<< window)
-  case app of
-    Nothing -> throw "There is no #app element."
-    Just element -> do
-      counter <- mkCounter
-      root <- createRoot element
-      renderRoot root (counter unit)
+${REACT_MAIN("counter")}
+`,
+      },
+    ],
+  },
+  {
+    id: "react-todos",
+    name: "React todos",
+    description: "A React todo list styled with StyleX",
+    files: [
+      {
+        path: "src/Main.purs",
+        text: String.raw`module Main where
+
+import Prelude
+
+import Data.Array (filter, length, snoc)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.String (trim)
+import Effect (Effect)
+import Effect.Exception (throw)
+import Iris.StyleX as StyleX
+import React.Basic (keyed)
+import React.Basic.DOM as R
+import React.Basic.DOM.Events (preventDefault, targetValue)
+import React.Basic.Events (handler, handler_)
+import React.Basic.Hooks (Component, component, useState, (/\))
+import React.Basic.Hooks as React
+${REACT_ROOT_IMPORTS}
+
+${TODO_STYLES}
+
+type Todo = { key :: Int, text :: String, done :: Boolean }
+
+mkTodos :: Component Unit
+mkTodos = component "Todos" \_ -> React.do
+  todos /\ setTodos <- useState
+    [ { key: 0, text: "Open the playground", done: true }
+    , { key: 1, text: "Write some PureScript", done: false }
+    ]
+  draft /\ setDraft <- useState ""
+  next /\ setNext <- useState 2
+  let
+    add = case trim draft of
+      "" -> pure unit
+      text -> do
+        setTodos \current -> snoc current { key: next, text, done: false }
+        setNext (_ + 1)
+        setDraft (const "")
+    toggle key = setTodos $ map \todo ->
+      if todo.key == key then todo { done = not todo.done } else todo
+    remove key = setTodos (filter \todo -> todo.key /= key)
+
+    item todo = keyed (show todo.key) $ R.li
+      { className: styleProps.item.className
+      , children:
+          [ R.label
+              { className: styleProps.label.className
+              , children:
+                  [ R.input
+                      { className: styleProps.checkbox.className
+                      , type: "checkbox"
+                      , checked: todo.done
+                      , onChange: handler_ (toggle todo.key)
+                      }
+                  , R.span
+                      { className: (StyleX.props [ StyleX.conditional todo.done styles.done ]).className
+                      , children: [ R.text todo.text ]
+                      }
+                  ]
+              }
+          , R.button
+              { className: styleProps.remove.className
+              , title: "Remove"
+              , onClick: handler_ (remove todo.key)
+              , children: [ R.text "×" ]
+              }
+          ]
+      }
+  pure $ R.div
+    { className: styleProps.page.className
+    , children:
+        [ R.h1 { className: styleProps.title.className, children: [ R.text "React todos" ] }
+        , R.form
+            { className: styleProps.form.className
+            -- The form only collects the todo; it is never submitted.
+            , onSubmit: handler preventDefault (const add)
+            , children:
+                [ R.input
+                    { className: styleProps.input.className
+                    , placeholder: "What needs doing?"
+                    , value: draft
+                    , onChange: handler targetValue \value -> setDraft (const (fromMaybe "" value))
+                    }
+                , R.button
+                    { className: styleProps.key.className
+                    , type: "submit"
+                    , children: [ R.text "Add" ]
+                    }
+                ]
+            }
+        , R.ul { className: styleProps.list.className, children: map item todos }
+        , R.p
+            { className: styleProps.remaining.className
+            , children: [ R.text (show (length (filter (not <<< _.done) todos)) <> " left") ]
+            }
+        ]
+    }
+
+${REACT_MAIN("todos")}
 `,
       },
     ],
