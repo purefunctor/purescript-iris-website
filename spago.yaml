@@ -1,6 +1,7 @@
 package:
   name: iris-website
   dependencies:
+    - aff
     - arrays
     - effect
     - foldable-traversable

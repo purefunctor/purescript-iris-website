@@ -6,12 +6,14 @@ import Data.Array (null)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Nullable (toMaybe)
 import Effect (Effect)
+import Effect.Aff (Milliseconds(..), delay)
 import Effect.Unsafe (unsafePerformEffect)
 import Foreign (Foreign)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
+import React.Basic.Hooks.Aff (useAff)
 import Website.Breakpoints (breakpoints)
 import Website.Components.ExternalLink (newTabLabel)
 import Website.Components.Icon as Icon
@@ -431,6 +433,16 @@ styles = StyleX.create
       , color: "var(--text-on-accent)"
       , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
       }
+  -- While compiling, and running until Stop appears, the key stays held down rather than greying
+  -- out, so a quick run reads as one press.
+  , pressed:
+      { backgroundColor: "var(--accent-press)"
+      , boxShadow:
+          "inset 0 1px 3px oklch(0% 0 0 / 45%), inset 0 0 0 oklch(0% 0 0 / 0%), 0 0 0 oklch(0% 0 0 / 0%)"
+      , color: "var(--text-on-accent)"
+      , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
+      , transform: "translateY(1px)"
+      }
   , stop:
       { backgroundColor:
           { default: "var(--surface-3)"
@@ -493,7 +505,8 @@ styles = StyleX.create
           [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       }
   -- Run and Stop, and Share and Copied, share one grid cell, so each button keeps its widest
-  -- label's width. Compiling keeps the Run label and turns its icon into a spinner.
+  -- label's width. Compiling, and running until Stop appears, keep the Run label and turn its
+  -- icon into a spinner.
   , labels: { display: "grid" }
   , label:
       { alignItems: "center"
@@ -629,7 +642,12 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , DOM.span (StyleX.props [ styles.labels, styles.shareLabels ])
             [ stackedLabel "Share" (not state.shared), stackedLabel "Copied" state.shared ]
         ]
-    , runButton state actions.run actions.stop
+    , element runButton
+        { status: state.run.status
+        , ready: state.server.status == "ready"
+        , run: actions.run
+        , stop: actions.stop
+        }
     , DOM.button
         { className: (StyleX.props [ styles.action, styles.iconOnly ]).className
         , onClick: handler_ actions.togglePanel
@@ -707,33 +725,55 @@ iconAction label icon' onPress = DOM.button
   }
   (DOM.span styleProps.icon (icon icon'))
 
-runButton :: State -> Effect Unit -> Effect Unit -> JSX
-runButton state run stop = DOM.button
-  { className:
-      ( StyleX.props
-          [ styles.action
-          , styles.runShape
-          , if running then styles.stop else if disabled then styles.runShape else styles.run
+-- | The Run key. Stop takes its place only once a program has run for half a second, so that
+-- | quick programs do not flash Stop; until then the key stays Run and keeps compiling's spinner.
+runButton ::
+  ReactComponent { status :: String, ready :: Boolean, run :: Effect Unit, stop :: Effect Unit }
+runButton = unsafePerformEffect $ Hooks.reactComponent "RunButton" \{ status, ready, run, stop } ->
+  Hooks.do
+    let
+      running = status == "running"
+    started <- useAff running (if running then delay (Milliseconds 500.0) $> true else pure false)
+    let
+      stoppable = running && started == Just true
+      busy = status == "compiling" || running && not stoppable
+      disabled = busy || not ready && not stoppable
+    pure $ DOM.button
+      { className:
+          ( StyleX.props
+              [ styles.action
+              , styles.runShape
+              , if stoppable
+                then styles.stop
+                else if busy
+                then styles.pressed
+                else if disabled
+                then styles.runShape
+                else styles.run
+              ]
+          ).className
+      , disabled
+      , onClick: handler_ (if stoppable then stop else run)
+      , type: "button"
+      , "aria-label":
+          if stoppable
+          then "Stop"
+          else if running
+          then "Running"
+          else if busy
+          then "Compiling"
+          else "Run"
+      }
+      ( DOM.span styleProps.labels
+          [ label "Run" (not stoppable)
+              [ if busy
+                then DOM.span styleProps.spinner (icon Icon.loaderCircle)
+                else DOM.span styleProps.icon (icon Icon.play)
+              ]
+          , label "Stop" stoppable [ DOM.span styleProps.icon (icon Icon.square) ]
           ]
-      ).className
-  , disabled
-  , onClick: handler_ (if running then stop else run)
-  , type: "button"
-  , "aria-label": if running then "Stop" else if compiling then "Compiling" else "Run"
-  }
-  ( DOM.span styleProps.labels
-      [ label "Run" (not running)
-          [ if compiling
-            then DOM.span styleProps.spinner (icon Icon.loaderCircle)
-            else DOM.span styleProps.icon (icon Icon.play)
-          ]
-      , label "Stop" running [ DOM.span styleProps.icon (icon Icon.square) ]
-      ]
-  )
+      )
   where
-  running = state.run.status == "running"
-  compiling = state.run.status == "compiling"
-  disabled = compiling || state.server.status /= "ready" && not running
   label text current icons = DOM.span
     { className:
         ( StyleX.props [ styles.label, StyleX.conditional (not current) styles.inactiveLabel ]
