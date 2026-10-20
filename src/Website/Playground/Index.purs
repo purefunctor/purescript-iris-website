@@ -430,14 +430,7 @@ styles = StyleX.create
       , paddingInline: 10
       }
   , lines: { margin: 0, paddingBlock: 12, paddingInline: 16 }
-  -- Each printed line settles in as it arrives.
-  , line:
-      { animationDuration: "180ms"
-      , animationName: { default: rise, "@media (prefers-reduced-motion: reduce)": "none" }
-      , animationTimingFunction: "var(--ease-out)"
-      , overflowWrap: "anywhere"
-      , whiteSpace: "pre-wrap"
-      }
+  , line: { overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
   , logLine: { color: "var(--text-secondary)" }
   , infoLine: { color: "var(--text-tertiary)" }
   , warningLine: { color: "var(--yellow-300)" }
