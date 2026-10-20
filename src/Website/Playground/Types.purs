@@ -55,7 +55,7 @@ type File = { path :: String, errors :: Int, warnings :: Int }
 type Viewer = { uri :: String, label :: String }
 
 -- | `kind` is `iris` or `mock`; `status` is `starting`, `ready`, `restarting` or `failed`. `version`
--- | is the Iris release, such as `v0.1.9`, and `revision` its commit.
+-- | is the Iris release, such as `v0.1.10`, and `revision` its commit.
 type Server =
   { kind :: Nullable String
   , version :: Nullable String

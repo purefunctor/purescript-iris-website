@@ -87,7 +87,7 @@ sections =
                 ") is installed, the script uses it to verify that the release was built from the Iris repository. Otherwise, the script prints a warning and installs Iris without verification."
             ]
         , paragraph [ DOM.text "After the script finishes, verify the installation:" ]
-        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.8" } ]
+        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.10" } ]
         , paragraph
             [ DOM.text
                 "If the command prints a version number, Iris is ready to use. If your shell cannot find the command, follow the steps below."
