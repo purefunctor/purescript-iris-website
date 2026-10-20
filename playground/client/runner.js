@@ -3,16 +3,42 @@
 // Generated modules import each other by relative path, which blob URLs cannot resolve, so each
 // file's specifiers are rewritten to bare keys under iris-output/ that the frame's import map maps
 // to blob URLs. Keys must be bare, because a path such as /x.js cannot resolve against a blob
-// URL's base. Other bare specifiers, such as npm packages that some FFI imports, cannot be
-// provided. The lexer's asm.js build needs no WebAssembly, so the page's policy stays as is.
+// URL's base. The only bare specifiers provided are React's, which the Registry's React bindings
+// import: the page fetches the site's React, bundled by src/pages/playground/react.json.ts, only
+// when a program imports it. Other npm packages cannot be provided. The lexer's asm.js build needs
+// no WebAssembly, so the page's policy stays as is.
 
 import { parse } from "es-module-lexer/js";
 
 const PREFIX = "iris-output/";
 const SANDBOX = "/playground/sandbox.html";
+const REACT = /^react(-dom)?(\/|$)/;
+// Generated modules live in directories named after PureScript modules, which are capitalized.
+const REACT_DIRECTORY = "npm/react/";
+
+let react = null;
 
 /** Rewrites imports between `files` and returns the frame's files, keyed by import map key. */
 export async function link(files) {
+  const first = rewrite(files, {});
+  if (!first.missing.some((specifier) => REACT.test(specifier))) return first;
+  react ??= fetch("/playground/react.json").then((response) => {
+    if (!response.ok) throw new Error(`Could not load React: ${response.status}`);
+    return response.json();
+  });
+  const bundle = await react.catch((error) => {
+    react = null;
+    throw error;
+  });
+  const vendor = Object.entries(bundle.files).map(([name, text]) => ({ path: `${REACT_DIRECTORY}${name}`, text }));
+  const provided = Object.fromEntries(
+    Object.entries(bundle.entries).map(([specifier, name]) => [specifier, `${REACT_DIRECTORY}${name}`]),
+  );
+  return rewrite([...files, ...vendor], provided);
+}
+
+/** `provided` maps bare specifiers to paths among `files`. */
+function rewrite(files, provided) {
   const paths = new Set(files.map((file) => file.path));
   const linked = {};
   const missing = new Set();
@@ -23,11 +49,14 @@ export async function link(files) {
     let last = 0;
     for (const { n: specifier, s: start, e: end, d: dynamic } of imports) {
       if (specifier === undefined || dynamic === -2) continue;
-      if (!specifier.startsWith("./") && !specifier.startsWith("../")) {
+      const relative = specifier.startsWith("./") || specifier.startsWith("../");
+      if (!relative && !Object.hasOwn(provided, specifier)) {
         missing.add(specifier);
         continue;
       }
-      const resolved = new URL(specifier, `https://iris.invalid/${file.path}`).pathname.slice(1);
+      const resolved = relative
+        ? new URL(specifier, `https://iris.invalid/${file.path}`).pathname.slice(1)
+        : provided[specifier];
       if (!paths.has(resolved)) missing.add(`${resolved} (imported by ${file.path})`);
       // Static imports span the specifier without quotes; dynamic ones span the quoted literal.
       const replacement = dynamic === -1 ? `${PREFIX}${resolved}` : JSON.stringify(`${PREFIX}${resolved}`);
