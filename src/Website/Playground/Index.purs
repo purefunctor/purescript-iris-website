@@ -24,6 +24,7 @@ import Website.Playground.FileTabs (fileTabs)
 import Website.Playground.FileTree (fileTree)
 import Website.Playground.Loading (loading)
 import Website.Playground.Packages (packagesPanel)
+import Website.Playground.Templates (templateList)
 import Website.Playground.Types (Line, Run, State, View)
 import Yoga.React.DOM as DOM
 
@@ -175,6 +176,8 @@ styles = StyleX.create
       , animationTimingFunction: "var(--ease-out)"
       , overflow: "hidden"
       }
+  -- Files take the sidebar's height above the templates.
+  , sidebarSections: { display: "flex", flexDirection: "column", height: "100%" }
   -- The sidebar's and the panel's edges, which drag to resize and close them below a minimum size.
   , handle:
       { backgroundColor:
@@ -629,8 +632,10 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
     , close: actions.closeSidebar
     , className: styleProps.sidebar.className
     , handleClassName: (StyleX.props [ styles.handle, styles.sidebarHandle ]).className
-    , children:
-        fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
+    , children: DOM.div styleProps.sidebarSections
+        [ fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
+        , templateList { templates: state.templates, actions }
+        ]
     }
 
   tabs = DOM.div styleProps.tabsRow

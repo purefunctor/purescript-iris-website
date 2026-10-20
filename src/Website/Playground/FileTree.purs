@@ -44,8 +44,9 @@ styles = StyleX.create
   { root:
       { backgroundColor: "var(--granite-950)"
       , display: "flex"
+      , flexBasis: 0
       , flexDirection: "column"
-      , height: "100%"
+      , flexGrow: 1
       , minHeight: 0
       }
   , header:

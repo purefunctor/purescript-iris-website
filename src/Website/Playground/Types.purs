@@ -7,6 +7,7 @@ module Website.Playground.Types
   , Run
   , Server
   , State
+  , Template
   , View
   , Viewer
   )
@@ -43,6 +44,7 @@ type State =
   , server :: Server
   , packages :: Packages
   , run :: Run
+  , templates :: Array Template
   , shared :: Boolean
   }
 
@@ -83,6 +85,9 @@ type Run = { status :: String, lines :: Array Line, view :: Boolean }
 
 type Line = { kind :: String, text :: String }
 
+-- | A starting project that replaces the current one, such as `halogen`.
+type Template = { id :: String, name :: String, description :: String }
+
 type Actions =
   { openFile :: String -> Effect Unit
   -- | Closes a file's tab; the file stays in the project.
@@ -105,6 +110,9 @@ type Actions =
   , stop :: Effect Unit
   , clearOutput :: Effect Unit
   , share :: Effect Unit
+  -- | Replaces the project with a template, by its `id`.
+  , loadTemplate :: String -> Effect Unit
+  -- | Replaces the project with the first template.
   , reset :: Effect Unit
   , retry :: Effect Unit
   }
