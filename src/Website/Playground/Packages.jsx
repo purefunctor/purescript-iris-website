@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
 
-const LIMIT = 60;
-
 // Searches the package set, which the project can import from in full, and links each package to
 // its documentation on Pursuit.
 export function packagesImpl({
@@ -39,7 +37,7 @@ export function packagesImpl({
         />
       </div>
       <ul aria-label="Packages" className={listClassName}>
-        {matches.slice(0, LIMIT).map((entry) => (
+        {matches.map((entry) => (
           <li className={rowClassName} key={entry.name}>
             <a
               className={nameClassName}
@@ -53,13 +51,7 @@ export function packagesImpl({
           </li>
         ))}
       </ul>
-      <p className={noteClassName}>
-        {matches.length === 0
-          ? "No package in this package set matches."
-          : matches.length > LIMIT
-            ? `Showing ${LIMIT} of ${matches.length}. Search to find the rest.`
-            : `${matches.length} ${matches.length === 1 ? "package" : "packages"}.`}
-      </p>
+      {matches.length === 0 && <p className={noteClassName}>No package in this package set matches.</p>}
     </div>
   );
 }
