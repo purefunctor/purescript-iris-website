@@ -27,8 +27,9 @@ buttonStyles = StyleX.create
       , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
       }
-  -- Run, Compiling, Stop and Try again are one raised key, as on audio equipment of the period: lit from
-  -- above by a translucent sheen, with a lip below and an engraved label, sinking while pressed.
+  -- Run, Compiling, Stop, Try again, Share and Reset are one raised key, as on audio equipment of
+  -- the period: lit from above by a translucent sheen, with a lip below and an engraved label,
+  -- sinking while pressed.
   -- Only its color changes between states, and colors and shadows interpolate, so the key eases
   -- from one state to the next. Its shadows keep one shape for that reason.
   , raised:

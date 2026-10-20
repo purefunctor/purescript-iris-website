@@ -396,14 +396,14 @@ styles = StyleX.create
   , commit: { fontFamily: "var(--font-mono)" }
   -- Lucide icons render at 1.2em, so the arrow sits a little smaller than the pill's label.
   , externalIcon: { flexShrink: 0, fontSize: 10, marginInlineStart: -1 }
-  , statusMock: { backgroundColor: "var(--yellow-400)" }
   , statusBusy:
       { backgroundColor: "var(--surface-2)"
       , boxShadow: "inset 0 0 0 1px var(--border-default)"
       , color: "var(--text-primary)"
       }
   , statusFailed: { backgroundColor: "var(--red-300)" }
-  , iconOnly: { paddingInline: 0, justifyContent: "center", width: 32 }
+  -- Round keys hold their width, so a crowded header cannot squeeze them into ovals.
+  , iconOnly: { flexShrink: 0, paddingInline: 0, justifyContent: "center", width: 32 }
   -- While compiling, and running until Stop appears, the key stays held down rather than greying
   -- out, so a quick run reads as one press.
   , pressed:
@@ -414,7 +414,8 @@ styles = StyleX.create
       , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
       , transform: "translateY(1px)"
       }
-  , stop:
+  -- Stop, Share and Reset are the Run key without its accent.
+  , neutral:
       { backgroundColor:
           { default: "var(--surface-3)"
           , ":hover": "oklch(from var(--surface-3) calc(l + 0.04) c h)"
@@ -519,6 +520,13 @@ styles = StyleX.create
       { display:
           StyleX.conditionalValue "grid" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
       }
+  -- Without its label, Share is a round key like Reset beside it.
+  , shareKey:
+      { flexShrink: 0
+      , justifyContent: "center"
+      , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 0 ]
+      , width: StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo600 "32px" ]
+      }
   , spinner:
       { animationDuration: "900ms"
       , animationIterationCount: "infinite"
@@ -612,7 +620,10 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         Nothing -> mempty
     , iconAction "Reset to the example" Icon.rotateCcw actions.reset
     , DOM.button
-        { className: (StyleX.props buttonStyles.action).className
+        { className:
+            ( StyleX.props
+                [ buttonStyles.action, buttonStyles.raised, styles.neutral, styles.shareKey ]
+            ).className
         , onClick: handler_ actions.share
         , title: "Copy a link to this project"
         , type: "button"
@@ -700,7 +711,9 @@ icon component' = element component' { "aria-hidden": true, focusable: false }
 
 iconAction :: String -> ReactComponent Icon.IconProps -> Effect Unit -> JSX
 iconAction label icon' onPress = DOM.button
-  { className: (StyleX.props [ buttonStyles.action, styles.iconOnly ]).className
+  { className:
+      ( StyleX.props [ buttonStyles.action, buttonStyles.raised, styles.neutral, styles.iconOnly ]
+      ).className
   , onClick: handler_ onPress
   , title: label
   , type: "button"
@@ -727,7 +740,7 @@ runButton = unsafePerformEffect $ Hooks.reactComponent "RunButton" \{ status, re
               [ buttonStyles.action
               , buttonStyles.raised
               , if stoppable
-                then styles.stop
+                then styles.neutral
                 else if busy
                 then styles.pressed
                 else if disabled
@@ -781,7 +794,7 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
   "failed", _, _ -> pill "Language server stopped" styles.statusFailed
   "restarting", _, _ -> pill "Restarting the language server" styles.statusBusy
   "starting", _, _ -> pill "Starting the language server" styles.statusBusy
-  _, Just "mock", _ -> pill "Mock language server" styles.statusMock
+  _, Just "mock", _ -> mempty
   _, _, Just version -> element pillImpl
     { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
     , label: version

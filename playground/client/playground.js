@@ -366,7 +366,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       await navigator.clipboard.writeText(url).catch(() => {});
       history.replaceState(null, "", url);
       setState(() => ({ shared: true }));
-      setTimeout(() => setState(() => ({ shared: false })), 2000);
+      setTimeout(() => setState(() => ({ shared: false })), 2500);
     },
     loadTemplate,
     reset: () => loadTemplate(TEMPLATES[0].id),
