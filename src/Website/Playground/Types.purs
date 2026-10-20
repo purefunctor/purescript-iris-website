@@ -34,6 +34,10 @@ type State =
   , sidebarWidth :: Int
   -- | Whether the Output and Packages panel shows.
   , panel :: Boolean
+  -- | The panel's width beside the editor and its height below it, in pixels, which the reader
+  -- | sets by dragging its edge.
+  , panelWidth :: Int
+  , panelHeight :: Int
   -- | The panel's selected tab, `output` or `packages`, which it keeps while closed.
   , panelTab :: String
   , server :: Server
@@ -87,6 +91,9 @@ type Actions =
   , resizeSidebar :: Int -> Effect Unit
   , closeSidebar :: Effect Unit
   , togglePanel :: Effect Unit
+  -- | Opens the panel at a width and height in pixels.
+  , resizePanel :: { width :: Int, height :: Int } -> Effect Unit
+  , closePanel :: Effect Unit
   , selectPanelTab :: String -> Effect Unit
   , createFile :: Effect Unit
   -- | Returns why the name was rejected, or null once the file is renamed.

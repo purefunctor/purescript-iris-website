@@ -13,6 +13,8 @@ const initialState = {
   sidebar: false,
   sidebarWidth: 240,
   panel: true,
+  panelWidth: 380,
+  panelHeight: 320,
   panelTab: "output",
   server: { kind: null, version: null, revision: null, status: "starting", message: null },
   packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
@@ -70,6 +72,8 @@ export function playgroundImpl({ theme, render }) {
       resizeSidebar: (width) => () => call("resizeSidebar", width),
       closeSidebar: () => call("closeSidebar"),
       togglePanel: () => call("togglePanel"),
+      resizePanel: (size) => () => call("resizePanel", size),
+      closePanel: () => call("closePanel"),
       selectPanelTab: (tab) => () => call("selectPanelTab", tab),
       createFile: () => call("createFile"),
       renameFile: (from) => (to) => () => call("renameFile", from, to) ?? null,
@@ -174,93 +178,148 @@ function usePresence(open, animate) {
 
 const settled = (phase) => (phase === "exiting" ? "closed" : phase === "entering" ? "open" : phase);
 
-// The Output and Packages panel, which animates as it opens and closes.
-export function panelImpl({ open, id, label, className, children }) {
-  const presence = usePresence(open, true);
-  if (!presence.rendered) return null;
-  return (
-    <aside aria-label={label} className={className} id={id} {...presence.props}>
-      {children}
-    </aside>
-  );
-}
-
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 480;
-// Dragging the edge narrower than this closes the sidebar, and dragging past it opens it again.
-const COLLAPSE_WIDTH = 120;
 const STEP = 16;
+// Shrinks are named by the key that grows each kind of area.
+const SHRINK = { ArrowRight: "ArrowLeft", ArrowLeft: "ArrowRight", ArrowUp: "ArrowDown", ArrowDown: "ArrowUp" };
 
-// The sidebar and the handle on its edge. A drag previews locally and reaches the controller once
-// it ends, so the rest of the page renders once per drag. Without the sidebar, the handle stays at
-// the editor's edge, so dragging it out opens the sidebar again.
-export function sidebarImpl({ id, open, width, resize, close, className, handleClassName, children }) {
+// An area that the reader resizes by dragging the handle on one of its edges, or with the arrow
+// keys on the focused handle. Dragging below `collapse` closes the area, and dragging the handle
+// out again opens it. A drag previews locally and reaches the controller once it ends, so the rest
+// of the page renders once per drag. `vertical` areas resize by height, and `fromEnd` areas sit at
+// the end of their parent, so their handle is on their leading edge. A `share` below 1 keeps the
+// area from taking more than that part of its parent.
+function useResizable({ id, label, open, size, min, max, collapse, vertical, fromEnd, share = 1, resize, close }) {
   const [drag, setDrag] = useState(null);
   const shown = drag ? drag.open : open;
-  const current = drag ? drag.width : width;
+  const current = drag ? drag.size : size;
   const presence = usePresence(shown, !drag);
-  const clamp = (value) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(value)));
+  const limit = (value, most = max) => Math.min(most, Math.max(min, Math.round(value)));
+  const grow = vertical ? (fromEnd ? "ArrowUp" : "ArrowDown") : fromEnd ? "ArrowLeft" : "ArrowRight";
 
   const end = () => {
     if (!drag) return;
     document.documentElement.style.removeProperty("cursor");
     setDrag(null);
-    if (drag.open) resize(drag.width)();
+    if (drag.open) resize(drag.size)();
     else close();
   };
   const onKeyDown = (event) => {
-    if (event.key === "ArrowLeft" && open) {
-      if (width - STEP < MIN_WIDTH) close();
-      else resize(width - STEP)();
-    } else if (event.key === "ArrowRight") {
-      resize(open ? clamp(width + STEP) : width)();
+    if (event.key === SHRINK[grow] && open) {
+      if (size - STEP < min) close();
+      else resize(size - STEP)();
+    } else if (event.key === grow) {
+      resize(open ? limit(size + STEP) : size)();
     } else if (event.key === "Enter") {
       if (open) close();
-      else resize(width)();
+      else resize(size)();
     } else {
       return;
     }
     event.preventDefault();
   };
 
+  return {
+    shown,
+    current,
+    presence,
+    handleProps: {
+      "aria-controls": id,
+      "aria-label": label,
+      // A separator's orientation is its own: a side panel's edge runs vertically.
+      "aria-orientation": vertical ? "horizontal" : "vertical",
+      "aria-valuemax": max,
+      "aria-valuemin": 0,
+      "aria-valuenow": shown ? current : 0,
+      "aria-valuetext": shown ? `${current} pixels` : "Closed",
+      "data-dragging": drag ? true : undefined,
+      onKeyDown,
+      onLostPointerCapture: end,
+      onPointerDown: (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.currentTarget.focus();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        document.documentElement.style.cursor = vertical ? "row-resize" : "col-resize";
+        setDrag({ bounds: event.currentTarget.parentElement.getBoundingClientRect(), size, open });
+      },
+      onPointerMove: (event) => {
+        if (!drag) return;
+        const { bounds } = drag;
+        const raw = vertical
+          ? fromEnd ? bounds.bottom - event.clientY : event.clientY - bounds.top
+          : fromEnd ? bounds.right - event.clientX : event.clientX - bounds.left;
+        const opened = raw >= collapse;
+        const most = Math.min(max, (vertical ? bounds.height : bounds.width) * share);
+        setDrag({ ...drag, open: opened, size: opened ? limit(raw, most) : drag.size });
+      },
+      role: "separator",
+      tabIndex: 0,
+    },
+  };
+}
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => matchMedia(query).matches);
+  useEffect(() => {
+    const list = matchMedia(query);
+    const update = () => setMatches(list.matches);
+    update();
+    list.addEventListener("change", update);
+    return () => list.removeEventListener("change", update);
+  }, [query]);
+  return matches;
+}
+
+// The sidebar and the handle on its edge. Without the sidebar, the handle stays at the editor's
+// edge, so dragging it out opens the sidebar again.
+export function sidebarImpl({ id, open, width, resize, close, className, handleClassName, children }) {
+  const area = useResizable({ id, label: "Resize files", open, size: width, min: 180, max: 480, collapse: 120, resize, close });
   return (
     <>
-      {presence.rendered && (
-        <div className={className} id={id} style={{ "--sidebar-width": `${current}px` }} {...presence.props}>
+      {area.presence.rendered && (
+        <div className={className} id={id} style={{ "--sidebar-width": `${area.current}px` }} {...area.presence.props}>
           {children}
         </div>
       )}
-      <div
-        aria-controls={id}
-        aria-label="Resize files"
-        aria-orientation="vertical"
-        aria-valuemax={MAX_WIDTH}
-        aria-valuemin={0}
-        aria-valuenow={shown ? current : 0}
-        aria-valuetext={shown ? `${current} pixels` : "Closed"}
-        className={handleClassName}
-        data-dragging={drag ? true : undefined}
-        onKeyDown={onKeyDown}
-        onLostPointerCapture={end}
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          event.preventDefault();
-          event.currentTarget.focus();
-          event.currentTarget.setPointerCapture(event.pointerId);
-          document.documentElement.style.cursor = "col-resize";
-          const left = event.currentTarget.parentElement.getBoundingClientRect().left;
-          setDrag({ left, width, open });
-        }}
-        onPointerMove={(event) => {
-          if (!drag) return;
-          const raw = event.clientX - drag.left;
-          const opened = raw >= COLLAPSE_WIDTH;
-          setDrag({ ...drag, open: opened, width: opened ? clamp(raw) : drag.width });
-        }}
-        role="separator"
-        style={{ insetInlineStart: shown ? current - 3 : 0 }}
-        tabIndex={0}
-      />
+      <div className={handleClassName} style={{ insetInlineStart: area.shown ? area.current - 3 : 0 }} {...area.handleProps} />
+    </>
+  );
+}
+
+// Website.Breakpoints' upTo960, where the panel moves below the editor.
+const BELOW = "(max-width: 960px)";
+
+// The Output and Packages panel and the handle on its leading edge. It sits beside the editor and
+// resizes by width, or below it and resizes by height, keeping a size for each. Its styles cap it
+// at 70% of the workspace, so the editor stays usable whatever size a wider window left it at.
+export function panelImpl({ id, label, open, width, height, resize, close, className, handleClassName, children }) {
+  const vertical = useMediaQuery(BELOW);
+  const area = useResizable({
+    id,
+    label: `Resize ${label.toLowerCase()}`,
+    open,
+    size: vertical ? height : width,
+    min: vertical ? 120 : 240,
+    max: vertical ? 800 : 900,
+    collapse: vertical ? 80 : 160,
+    vertical,
+    fromEnd: true,
+    share: 0.7,
+    resize: (size) => resize(vertical ? { width, height: size } : { width: size, height }),
+    close,
+  });
+  const sizes = (shown) => ({
+    "--panel-width": `${shown ? (vertical ? width : area.current) : 0}px`,
+    "--panel-height": `${shown ? (vertical ? area.current : height) : 0}px`,
+  });
+  return (
+    <>
+      {area.presence.rendered && (
+        <aside aria-label={label} className={className} id={id} style={sizes(true)} {...area.presence.props}>
+          {children}
+        </aside>
+      )}
+      <div className={handleClassName} style={sizes(area.shown)} {...area.handleProps} />
     </>
   );
 }

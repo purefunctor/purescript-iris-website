@@ -51,7 +51,17 @@ foreign import pillImpl ::
 
 foreign import panelImpl ::
   ReactComponent
-    { open :: Boolean, id :: String, label :: String, className :: String, children :: JSX }
+    { id :: String
+    , label :: String
+    , open :: Boolean
+    , width :: Int
+    , height :: Int
+    , resize :: { width :: Int, height :: Int } -> Effect Unit
+    , close :: Effect Unit
+    , className :: String
+    , handleClassName :: String
+    , children :: JSX
+    }
 
 foreign import panelTabsImpl ::
   ReactComponent
@@ -157,8 +167,7 @@ styles = StyleX.create
       , animationTimingFunction: "var(--ease-out)"
       , overflow: "hidden"
       }
-  -- The sidebar's edge, which drags to resize and closes it below a minimum width. Phones open
-  -- the sidebar over the editor instead, so they have no handle.
+  -- The sidebar's and the panel's edges, which drag to resize and close them below a minimum size.
   , handle:
       { backgroundColor:
           { default: "transparent"
@@ -167,18 +176,42 @@ styles = StyleX.create
           , "[data-dragging]": "var(--accent)"
           }
       , backgroundClip: "content-box"
-      , cursor: "col-resize"
-      , display:
-          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
-      , insetBlock: 0
       , outlineStyle: "none"
-      , paddingInline: 2
       , position: "absolute"
+      , touchAction: "none"
       , transitionDelay: { default: "0ms", ":hover": "150ms" }
       , transitionDuration: "120ms"
       , transitionProperty: "background-color"
-      , width: 6
       , zIndex: 4
+      }
+  -- Phones open the sidebar over the editor instead, so they have no handle.
+  , sidebarHandle:
+      { cursor: "col-resize"
+      , display:
+          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
+      , insetBlock: 0
+      , paddingInline: 2
+      , width: 6
+      }
+  -- The panel's handle follows its leading edge: its start beside the editor, its top below it.
+  -- It reads the panel's capped size, so it stays on the edge at any window size.
+  , panelHandle:
+      { cursor: StyleX.conditionalValue "col-resize"
+          [ StyleX.conditionalCase breakpoints.upTo960 "row-resize" ]
+      , height: StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo960 "6px" ]
+      , insetBlockEnd: StyleX.conditionalValue "0px"
+          [ StyleX.conditionalCase breakpoints.upTo960
+              "max(0px, calc(min(var(--panel-height), 70%) - 3px))"
+          ]
+      , insetBlockStart:
+          StyleX.conditionalValue "0px" [ StyleX.conditionalCase breakpoints.upTo960 "auto" ]
+      , insetInlineEnd: StyleX.conditionalValue "max(0px, calc(min(var(--panel-width), 70%) - 3px))"
+          [ StyleX.conditionalCase breakpoints.upTo960 "0px" ]
+      , insetInlineStart:
+          StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo960 "0px" ]
+      , paddingBlock: StyleX.conditionalValue 0 [ StyleX.conditionalCase breakpoints.upTo960 2 ]
+      , paddingInline: StyleX.conditionalValue 2 [ StyleX.conditionalCase breakpoints.upTo960 0 ]
+      , width: StyleX.conditionalValue "6px" [ StyleX.conditionalCase breakpoints.upTo960 "auto" ]
       }
   , editorColumn:
       { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0, minWidth: 0 }
@@ -219,8 +252,8 @@ styles = StyleX.create
       , flexDirection: "column"
       -- The panel's size is its flex basis, which runs along the workspace beside the editor and
       -- down it below, so one animation opens the panel in both places.
-      , flexBasis:
-          StyleX.conditionalValue "380px" [ StyleX.conditionalCase breakpoints.upTo960 "40dvh" ]
+      , flexBasis: StyleX.conditionalValue "min(var(--panel-width), 70%)"
+          [ StyleX.conditionalCase breakpoints.upTo960 "min(var(--panel-height), 70%)" ]
       , flexShrink: 0
       , minHeight: 0
       , minWidth: 0
@@ -618,7 +651,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
     , resize: actions.resizeSidebar
     , close: actions.closeSidebar
     , className: styleProps.sidebar.className
-    , handleClassName: styleProps.handle.className
+    , handleClassName: (StyleX.props [ styles.handle, styles.sidebarHandle ]).className
     , children:
         fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
     }
@@ -634,10 +667,15 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
     ]
 
   panel = element panelImpl
-    { open: state.panel
-    , id: "playground-panel"
+    { id: "playground-panel"
     , label: "Output and packages"
+    , open: state.panel
+    , width: state.panelWidth
+    , height: state.panelHeight
+    , resize: actions.resizePanel
+    , close: actions.closePanel
     , className: styleProps.panel.className
+    , handleClassName: (StyleX.props [ styles.handle, styles.panelHandle ]).className
     , children: element panelTabsImpl
         { selected: state.panelTab
         , select: actions.selectPanelTab

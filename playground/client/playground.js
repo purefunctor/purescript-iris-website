@@ -19,6 +19,8 @@ const NARROW = "(max-width: 720px)";
 const MAX_LINES = 1000;
 // The reader's sidebar width, kept apart from the project so that shared links do not carry it.
 const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
+// The panel's width beside the editor and its height below it, kept the same way.
+const PANEL_SIZE = "iris-playground-panel-size";
 
 export const DEFAULT_FILES = [
   {
@@ -67,6 +69,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   const paths = project.files.map(({ path }) => path);
   const open = (project.open ?? paths).filter((path) => paths.includes(path));
   const active = open.includes(project.active) ? project.active : open[0] ?? null;
+  const panelSize = safely(() => JSON.parse(localStorage.getItem(PANEL_SIZE))) ?? {};
   let state = {
     phase: "loading",
     files: paths.map((path) => ({ path, errors: 0, warnings: 0 })),
@@ -76,6 +79,8 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     sidebar: !matchMedia(NARROW).matches,
     sidebarWidth: Number(safely(() => localStorage.getItem(SIDEBAR_WIDTH))) || 240,
     panel: true,
+    panelWidth: Number(panelSize.width) || 380,
+    panelHeight: Number(panelSize.height) || Math.round(innerHeight * 0.4),
     panelTab: "output",
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
@@ -306,6 +311,11 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     closeSidebar: () => setState(() => ({ sidebar: false })),
     togglePanel: () => setState((current) => ({ panel: !current.panel })),
+    resizePanel: ({ width, height }) => {
+      safely(() => localStorage.setItem(PANEL_SIZE, JSON.stringify({ width, height })));
+      setState(() => ({ panel: true, panelWidth: width, panelHeight: height }));
+    },
+    closePanel: () => setState(() => ({ panel: false })),
     selectPanelTab: (tab) => setState(() => ({ panelTab: tab })),
     createFile: () => {
       let index = 1;
