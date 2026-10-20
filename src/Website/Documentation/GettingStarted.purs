@@ -18,7 +18,11 @@ component = unsafePerformEffect $ Hooks.reactComponent "GettingStarted" \_ ->
   pure $ Documentation.documentation
     { page: Documentation.GettingStarted
     , intro:
-        "This guide covers installing Iris, creating a project, and running a small program that prints a greeting."
+        [ paragraph
+            [ DOM.text
+                "This guide covers installing Iris, creating a project, and running a small program that prints a greeting."
+            ]
+        ]
     , sections
     }
 

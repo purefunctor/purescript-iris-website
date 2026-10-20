@@ -236,8 +236,7 @@ styles = StyleX.create
       , lineHeight: 1.1
       , marginBlockEnd: 20
       }
-  , intro:
-      { fontSize: "1.1875em", color: "var(--text-secondary)", lineHeight: 1.65, marginBlockEnd: 48 }
+  , intro: { display: "flex", flexDirection: "column", gap: 18, marginBlockEnd: 48 }
   -- Clear the sticky header, and below the desktop layout the navigation bar under it.
   , section:
       { marginBlockEnd: 48
@@ -293,7 +292,7 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
-documentation :: { page :: Page, intro :: String, sections :: Array Section } -> JSX
+documentation :: { page :: Page, intro :: Array JSX, sections :: Array Section } -> JSX
 documentation { page, intro, sections } = DOM.div styleProps.page
   [ DOM.a { className: styleProps.skip.className, href: "#content" } "Skip to content"
   , SiteNav.siteHeader { contained: false }
@@ -329,7 +328,7 @@ documentation { page, intro, sections } = DOM.div styleProps.page
               }
           , DOM.main { className: styleProps.article.className, id: "content", tabIndex: -1 }
               [ DOM.h1 styleProps.title (pageTitle page)
-              , DOM.p styleProps.intro intro
+              , DOM.div styleProps.intro intro
               , DOM.div {} (map section sections)
               , DOM.footer styleProps.footer
                   [ DOM.nav

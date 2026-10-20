@@ -16,7 +16,11 @@ component = unsafePerformEffect $ Hooks.reactComponent "Installation" \_ ->
   pure $ Documentation.documentation
     { page: Documentation.Installation
     , intro:
-        "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build. Iris 0.1.7 and later can also update themselves."
+        [ paragraph
+            [ DOM.text
+                "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build. Iris 0.1.7 and later can also update themselves."
+            ]
+        ]
     , sections
     }
 

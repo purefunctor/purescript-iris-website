@@ -16,7 +16,11 @@ component = unsafePerformEffect $ Hooks.reactComponent "LanguageServer" \_ ->
   pure $ Documentation.documentation
     { page: Documentation.LanguageServer
     , intro:
-        "Iris includes a language server that provides types, completion, and error reporting for PureScript in your editor. It is available in Visual Studio Code through the Iris extension and in any other editor that supports the Language Server Protocol (LSP)."
+        [ paragraph
+            [ DOM.text
+                "Iris includes a language server that provides types, completion, and error reporting for PureScript in your editor. It is available in Visual Studio Code through the Iris extension and in any other editor that supports the Language Server Protocol (LSP)."
+            ]
+        ]
     , sections
     }
 

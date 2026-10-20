@@ -16,7 +16,11 @@ component = unsafePerformEffect $ Hooks.reactComponent "ModuleMetadata" \_ ->
   pure $ Documentation.documentation
     { page: Documentation.ModuleMetadata
     , intro:
-        "Next to each module's generated JavaScript, Iris writes a metadata.json file. It records the package the module belongs to, whether that package is editable, where the module's source file is, and the name of its foreign file. Tools such as bundler plugins can read it instead of guessing which package a module comes from."
+        [ paragraph
+            [ DOM.text
+                "Next to each module's generated JavaScript, Iris writes a metadata.json file. It records the package the module belongs to, whether that package is editable, where the module's source file is, and the name of its foreign file. Tools such as bundler plugins can read it instead of guessing which package a module comes from."
+            ]
+        ]
     , sections
     }
 
