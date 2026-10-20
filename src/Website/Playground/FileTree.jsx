@@ -1,11 +1,26 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ChevronRightIcon from "~icons/lucide/chevron-right";
-import FileIcon from "~icons/lucide/file";
 import FilePlusIcon from "~icons/lucide/file-plus";
-import PureScriptIcon from "~icons/simple-icons/purescript";
 import PencilIcon from "~icons/lucide/pencil";
 import TrashIcon from "~icons/lucide/trash-2";
+import FileIcon from "~icons/material-icon-theme/document";
+import JavaScriptIcon from "~icons/material-icon-theme/javascript";
+import PureScriptIcon from "~icons/material-icon-theme/purescript";
+import ReactIcon from "~icons/material-icon-theme/react";
+
+// Icons by file extension, from Material Icon Theme, whose icons share a 16px grid so every entry
+// renders at one size. Files with other extensions use `FileIcon`.
+const fileIcons = {
+  purs: PureScriptIcon,
+  js: JavaScriptIcon,
+  jsx: ReactIcon,
+};
+
+function iconFor(name) {
+  const dot = name.lastIndexOf(".");
+  return (dot > 0 && fileIcons[name.slice(dot + 1)]) || FileIcon;
+}
 
 /** Folders and files from slash-separated paths, folders first, each sorted by name. */
 function buildTree(files) {
@@ -146,6 +161,7 @@ export function fileTreeImpl({
       );
     }
     const selected = !viewing && file.path === active;
+    const Icon = iconFor(file.name);
     return (
       <li className={itemClassName} key={file.path}>
         <button
@@ -157,11 +173,7 @@ export function fileTreeImpl({
           title={file.path}
           type="button"
         >
-          {file.path.endsWith(".purs") ? (
-            <PureScriptIcon aria-hidden className={iconClassName} />
-          ) : (
-            <FileIcon aria-hidden className={iconClassName} />
-          )}
+          <Icon aria-hidden className={iconClassName} />
           <span className={nameClassName}>{file.name}</span>
           {file.errors > 0 && (
             <span aria-label={`${file.errors} errors`} className={errorCountClassName}>

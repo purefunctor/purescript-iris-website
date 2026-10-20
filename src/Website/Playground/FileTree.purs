@@ -106,7 +106,7 @@ styles = StyleX.create
       , transitionProperty: "transform"
       }
   , openChevron: { transform: "rotate(90deg)" }
-  , icon: { color: "var(--text-tertiary)", flexShrink: 0, fontSize: 14 }
+  , icon: { flexShrink: 0, height: 16, width: 16 }
   , name: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }
   , count:
       { borderRadius: 999

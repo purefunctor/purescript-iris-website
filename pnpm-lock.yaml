@@ -161,6 +161,9 @@ importers:
       '@iconify-json/lucide':
         specifier: 1.2.126
         version: 1.2.126
+      '@iconify-json/material-icon-theme':
+        specifier: 1.2.72
+        version: 1.2.72
       '@iconify-json/simple-icons':
         specifier: 1.2.93
         version: 1.2.93
@@ -847,6 +850,9 @@ packages:
 
   '@iconify-json/lucide@1.2.126':
     resolution: {integrity: sha512-Fl3OfR71yeWLrlTLp6C4W5W3rJJDWH9/e70mjtq9VAldYDxvHh149JMNPz7foTeLLTE2Paynnp2aYKVL9rgF5Q==}
+
+  '@iconify-json/material-icon-theme@1.2.72':
+    resolution: {integrity: sha512-zNe7VGXvUGMeexC8DTSa+NNF2ng5gLAgQL8GQgEBLfqnG7W52dfL/X8cwNx5OmhaZkA+fuKZ6DFVrDdg5vqp/Q==}
 
   '@iconify-json/simple-icons@1.2.93':
     resolution: {integrity: sha512-/XhANjfGYOuqvSR3TmUnkQkINvQ4GVjVuukvymRbxtVFBvIq/yiXJqCDycKcQPT401OYT9H2vIY6ihAlz1QIAw==}
@@ -3850,6 +3856,10 @@ snapshots:
   '@gar/promisify@1.1.3': {}
 
   '@iconify-json/lucide@1.2.126':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/material-icon-theme@1.2.72':
     dependencies:
       '@iconify/types': 2.0.0
 
