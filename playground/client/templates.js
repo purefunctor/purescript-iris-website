@@ -18,25 +18,52 @@ const KEY = String.raw`  , key:
       , cursor: "default"
       , fontWeight: 600
       , height: 32
-      , minWidth: 40
+      -- As wide as the playground's Run key, which reads as a key rather than an icon.
+      , minWidth: 72
       , outlineStyle: "none"
-      , paddingInline: 12
+      , paddingInline: 16
       , textShadow: "0 -1px 0 oklch(0% 0 0 / 35%)"
       , transform: { default: "none", ":active": "translateY(1px)" }
       }`;
 
-const COUNTER_STYLES = String.raw`styles = StyleX.create
-  { page: { display: "flex", flexDirection: "column", gap: 12, padding: 24 }
-  , title: { fontSize: 16, fontWeight: 600, margin: 0 }
+const COUNTER_STYLES = String.raw`-- The number rises in whenever it changes; each value is a new element, so it plays again.
+bump = StyleX.keyframes
+  { from: { opacity: 0, transform: "translateY(45%) scale(0.8)" }
+  , to: { opacity: 1, transform: "none" }
+  }
+
+styles = StyleX.create
+  { page:
+      { alignItems: "center"
+      , display: "flex"
+      , flexDirection: "column"
+      , gap: 12
+      , justifyContent: "center"
+      , minHeight: "100vh"
+      , padding: 24
+      }
+  -- Set like the site's section headings, in bold.
+  , title: { fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, margin: 0 }
   , row: { alignItems: "center", display: "flex", gap: 12 }
   , count:
-      { fontFamily: "var(--font-mono)"
-      , fontSize: 16
+      { animationDuration: "240ms"
+      , animationName: { default: bump, "@media (prefers-reduced-motion: reduce)": "none" }
+      , animationTimingFunction: "var(--ease-out)"
+      , display: "inline-block"
+      , fontSize: 20
+      , fontWeight: 600
       , fontVariantNumeric: "tabular-nums"
       , minWidth: "3ch"
       , textAlign: "center"
       }
 ${KEY}
+  -- The playground's Run key: orange, with an engraved label.
+  , accent:
+      { backgroundColor:
+          { default: "var(--accent)", ":hover": "var(--accent-hover)", ":active": "var(--accent-press)" }
+      , color: "var(--text-on-accent)"
+      , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
+      }
   }
 
 styleProps = StyleX.recordProps styles`;
@@ -164,7 +191,9 @@ greet name = "Hello, " <> name <> "!"
 
 import Prelude
 
+import Data.Tuple (Tuple(..))
 ${HALOGEN_IMPORTS}
+import Halogen.HTML.Elements.Keyed as HK
 
 ${COUNTER_STYLES}
 
@@ -183,8 +212,11 @@ counter = H.mkComponent
     [ HH.h1 [ style styleProps.title ] [ HH.text "Halogen counter" ]
     , HH.div [ style styleProps.row ]
         [ HH.button [ style styleProps.key, HE.onClick \_ -> Decrement ] [ HH.text "−" ]
-        , HH.span [ style styleProps.count ] [ HH.text (show count) ]
-        , HH.button [ style styleProps.key, HE.onClick \_ -> Increment ] [ HH.text "+" ]
+        , HK.div_
+            [ Tuple (show count) (HH.span [ style styleProps.count ] [ HH.text (show count) ]) ]
+        , HH.button
+            [ style (StyleX.props [ styles.key, styles.accent ]), HE.onClick \_ -> Increment ]
+            [ HH.text "+" ]
         ]
     ]
 
@@ -316,6 +348,7 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Exception (throw)
 import Iris.StyleX as StyleX
+import React.Basic (keyed)
 import React.Basic.DOM as R
 import React.Basic.Events (handler_)
 import React.Basic.Hooks (Component, component, useState, (/\))
@@ -328,8 +361,8 @@ mkCounter :: Component Unit
 mkCounter = component "Counter" \_ -> React.do
   count /\ setCount <- useState 0
   let
-    key label change = R.button
-      { className: styleProps.key.className
+    key keyStyles label change = R.button
+      { className: (StyleX.props keyStyles).className
       , onClick: handler_ (setCount change)
       , children: [ R.text label ]
       }
@@ -340,9 +373,10 @@ mkCounter = component "Counter" \_ -> React.do
         , R.div
             { className: styleProps.row.className
             , children:
-                [ key "−" (_ - 1)
-                , R.span { className: styleProps.count.className, children: [ R.text (show count) ] }
-                , key "+" (_ + 1)
+                [ key [ styles.key ] "−" (_ - 1)
+                , keyed (show count) $ R.span
+                    { className: styleProps.count.className, children: [ R.text (show count) ] }
+                , key [ styles.key, styles.accent ] "+" (_ + 1)
                 ]
             }
         ]
