@@ -127,13 +127,16 @@ styles = StyleX.create
       }
   , spacer: { flexGrow: 1 }
   -- The editor and its panel meet at a hard edge; the panel drops below the editor on narrow
-  -- screens.
+  -- screens. The workspace is the container that sizes the panel's contents, and it clips the
+  -- program's frame as the panel slides in from its edge.
   , workspace:
-      { display: "flex"
+      { containerType: "size"
+      , display: "flex"
       , flexDirection:
           StyleX.conditionalValue "row" [ StyleX.conditionalCase breakpoints.upTo960 "column" ]
       , flexGrow: 1
       , minHeight: 0
+      , overflow: "hidden"
       , position: "relative"
       }
   -- Switching between Output and Packages fades the new panel in.
@@ -157,19 +160,18 @@ styles = StyleX.create
       }
   -- The sidebar sits beside the editor, and over it on phones.
   , sidebar:
-      { borderInlineEndColor: StyleX.conditionalValue "var(--border-subtle)"
-          [ StyleX.conditionalCase breakpoints.upTo720 "var(--border-strong)" ]
-      , borderInlineEndStyle: "solid"
-      , borderInlineEndWidth: 1
+      { display: "flex"
       , flexShrink: 0
       , insetBlock: 0
       , insetInlineStart: 0
+      -- Opening and closing grow and shrink the sidebar, so the editor follows its edge. Its
+      -- sections keep their width at that edge, so they slide in rather than squeeze.
+      , justifyContent: "flex-end"
       , position: StyleX.conditionalValue "relative"
           [ StyleX.conditionalCase breakpoints.upTo720 "absolute" ]
       , width: StyleX.conditionalValue "var(--sidebar-width)"
           [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
       , zIndex: 3
-      -- Opening and closing grow and shrink the sidebar, so the editor follows its edge.
       , animationDuration: "200ms"
       , animationFillMode: "forwards"
       , animationName: { default: "none", "[data-entering]": widthIn, "[data-exiting]": widthOut }
@@ -177,7 +179,17 @@ styles = StyleX.create
       , overflow: "hidden"
       }
   -- Files take the sidebar's height above the templates.
-  , sidebarSections: { display: "flex", flexDirection: "column", height: "100%" }
+  , sidebarSections:
+      { borderInlineEndColor: StyleX.conditionalValue "var(--border-subtle)"
+          [ StyleX.conditionalCase breakpoints.upTo720 "var(--border-strong)" ]
+      , borderInlineEndStyle: "solid"
+      , borderInlineEndWidth: 1
+      , display: "flex"
+      , flexDirection: "column"
+      , flexShrink: 0
+      , width: StyleX.conditionalValue "var(--sidebar-width)"
+          [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
+      }
   -- The sidebar's and the panel's edges, which drag to resize and close them below a minimum size.
   , handle:
       { backgroundColor:
@@ -250,6 +262,22 @@ styles = StyleX.create
       , position: "absolute"
       }
   , panel:
+      -- The panel's size is its flex basis, which runs along the workspace beside the editor and
+      -- down it below, so one animation opens the panel in both places.
+      { flexBasis: StyleX.conditionalValue "min(var(--panel-width), 70%)"
+          [ StyleX.conditionalCase breakpoints.upTo960 "min(var(--panel-height), 70%)" ]
+      , flexShrink: 0
+      , minHeight: 0
+      , minWidth: 0
+      , overflow: "hidden"
+      , animationDuration: "220ms"
+      , animationFillMode: "forwards"
+      , animationName: { default: "none", "[data-entering]": basisIn, "[data-exiting]": basisOut }
+      , animationTimingFunction: "var(--ease-out)"
+      }
+  -- The tabs keep the panel's open size at its leading edge, so they slide in rather than squeeze.
+  -- The workspace's container units match the 70% cap of the panel's flex basis.
+  , tabs:
       { backgroundColor: "var(--granite-950)"
       , borderInlineStartColor: "var(--border-subtle)"
       , borderInlineStartStyle:
@@ -261,20 +289,11 @@ styles = StyleX.create
       , borderBlockStartWidth: 1
       , display: "flex"
       , flexDirection: "column"
-      -- The panel's size is its flex basis, which runs along the workspace beside the editor and
-      -- down it below, so one animation opens the panel in both places.
-      , flexBasis: StyleX.conditionalValue "min(var(--panel-width), 70%)"
-          [ StyleX.conditionalCase breakpoints.upTo960 "min(var(--panel-height), 70%)" ]
-      , flexShrink: 0
-      , minHeight: 0
-      , minWidth: 0
-      , overflow: "hidden"
-      , animationDuration: "220ms"
-      , animationFillMode: "forwards"
-      , animationName: { default: "none", "[data-entering]": basisIn, "[data-exiting]": basisOut }
-      , animationTimingFunction: "var(--ease-out)"
+      , height: StyleX.conditionalValue "100%"
+          [ StyleX.conditionalCase breakpoints.upTo960 "min(var(--panel-height), 70cqh)" ]
+      , width: StyleX.conditionalValue "min(var(--panel-width), 70cqw)"
+          [ StyleX.conditionalCase breakpoints.upTo960 "100%" ]
       }
-  , tabs: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
   -- The panel's tabs share their row with the selected tab's actions, such as Clear.
   , panelBar:
       { alignItems: "center"
