@@ -1,41 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "react-aria-components/Button";
 import { Dialog, DialogTrigger } from "react-aria-components/Dialog";
-import { Modal, ModalOverlay } from "react-aria-components/Modal";
 import { Popover } from "react-aria-components/Popover";
 import ChevronDownIcon from "~icons/lucide/chevron-down";
-import PanelLeftCloseIcon from "~icons/lucide/panel-left-close";
-import PanelLeftOpenIcon from "~icons/lucide/panel-left-open";
+import MenuIcon from "~icons/lucide/menu";
+import XIcon from "~icons/lucide/x";
 import { NavigationLink } from "#src/Website/Components/NavigationLink.jsx";
-
-// When the page links scroll horizontally on narrow screens, keep the current page in view and
-// mark the edges that hide links so they can fade.
-export function pageNavigationImpl({ className, label, content }) {
-  const navigation = useRef(null);
-  const [fade, setFade] = useState(undefined);
-
-  useEffect(() => {
-    const element = navigation.current;
-    const current = element.querySelector("[aria-current='page']");
-    if (current && current.offsetLeft + current.offsetWidth > element.clientWidth) {
-      element.scrollLeft = current.offsetLeft;
-    }
-    const update = () => {
-      const start = element.scrollLeft > 1;
-      const end = element.scrollLeft + element.clientWidth < element.scrollWidth - 1;
-      setFade(start && end ? "both" : start ? "start" : end ? "end" : undefined);
-    };
-    update();
-    element.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      element.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-
-  return <nav ref={navigation} className={className} aria-label={label} data-fade={fade}>{content}</nav>;
-}
 
 // The reader is in the last section whose top has passed a line a third of the way down the
 // viewport, or in the last section once the page cannot scroll further. A section the reader
@@ -134,90 +104,76 @@ export function sectionNavigationImpl({ sections, links }) {
   return <SectionLinks sections={sections} active={active} links={links} />;
 }
 
-// Close an overlay when a shared StyleX breakpoint hides the component that opened it.
-function useCloseWhenHidden(setOpen) {
-  const root = useRef(null);
+// Below the desktop layout a sticky bar replaces the section rail, and on phones it also replaces
+// the page rail. Both menus open as panels the full width of the bar, below it.
+export function navigationBarImpl({ sections, links, pages, classes }) {
+  const active = useActiveSection(sections);
+  const [menu, setMenu] = useState(null);
+  const bar = useRef(null);
+  const pagesButton = useRef(null);
+  const title = sections.find(({ id }) => id === active)?.title;
 
+  // Close a menu once a shared StyleX breakpoint hides the control that opened it.
   useEffect(() => {
     const resize = () => {
-      if (getComputedStyle(root.current).display === "none") setOpen(false);
+      if (getComputedStyle(bar.current).display === "none") setMenu(null);
+      else if (getComputedStyle(pagesButton.current).display === "none") {
+        setMenu(current => (current === "pages" ? null : current));
+      }
     };
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  return root;
-}
-
-export function sectionMenuImpl({
-  sections, links, rootClassName, triggerClassName, labelClassName, currentClassName,
-  iconClassName, popoverClassName, dialogClassName, headingClassName, resources,
-}) {
-  const active = useActiveSection(sections);
-  const [open, setOpen] = useState(false);
-  const root = useCloseWhenHidden(setOpen);
-  const title = sections.find(({ id }) => id === active)?.title;
+  const trigger = name => ({
+    isOpen: menu === name,
+    onOpenChange: open => setMenu(open ? name : current => (current === name ? null : current)),
+  });
+  const closeOnLink = event => {
+    if (event.target.closest("a")) setMenu(null);
+  };
 
   return (
-    <div className={rootClassName} ref={root}>
-      <DialogTrigger isOpen={open} onOpenChange={setOpen}>
-        <Button className={triggerClassName}>
-          <span className={labelClassName}>On this page</span>
-          {title && <span className={currentClassName}>{title}</span>}
-          <ChevronDownIcon aria-hidden="true" focusable="false" className={iconClassName} />
+    <div className={classes.bar} ref={bar}>
+      <DialogTrigger {...trigger("pages")}>
+        <Button ref={pagesButton} className={classes.pagesTrigger}>
+          {menu === "pages"
+            ? <XIcon aria-hidden="true" focusable="false" className={classes.pagesIcon} />
+            : <MenuIcon aria-hidden="true" focusable="false" className={classes.pagesIcon} />}
+          <span className={classes.label}>Pages</span>
         </Button>
-        <Popover className={popoverClassName} placement="bottom start" offset={0} containerPadding={0}>
-          <Dialog className={dialogClassName} aria-label="On this page">
-            <div onClick={event => {
-              if (event.target.closest("a")) setOpen(false);
-            }}>
+        <Popover
+          className={classes.pagesPopover}
+          triggerRef={bar}
+          placement="bottom start"
+          offset={0}
+          containerPadding={0}
+        >
+          <Dialog className={classes.dialog} aria-label="Pages">
+            <div onClick={closeOnLink}>{pages}</div>
+          </Dialog>
+        </Popover>
+      </DialogTrigger>
+      <DialogTrigger {...trigger("sections")}>
+        <Button className={classes.sectionsTrigger}>
+          <span className={classes.label}>On this page</span>
+          {title && <span className={classes.current}>{title}</span>}
+          <ChevronDownIcon aria-hidden="true" focusable="false" className={classes.chevron} />
+        </Button>
+        <Popover
+          className={classes.popover}
+          triggerRef={bar}
+          placement="bottom start"
+          offset={0}
+          containerPadding={0}
+        >
+          <Dialog className={classes.dialog} aria-label="On this page">
+            <div onClick={closeOnLink}>
               <SectionLinks sections={sections} active={active} links={links} />
-              <p className={headingClassName}>Resources</p>
-              {resources}
             </div>
           </Dialog>
         </Popover>
       </DialogTrigger>
-    </div>
-  );
-}
-
-export function sectionSidebarImpl({
-  sections, links, rootClassName, buttonClassName, closeClassName, overlayClassName,
-  panelClassName, dialogClassName, labelClassName, resources,
-}) {
-  const active = useActiveSection(sections);
-  const [open, setOpen] = useState(false);
-  const root = useCloseWhenHidden(setOpen);
-
-  return (
-    <div className={rootClassName} ref={root}>
-      <Button
-        className={buttonClassName}
-        aria-label="Expand sidebar"
-        aria-expanded={open}
-        aria-controls="documentation-sidebar"
-        onPress={() => setOpen(true)}
-      >
-        <PanelLeftOpenIcon aria-hidden="true" focusable="false" />
-      </Button>
-      <ModalOverlay className={overlayClassName} isOpen={open} onOpenChange={setOpen} isDismissable>
-        <Modal className={panelClassName}>
-          <Dialog id="documentation-sidebar" className={dialogClassName} aria-label="Documentation sidebar">
-            <Button className={closeClassName} aria-label="Collapse sidebar" onPress={() => setOpen(false)}>
-              <PanelLeftCloseIcon aria-hidden="true" focusable="false" />
-            </Button>
-            <nav aria-label="On this page" onClick={event => {
-              if (event.target.closest("a")) setOpen(false);
-            }}>
-              <p className={labelClassName}>On this page</p>
-              <SectionLinks sections={sections} active={active} links={links} />
-            </nav>
-            <p className={labelClassName}>Resources</p>
-            {resources}
-          </Dialog>
-        </Modal>
-      </ModalOverlay>
     </div>
   );
 }

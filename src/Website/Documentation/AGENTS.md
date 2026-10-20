@@ -4,7 +4,7 @@ The documentation pages under `/docs/` follow the root [`AGENTS.md`](../../../AG
 
 ## Pages and links
 
-Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs` that uses `DocumentationLayout`. Add each page to `Page` in `Website.Components.Documentation`, which orders the header navigation and the previous and next links, and build its body from `Website.Documentation.Prose`.
+Each documentation page is a `Website.Documentation` module with a prerendered route in `src/pages/docs` that uses `DocumentationLayout`. Add each page to `Page` in `Website.Components.Documentation`, which orders the page navigation and the previous and next links, and build its body from `Website.Documentation.Prose`.
 
 - Link to documentation pages by their trailing-slash URLs, such as `/docs/installation/`. Production serves each page's `index.html` there and answers the bare form with an uncacheable 307, which would add a round trip to every swap.
 - The compiler README links to these routes. Keep their slugs stable, or update those links when you rename a page.
