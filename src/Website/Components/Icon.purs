@@ -20,11 +20,18 @@ module Website.Components.Icon
   , menu
   , minimize
   , pause
+  , loaderCircle
+  , panelBottom
+  , panelLeft
+  , panelRight
   , play
   , pureScript
+  , rotateCcw
   , server
+  , share
   , shieldCheck
   , snowflake
+  , square
   , squareTerminal
   , x
   , xSocial
@@ -55,11 +62,18 @@ foreign import maximize :: ReactComponent IconProps
 foreign import menu :: ReactComponent IconProps
 foreign import minimize :: ReactComponent IconProps
 foreign import pause :: ReactComponent IconProps
+foreign import loaderCircle :: ReactComponent IconProps
+foreign import panelBottom :: ReactComponent IconProps
+foreign import panelLeft :: ReactComponent IconProps
+foreign import panelRight :: ReactComponent IconProps
 foreign import play :: ReactComponent IconProps
 foreign import pureScript :: ReactComponent IconProps
+foreign import rotateCcw :: ReactComponent IconProps
 foreign import server :: ReactComponent IconProps
+foreign import share :: ReactComponent IconProps
 foreign import shieldCheck :: ReactComponent IconProps
 foreign import snowflake :: ReactComponent IconProps
+foreign import square :: ReactComponent IconProps
 foreign import squareTerminal :: ReactComponent IconProps
 foreign import x :: ReactComponent IconProps
 foreign import xSocial :: ReactComponent IconProps

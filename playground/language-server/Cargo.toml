@@ -1,0 +1,34 @@
+[package]
+name = "iris-playground-language-server"
+version = "0.1.0"
+edition = "2024"
+license = "BSD-3-Clause"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# The compiler crates are not published, so they come from the Iris repository at a release tag.
+# Bump every tag together, and regenerate `playground/packages/index.json` for the same tag.
+[dependencies]
+building = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+syntax = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.9" }
+# Match the version the Iris workspace pins.
+lsp-types = { package = "gen-lsp-types", version = "=0.11.0", features = ["url"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+url = "2.5.8"
+# `scripts/build-playground-language-server.mjs` requires the same wasm-bindgen-cli version.
+wasm-bindgen = "=0.2.129"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[workspace]

@@ -158,7 +158,13 @@ styles = StyleX.create
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
       }
-  , sectionLink: { width: 112, paddingInline: 12 }
+  -- Section links fit their labels on narrow desktops, where four of them at full width would
+  -- run into the actions.
+  , sectionLink:
+      { width:
+          StyleX.conditionalValue "112px" [ StyleX.conditionalCase breakpoints.upTo1160 "auto" ]
+      , paddingInline: 12
+      }
   , socialLink: { width: 44, paddingInline: 0 }
   , actions:
       { alignItems: "center"
@@ -338,6 +344,7 @@ siteNav { onInstall } = siteHeader { contained: true }
   [ DOM.nav { className: styleProps.links.className, "aria-label": "Explore Iris" }
       [ link false "/#benchmarks" "Benchmarks"
       , link false "/#editor" "Editor"
+      , link false "/playground/" "Playground"
       , socialLink "https://github.com/purefunctor/purescript-iris" "Iris on GitHub" Icon.gitHub
       , socialLink "https://x.com/purefunctor" "purefunctor on X" Icon.xSocial
       , socialLink "https://bsky.app/profile/purefunctor.me" "purefunctor on Bluesky" Icon.bluesky
@@ -354,6 +361,7 @@ siteNav { onInstall } = siteHeader { contained: true }
           , content:
               [ link true "/#benchmarks" "Benchmarks"
               , link true "/#editor" "Editor"
+              , link true "/playground/" "Playground"
               , link true "/docs/getting-started/" "Documentation"
               , menuInstallButton
               , DOM.div styleProps.menuFooter

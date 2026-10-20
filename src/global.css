@@ -65,6 +65,7 @@
     --yellow-300: oklch(89% 0.1 98);
     --cyan-300: oklch(83% 0.08 205);
     --red-300: oklch(76% 0.13 28);
+    --blue-300: oklch(81% 0.1 245);
     /* Temperatures for the benchmark's Cold and Hot tabs and their particles. */
     --frost-400: oklch(79% 0.1 238);
     --frost-300: oklch(89% 0.06 230);

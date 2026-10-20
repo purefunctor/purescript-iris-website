@@ -5,3 +5,6 @@
 dist/
 node_modules/
 output/
+/playground/language-server/target/
+/public/playground/language-server/
+/playground/.cache/

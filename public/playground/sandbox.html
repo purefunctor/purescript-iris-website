@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+  Runs a playground program. The page embeds it with sandbox="allow-scripts", so it has an opaque
+  origin, and public/_headers adds the same sandbox to its response. Its policy below blocks network
+  access; modules arrive from the page as text and load from blob URLs through an import map.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'"
+    />
+    <title>Iris playground program</title>
+  </head>
+  <body>
+    <script>
+      (() => {
+        const send = (message) => parent.postMessage(message, "*");
+        const format = (value) => {
+          if (typeof value === "string") return value;
+          if (value instanceof Error) return value.stack || String(value);
+          try {
+            return JSON.stringify(value) ?? String(value);
+          } catch {
+            return String(value);
+          }
+        };
+        for (const level of ["log", "info", "warn", "error", "debug"]) {
+          console[level] = (...values) => send({ type: "console", level, text: values.map(format).join(" ") });
+        }
+        addEventListener("error", (event) => send({ type: "error", text: format(event.error ?? event.message) }));
+        addEventListener("unhandledrejection", (event) => send({ type: "error", text: format(event.reason) }));
+
+        addEventListener("message", async (event) => {
+          if (event.source !== parent || event.data?.type !== "run") return;
+          const { files, entry } = event.data;
+          const imports = {};
+          for (const [path, text] of Object.entries(files)) {
+            imports[path] = URL.createObjectURL(new Blob([text], { type: "text/javascript" }));
+          }
+          const map = document.createElement("script");
+          map.type = "importmap";
+          map.textContent = JSON.stringify({ imports });
+          document.head.append(map);
+          try {
+            const module = await import(entry);
+            if (typeof module.main !== "function") {
+              send({ type: "error", text: "The entry module does not export main." });
+            } else {
+              module.main();
+            }
+            send({ type: "done" });
+          } catch (error) {
+            send({ type: "error", text: format(error) });
+          }
+        }, { once: false });
+
+        send({ type: "ready" });
+      })();
+    </script>
+  </body>
+</html>

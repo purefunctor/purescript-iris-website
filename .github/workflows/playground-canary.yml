@@ -1,0 +1,118 @@
+name: Playground language server canary
+
+# Publishes the playground's language server for every change to its inputs on main, as the Iris
+# repository publishes compiler canaries. The deploy installs the canary of the last commit that
+# changed these paths, which `scripts/download-playground-language-server.mjs` finds the same way.
+on:
+  push:
+    branches: [main]
+    paths:
+      - playground/language-server/**
+      - scripts/build-playground-language-server.mjs
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: playground-language-server-canary
+  cancel-in-progress: false
+
+jobs:
+  canary:
+    name: Build and publish the canary
+    runs-on: ubuntu-24.04
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Derive canary
+        id: canary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(node scripts/download-playground-language-server.mjs --print-tag)
+          revision=$(git log -1 --format=%H -- playground/language-server scripts/build-playground-language-server.mjs)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          if release=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,targetCommitish); then
+            if [[ $(jq -r '.isDraft' <<< "$release") != true ]]; then
+              echo "Canary $tag is already published."
+              echo "published=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [[ $(jq -r '.targetCommitish' <<< "$release") != "$revision" ]]; then
+              echo "Draft canary $tag targets a different commit." >&2
+              exit 1
+            fi
+          fi
+          echo "published=false" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the canary's revision
+        if: steps.canary.outputs.published == 'false'
+        run: git checkout --detach "${{ steps.canary.outputs.revision }}"
+
+      - name: Cache Rust builds
+        if: steps.canary.outputs.published == 'false'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: playground/language-server
+
+      - name: Install wasm-bindgen
+        if: steps.canary.outputs.published == 'false'
+        run: |
+          version=$(sed -n 's/^wasm-bindgen = "=\(.*\)"$/\1/p' playground/language-server/Cargo.toml)
+          cargo install wasm-bindgen-cli --version "$version" --locked
+
+      - name: Build the language server
+        if: steps.canary.outputs.published == 'false'
+        env:
+          PLAYGROUND_LANGUAGE_SERVER_RELEASE: ${{ steps.canary.outputs.tag }}
+        run: node scripts/build-playground-language-server.mjs
+
+      - name: Check the language server
+        if: steps.canary.outputs.published == 'false'
+        run: |
+          node scripts/test-playground-language-server.mjs --stress
+          node scripts/test-playground-language-server.mjs --all
+
+      - name: Package the language server
+        if: steps.canary.outputs.published == 'false'
+        run: tar -czf playground-language-server.tar.gz -C public/playground/language-server .
+
+      - name: Attest the archive
+        if: steps.canary.outputs.published == 'false'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: playground-language-server.tar.gz
+
+      - name: Publish the canary
+        if: steps.canary.outputs.published == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVISION: ${{ steps.canary.outputs.revision }}
+          TAG: ${{ steps.canary.outputs.tag }}
+        run: |
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$REVISION" \
+              --title "$TAG" \
+              --notes "Automated canary build of the playground language server at \`$REVISION\`." \
+              --draft \
+              --prerelease \
+              --latest=false
+          fi
+          gh release upload "$TAG" playground-language-server.tar.gz --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
