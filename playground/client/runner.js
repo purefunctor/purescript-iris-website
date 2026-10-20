@@ -38,6 +38,16 @@ const loadModules = once(async () => {
 // A literal specifier would make Vite resolve the endpoint as a source file.
 const STYLEX_COMPILER = "/playground/stylex.js";
 const loadStylex = once(() => import(/* @vite-ignore */ STYLEX_COMPILER));
+// The site's tokens, base styles and fonts, from src/pages/playground/frame.json.ts.
+const loadTheme = once(async () => {
+  const response = await fetch("/playground/frame.json");
+  if (!response.ok) throw new Error(`Could not load the frame's theme: ${response.status}`);
+  const { css, fonts } = await response.json();
+  return {
+    css,
+    fonts: fonts.map(({ family, data }) => ({ family, data: Uint8Array.from(atob(data), (char) => char.charCodeAt(0)) })),
+  };
+});
 
 /**
  * Rewrites imports between `files` and returns the frame's files, keyed by import map key, with
@@ -127,16 +137,21 @@ export class Runner {
   run(files, entry, css) {
     this.stop();
     const frame = document.createElement("iframe");
-    frame.setAttribute("sandbox", "allow-scripts");
+    // Forms fire submit events only with allow-forms; the frame's form-action keeps them from leaving.
+    frame.setAttribute("sandbox", "allow-scripts allow-forms");
     frame.setAttribute("referrerpolicy", "no-referrer");
     frame.setAttribute("aria-hidden", "true");
     frame.tabIndex = -1;
     frame.title = "Program sandbox";
-    frame.style.cssText = "display:block;width:100%;height:100%;border:0;background:white;visibility:hidden";
+    frame.style.cssText = "display:block;width:100%;height:100%;border:0;visibility:hidden";
+    // The theme loads while the frame does; a program runs unstyled if it cannot.
+    const theme = loadTheme().catch(() => null);
     this.#listener = ({ source, data }) => {
       if (source !== frame.contentWindow || typeof data !== "object" || data === null) return;
       if (data.type === "ready") {
-        frame.contentWindow.postMessage({ type: "run", files, entry: `${PREFIX}${entry}`, css }, "*");
+        theme.then((theme) => {
+          if (this.#frame === frame) frame.contentWindow.postMessage({ type: "run", files, entry: `${PREFIX}${entry}`, css, theme }, "*");
+        });
       } else if (data.type === "view") {
         frame.removeAttribute("aria-hidden");
         frame.tabIndex = 0;

@@ -21,7 +21,7 @@
 # The playground runs programs in this frame. Its response carries the same sandbox as the frame
 # element, so the page stays in an opaque origin even when opened directly.
 /playground/sandbox.html
-  Content-Security-Policy: sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'
+  Content-Security-Policy: sandbox allow-scripts allow-forms; default-src 'none'; form-action 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'
   Cache-Control: no-cache
 
 # The language server is replaced in place when the playground updates its Iris release.
