@@ -164,11 +164,27 @@ export function outputViewImpl({ frames, className }) {
       container.style.height = `${inner.height}px`;
     };
     place();
-    // The slot's size changes whenever its position does, as the panel resizes or the window does.
+    // The slot's size changes as the panel resizes or the window does.
     const observer = new ResizeObserver(place);
     observer.observe(element);
     observer.observe(container.parentElement);
+    // The panel opens and closes at its full size, so while it animates, the slot only moves.
+    let frame = 0;
+    const follow = () => {
+      place();
+      frame = requestAnimationFrame(follow);
+    };
+    const moving = (event) => {
+      if (!event.target.contains(element)) return;
+      cancelAnimationFrame(frame);
+      if (event.type === "animationstart") follow();
+      else place();
+    };
+    const events = ["animationstart", "animationend", "animationcancel"];
+    for (const type of events) container.parentElement.addEventListener(type, moving);
     return () => {
+      cancelAnimationFrame(frame);
+      for (const type of events) container.parentElement.removeEventListener(type, moving);
       observer.disconnect();
       for (const property of ["inset-inline-start", "inset-block-start", "width", "height"]) {
         container.style.removeProperty(property);
