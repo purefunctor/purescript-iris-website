@@ -25,6 +25,8 @@ const MAX_LINES = 1000;
 const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
 // The panel's width beside the editor and its height below it, kept the same way.
 const PANEL_SIZE = "iris-playground-panel-size";
+// The height of the console over a program's view, kept the same way.
+const CONSOLE_HEIGHT = "iris-playground-console-height";
 // Every template activates what the `purescript` and `purescript-contrib` organizations publish.
 const CORE = Object.keys(index.packages).filter((name) => ["purescript", "purescript-contrib"].includes(index.packages[name].owner));
 const templatePackages = (template) => [...CORE, ...template.packages];
@@ -62,6 +64,8 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     panelWidth: Number(panelSize.width) || 380,
     panelHeight: Number(panelSize.height) || Math.round(innerHeight * 0.4),
     panelTab: "output",
+    console: true,
+    consoleHeight: Number(safely(() => localStorage.getItem(CONSOLE_HEIGHT))) || 0,
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], active: 0, packageSet: index.packageSet.version, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [], view: false },
@@ -369,6 +373,12 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     closePanel: () => setState(() => ({ panel: false })),
     selectPanelTab: (tab) => setState(() => ({ panelTab: tab })),
+    resizeConsole: (height) => {
+      safely(() => localStorage.setItem(CONSOLE_HEIGHT, String(height)));
+      setState(() => ({ console: true, consoleHeight: height }));
+    },
+    toggleConsole: () => setState((current) => ({ console: !current.console })),
+    closeConsole: () => setState(() => ({ console: false })),
     createFile: () => {
       let index = 1;
       while (models.has(`src/Module${index}.purs`)) index += 1;

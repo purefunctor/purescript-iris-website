@@ -2,7 +2,7 @@ module Website.Playground.Index (component) where
 
 import Prelude
 
-import Data.Array (null)
+import Data.Array (filter, length, null)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Nullable (Nullable, toMaybe)
 import Effect (Effect)
@@ -10,7 +10,7 @@ import Effect.Aff (Milliseconds(..), delay)
 import Effect.Unsafe (unsafePerformEffect)
 import Foreign (Foreign)
 import Iris.StyleX as StyleX
-import React.Basic (JSX, ReactComponent, Ref, element)
+import React.Basic (JSX, ReactComponent, Ref, element, fragment)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import React.Basic.Hooks.Aff (useAff)
@@ -25,7 +25,7 @@ import Website.Playground.FileTree (fileTree)
 import Website.Playground.Loading (loading)
 import Website.Playground.Packages (packagesPanel)
 import Website.Playground.Templates (templateList)
-import Website.Playground.Types (Line, Run, State, View)
+import Website.Playground.Types (Actions, Line, Run, State, View)
 import Yoga.React.DOM as DOM
 
 foreign import playgroundImpl :: ReactComponent { theme :: Foreign, render :: View -> JSX }
@@ -71,6 +71,23 @@ foreign import panelImpl ::
 -- | Shows the program's frame, which lives in `frames`, where this renders.
 foreign import outputViewImpl ::
   ReactComponent { frames :: Ref (Nullable Element), className :: String }
+
+-- | The program's messages, which follow new ones while scrolled to the bottom. An `overlay`
+-- | console lies over the program's view below its `bar`, `height` pixels tall and at least ten
+-- | messages, and collapses to the bar while not `open`.
+foreign import consoleImpl ::
+  ReactComponent
+    { overlay :: Boolean
+    , open :: Boolean
+    , height :: Int
+    , resize :: Int -> Effect Unit
+    , close :: Effect Unit
+    , className :: String
+    , scrollerClassName :: String
+    , handleClassName :: String
+    , bar :: JSX
+    , children :: JSX
+    }
 
 foreign import panelTabsImpl ::
   ReactComponent
@@ -430,8 +447,8 @@ styles = StyleX.create
       , flexGrow: 1
       , fontFamily: "var(--font-mono)"
       , fontSize: 13
-      , lineHeight: 1.6
       , minHeight: 0
+      , position: "relative"
       }
   , clear:
       { backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
@@ -446,22 +463,107 @@ styles = StyleX.create
       , outline: { default: "revert", ":focus-visible": "none" }
       , paddingInline: 10
       }
-  , lines: { margin: 0, paddingBlock: 12, paddingInline: 16 }
-  -- A program that renders fills the panel, and its log keeps to a strip below it.
+  -- The console reads like a browser's: one row per message, split by hairlines, with warnings
+  -- and errors tinted in their own hues and marked by an icon. consoleImpl's minimum height is its
+  -- bar and ten of these rows, so keep its arithmetic in step with their sizes.
+  , console: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
+  , consoleScroller: { flexGrow: 1, minHeight: 0, overflowY: "auto" }
+  -- A program that renders fills the panel, and its console lies over the view's lower edge.
   , view: { flexGrow: 1, minHeight: 0 }
-  , viewLines:
-      { borderBlockStartColor: "var(--border-subtle)"
+  , overlayConsole:
+      { backgroundColor: "var(--granite-950)"
+      , borderBlockStartColor: "var(--border-default)"
       , borderBlockStartStyle: "solid"
       , borderBlockStartWidth: 1
-      , flexShrink: 0
-      , maxHeight: "35%"
-      , overflowY: "auto"
+      , boxShadow: "0 -10px 24px oklch(0% 0 0 / 35%)"
+      , flexGrow: 0
+      , insetBlockEnd: 0
+      , insetInline: 0
+      , maxHeight: "100%"
+      , overflow: "hidden"
+      , position: "absolute"
+      , zIndex: 5
       }
-  , line: { overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
+  , consoleHandle: { cursor: "row-resize", height: 6, insetInline: 0, paddingBlock: 2, zIndex: 6 }
+  -- The bar collapses and brings up the console, and counts its messages, warnings and errors.
+  , consoleBar:
+      { alignItems: "center"
+      , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
+      , borderBlockEndColor: "var(--border-subtle)"
+      , borderBlockEndStyle: "solid"
+      , borderBlockEndWidth: 1
+      , borderBlockStartStyle: "none"
+      , borderInlineStyle: "none"
+      , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
+      , cursor: "default"
+      , display: "flex"
+      , flexShrink: 0
+      , fontFamily: "var(--font-sans)"
+      , fontSize: 12
+      , fontWeight: 500
+      , gap: 8
+      , height: 28
+      , outlineColor: "var(--focus-ring)"
+      , outlineOffset: -2
+      , outlineStyle: { default: "none", ":focus-visible": "solid" }
+      , outlineWidth: 2
+      , paddingInline: 8
+      , textAlign: "start"
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
+      , width: "100%"
+      }
+  , chevron:
+      { display: "inline-flex"
+      , fontSize: 12
+      , transitionDuration: { default: "160ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "transform"
+      , transitionTimingFunction: "var(--ease-out)"
+      }
+  , collapsedChevron: { transform: "rotate(180deg)" }
+  , counts: { alignItems: "center", display: "flex", gap: 10, marginInlineStart: "auto" }
+  , count:
+      { alignItems: "center", display: "inline-flex", fontVariantNumeric: "tabular-nums", gap: 4 }
+  , warningCount: { color: "var(--yellow-300)" }
+  , errorCount: { color: "var(--red-300)" }
+  , line:
+      { borderBlockEndColor: "var(--border-subtle)"
+      , borderBlockEndStyle: "solid"
+      , borderBlockEndWidth: 1
+      , display: "flex"
+      , gap: 8
+      , lineHeight: "18px"
+      , paddingBlock: 2
+      , paddingInlineEnd: 12
+      , paddingInlineStart: 8
+      }
+  -- The icon centers on the message's first line, which is as tall as the icon's box.
+  , lineIcon:
+      { alignItems: "center"
+      , display: "inline-flex"
+      , flexShrink: 0
+      , fontSize: 11
+      , height: 18
+      , justifyContent: "center"
+      , width: 14
+      }
+  , lineText: { minWidth: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
   , logLine: { color: "var(--text-secondary)" }
   , infoLine: { color: "var(--text-tertiary)" }
-  , warningLine: { color: "var(--yellow-300)" }
-  , errorLine: { color: "var(--red-300)" }
+  -- A tinted row also tints the separator above it, as browsers do.
+  , warningLine:
+      { backgroundColor: "oklch(from var(--yellow-300) l c h / 8%)"
+      , borderBlockEndColor: "oklch(from var(--yellow-300) l c h / 22%)"
+      , boxShadow: "0 -1px 0 oklch(from var(--yellow-300) l c h / 22%)"
+      , color: "var(--yellow-300)"
+      }
+  , errorLine:
+      { backgroundColor: "oklch(from var(--red-300) l c h / 9%)"
+      , borderBlockEndColor: "oklch(from var(--red-300) l c h / 24%)"
+      , boxShadow: "0 -1px 0 oklch(from var(--red-300) l c h / 24%)"
+      , color: "var(--red-300)"
+      }
   , empty:
       { color: "var(--text-tertiary)"
       , fontFamily: "var(--font-sans)"
@@ -698,7 +800,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , panelClassName: styleProps.tabPanel.className
         , switchedPanelClassName: (StyleX.props [ styles.tabPanel, styles.switched ]).className
         , badgeClassName: styleProps.badge.className
-        , output: output state.run frames
+        , output: output state actions frames
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
         , packages: packagesPanel
@@ -823,22 +925,69 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
 -- | What `main` printed, below what it rendered, if it did. The Run key already shows whether the
 -- | project is compiling or running, and errors and stops arrive as lines, so the output has no
 -- | status of its own.
-output :: Run -> Ref (Nullable Element) -> JSX
-output run frames = DOM.div styleProps.output
+output :: State -> Actions -> Ref (Nullable Element) -> JSX
+output state actions frames = DOM.div styleProps.output
   if run.view
   then
     [ element outputViewImpl { frames, className: styleProps.view.className }
-    , if null run.lines then mempty else log (StyleX.props [ styles.lines, styles.viewLines ])
+    , if null run.lines then mempty else console true
     ]
   else
     [ case run.status, null run.lines of
         "idle", true -> DOM.p styleProps.empty "Run the project to see what main prints or renders."
         "done", true -> DOM.p styleProps.empty "main finished without printing anything."
-        _, _ -> log styleProps.lines
+        _, _ -> console false
     ]
   where
-  log { className } =
-    DOM.div { className, role: "log", "aria-live": "polite" } (map outputLine run.lines)
+  run = state.run
+  console overlay = element consoleImpl
+    { overlay
+    , open: state.console
+    , height: state.consoleHeight
+    , resize: actions.resizeConsole
+    , close: actions.closeConsole
+    , className:
+        ( StyleX.props [ styles.console, StyleX.conditional overlay styles.overlayConsole ]
+        ).className
+    , scrollerClassName: styleProps.consoleScroller.className
+    , handleClassName: (StyleX.props [ styles.handle, styles.consoleHandle ]).className
+    , bar: consoleBar state.console run.lines actions.toggleConsole
+    , children: fragment (map outputLine run.lines)
+    }
+
+consoleBar :: Boolean -> Array Line -> Effect Unit -> JSX
+consoleBar open lines toggle = DOM.button
+  { className: styleProps.consoleBar.className
+  , onClick: handler_ toggle
+  , title: if open then "Collapse the console" else "Bring up the console"
+  , type: "button"
+  , "aria-controls": "playground-console"
+  , "aria-expanded": open
+  , "aria-label": "Console, "
+      <> plural (length lines) "message"
+      <> label warnings "warning"
+      <> label errors "error"
+  }
+  [ DOM.span
+      (StyleX.props [ styles.chevron, StyleX.conditional (not open) styles.collapsedChevron ])
+      (icon Icon.chevronDown)
+  , DOM.text "Console"
+  , DOM.span styleProps.counts
+      [ counter warnings styles.warningCount Icon.triangleAlert
+      , counter errors styles.errorCount Icon.circleX
+      , DOM.span styleProps.badge (show (length lines))
+      ]
+  ]
+  where
+  warnings = count "warning"
+  errors = count "error"
+  count kind = length (filter (\line -> line.kind == kind) lines)
+  counter n tone icon'
+    | n == 0 = mempty
+    | otherwise = DOM.span (StyleX.props [ styles.count, tone ])
+      [ DOM.span styleProps.icon (icon icon'), DOM.text (show n) ]
+  label n word = if n == 0 then "" else ", " <> plural n word
+  plural n word = show n <> " " <> word <> if n == 1 then "" else "s"
 
 clearButton :: Run -> Effect Unit -> JSX
 clearButton run clear
@@ -848,10 +997,11 @@ clearButton run clear
       "Clear"
 
 outputLine :: Line -> JSX
-outputLine line = DOM.div (StyleX.props [ styles.line, tone ]) line.text
+outputLine line = DOM.div (StyleX.props [ styles.line, tone ])
+  [ DOM.span styleProps.lineIcon marker, DOM.span styleProps.lineText line.text ]
   where
-  tone = case line.kind of
-    "error" -> styles.errorLine
-    "warning" -> styles.warningLine
-    "info" -> styles.infoLine
-    _ -> styles.logLine
+  { tone, marker } = case line.kind of
+    "error" -> { tone: styles.errorLine, marker: icon Icon.circleX }
+    "warning" -> { tone: styles.warningLine, marker: icon Icon.triangleAlert }
+    "info" -> { tone: styles.infoLine, marker: mempty }
+    _ -> { tone: styles.logLine, marker: mempty }

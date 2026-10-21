@@ -41,6 +41,10 @@ type State =
   , panelHeight :: Int
   -- | The panel's selected tab, `output` or `packages`, which it keeps while closed.
   , panelTab :: String
+  -- | Whether the console over a program's view shows its messages or only its bar, and its
+  -- | height there in pixels, or 0 before the reader resizes it.
+  , console :: Boolean
+  , consoleHeight :: Int
   , server :: Server
   , packages :: Packages
   , run :: Run
@@ -107,6 +111,11 @@ type Actions =
   , resizePanel :: { width :: Int, height :: Int } -> Effect Unit
   , closePanel :: Effect Unit
   , selectPanelTab :: String -> Effect Unit
+  -- | Collapses the console over a program's view to its bar, or brings it back up.
+  , toggleConsole :: Effect Unit
+  -- | Opens the console over a program's view at a height in pixels.
+  , resizeConsole :: Int -> Effect Unit
+  , closeConsole :: Effect Unit
   , createFile :: Effect Unit
   -- | Returns why the name was rejected, or null once the file is renamed.
   , renameFile :: String -> String -> Effect (Nullable String)

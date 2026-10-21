@@ -6,6 +6,8 @@ module Website.Components.Icon
   , bot
   , check
   , checkCircle
+  , chevronDown
+  , circleX
   , code
   , codeXml
   , copy
@@ -33,6 +35,7 @@ module Website.Components.Icon
   , snowflake
   , square
   , squareTerminal
+  , triangleAlert
   , x
   , xSocial
   )
@@ -48,6 +51,8 @@ foreign import bookOpen :: ReactComponent IconProps
 foreign import bot :: ReactComponent IconProps
 foreign import check :: ReactComponent IconProps
 foreign import checkCircle :: ReactComponent IconProps
+foreign import chevronDown :: ReactComponent IconProps
+foreign import circleX :: ReactComponent IconProps
 foreign import code :: ReactComponent IconProps
 foreign import codeXml :: ReactComponent IconProps
 foreign import copy :: ReactComponent IconProps
@@ -75,5 +80,6 @@ foreign import shieldCheck :: ReactComponent IconProps
 foreign import snowflake :: ReactComponent IconProps
 foreign import square :: ReactComponent IconProps
 foreign import squareTerminal :: ReactComponent IconProps
+foreign import triangleAlert :: ReactComponent IconProps
 foreign import x :: ReactComponent IconProps
 foreign import xSocial :: ReactComponent IconProps

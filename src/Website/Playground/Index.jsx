@@ -16,6 +16,8 @@ const initialState = {
   panelWidth: 380,
   panelHeight: 320,
   panelTab: "output",
+  console: true,
+  consoleHeight: 0,
   server: { kind: null, version: null, revision: null, status: "starting", message: null },
   packages: { available: [], active: 0, packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
   run: { status: "idle", lines: [], view: false },
@@ -76,6 +78,9 @@ export function playgroundImpl({ theme, render }) {
       resizePanel: (size) => () => call("resizePanel", size),
       closePanel: () => call("closePanel"),
       selectPanelTab: (tab) => () => call("selectPanelTab", tab),
+      toggleConsole: () => call("toggleConsole"),
+      resizeConsole: (height) => () => call("resizeConsole", height),
+      closeConsole: () => call("closeConsole"),
       createFile: () => call("createFile"),
       renameFile: (from) => (to) => () => call("renameFile", from, to) ?? null,
       deleteFile: (path) => () => call("deleteFile", path),
@@ -231,6 +236,17 @@ function usePresence(open, animate) {
 const settled = (phase) => (phase === "exiting" ? "closed" : phase === "entering" ? "open" : phase);
 
 const STEP = 16;
+
+// A drag keeps the page's cursor, and frames, such as a program's view, ignore the pointer, because
+// a frame under it takes its events from the handle that captured it.
+function dragging(cursor) {
+  if (cursor) document.documentElement.style.cursor = cursor;
+  else document.documentElement.style.removeProperty("cursor");
+  for (const frame of document.querySelectorAll("iframe")) {
+    if (cursor) frame.style.pointerEvents = "none";
+    else frame.style.removeProperty("pointer-events");
+  }
+}
 // Shrinks are named by the key that grows each kind of area.
 const SHRINK = { ArrowRight: "ArrowLeft", ArrowLeft: "ArrowRight", ArrowUp: "ArrowDown", ArrowDown: "ArrowUp" };
 
@@ -250,7 +266,7 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
 
   const end = () => {
     if (!drag) return;
-    document.documentElement.style.removeProperty("cursor");
+    dragging(null);
     setDrag(null);
     if (drag.open) resize(drag.size)();
     else close();
@@ -290,7 +306,7 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
         if (event.button !== 0) return;
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
-        document.documentElement.style.cursor = vertical ? "row-resize" : "col-resize";
+        dragging(vertical ? "row-resize" : "col-resize");
         setDrag({ bounds: event.currentTarget.parentElement.getBoundingClientRect(), size, open });
       },
       onPointerMove: (event) => {
@@ -396,5 +412,72 @@ export function pillImpl({ href, label, accessibleLabel, tooltip, className, ico
         {tooltip}
       </Tooltip>
     </TooltipTrigger>
+  );
+}
+
+// The console's bar with the border above it, and ten single-line messages below it, from the
+// console's styles in Index.purs: a 28px bar, and rows of an 18px line, 2px of padding above and
+// below, and a 1px separator.
+const CONSOLE_BAR = 1 + 28;
+const CONSOLE_MIN = CONSOLE_BAR + 10 * 23;
+
+// The program's messages, which follow new ones while scrolled to the bottom and stay put once the
+// reader scrolls up. Without a view they fill the output. Over a view, they lie on its lower edge
+// below `bar`, opening at ten messages' height, and the handle on their top edge resizes them;
+// dragging it below the bar's height, or the bar's toggle, collapses them to the bar. The handle
+// measures from the console's parent, which must be positioned, and the console's styles cap it at
+// that parent's height, so a height kept from a taller window keeps the bar in reach.
+export function consoleImpl({ overlay, open, height, resize, close, className, scrollerClassName, handleClassName, bar, children }) {
+  const scroller = useRef(null);
+  const following = useRef(true);
+  const area = useResizable({
+    id: "playground-console",
+    label: "Resize console",
+    open,
+    size: Math.max(CONSOLE_MIN, height),
+    min: CONSOLE_MIN,
+    max: 4000,
+    collapse: CONSOLE_BAR + 40,
+    vertical: true,
+    fromEnd: true,
+    share: 0.9,
+    resize,
+    close,
+  });
+  const shown = area.shown ? area.current : CONSOLE_BAR;
+  const follow = () => {
+    const element = scroller.current;
+    if (element && following.current) element.scrollTop = element.scrollHeight;
+  };
+  // Every render may add messages, and a resize moves the bottom.
+  useLayoutEffect(follow);
+  useEffect(() => {
+    const observer = new ResizeObserver(follow);
+    observer.observe(scroller.current);
+    return () => observer.disconnect();
+  }, []);
+  const onScroll = () => {
+    const element = scroller.current;
+    following.current = element.scrollHeight - element.scrollTop - element.clientHeight < 2;
+  };
+  return (
+    <>
+      {overlay && (
+        <div className={handleClassName} style={{ insetBlockEnd: `calc(min(${shown}px, 100%) - 3px)` }} {...area.handleProps} />
+      )}
+      <div className={className} style={overlay ? { height: shown } : undefined}>
+        {overlay && bar}
+        <div
+          aria-live="polite"
+          className={scrollerClassName}
+          id="playground-console"
+          onScroll={onScroll}
+          ref={scroller}
+          role="log"
+        >
+          {children}
+        </div>
+      </div>
+    </>
   );
 }
