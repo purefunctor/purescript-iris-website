@@ -220,22 +220,20 @@ assert.ok(errors(broken.get(main)).length > 0, "a String total should not type c
 notify("textDocument/didChange", { textDocument: { uri: main, version: 3 }, contentChanges: [{ text: MAIN }] });
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 
-// Package sources load once an import reaches them, so an import that an edit adds loads modules
-// that nothing imported before.
-assert.ok(loaded.loaded < loaded.sources, "package sources should load on demand");
-const REGEX = MAIN.replace(
-  "import Util (answer, double)\n",
-  "import Util (answer, double)\nimport Data.String.Regex (test)\nimport Data.String.Regex.Flags (noFlags)\n" +
-    "import Data.String.Regex.Unsafe (unsafeRegex)\n",
-) + '\nmatches :: Boolean\nmatches = test (unsafeRegex "a+" noFlags) "aaa"\n';
-notify("textDocument/didChange", { textDocument: { uri: main, version: 4 }, contentChanges: [{ text: REGEX }] });
-const imported = await time("Diagnostics after a new import", drainDiagnostics);
-assert.deepEqual(errors(imported.get(main)), [], "a newly imported package module should resolve");
-const regexDefinition = request("textDocument/definition", {
+// Completion offers imports from package modules that nothing in the project imports yet.
+const UNIMPORTED = MAIN + "\nmatches = unsafeRege\n";
+notify("textDocument/didChange", { textDocument: { uri: main, version: 4 }, contentChanges: [{ text: UNIMPORTED }] });
+drainDiagnostics();
+const unimported = request("textDocument/completion", {
   textDocument: { uri: main },
-  position: at(REGEX, "unsafeRegex \"", 1),
+  position: at(UNIMPORTED, "unsafeRege\n", "unsafeRege".length),
 });
-assert.match(JSON.stringify(regexDefinition), /packages\/strings\/src\/Data\/String\/Regex\/Unsafe\.purs/);
+assert.ok(
+  (unimported.items ?? unimported).some(
+    (item) => item.label === "unsafeRegex" && item.labelDetails?.description === "Data.String.Regex.Unsafe",
+  ),
+  "completion should offer unsafeRegex from Data.String.Regex.Unsafe, which nothing imports",
+);
 notify("textDocument/didChange", { textDocument: { uri: main, version: 5 }, contentChanges: [{ text: MAIN }] });
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 

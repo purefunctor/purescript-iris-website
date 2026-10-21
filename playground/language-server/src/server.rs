@@ -118,8 +118,7 @@ impl Server {
         }
     }
 
-    /// The text of a project or package source, including package sources the engine has not
-    /// loaded.
+    /// The text of a project or package file, including package foreign files.
     pub fn read_source(&self, uri: &str) -> Option<String> {
         if let Some(file_id) = self.workspace.files.source_id(uri)
             && let Ok(content) = self.workspace.engine.content(file_id)
@@ -160,8 +159,7 @@ impl Server {
                 });
                 let change = self.workspace.set_packages(packages.collect());
                 self.schedule(&change, None, outgoing);
-                let (sources, loaded) = self.workspace.package_counts();
-                Ok(json!({ "sources": sources, "loaded": loaded }))
+                Ok(json!({ "sources": self.workspace.package_sources() }))
             }
             "iris/emit" => {
                 let emitted = emit::emit(&self.workspace)

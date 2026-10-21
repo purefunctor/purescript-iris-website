@@ -4,13 +4,10 @@
 //! snapshot, because an input change waits for every snapshot to be dropped, and on a single
 //! thread that wait can never finish.
 //!
-//! The playground receives the whole package set, but the engine only loads the package sources
-//! that the project imports, directly or through other packages. Loading a source parses it to
-//! register its module name and keeps the syntax tree, which for all 10,000 sources of the package
-//! set takes about 900 MiB of memory and four seconds. Unloaded sources stay as text, indexed by
-//! the module name in their header.
+//! The engine loads every package source it receives, because completion offers imports only from
+//! loaded modules.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use building::QueryEngine;
@@ -25,7 +22,6 @@ use iris_analysis::symbols::WorkspaceSymbolsCache;
 use iris_analysis::{AnalyzerCapabilities, AnalyzerContext, AnalyzerHost};
 use lsp_types::Uri;
 use prim_constants::MODULE_MAP;
-use syntax::ast::AstNode;
 
 /// Where the playground's documents live. Project files are opened by the editor; package and Prim
 /// sources are read-only.
@@ -59,24 +55,15 @@ pub struct Workspace {
     pub position_encoding: PositionEncoding,
     pub capabilities: AnalyzerCapabilities,
     packages: PackageSources,
-    /// Package units in the engine, with the foreign kinds loaded for each.
-    loaded: HashMap<SourceUnitKey, Vec<ForeignSourceKind>>,
-    /// Loaded package sources whose imports have been followed. Package sources never change
-    /// while loaded, so each is read once.
-    followed: HashSet<FileId>,
 }
 
-/// Every package file, loaded or not.
+/// Every package file, all of which are loaded in the engine.
 #[derive(Default)]
 struct PackageSources {
     /// File contents by locator.
     texts: HashMap<String, Arc<str>>,
-    /// Source units by the module name their header declares.
-    modules: HashMap<String, Vec<SourceUnitKey>>,
-    /// Source units whose header could not be read, which are loaded unconditionally so that the
-    /// parser decides their module name.
-    unnamed: Vec<SourceUnitKey>,
-    foreign: HashMap<SourceUnitKey, Vec<ForeignSourceKind>>,
+    /// Source units, with the foreign kinds of each.
+    units: HashMap<SourceUnitKey, Vec<ForeignSourceKind>>,
 }
 
 impl Default for Workspace {
@@ -107,8 +94,6 @@ impl Default for Workspace {
             position_encoding: PositionEncoding::Utf16,
             capabilities: AnalyzerCapabilities::default(),
             packages: PackageSources::default(),
-            loaded: HashMap::new(),
-            followed: HashSet::new(),
         }
     }
 }
@@ -136,13 +121,11 @@ impl Workspace {
         (analyzer, &mut self.suggestions, &mut self.workspace_symbols)
     }
 
-    /// Applies document events, then loads the package sources that the project now imports.
     pub fn apply(
         &mut self,
         events: impl IntoIterator<Item = LifecycleEvent<i32, SourceMetadata>>,
     ) -> LifecycleChange {
-        let mut change = self.files.apply_all(&self.engine, events);
-        change.combine(self.load_imported_packages());
+        let change = self.files.apply_all(&self.engine, events);
         if !matches!(change.analysis(), AnalysisInvalidation::None) {
             self.suggestions = SuggestionsCache::default();
             self.workspace_symbols = WorkspaceSymbolsCache::default();
@@ -150,8 +133,7 @@ impl Workspace {
         change
     }
 
-    /// Replaces every package source. Loaded sources that are unchanged keep their analysis, and
-    /// the rest load once an import reaches them.
+    /// Replaces every package source. Sources that are unchanged keep their analysis.
     pub fn set_packages(&mut self, packages: Vec<Package>) -> LifecycleChange {
         let mut next = PackageSources::default();
         let mut foreign_units = Vec::new();
@@ -163,13 +145,7 @@ impl Workspace {
                 };
                 match kind {
                     DocumentKind::Source => {
-                        let unit = source_unit(&locator);
-                        match module_header_name(&file.text) {
-                            Some(name) => {
-                                next.modules.entry(name.to_string()).or_default().push(unit)
-                            }
-                            None => next.unnamed.push(unit),
-                        }
+                        next.units.insert(source_unit(&locator), Vec::new());
                     }
                     DocumentKind::Foreign(kind) => {
                         foreign_units.push((source_unit(&sibling(&locator, "purs")), kind));
@@ -179,19 +155,17 @@ impl Workspace {
             }
         }
         for (unit, kind) in foreign_units {
-            if next.texts.contains_key(unit.source()) {
-                next.foreign.entry(unit).or_default().push(kind);
+            if let Some(kinds) = next.units.get_mut(&unit) {
+                kinds.push(kind);
             }
         }
 
-        // Reload the loaded units that remain, so that changed ones are reanalyzed, and remove the
-        // rest.
+        // Remove the sources that went away, then load every source.
         let mut events = Vec::new();
-        let loaded = std::mem::take(&mut self.loaded);
-        for (unit, kinds) in &loaded {
-            let current = next.foreign.get(unit).map_or(&[][..], Vec::as_slice);
+        for (unit, kinds) in &self.packages.units {
+            let current = next.units.get(unit);
             for kind in kinds {
-                if !current.contains(kind) {
+                if !current.is_some_and(|current| current.contains(kind)) {
                     events.push(LifecycleEvent::Foreign {
                         unit: SourceUnitKey::clone(unit),
                         kind: *kind,
@@ -199,7 +173,7 @@ impl Workspace {
                     });
                 }
             }
-            if !next.texts.contains_key(unit.source()) {
+            if current.is_none() {
                 events.push(LifecycleEvent::Source {
                     unit: SourceUnitKey::clone(unit),
                     event: SourceEvent::DiskObserved {
@@ -209,123 +183,21 @@ impl Workspace {
                 });
             }
         }
-        self.packages = next;
-        for unit in loaded.into_keys() {
-            if self.packages.texts.contains_key(unit.source()) {
-                events.extend(self.load_events(&unit));
-            }
+        for (unit, kinds) in &next.units {
+            events.extend(load_events(&next.texts, unit, kinds));
         }
-        self.followed.clear();
+        self.packages = next;
         self.apply(events)
     }
 
-    /// The text of a package file, whether or not it is loaded.
+    /// The text of a package file, including foreign files.
     pub fn package_text(&self, locator: &str) -> Option<Arc<str>> {
         self.packages.texts.get(locator).cloned()
     }
 
-    /// The number of package sources available and loaded.
-    pub fn package_counts(&self) -> (usize, usize) {
-        let available = self.packages.modules.values().map(Vec::len).sum::<usize>()
-            + self.packages.unnamed.len();
-        (available, self.loaded.len())
-    }
-
-    /// Loads the package sources that loaded sources import, until every import that the
-    /// packages provide is loaded.
-    fn load_imported_packages(&mut self) -> LifecycleChange {
-        let mut change = LifecycleChange::default();
-        self.followed.retain(|file_id| self.files.contains_source(*file_id));
-        let mut wanted: Vec<SourceUnitKey> = self
-            .packages
-            .unnamed
-            .iter()
-            .filter(|unit| !self.loaded.contains_key(*unit))
-            .cloned()
-            .collect();
-        loop {
-            let sources: Vec<FileId> = self.files.source_ids().collect();
-            for file_id in sources {
-                match self.files.source_metadata(file_id) {
-                    Some(SourceMetadata::Prim) | None => continue,
-                    Some(SourceMetadata::Package) => {
-                        if !self.followed.insert(file_id) {
-                            continue;
-                        }
-                    }
-                    Some(SourceMetadata::Project) => {}
-                }
-                for name in self.imports(file_id) {
-                    let Some(units) = self.packages.modules.get(&name) else {
-                        continue;
-                    };
-                    for unit in units {
-                        if !self.loaded.contains_key(unit) && !wanted.contains(unit) {
-                            wanted.push(SourceUnitKey::clone(unit));
-                        }
-                    }
-                }
-            }
-            if wanted.is_empty() {
-                return change;
-            }
-            let mut events = Vec::new();
-            for unit in std::mem::take(&mut wanted) {
-                events.extend(self.load_events(&unit));
-            }
-            change.combine(self.files.apply_all(&self.engine, events));
-        }
-    }
-
-    /// The events that load a package unit, which also record it as loaded.
-    fn load_events(&mut self, unit: &SourceUnitKey) -> Vec<LifecycleEvent<i32, SourceMetadata>> {
-        let mut events = Vec::new();
-        let Some(text) = self.packages.texts.get(unit.source()) else {
-            return events;
-        };
-        events.push(LifecycleEvent::Source {
-            unit: SourceUnitKey::clone(unit),
-            event: SourceEvent::DiskObserved {
-                disk: DiskObservation::Found(Arc::clone(text)),
-                metadata: SourceMetadata::Package,
-            },
-        });
-        let kinds = self.packages.foreign.get(unit).cloned().unwrap_or_default();
-        for kind in &kinds {
-            let extension = match kind {
-                ForeignSourceKind::JavaScript => "js",
-                ForeignSourceKind::Jsx => "jsx",
-            };
-            let Some(text) = self.packages.texts.get(&sibling(unit.source(), extension)) else {
-                continue;
-            };
-            events.push(LifecycleEvent::Foreign {
-                unit: SourceUnitKey::clone(unit),
-                kind: *kind,
-                event: ForeignEvent::DiskObserved {
-                    disk: DiskObservation::Found(Arc::clone(text)),
-                },
-            });
-        }
-        self.loaded.insert(SourceUnitKey::clone(unit), kinds);
-        events
-    }
-
-    /// The module names that a loaded source imports.
-    fn imports(&self, file_id: FileId) -> Vec<String> {
-        let (Ok(content), Ok((parsed, _))) =
-            (self.engine.content(file_id), self.engine.parsed(file_id))
-        else {
-            return Vec::new();
-        };
-        let Some(imports) = parsed.cst().imports() else {
-            return Vec::new();
-        };
-        imports
-            .children()
-            .filter_map(|import| import.module_name())
-            .map(|name| name.syntax().text(&content).trim().to_string())
-            .collect()
+    /// The number of package sources.
+    pub fn package_sources(&self) -> usize {
+        self.packages.units.len()
     }
 
     /// Project sources, which are the only ones that receive diagnostics.
@@ -334,6 +206,40 @@ impl Workspace {
             self.files.source_metadata(*file_id) == Some(&SourceMetadata::Project)
         })
     }
+}
+
+/// The events that load a package unit and its foreign sources.
+fn load_events(
+    texts: &HashMap<String, Arc<str>>,
+    unit: &SourceUnitKey,
+    kinds: &[ForeignSourceKind],
+) -> Vec<LifecycleEvent<i32, SourceMetadata>> {
+    let mut events = Vec::new();
+    let Some(text) = texts.get(unit.source()) else {
+        return events;
+    };
+    events.push(LifecycleEvent::Source {
+        unit: SourceUnitKey::clone(unit),
+        event: SourceEvent::DiskObserved {
+            disk: DiskObservation::Found(Arc::clone(text)),
+            metadata: SourceMetadata::Package,
+        },
+    });
+    for kind in kinds {
+        let extension = match kind {
+            ForeignSourceKind::JavaScript => "js",
+            ForeignSourceKind::Jsx => "jsx",
+        };
+        let Some(text) = texts.get(&sibling(unit.source(), extension)) else {
+            continue;
+        };
+        events.push(LifecycleEvent::Foreign {
+            unit: SourceUnitKey::clone(unit),
+            kind: *kind,
+            event: ForeignEvent::DiskObserved { disk: DiskObservation::Found(Arc::clone(text)) },
+        });
+    }
+    events
 }
 
 pub struct Analyzer<'a> {
@@ -411,62 +317,6 @@ pub fn document_unit(locator: &str) -> Option<(DocumentKind, SourceUnitKey)> {
         DocumentKind::Foreign(_) => source_unit(&sibling(locator, "purs")),
     };
     Some((kind, unit))
-}
-
-/// The module name a source's header declares, read without parsing the module. Returns `None`
-/// for anything unusual, which the parser then handles.
-fn module_header_name(text: &str) -> Option<&str> {
-    let rest = skip_trivia(text.strip_prefix('\u{feff}').unwrap_or(text))?;
-    let rest = rest.strip_prefix("module")?;
-    let after = skip_trivia(rest)?;
-    if after.len() == rest.len() {
-        return None;
-    }
-    let end = after
-        .find(|character: char| {
-            !(character.is_alphanumeric() || matches!(character, '_' | '\'' | '.'))
-        })
-        .unwrap_or(after.len());
-    let name = &after[..end];
-    let valid =
-        name.split('.').all(|segment| segment.chars().next().is_some_and(char::is_uppercase));
-    valid.then_some(name)
-}
-
-/// Skips whitespace and comments, or returns `None` for an unterminated block comment.
-fn skip_trivia(mut text: &str) -> Option<&str> {
-    loop {
-        let trimmed = text.trim_start();
-        if let Some(rest) = trimmed.strip_prefix("--") {
-            text = rest.find('\n').map_or("", |index| &rest[index..]);
-        } else if trimmed.starts_with("{-") {
-            let mut depth = 0usize;
-            let mut index = 0;
-            let bytes = trimmed.as_bytes();
-            loop {
-                if index + 1 >= bytes.len() {
-                    return None;
-                }
-                match &bytes[index..index + 2] {
-                    b"{-" => {
-                        depth += 1;
-                        index += 2;
-                    }
-                    b"-}" => {
-                        depth -= 1;
-                        index += 2;
-                        if depth == 0 {
-                            break;
-                        }
-                    }
-                    _ => index += 1,
-                }
-            }
-            text = &trimmed[index..];
-        } else {
-            return Some(trimmed);
-        }
-    }
 }
 
 fn sibling(locator: &str, extension: &str) -> String {
