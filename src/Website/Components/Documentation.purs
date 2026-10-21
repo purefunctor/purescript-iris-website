@@ -2,8 +2,6 @@ module Website.Components.Documentation (Page(..), Section, documentation) where
 
 import Prelude
 
-import Data.Array (findIndex, (!!))
-import Data.Maybe (maybe)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, ReactComponent, element, fragment)
 import Website.Breakpoints (breakpoints)
@@ -16,7 +14,7 @@ data Page = GettingStarted | Installation | LanguageServer | Formatting | Module
 
 derive instance Eq Page
 
--- | Pages in navigation and previous/next order. The compiler README links to these
+-- | Pages in navigation order. The compiler README links to these
 -- | routes.
 pages :: Array Page
 pages = [ GettingStarted, Installation, LanguageServer, Formatting, ModuleMetadata ]
@@ -252,33 +250,6 @@ styles = StyleX.create
       , marginBlockEnd: 20
       }
   , body: { display: "flex", flexDirection: "column", gap: 18 }
-  , footer: { display: "flex", flexDirection: "column", gap: 32, marginBlockStart: 72 }
-  , pager:
-      { display: "grid"
-      , gridTemplateColumns: StyleX.conditionalValue "repeat(2, minmax(0, 1fr))"
-          [ StyleX.conditionalCase breakpoints.upTo480 "minmax(0, 1fr)" ]
-      , gap: 12
-      }
-  , pagerLink:
-      { display: "flex"
-      , flexDirection: "column"
-      , gap: 2
-      , paddingBlock: 16
-      , paddingInline: 20
-      , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
-      , cursor: "default"
-      , textDecoration: "none"
-      , outlineColor: "var(--focus-ring)"
-      }
-  , pagerNext:
-      { gridColumnStart: StyleX.conditionalValue 2 [ StyleX.conditionalCase breakpoints.upTo480 1 ]
-      , alignItems: "flex-end"
-      , textAlign: "end"
-      }
-  , pagerLabel: { fontSize: 13, color: "var(--text-tertiary)" }
-  , pagerTitle:
-      { fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", color: "var(--text-primary)" }
-  , notice: { color: "var(--text-tertiary)", fontSize: 13 }
   , skip:
       { position: "fixed"
       , top: { default: "-100px", ":focus": "12px" }
@@ -330,15 +301,6 @@ documentation { page, intro, sections } = DOM.div styleProps.page
               [ DOM.h1 styleProps.title (pageTitle page)
               , DOM.div styleProps.intro intro
               , DOM.div {} (map section sections)
-              , DOM.footer styleProps.footer
-                  [ DOM.nav
-                      { className: styleProps.pager.className
-                      , "aria-label": "Previous and next pages"
-                      }
-                      (pagerLink "Previous" false (offset (-1)) <> pagerLink "Next" true (offset 1))
-                  , DOM.p styleProps.notice
-                      "Iris is in alpha. Commands and APIs may change between releases."
-                  ]
               ]
           ]
       , DOM.aside (StyleX.props [ styles.rail, styles.sectionRail ])
@@ -371,15 +333,6 @@ documentation { page, intro, sections } = DOM.div styleProps.page
     , current: entry == page
     , content: DOM.text (pageTitle entry)
     }
-  offset by = findIndex (_ == page) pages >>= \index -> pages !! (index + by)
-  pagerLink label next = maybe [] \entry ->
-    [ DOM.a
-        { className:
-            (StyleX.props [ styles.pagerLink, StyleX.conditional next styles.pagerNext ]).className
-        , href: pageHref entry
-        }
-        [ DOM.span styleProps.pagerLabel label, DOM.span styleProps.pagerTitle (pageTitle entry) ]
-    ]
   resources = DOM.div styleProps.links
     [ resource "https://github.com/purefunctor/purescript-iris" "Compiler source"
     , resource "https://github.com/purefunctor/purescript-iris/releases" "Releases"
