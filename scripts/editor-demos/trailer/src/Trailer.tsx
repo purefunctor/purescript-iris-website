@@ -15,7 +15,7 @@ import {
 // The logo's dots, as the site's header and favicon draw them.
 import { marks } from "../../../../src/Website/Components/Logo.js";
 import { Lattice, type Ripple } from "./Lattice";
-import { fps, height, margin, plan, timing, width, type Caption, type Manifest, type Marker } from "./timeline";
+import { fps, height, margin, plan, timing, width, type Caption, type Manifest } from "./timeline";
 
 const fonts = delayRender("Loading Geist");
 Promise.all(
@@ -140,20 +140,6 @@ function OpenScene({ duration }: { duration: number }) {
   );
 }
 
-// A feature's name, set as a closed caption centred near the bottom of the frame, above where the
-// landing page's player keeps its controls.
-function FeatureCaption({ marker }: { marker: Marker }) {
-  const frame = useCurrentFrame();
-  const shown = Math.min(progress(frame, 0, sec(0.25)), 1 - progress(frame, marker.duration - sec(0.3), sec(0.3), inOut));
-  return (
-    <div style={{ position: "absolute", left: 0, right: 0, bottom: 132, display: "flex", justifyContent: "center", opacity: shown }}>
-      <div style={{ ...sans, fontSize: 46, fontWeight: 500, lineHeight: 1.25, color: "var(--granite-50)", backgroundColor: "oklch(from var(--granite-950) l c h / 86%)", padding: "8px 22px" }}>
-        {marker.feature.title}
-      </div>
-    </div>
-  );
-}
-
 // The take, full screen and playing throughout, under the overlays.
 function Take({ src, track, captions, scale }: { src: string; track: { source: number; opacity: number }[]; captions: (Caption & { until: number })[]; scale: number }) {
   const frame = useCurrentFrame();
@@ -175,7 +161,7 @@ function Take({ src, track, captions, scale }: { src: string; track: { source: n
 
 // One semantic role, captioned on the code: its tokens underlined in the role's editor color, and a
 // flat tag in that color in the margin beside one of them. Captions keep to the take's own clock, so
-// they hold while its frame holds, and leave before the next feature's card.
+// they hold while its frame holds, and leave before the next feature starts.
 const tagColumn = 1600;
 function CaptionMark({ caption, order, source }: { caption: Caption & { until: number }; order: number; source: number }) {
   const appear = caption.t + 0.35 + order * 0.8;
@@ -271,7 +257,7 @@ function EndScene() {
 }
 
 export function Trailer({ manifest }: { manifest: Manifest }) {
-  const { scenes, track, markers } = useMemo(() => plan(manifest), [manifest]);
+  const { scenes, track } = useMemo(() => plan(manifest), [manifest]);
   // Captions clear before the beat that follows them.
   const captions = useMemo(
     () =>
@@ -303,11 +289,6 @@ export function Trailer({ manifest }: { manifest: Manifest }) {
     <AbsoluteFill style={{ background: "var(--canvas-texture), var(--bg-canvas)", color: "var(--text-primary)" }}>
       <Lattice ripples={ripples} reveal={frame < sec(3) ? reveal : undefined} />
       <Take src={manifest.take.src} track={track} captions={captions} scale={width / (manifest.take.width ?? width)} />
-      {markers.map((marker) => (
-        <Sequence key={marker.feature.slug} from={marker.from} durationInFrames={marker.duration} layout="none">
-          <FeatureCaption marker={marker} />
-        </Sequence>
-      ))}
       {scenes.map((scene) => (
         <Sequence key={scene.kind} from={scene.from} durationInFrames={scene.duration} layout="none">
           {scene.kind === "open" ? <OpenScene duration={scene.duration} /> : <EndScene />}

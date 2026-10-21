@@ -28,8 +28,6 @@ export const timing = {
   open: 5.3,
   // The take fades in under the opening's exit and out under the end card's entrance.
   crossfade: 0.8,
-  // Each feature's name stays captioned over the take this long.
-  marker: 2.8,
   end: 6.5,
 };
 
@@ -40,8 +38,8 @@ export const margin = 120;
 
 const sec = (seconds: number) => Math.round(seconds * fps);
 
-// One feature's name, captioned over the take as the feature starts.
-export type Marker = { feature: Feature; index: number; act: Act; from: number; duration: number };
+// Where each feature starts in the trailer, for the landing page's chapter list.
+export type Marker = { feature: Feature; index: number; act: Act; from: number };
 export type Scene = { kind: "open"; from: number; duration: number } | { kind: "end"; from: number; duration: number };
 
 export function plan({ take }: Manifest) {
@@ -67,7 +65,7 @@ export function plan({ take }: Manifest) {
   const markers: Marker[] = [];
   acts.forEach((act) => {
     for (const feature of act.features)
-      markers.push({ feature, index: index++, act, from: frameAt(beat(feature.slug)), duration: sec(timing.marker) });
+      markers.push({ feature, index: index++, act, from: frameAt(beat(feature.slug)) });
   });
   const endFrom = from + times.length - fade;
   const scenes: Scene[] = [
@@ -77,6 +75,6 @@ export function plan({ take }: Manifest) {
   return { scenes, track, markers, frameAt, duration: endFrom + sec(timing.end) };
 }
 
-// Chapter start times in seconds, for the landing page's chapter list: when each feature's caption appears.
+// Chapter start times in seconds, for the landing page's chapter list: when each feature's beat plays.
 export const chapters = (markers: Marker[]) =>
   markers.map((marker) => ({ slug: marker.feature.slug, title: marker.feature.title, at: Math.round((marker.from / fps) * 10) / 10 }));

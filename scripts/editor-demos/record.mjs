@@ -502,8 +502,8 @@ async function stage() {
 }
 
 const cases = {
-  // One continuous take that shows every feature; see screenplay.md. The trailer lays its section
-  // markers and captions over the take as it plays, so the pacing here is the trailer's.
+  // One continuous take that shows every feature; see screenplay.md. The trailer lays its semantic
+  // highlighting captions over the take as it plays, so the pacing here is the trailer's.
   async trailer() {
     await stage();
     await capture('trailer', async () => {
@@ -535,8 +535,7 @@ const cases = {
       });
 
       await beat('go-to-definition');
-      // Line 47 sits low, where the feature's caption is, so the camera stays on the whole editor
-      // until the definition opens; hover zooms in from there.
+      // The camera stays on the whole editor until the definition opens; hover zooms in from there.
       await overview(async () => {
         await token('element Demos.component {}', 'component', 'click');
         await sleep(300);
@@ -552,7 +551,7 @@ const cases = {
         ['time /\\ setTime', '/\\', 't0 -> t1 -> Tuple t0 t1', 2000],
         ['seek /\\ setSeek', 'seek', '{ request :: Int, time :: Number }', 1300],
         ['chapter.at <= time', '<=', 'Ord a => a -> a -> Boolean', 1400],
-        ['chapter = fromMaybe', 'chapter', '{ at :: Number, description :: String, title :: String }', 1500],
+        ['chapter = index', 'chapter', 'Maybe { at :: Number, description :: String, title :: String }', 1500],
       ]) {
         await token(line, name);
         await expect(hover(type), `Hovering ${name} shows ${type}`);
@@ -565,9 +564,9 @@ const cases = {
       browser('press', 'Escape');
       await sleep(200);
       await token('(\\chapter -> chapter.at', 'chapter', 'click');
-      await expect(`${marks}.length === 2 && ${on('(\\chapter -> chapter.at')} === 2 && ${on('chapter = fromMaybe')} === 0`,
+      await expect(`${marks}.length === 2 && ${on('(\\chapter -> chapter.at')} === 2 && ${on('chapter = index')} === 0`,
         'The lambda parameter highlights its own use, not the chapter bound beside it',
-        region('selected = fromMaybe 0', 'chapter = fromMaybe'));
+        region('selected = findLastIndex', 'chapter = index'));
       await sleep(1500);
 
       await beat('document-symbols');

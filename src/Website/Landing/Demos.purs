@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Array (findLastIndex, index, length, mapWithIndex)
 import Data.Foldable (for_)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
@@ -18,7 +18,7 @@ import Website.Components.VideoPlayer as VideoPlayer
 import Website.Landing.Section as Section
 import Yoga.React.DOM as DOM
 
--- | A feature's chapter in the trailer. `at` is where its card enters, in seconds, as printed by
+-- | A feature's chapter in the trailer. `at` is where the feature starts, in seconds, as printed by
 -- | `scripts/editor-demos/trailer/render.mjs`.
 type Chapter = { title :: String, description :: String, at :: Number }
 
@@ -30,17 +30,13 @@ trailer =
   , { src: "/editor-demos/trailer.mp4", type: "video/mp4; codecs=\"avc1.64002A\"" }
   ]
 
-semanticHighlighting :: Chapter
-semanticHighlighting =
-  { title: "Semantic highlighting"
-  , description:
-      "Names are coloured by their role, such as declarations, record labels, module qualifiers and bindings."
-  , at: 5.3
-  }
-
 reading :: Array Chapter
 reading =
-  [ semanticHighlighting
+  [ { title: "Semantic highlighting"
+    , description:
+        "Names are coloured by their role, such as declarations, record labels, module qualifiers and bindings."
+    , at: 5.3
+    }
   , { title: "Go to definition"
     , description: "Names jump to their declarations, in the project or its dependencies."
     , at: 15.9
@@ -56,15 +52,15 @@ reading =
     }
   , { title: "Document symbols"
     , description: "Declarations in the current file are searchable by name."
-    , at: 35.5
+    , at: 35.6
     }
   , { title: "Find references"
     , description: "Every use of a name is found across the workspace."
-    , at: 41.1
+    , at: 41.0
     }
   , { title: "Workspace symbols"
     , description: "Declarations across the whole project are searchable by name."
-    , at: 50.4
+    , at: 50.3
     }
   ]
 
@@ -73,11 +69,11 @@ writing =
   [ { title: "Rename"
     , description:
         "Renames follow scope, and update a constructor, type or value in every module that uses it, qualified or not."
-    , at: 55.3
+    , at: 55.2
     }
   , { title: "Automatic imports"
     , description: "Completing a name from another module adds its import."
-    , at: 73.7
+    , at: 73.6
     }
   , { title: "Completion"
     , description: "Completion offers every name in scope, including local bindings."
@@ -85,12 +81,12 @@ writing =
     }
   , { title: "Typed holes"
     , description: "Typed holes suggest names in scope that fit the expected type."
-    , at: 86.3
+    , at: 86.2
     }
   , { title: "Diagnostics"
     , description:
         "Type errors appear and clear on unsaved edits; on-change diagnostics are opt-in."
-    , at: 91.9
+    , at: 91.8
     }
   ]
 
@@ -165,9 +161,9 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
   playing /\ setPlaying <- Hooks.useState false
   seek /\ setSeek <- Hooks.useState { request: 0, time: 0.0 }
   let
-    -- The opening titles belong to the first chapter.
-    selected = fromMaybe 0 (findLastIndex (\chapter -> chapter.at <= time) chapters)
-    chapter = fromMaybe semanticHighlighting (index chapters selected)
+    -- No chapter is selected or captioned until the first one starts.
+    selected = findLastIndex (\chapter -> chapter.at <= time) chapters
+    chapter = index chapters =<< selected
     select number = for_ (index chapters number) \{ at } -> do
       setSeek \{ request } -> { request: request + 1, time: at }
       setTime at
@@ -194,9 +190,9 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
                         , setPlaying
                         , sources: trailer
                         }
-                    , DOM.div styleProps.caption
-                        [ DOM.h3 styleProps.captionTitle chapter.title
-                        , DOM.p styleProps.captionDescription chapter.description
+                    , chapter # maybe mempty \{ title, description } -> DOM.div styleProps.caption
+                        [ DOM.h3 styleProps.captionTitle title
+                        , DOM.p styleProps.captionDescription description
                         ]
                     ]
                 , DOM.div styleProps.groups
@@ -207,14 +203,14 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
             ]
         ]
 
-group :: String -> Int -> Array Chapter -> Int -> (Int -> Effect Unit) -> JSX
+group :: String -> Int -> Array Chapter -> Maybe Int -> (Int -> Effect Unit) -> JSX
 group title offset items selected select = DOM.div {}
   [ DOM.h3 styleProps.groupTitle title
   , DOM.ol styleProps.list $ mapWithIndex
       ( \position chapter ->
           let
             number = offset + position
-            current = number == selected
+            current = Just number == selected
           in
             DOM.li {}
               [ DOM.button

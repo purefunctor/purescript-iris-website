@@ -2,8 +2,8 @@
 
 One continuous VS Code take, recorded with Cap, in which twelve language server features come up
 while working on real code in this website. The take plays full screen from the opening card to
-the end card without cutting, at recorded speed. Remotion draws everything else over it: each
-feature's name as a closed caption as the feature starts, and captions for semantic highlighting.
+the end card without cutting, at recorded speed. Remotion draws only the semantic highlighting captions
+over it; feature names are left to the landing page's chapter list, which already names each one.
 There are no divider screens; the two acts below only group the features.
 
 ## Premise
@@ -39,9 +39,9 @@ order. It then restores the seed files.
 
 | # | Feature | What happens on screen | Where |
 |---|---------|------------------------|-------|
-| 1 | Semantic highlighting | `Index.purs` sits in TextMate colours under its caption, then recolours by role. Four captions point out what changed: **Declarations** at `styles`, **Record labels** at the style keys and `onInstall`, **Module qualifiers** at `Hooks` and `DOM`, and **Bindings** at `install`, `ripples` and `setRipples`. | `Landing/Index.purs:24–48` |
-| 2 | Go to definition | Click `Demos.component` and press F12. `Demos.purs` opens at `component =`. The camera stays on the whole editor, because line 47 sits under the caption; hover zooms in. | `Index.purs:47` → `Demos.purs` |
-| 3 | Hover | Hover `time` → `Number`; `/\` → `forall @t0 @t1. t0 -> t1 -> Tuple t0 t1` with its documentation; `seek` → `{ request :: Int, time :: Number }`; `<=` → `forall a. Ord a => a -> a -> Boolean`; `chapter` → `{ at :: Number, description :: String, title :: String }`. | `Demos.purs` component |
+| 1 | Semantic highlighting | `Index.purs` sits in TextMate colours, then recolours by role. Four captions point out what changed: **Declarations** at `styles`, **Record labels** at the style keys and `onInstall`, **Module qualifiers** at `Hooks` and `DOM`, and **Bindings** at `install`, `ripples` and `setRipples`. | `Landing/Index.purs:24–48` |
+| 2 | Go to definition | Click `Demos.component` and press F12. `Demos.purs` opens at `component =`. The camera stays on the whole editor; hover zooms in. | `Index.purs:47` → `Demos.purs` |
+| 3 | Hover | Hover `time` → `Number`; `/\` → `forall @t0 @t1. t0 -> t1 -> Tuple t0 t1` with its documentation; `seek` → `{ request :: Int, time :: Number }`; `<=` → `forall a. Ord a => a -> a -> Boolean`; `chapter` → `Maybe { at :: Number, description :: String, title :: String }`. | `Demos.purs` component |
 | 4 | Document highlights | Click the lambda's `chapter` in `findLastIndex (\chapter -> chapter.at <= time)`. Only the parameter and its use light up; the `chapter` bound on the next line stays dark. | `Demos.purs` component |
 | 5 | Document symbols | Ctrl+Shift+O, `@styles`. The editor jumps and scrolls on to bring `breakpoints.from960` into view, while the camera moves from the quick input to the style table without zooming out. | `Demos.purs` styles |
 | 6 | Find references | Shift+F12 on `breakpoints`. The peek view lists its uses across nine modules. Open the `Code.purs` and `JavaScript.purs` entries in turn and step onto their first reference, so the preview shows each. | `Demos.purs` styles |
