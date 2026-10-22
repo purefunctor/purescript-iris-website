@@ -47,7 +47,7 @@ writeFileSync(`${tools}/profile/User/settings.json`, JSON.stringify({
   'editor.semanticHighlighting.enabled': true,
   'editor.minimap.enabled': false,
   'editor.stickyScroll.enabled': false,
-  // The take animates its own scrolls, one eased scroll each (record.mjs smoothScroll).
+  // The take animates its own scrolls, one eased scroll each (editor.mjs smoothScroll).
   'editor.smoothScrolling': false,
   'editor.inlayHints.enabled': 'off',
   'editor.suggest.preview': false,

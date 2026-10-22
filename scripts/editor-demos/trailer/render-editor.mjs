@@ -1,10 +1,10 @@
-// Renders the editor trailer from the one-shot Cap take that `record.mjs trailer` exports. Run from
+// Renders the editor trailer from the one-shot Cap take that `editor.mjs trailer` exports. Run from
 // this directory after recording it:
-//   node render.mjs                 the whole trailer, its poster and chapter times
-//   node render.mjs --still 240,1200  single frames, for checking a design
-//   node render.mjs --frames 0-600  a range of frames, for checking motion
-//   node render.mjs --encode        the published encodes again, from the last master
-//   node render.mjs --review rename,completion  review clips of those features, from the last encode
+//   node render-editor.mjs                 the whole trailer, its poster and chapter times
+//   node render-editor.mjs --still 240,1200  single frames, for checking a design
+//   node render-editor.mjs --frames 0-600  a range of frames, for checking motion
+//   node render-editor.mjs --encode        the published encodes again, from the last master
+//   node render-editor.mjs --review rename,completion  review clips of those features, from the last encode
 import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { cpus } from "node:os";
@@ -36,9 +36,9 @@ const { values } = parseArgs({
 });
 
 // Node strips the types from the composition's plain TypeScript modules.
-const { plan, chapters } = await import("./src/timeline.ts");
+const { plan, chapters } = await import("./src/editor.ts");
 
-// The raw Cap export plays at recorded speed; record.mjs writes its pacing beside the review copy.
+// The raw Cap export plays at recorded speed; editor.mjs writes its pacing beside the review copy.
 mkdirSync(`${here}/public`, { recursive: true });
 const raw = `${tools}/trailer-raw.mp4`;
 copyFileSync(raw, `${here}/public/take.mp4`);

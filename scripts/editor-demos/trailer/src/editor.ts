@@ -8,7 +8,7 @@ export type Box = [left: number, top: number, right: number, bottom: number];
 // A caption names one semantic role and underlines its tokens. `anchor.end` is where the anchor
 // token's line ends, in device pixels, so that the caption's leader never crosses code.
 export type Caption = { t: number; label: string; color: string; boxes: Box[]; anchor: { box: Box; end: number } };
-// The pacing record.mjs writes beside the take, on the take's own timeline, in seconds: where the
+// The pacing editor.mjs writes beside the take, on the take's own timeline, in seconds: where the
 // scripted work starts and ends, each feature's beat, and the captions.
 export type Take = {
   src: string;

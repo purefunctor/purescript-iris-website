@@ -60,7 +60,7 @@ order. It then restores the seed files.
 
 ## Pacing and camera
 
-- `record.mjs trailer` logs each feature's beat. Beats do not move the camera; each feature's
+- `editor.mjs trailer` logs each feature's beat. Beats do not move the camera; each feature's
   result holds for half a second before the next one starts.
 - Cap's zoom planner holds a framing for three seconds and keeps it across pauses of up to two
   seconds, so the camera pans between nearby work instead of zooming out and back in. Typing is

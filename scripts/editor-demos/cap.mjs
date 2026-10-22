@@ -1,7 +1,7 @@
-// Cap (https://cap.so), the default capture backend for record.mjs.
+// Cap (https://cap.so), the default capture backend for editor.mjs.
 // Cap renders its own smoothed cursor, click ripples and zoom from the recorded pointer data.
 // Its CLI writes a default project configuration, so the zoom segments come from the action
-// timeline that record.mjs logs: pointer positions and the overlays visible at each check. cap-setup.sh installs the CLI as $IRIS_DEMO_HOME/cap-cli; IRIS_DEMO_CAP
+// timeline that editor.mjs logs: pointer positions and the overlays visible at each check. cap-setup.sh installs the CLI as $IRIS_DEMO_HOME/cap-cli; IRIS_DEMO_CAP
 // overrides it, for example with `cap-cli` where Cap's packages install natively.
 //
 // Re-export a recorded take with different effects, without re-recording it:
@@ -12,7 +12,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-// The recording display, which launch.sh sizes from IRIS_DEMO_SCALE: 1080p by default.
+// The recording display, which editor-launch.sh sizes from IRIS_DEMO_SCALE: 1080p by default.
 export const [width, height] = { 150: [1920, 1080], 200: [2560, 1440], 300: [3840, 2160] }[process.env.IRIS_DEMO_SCALE || 150];
 const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
 const command = (process.env.IRIS_DEMO_CAP || `${tools}/cap-cli`).split(' ');
@@ -130,7 +130,7 @@ export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, m
     }));
 }
 
-// Cap replaces a last cursor shape held under a second until the last move. record.mjs ends each take
+// Cap replaces a last cursor shape held under a second until the last move. editor.mjs ends each take
 // with an invisible move that logs the shape the pointer rests in, so date that shape from the last
 // scripted action when the pointer stayed put after it, such as a dialog closing under the pointer.
 function holdRestingShape(path, since) {
@@ -173,7 +173,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(JSON.stringify(render(project, actions, raw, {
     zoom: !values['no-zoom'], ripple: !values['no-ripple'], amount: values.zoom && Number(values.zoom),
   })));
-  // The same retime and final hold as record.mjs, applied to the normal-speed export.
+  // The same retime and final hold as editor.mjs, applied to the normal-speed export.
   mkdirSync(output, { recursive: true });
   execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
     '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,

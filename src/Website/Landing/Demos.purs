@@ -19,11 +19,11 @@ import Website.Landing.Section as Section
 import Yoga.React.DOM as DOM
 
 -- | A feature's chapter in the trailer. `at` is where the feature starts, in seconds, as printed by
--- | `scripts/editor-demos/trailer/render.mjs`.
+-- | `scripts/editor-demos/trailer/render-editor.mjs`.
 type Chapter = { title :: String, description :: String, at :: Number }
 
 -- | The trailer in AV1, for browsers that decode it, and in H.264 for the rest. Both come from
--- | `scripts/editor-demos/trailer/render.mjs`.
+-- | `scripts/editor-demos/trailer/render-editor.mjs`.
 trailer :: Array { src :: String, type :: String }
 trailer =
   [ { src: "/editor-demos/trailer-av1.mp4", type: "video/mp4; codecs=\"av01.0.09M.08\"" }

@@ -1,4 +1,4 @@
-// Run against the disposable native VS Code started by launch.sh, never the seed editor.
+// Run against the disposable native VS Code started by editor-launch.sh, never the seed editor.
 import { execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -502,7 +502,7 @@ async function stage() {
 }
 
 const cases = {
-  // One continuous take that shows every feature; see screenplay.md. The trailer lays its semantic
+  // One continuous take that shows every feature; see editor-screenplay.md. The trailer lays its semantic
   // highlighting captions over the take as it plays, so the pacing here is the trailer's.
   async trailer() {
     await stage();

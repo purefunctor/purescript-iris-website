@@ -15,7 +15,7 @@ import {
 // The logo's dots, as the site's header and favicon draw them.
 import { marks } from "../../../../src/Website/Components/Logo.js";
 import { Lattice, type Ripple } from "./Lattice";
-import { fps, height, margin, plan, timing, width, type Caption, type Manifest } from "./timeline";
+import { fps, height, margin, plan, timing, width, type Caption, type Manifest } from "./editor";
 
 const fonts = delayRender("Loading Geist");
 Promise.all(
