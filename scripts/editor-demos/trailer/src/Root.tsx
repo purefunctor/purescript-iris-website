@@ -1,6 +1,7 @@
 import { Composition, staticFile } from "remotion";
 import { Trailer } from "./EditorTrailer";
-import { fps, height, plan, width, type Manifest } from "./editor";
+import { plan, type Manifest } from "./editor";
+import { fps, height, width } from "./takes";
 
 // render-editor.mjs passes the manifest it writes to public/manifest.json; Remotion Studio fetches it.
 export function Root() {

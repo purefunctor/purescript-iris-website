@@ -1,53 +1,12 @@
-// Run against the disposable native VS Code started by editor-launch.sh, never the seed editor.
-import { execFileSync, spawn } from 'node:child_process';
-import { once } from 'node:events';
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+// Records the editor trailer's one continuous take in the disposable native VS Code that
+// editor-launch.sh starts, never the seed editor. See editor-screenplay.md.
+//   node scripts/editor-demos/editor.mjs trailer
+import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { height, lines, output, recorder, run, sleep, suggestion, tools, width } from './recorder.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
-const output = resolve(process.env.IRIS_DEMO_OUTPUT || `${tools}/recordings`);
-const session = 'iriscode';
-const env = { ...process.env, DISPLAY: ':94' };
-const run = (name, args) => execFileSync(name, args, { env, encoding: 'utf8' }).trim();
-const browser = (...args) => run('agent-browser', ['--session', session, '--cdp', '9223', ...args]);
-const evaluate = code => JSON.parse(browser('eval', code));
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-const press = key => (focus(), browser('press', key));
 const input = '.quick-input-widget input';
-// cap renders Cap's cursor, click ripples and zoom (cap.mjs); ffmpeg captures the X display as is.
-const recorder = process.env.IRIS_DEMO_RECORDER || 'cap';
-const cap = recorder === 'cap' && await import('./cap.mjs');
-// The recording display's size in device pixels, which follows IRIS_DEMO_SCALE.
-const { width, height } = await import('./cap.mjs');
-// Playback speed and quality of the exported take. Cap's zoom makes faster takes easy to follow.
-const [speed, crf] = cap ? [cap.speed, cap.crf] : [0.75, 23];
-let recording;
-// Pointer and keyboard actions in the current take, in seconds since capture started. Cap zooms toward them.
-let actions = [], epoch;
-const mark = (x, y, detail = {}) => epoch && actions.push(steady
-  ? { t: (Date.now() - epoch) / 1000, action: 'steady', box: steady.box, zoom: steady.zoom }
-  : wide
-  ? { t: (Date.now() - epoch) / 1000, action: 'overview' }
-  : { t: (Date.now() - epoch) / 1000, x, y, ...detail });
-// Actions inside `steadily` keep one fixed framing, `box` in device pixels at `zoom`, however the
-// pointer, caret and popups move within it.
-let steady = null;
-async function steadily(frame, action) {
-  steady = frame;
-  mark();
-  try { await action(); } finally { steady = null; }
-}
-// Actions inside `overview` show the whole editor rather than zooming in.
-let wide = false;
-async function overview(action) {
-  wide = true;
-  mark();
-  try { await action(); } finally { wide = false; }
-}
-// Keyboard work keeps the focus at the last pointer action.
-const pointer = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
 // Keyboard work in an editor is framed on its text cursor, in quick input on the quick input, and
 // elsewhere on the last pointer action.
 const caret = `(() => {
@@ -58,17 +17,22 @@ const caret = `(() => {
   const r = cursor?.getBoundingClientRect();
   return r && r.height > 0 ? { x: Math.round(r.x * devicePixelRatio), y: Math.round((r.y + r.height / 2) * devicePixelRatio) } : null;
 })()`;
-const focus = () => {
-  if (!epoch) return;
-  const at = evaluate(caret) ?? pointer();
-  if (at) mark(at.x, at.y, { action: 'key' });
-};
-// Overlays that demos show. Each passing check logs the screen boxes of those that are in view, which
-// Cap's zoom keeps in frame. A check can name what else it shows with a script returning elements.
-const overlays = ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget',
-  '.rename-box'];
-const lines = (...texts) => `[...document.querySelectorAll('.view-line')].filter(line => ${JSON.stringify(texts)}
-  .some(text => line.textContent.replaceAll('\\u00a0', ' ').includes(text)))`;
+const {
+  browser, evaluate, captions, now, mark, steadily, overview, beat, focus, expect,
+  move, hold, clickOn, tokenPoint, aside, smoothScroll, keys, capture,
+} = recorder({
+  session: 'iriscode',
+  cdp: 9223,
+  // Overlays that the take shows.
+  overlays: ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget', '.rename-box'],
+  caret,
+  // The tabs and breadcrumbs above the editor, and the status bar below it, in CSS pixels.
+  chrome: { top: 80, bottom: 22 },
+});
+// Keys go to VS Code through CDP, framed on the text cursor. Keys pressed with `browser('press', …)`
+// instead are not framed, for keys whose text cursor is somewhere the camera should not go.
+const press = key => (focus(), browser('press', key));
+
 // The visible lines from the one containing `from` to the one containing `to`.
 const region = (from, to) => `(() => {
   const text = line => line.textContent.replaceAll('\\u00a0', ' ');
@@ -79,32 +43,6 @@ const region = (from, to) => `(() => {
   return start < 0 || end < 0 ? [] : lines.slice(start, end + 1).flatMap(line => [...line.querySelectorAll('span span')]);
 })()`;
 const highlights = `document.querySelectorAll('.cdr.wordHighlight, .cdr.wordHighlightStrong, .cdr.wordHighlightText')`;
-
-async function expect(code, message, shows = '[]') {
-  const boxes = evaluate(`new Promise(resolve => {
-    const deadline = Date.now() + 12000;
-    // Skip anything covered by something else, such as an editor behind the Settings dialog.
-    const uncovered = (e, r) => {
-      const hit = document.elementFromPoint((r.left + r.right) / 2, (r.top + r.bottom) / 2);
-      return hit && (e.contains(hit) || hit.closest('.monaco-editor') === e.closest('.monaco-editor'));
-    };
-    const overlays = () => [...document.querySelectorAll(${JSON.stringify(overlays.join(', '))}), ...${shows}]
-      .filter(e => e.checkVisibility({ opacityProperty: true, visibilityProperty: true }))
-      .map(e => [e, e.getBoundingClientRect()])
-      .filter(([e, r]) => r.width > 0 && r.height > 0 && uncovered(e, r))
-      .map(([, r]) => [r.left, r.top, r.right, r.bottom].map(v => Math.round(v * devicePixelRatio)));
-    const check = () => {
-      if (${code}) resolve(overlays());
-      else if (Date.now() > deadline) resolve(false);
-      else setTimeout(check, 100);
-    }; check();
-  })`);
-  if (!boxes) throw new Error(message);
-  // A check that names what it shows is framed on that alone.
-  const last = shows === '[]' ? actions.findLast(a => a.action !== 'ui' && a.x !== undefined) : undefined;
-  mark(last?.x, last?.y, { action: 'ui', boxes });
-  console.log(`PASS: ${message}`);
-}
 
 async function command(name) {
   press('F1');
@@ -123,160 +61,13 @@ async function open(file, line = 1) {
   await sleep(700);
 }
 
-async function prepare(file, line = 1) {
-  copyFileSync(`${root}/src/Website/${file}`, `${tools}/iris-website/src/Website/${file}`);
-  await open(file, line);
-  await command('File: Revert File');
-  await command('View: Close All Editors');
-  await open(file, line);
-  await move(100, 180, 100);
-  press('Escape');
-  await sleep(800);
-}
-
-// Resolve actual rendered text ranges, not fixed coordinates. This also works at 200%.
-function tokenPoint(line, token, occurrence = 0) {
-  return evaluate(`(() => {
-    const normalize = s => s.replaceAll('\u00a0', ' ');
-    const line = [...document.querySelectorAll('.view-line')]
-      .find(e => normalize(e.textContent).includes(${JSON.stringify(line)}));
-    if (!line) throw new Error('Line not visible: ' + ${JSON.stringify(line)});
-    const text = normalize(line.textContent), token = ${JSON.stringify(token)};
-    let start = -1;
-    for (let i = 0; i <= ${occurrence}; i++) start = text.indexOf(token, start + 1);
-    if (start < 0) throw new Error('Token not found: ' + token);
-    const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
-    const range = document.createRange();
-    let offset = 0, node;
-    while (node = walker.nextNode()) {
-      if (start >= offset && start < offset + node.length) {
-        range.setStart(node, start - offset);
-        range.setEnd(node, Math.min(node.length, start - offset + token.length));
-        const r = range.getBoundingClientRect();
-        if (r.x < 0 || r.right > innerWidth || r.y < 80 || r.bottom > innerHeight - 22)
-          throw new Error('Token clipped: ' + token);
-        return { x: (r.x + r.width / 2) * devicePixelRatio,
-          y: (r.y + r.height / 2) * devicePixelRatio };
-      }
-      offset += node.length;
-    }
-  })()`);
-}
-
-async function move(x, y, duration = 650) {
-  const location = run('xdotool', ['getmouselocation', '--shell']);
-  const fromX = Number(location.match(/^X=(\d+)/m)[1]);
-  const fromY = Number(location.match(/^Y=(\d+)/m)[1]);
-  const steps = Math.max(2, Math.round(duration / 25));
-  const start = Date.now();
-  for (let i = 1; i <= steps; i++) {
-    const eased = (1 - Math.cos(Math.PI * i / steps)) / 2;
-    run('xdotool', ['mousemove', String(Math.round(fromX + (x - fromX) * eased)), String(Math.round(fromY + (y - fromY) * eased))]);
-    await sleep(Math.max(0, start + duration * i / steps - Date.now()));
-  }
-}
-
-// Hold each button press for a few frames. Cap polls the pointer every 16 ms and misses instant clicks.
-async function press1(count = 1) {
-  for (let i = 0; i < count; i++) {
-    if (i) await sleep(70);
-    run('xdotool', ['mousedown', '1']);
-    await sleep(50);
-    run('xdotool', ['mouseup', '1']);
-  }
-}
-
+// Moves to a token and hovers it, or clicks or double-clicks (`select`) it.
 async function token(line, text, action = 'hover', occurrence = 0) {
-  const { x, y } = tokenPoint(line, text, occurrence);
+  const { x, y } = tokenPoint(line, text, { occurrence });
   await move(x, y);
   mark(x, y, { action });
-  if (action === 'click') await press1();
-  if (action === 'select') await press1(2);
-  await sleep(300);
-}
-
-const click = selector => clickOn(`document.querySelector(${JSON.stringify(selector)})`);
-
-// Click the element that a script returns.
-async function clickOn(element) {
-  const { x, y } = evaluate(`(() => {
-    const r = (${element}).getBoundingClientRect();
-    return { x: (r.x + r.width / 2) * devicePixelRatio, y: (r.y + r.height / 2) * devicePixelRatio };
-  })()`);
-  await move(x, y);
-  mark(x, y, { action: 'click' });
-  await press1();
-  await sleep(300);
-}
-
-// The pointer stays visible while typing, so move it aside first, into the nearest negative space
-// of the editor: clear of text, outside the area around the caret where suggestion lists, quick
-// fixes and hovers open, and preferably below and to the right of the caret.
-async function aside() {
-  const location = run('xdotool', ['getmouselocation', '--shell']);
-  const [x, y] = ['X', 'Y'].map(axis => Number(location.match(new RegExp(`^${axis}=(\\d+)`, 'm'))[1]));
-  const target = evaluate(`(() => {
-    const [px, py] = [${x} / devicePixelRatio, ${y} / devicePixelRatio];
-    const editor = [...document.querySelectorAll('.monaco-editor')].findLast(e => {
-      const r = e.getBoundingClientRect();
-      return px >= r.left && px <= r.right && py >= r.top && py <= r.bottom;
-    });
-    const bounds = editor.querySelector('.lines-content').closest('.monaco-scrollable-element').getBoundingClientRect();
-    const lines = [...editor.querySelectorAll('.view-line')].map(line => {
-      const text = [...line.querySelectorAll('span span')].filter(s => s.textContent.trim()).at(-1);
-      const r = line.getBoundingClientRect();
-      return { top: r.top, bottom: r.bottom, end: text ? text.getBoundingClientRect().right : -Infinity };
-    });
-    const clear = (x, y, gap) => lines.every(l => l.bottom < y - gap || l.top > y + gap || l.end + 24 < x);
-    const popups = (x, y) => x > px - 40 && x < px + 520 && y > py - 80 && y < py + 260;
-    const [x0, y0] = [px + 160, py + 200];
-    const candidates = [];
-    for (let y = bounds.top + 24; y <= bounds.bottom - 40; y += 12)
-      for (let x = bounds.left + 24; x <= bounds.right - 40; x += 24)
-        if (!popups(x, y)) candidates.push([x, y]);
-    // Points above or left of the caret count as further away.
-    const cost = ([x, y]) => Math.hypot(x - x0, y - y0) + (y < py + 24 ? 400 : 0) + (x < px ? 400 : 0);
-    const [x, y] = [36, 12].map(gap => candidates.filter(([x, y]) => clear(x, y, gap)).sort((a, b) => cost(a) - cost(b))[0])
-      .find(Boolean) ?? [Math.min(x0, bounds.right - 40), Math.min(y0, bounds.bottom - 40)];
-    return { x: Math.round(x * devicePixelRatio), y: Math.round(y * devicePixelRatio) };
-  })()`);
-  await move(target.x, target.y, 300);
-}
-
-// One swift, eased scroll that ends with `line` (1-based) at fraction `at` of the editor's height, or
-// as near as the ends of the file allow. The page animates it itself, a wheel event per frame, with
-// VS Code's own smooth scrolling off so that each event applies at once. Monaco scrolls a synthetic
-// wheel event's wheelDeltaY / 120 × 50 pixels, and Chrome sets wheelDeltaY to the event's deltaY.
-async function smoothScroll(line, at = 0.45, duration = 700) {
-  evaluate(`new Promise(resolve => {
-    const scrollable = [...document.querySelectorAll('.monaco-editor .monaco-scrollable-element.editor-scrollable')]
-      .find(e => e.checkVisibility());
-    // How many pixels below fraction at of the editor the line sits; negative when above it.
-    const offset = () => {
-      const view = scrollable.getBoundingClientRect();
-      const [number, r] = [...scrollable.closest('.monaco-editor').querySelectorAll('.line-numbers')]
-        .map(e => [Number(e.textContent), e.getBoundingClientRect()])
-        .filter(([n, r]) => n > 0 && r.height > 0)
-        .sort((a, b) => a[1].top - b[1].top)[0];
-      return r.top + (${line} - number + 0.5) * r.height - view.top - ${at} * view.height;
-    };
-    const wheel = pixels => {
-      const r = scrollable.getBoundingClientRect();
-      scrollable.dispatchEvent(new WheelEvent('wheel', { deltaY: -pixels * 120 / 50, deltaMode: 0, bubbles: true,
-        cancelable: true, clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 }));
-    };
-    const distance = offset(), started = performance.now();
-    let sent = 0;
-    const frame = now => {
-      const t = Math.min(1, (now - started) / ${duration});
-      const eased = t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2;
-      wheel(distance * eased - sent);
-      sent = distance * eased;
-      if (t < 1) requestAnimationFrame(frame);
-      else setTimeout(resolve, 150);
-    };
-    requestAnimationFrame(frame);
-  })`);
+  if (action === 'click') await hold();
+  if (action === 'select') await hold(2);
   await sleep(300);
 }
 
@@ -285,55 +76,6 @@ async function type(text) {
   await aside();
   run('xdotool', ['type', '--clearmodifiers', '--delay', '85', text]);
   await sleep(300);
-}
-
-async function capture(name, action) {
-  const raw = `${tools}/${name}-raw.mp4`;
-  const project = `${tools}/cap/${name}.cap`;
-  if (cap) recording = cap.start(project);
-  else recording = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y',
-    '-f', 'x11grab', '-draw_mouse', '1', '-video_size', `${width}x${height}`, '-framerate', '60',
-    '-i', ':94', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '18', '-pix_fmt', 'yuv420p', raw],
-    { env, stdio: ['pipe', 'ignore', 'inherit'] });
-  [actions, beats, captions, epoch] = [[], [], [], Date.now()];
-  await sleep(800);
-  await action();
-  await sleep(2000);
-  epoch = undefined;
-  if (cap) {
-    // Cap logs the cursor shape only when the pointer moves. An invisible move just before stopping,
-    // too late to raise a hover, logs the shape the pointer rests in; cap.mjs dates it back.
-    run('xdotool', ['mousemove_relative', '--', '1', '0']);
-    await sleep(50);
-    run('xdotool', ['mousemove_relative', '--', '-1', '0']);
-    await sleep(50);
-    cap.stop(recording);
-    recording = undefined;
-    writeFileSync(`${project}/iris-actions.json`, JSON.stringify(actions, null, 2));
-    const rendered = cap.render(project, actions, raw);
-    console.log(JSON.stringify(rendered));
-    // The trailer's pacing, on the timeline of the raw export: where the scripted work begins and
-    // ends, and which stretches it may hurry through.
-    const align = t => t + rendered.shift;
-    writeFileSync(`${output}/${name}.pace.json`, JSON.stringify({
-      first: align(actions[0]?.t ?? 0),
-      last: align(actions.at(-1)?.t ?? 0),
-      beats: beats.map(({ slug, t }) => ({ slug, t: align(t) })),
-      captions: captions.map(caption => ({ ...caption, t: align(caption.t) })),
-    }, null, 2));
-  } else {
-    recording.stdin.end('q\n');
-    const [code] = await once(recording, 'exit');
-    recording = undefined;
-    if (code !== 0) throw new Error(`ffmpeg exited ${code}`);
-  }
-  run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
-    // Slow the interactions, then hold the final frame for one extra second.
-    '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-pix_fmt', 'yuv420p',
-    '-movflags', '+faststart', `${output}/${name}.mp4`]);
-  writeFileSync(`${output}/${name}.txt`, browser('snapshot', '-i'));
-  console.log(`Recorded ${name}`);
 }
 
 const index = 'Landing/Index.purs';
@@ -353,7 +95,6 @@ const semantic = enabled => setting('editor.semanticHighlighting.enabled', enabl
 const onChange = enabled => setting('iris.server.diagnostics.onChange', enabled);
 const activeTab = file => `document.querySelector('[role="tab"][aria-selected="true"][data-resource-name="${file}"]') !== null`;
 const hover = text => `document.querySelector('.monaco-hover:not(.hidden)')?.innerText.includes(${JSON.stringify(text)})`;
-const suggestion = (...texts) => `${JSON.stringify(texts)}.every(text => document.querySelector('.suggest-widget .monaco-list-row.focused')?.innerText.includes(text))`;
 const errors = `document.querySelectorAll('.squiggly-error').length`;
 const marks = `[...${highlights}].filter(e => e.getBoundingClientRect().width > 0)`;
 // The highlighted words on the line containing `text`.
@@ -375,8 +116,6 @@ const handler = `    select number = for_ (index chapters number) \\{ at } -> do
 `;
 const foldable = 'import Data.Foldable (for_)\n';
 
-// Beats start each feature, where the trailer shows its section marker over the take.
-let beats = [], captions = [];
 // Opens quick input and frames it before typing, so the camera has arrived by the first keystroke.
 async function quickInput(key) {
   // Pressed without framing the text cursor, so the camera moves once, straight to the quick input.
@@ -384,25 +123,8 @@ async function quickInput(key) {
   // It fades in, so wait until it is opaque enough to be logged as in view.
   await expect(`document.querySelector('.quick-input-widget')?.checkVisibility({ opacityProperty: true })
     && getComputedStyle(document.querySelector('.quick-input-widget')).opacity === '1'`, 'Quick input opens',
-    `[document.querySelector('.quick-input-widget')]`);
+    { shows: `[document.querySelector('.quick-input-widget')]` });
   await sleep(600);
-}
-
-async function beat(slug, { continues = false } = {}) {
-  // Each feature's result holds on screen for a moment before the next one starts.
-  await sleep(500);
-  beats.push({ slug, t: (Date.now() - epoch) / 1000 });
-  // Cap's zoom starts a new framing here, so one feature's framing never stretches over the next,
-  // unless the feature continues in the place, and the framing, where the previous one ended.
-  if (epoch && !steady && !continues) actions.push({ t: (Date.now() - epoch) / 1000, action: 'beat' });
-  await sleep(200);
-}
-
-// Typing that continues at the caret, without moving the pointer aside again.
-async function keys(text, delay = 85) {
-  focus();
-  run('xdotool', ['type', '--clearmodifiers', '--delay', String(delay), text]);
-  await sleep(300);
 }
 
 // The 1-based line of the staged Demos.purs that contains `text`. Until Act II adds the import, the
@@ -517,7 +239,7 @@ const cases = {
         await expect(`${recoloured(before)}.length > 0`, 'Semantic tokens recolour Index.purs');
         await sleep(300);
         const changed = evaluate(recoloured(before));
-        const t = (Date.now() - epoch) / 1000;
+        const t = now();
         const styleOf = word => changed.find(span => span.word === word)?.style;
         for (const span of changed)
           if (!roles.some(role => styleOf(role.example) === span.style))
@@ -566,7 +288,7 @@ const cases = {
       await token('(\\chapter -> chapter.at', 'chapter', 'click');
       await expect(`${marks}.length === 2 && ${on('(\\chapter -> chapter.at')} === 2 && ${on('chapter = index')} === 0`,
         'The lambda parameter highlights its own use, not the chapter bound beside it',
-        region('selected = findLastIndex', 'chapter = index'));
+        { shows: region('selected = findLastIndex', 'chapter = index') });
       await sleep(1500);
 
       await beat('document-symbols');
@@ -581,7 +303,7 @@ const cases = {
       await sleep(500);
       await smoothScroll(lineOf('StyleX.conditionalCase breakpoints.from960'), 0.45, 450);
       await expect(shown('StyleX.conditionalCase breakpoints.from960'), 'The style table is in view',
-        region('layout:', 'StyleX.conditionalCase breakpoints.from960'));
+        { shows: region('layout:', 'StyleX.conditionalCase breakpoints.from960') });
       await sleep(900);
 
       await beat('find-references');
@@ -627,7 +349,7 @@ const cases = {
       });
       // The framing leaves room below the declaration for the rename box, so that rename continues in it.
       await expect(shown('type Measured a'), 'The Measured declaration is in view',
-        region('-- | A value for each measurement', 'tool :: Measured String'));
+        { shows: region('-- | A value for each measurement', 'tool :: Measured String') });
       await sleep(900);
 
       // Act II: Writing code.
@@ -641,7 +363,7 @@ const cases = {
       await sleep(400);
       press('Enter');
       await expect(`${lines('type Measured value = { cold :: value, hot :: value }')}.length === 1`,
-        'The type variable is renamed throughout its declaration', region('type Measured value', 'type Measured value'));
+        'The type variable is renamed throughout its declaration', { shows: region('type Measured value', 'type Measured value') });
       await sleep(1400);
 
       await quickInput('Control+p');
@@ -659,7 +381,7 @@ const cases = {
       await sleep(400);
       press('Enter');
       await expect(`${lines('data Size = Compact | Medium')}.length === 1 && ${lines('Compact -> iconButtonStyles.small')}.length === 1`,
-        'The constructor is renamed with its pattern', region('data Size = Compact', 'Medium -> iconButtonStyles'));
+        'The constructor is renamed with its pattern', { shows: region('data Size = Compact', 'Medium -> iconButtonStyles') });
       await sleep(900);
       await token('data Size = Compact | Medium', 'Compact', 'click');
       press('Shift+F12');
@@ -798,7 +520,6 @@ const cases = {
   },
 };
 
-mkdirSync(output, { recursive: true });
 try {
   let display = evaluate('({width:innerWidth,height:innerHeight,scale:devicePixelRatio})');
   // VS Code can leave F11 fullscreen when the display restarts, such as after the orb pauses.
@@ -817,11 +538,6 @@ try {
     await cases[name]();
   }
 } finally {
-  if (recording && cap) cap.stop(recording);
-  else if (recording) {
-    recording.stdin.end('q\n');
-    await once(recording, 'exit');
-  }
   // Disconnect from the external Electron browser without closing VS Code.
   browser('close');
 }

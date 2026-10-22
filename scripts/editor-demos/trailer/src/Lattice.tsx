@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useCurrentFrame } from "remotion";
 // The site's hero backdrop, rendered frame by frame instead of on requestAnimationFrame.
 import { layoutField, makeField, makeOcean, palette } from "../../../../src/Website/Components/Backdrop.js";
-import { fps, height, width } from "./editor";
+import { fps, height, width } from "./takes";
 
 const seed = 5139;
 // The video is watched smaller than the page it borrows from, so the lattice is laid out at
