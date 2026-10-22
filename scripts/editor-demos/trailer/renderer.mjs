@@ -1,6 +1,7 @@
-// The rendering pipeline that every trailer's entry script shares, such as render-editor.mjs
-// for the editor trailer. An entry script names its trailer, its composition and timeline module,
-// and the takes it is cut from, then calls `render`, which takes these options:
+// The rendering pipeline that every trailer's entry script shares: render-editor.mjs for the editor
+// trailer and render-playground.mjs for the playground trailer. An entry script names its trailer,
+// its composition and timeline module, and the takes it is cut from, then calls `render`, which
+// takes these options:
 //   (none)                       the whole trailer, its poster and chapter times
 //   --still 240,1200             single frames, for checking a design
 //   --frames 0-600               a range of frames, for checking motion

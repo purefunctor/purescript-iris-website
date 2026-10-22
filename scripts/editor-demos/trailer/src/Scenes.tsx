@@ -1,19 +1,22 @@
-// The pieces that every trailer composes: the opening and closing lockups and the hero's dot
-// lattice behind them. They use the site's tokens, fonts and logo.
+// The pieces that every trailer composes: the opening and closing lockups, the hero's dot lattice
+// behind them, and a take placed in the frame. They use the site's tokens, fonts and logo.
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import {
   AbsoluteFill,
   Easing,
+  Freeze,
+  OffthreadVideo,
   continueRender,
   delayRender,
   interpolate,
+  staticFile,
   useCurrentFrame,
 } from "remotion";
 // The logo's dots, as the site's header and favicon draw them.
 import { marks } from "../../../../src/Website/Components/Logo.js";
 import { Lattice, type Ripple } from "./Lattice";
-import { height, margin, sec, timing, width } from "./takes";
+import { fps, height, margin, sec, timing, width } from "./takes";
 
 const fonts = delayRender("Loading Geist");
 Promise.all(
@@ -78,18 +81,28 @@ function Words({ text, at, frame, stagger = 4 }: { text: string; at: number; fra
 }
 
 
-// The opening lockup.
-export function OpenScene({ duration }: { duration: number }) {
+// The opening lockup. The playground trailer passes its own line and command.
+export function OpenScene({
+  duration,
+  subtitle = "Language analysis for PureScript, in the editor.",
+  command = "iris lsp --stdio",
+  prompt = true,
+}: {
+  duration: number;
+  subtitle?: string;
+  command?: string;
+  prompt?: boolean;
+}) {
   const frame = useCurrentFrame();
   const leave = duration - sec(timing.crossfade);
   const gone = progress(frame, leave, sec(0.4), inOut);
-  const subtitle = sec(1.55);
-  const command = sec(2.35);
-  const typed = Math.floor(interpolate(frame, [command + sec(0.3), command + sec(1.1)], [0, 17], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  const subtitleAt = sec(1.55);
+  const typing = sec(2.35);
+  const typed = Math.floor(interpolate(frame, [typing + sec(0.3), typing + sec(1.1)], [0, command.length + 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   // The caret holds while typing, then blinks from the last keystroke: on, off, and on again as the
   // opening leaves, which timing.open allows for.
-  const typedAt = command + sec(1.1);
-  const caret = frame < command + sec(0.15) ? 0 : frame < typedAt || Math.floor((frame - typedAt) / sec(0.5)) % 2 === 0 ? 1 : 0;
+  const typedAt = typing + sec(1.1);
+  const caret = frame < typing + sec(0.15) ? 0 : frame < typedAt || Math.floor((frame - typedAt) / sec(0.5)) % 2 === 0 ? 1 : 0;
   return (
     <AbsoluteFill style={{ opacity: 1 - gone }}>
       <div style={{ position: "absolute", left: margin, top: 300, display: "flex", flexDirection: "column", gap: 34 }}>
@@ -111,7 +124,7 @@ export function OpenScene({ duration }: { duration: number }) {
           <Logo size={214} frame={frame} start={sec(0.15)} />
         </div>
         <div style={{ ...sans, fontSize: 66, fontWeight: 500, letterSpacing: "-0.025em", lineHeight: 1.1, color: "var(--text-secondary)" }}>
-          <Words text="Language analysis for PureScript, in the editor." at={subtitle} frame={frame} />
+          <Words text={subtitle} at={subtitleAt} frame={frame} />
         </div>
         <div
           style={{
@@ -123,12 +136,12 @@ export function OpenScene({ duration }: { duration: number }) {
             color: "var(--text-secondary)",
             backgroundColor: "var(--surface-1)",
             boxShadow: "inset 0 0 0 1px var(--border-default)",
-            opacity: progress(frame, command, sec(0.35)),
-            transform: `translateY(${(1 - progress(frame, command, sec(0.5))) * 16}px)`,
+            opacity: progress(frame, typing, sec(0.35)),
+            transform: `translateY(${(1 - progress(frame, typing, sec(0.5))) * 16}px)`,
           }}
         >
-          <span style={{ color: "var(--text-tertiary)" }}>$ </span>
-          {"iris lsp --stdio".slice(0, typed)}
+          {prompt && <span style={{ color: "var(--text-tertiary)" }}>$ </span>}
+          {command.slice(0, typed)}
           <span style={{ display: "inline-block", width: "0.6em", height: "1.1em", marginLeft: 2, verticalAlign: "-0.2em", backgroundColor: "var(--accent)", opacity: caret }} />
         </div>
       </div>
@@ -136,8 +149,16 @@ export function OpenScene({ duration }: { duration: number }) {
   );
 }
 
-// The closing lockup.
-export function EndScene() {
+// The closing lockup. The playground trailer passes its own command and link.
+export function EndScene({
+  command = "curl -fsSL https://iris-lang.com/install.sh | sh",
+  link = "iris-lang.com/docs/language-server",
+  prompt = true,
+}: {
+  command?: string;
+  link?: string;
+  prompt?: boolean;
+}) {
   const frame = useCurrentFrame();
   const enter = sec(0.5);
   const t = (delay: number) => progress(frame, enter + sec(delay), sec(0.6));
@@ -166,10 +187,11 @@ export function EndScene() {
             transform: `translateY(${(1 - t(0.6)) * 16}px)`,
           }}
         >
-          <span style={{ color: "var(--text-tertiary)" }}>$ </span>curl -fsSL https://iris-lang.com/install.sh | sh
+          {prompt && <span style={{ color: "var(--text-tertiary)" }}>$ </span>}
+          {command}
         </div>
         <div style={{ ...sans, fontSize: 30, fontWeight: 500, color: "var(--text-tertiary)", opacity: t(1.0) }}>
-          iris-lang.com/docs/language-server
+          {link}
         </div>
       </div>
     </AbsoluteFill>
@@ -190,4 +212,30 @@ export function Backdrop({ endFrom }: { endFrom: number }) {
     [frame],
   );
   return <Lattice ripples={ripples} reveal={frame < sec(3) ? reveal : undefined} />;
+}
+
+// One take at a frame of the trailer, placed by `box` in the composition's pixels.
+export function Clip({ src, pose, box }: { src: string; pose?: { source: number; opacity: number }; box: { x: number; y: number; scale: number } }) {
+  if (!pose) return null;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        width,
+        height,
+        opacity: pose.opacity,
+        transform: `translate(${box.x}px, ${box.y}px) scale(${box.scale})`,
+        transformOrigin: "0 0",
+        // The split's panels read as two windows, with a hard edge against the lattice.
+        boxShadow: box.scale < 1 ? "0 0 0 2px var(--border-default), 0 30px 80px oklch(0% 0 0 / 55%)" : "none",
+        overflow: "hidden",
+      }}
+    >
+      <Freeze frame={Math.round(pose.source * fps)}>
+        <OffthreadVideo src={staticFile(src)} muted style={{ width, height, display: "block" }} />
+      </Freeze>
+    </div>
+  );
 }

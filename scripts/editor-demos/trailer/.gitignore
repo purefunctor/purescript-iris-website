@@ -1,3 +1,3 @@
-# Rendered inputs and outputs. render-editor.mjs copies the Cap takes in and writes the manifest.
+# Rendered inputs and outputs. The render scripts copy the Cap takes in and write the manifests.
 public/
 out/

@@ -20,7 +20,7 @@ const backend = process.env.IRIS_DEMO_RECORDER || 'cap';
 // Playback speed and quality of the review copy. Cap's zoom makes faster takes easy to follow.
 const [speed, crf] = backend === 'cap' ? [cap.speed, cap.crf] : [0.75, 23];
 
-// Page scripts for Monaco.
+// Page scripts for Monaco, which both the editor and the playground use.
 // The visible lines that contain any of `texts`.
 export const lines = (...texts) => `[...document.querySelectorAll('.view-line')].filter(line => ${JSON.stringify(texts)}
   .some(text => line.textContent.replaceAll('\\u00a0', ' ').includes(text)))`;
@@ -31,8 +31,9 @@ export const suggestion = (...texts) => `${JSON.stringify(texts)}.every(text => 
 // `overlays` are selectors for popups that each passing check logs when they are in view, so the zoom
 // keeps them in frame. `caret` is a page script returning where keyboard work happens, in device
 // pixels, or null. `chrome` is how far the app's own chrome covers the page at the top and bottom,
-// in CSS pixels, where a token cannot be clicked.
-export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bottom: 0 } }) {
+// in CSS pixels, where a token cannot be clicked. `offset` returns where the page starts on screen,
+// for a window whose page sits below its toolbar. `planner` overrides cap.mjs's zoom planning.
+export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bottom: 0 }, offset = () => 0, planner = {} }) {
   const browser = (...args) => run('agent-browser', ['--session', session, '--cdp', String(cdp), ...args]);
   const evaluate = code => JSON.parse(browser('eval', code));
 
@@ -139,7 +140,7 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
   // The centre of the element a script returns, in screen pixels.
   const centre = element => evaluate(`(() => {
     const r = (${element}).getBoundingClientRect();
-    return { x: Math.round((r.x + r.width / 2) * devicePixelRatio), y: Math.round((r.y + r.height / 2) * devicePixelRatio) };
+    return { x: Math.round((r.x + r.width / 2) * devicePixelRatio), y: Math.round((r.y + r.height / 2) * devicePixelRatio) + ${offset()} };
   })()`);
   const clickOn = (element, options) => clickAt(centre(element), options);
 
@@ -253,8 +254,8 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
   }
 
   // Records `action` as the take `name`: the raw export at recorded speed, which the trailer is cut
-  // from, the actions beside the Cap project, so `cap.mjs <name>` re-exports it, the pacing the
-  // trailer reads, a review copy and the app's last accessibility snapshot.
+  // from, the actions and planner settings beside the Cap project, so `cap.mjs <name>` re-exports
+  // it, the pacing the trailer reads, a review copy and the app's last accessibility snapshot.
   async function capture(name, action) {
     const raw = `${tools}/${name}-raw.mp4`;
     const project = `${tools}/cap/${name}.cap`;
@@ -287,7 +288,8 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     }
     if (backend === 'cap') {
       writeFileSync(`${project}/iris-actions.json`, JSON.stringify(actions, null, 2));
-      const rendered = cap.render(project, actions, raw);
+      writeFileSync(`${project}/iris-planner.json`, JSON.stringify(planner));
+      const rendered = cap.render(project, actions, raw, { planner });
       console.log(JSON.stringify(rendered));
       // The trailer's pacing, on the timeline of the raw export: where the scripted work begins and
       // ends, each feature's beat, and the captions.

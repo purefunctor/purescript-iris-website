@@ -7,7 +7,7 @@
 // Re-export a recorded take with different effects, without re-recording it:
 //   node scripts/editor-demos/cap.mjs <clip> [--zoom 1.5] [--no-zoom] [--no-ripple]
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -145,7 +145,8 @@ function holdRestingShape(path, since) {
   writeFileSync(path, JSON.stringify(events, null, 2));
 }
 
-export function render(project, actions, output, { zoom = true, ripple = true, amount } = {}) {
+// `planner` overrides zoomSegments' options, such as how long a framing holds.
+export function render(project, actions, output, { zoom = true, ripple = true, amount, planner = {} } = {}) {
   const json = path => JSON.parse(readFileSync(`${project}/${path}`, 'utf8'));
   const meta = json('recording-meta.json');
   const config = json('project-config.json');
@@ -155,7 +156,7 @@ export function render(project, actions, output, { zoom = true, ripple = true, a
   const aligned = actions.map(a => ({ ...a, t: a.t + shift }));
   const cursor = (meta.segments ?? [meta.segment]).at(-1).cursor;
   if (cursor && aligned.length) holdRestingShape(`${project}/${cursor}`, aligned.at(-1).t);
-  config.timeline.zoomSegments = zoom ? zoomSegments(aligned, duration, amount ? { amount } : {}) : [];
+  config.timeline.zoomSegments = zoom ? zoomSegments(aligned, duration, { ...planner, ...(amount ? { amount } : {}) }) : [];
   config.cursor.ripple = { ...config.cursor.ripple, enabled: ripple };
   writeFileSync(`${project}/project-config.json`, JSON.stringify(config, null, 2));
   cap('export', project, '--output', output, '--fps', '60', '--resolution', `${width}x${height}`, '--quality', 'maximum');
@@ -170,7 +171,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const raw = `${tools}/${name}-raw.mp4`;
   const output = process.env.IRIS_DEMO_OUTPUT || `${tools}/recordings`;
   const actions = JSON.parse(readFileSync(`${project}/iris-actions.json`, 'utf8'));
-  console.log(JSON.stringify(render(project, actions, raw, {
+  // Takes that set their own zoom planning, such as the playground's, save it beside their actions.
+  const planner = existsSync(`${project}/iris-planner.json`) ? JSON.parse(readFileSync(`${project}/iris-planner.json`, 'utf8')) : {};
+  console.log(JSON.stringify(render(project, actions, raw, { planner,
     zoom: !values['no-zoom'], ripple: !values['no-ripple'], amount: values.zoom && Number(values.zoom),
   })));
   // The same retime and final hold as recorder.mjs, applied to the normal-speed export.
