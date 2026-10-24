@@ -73,6 +73,18 @@ sections =
             ]
         ]
     }
+  , { id: "zed"
+    , title: "Zed"
+    , body:
+        [ paragraph
+            [ DOM.text "A community-maintained "
+            , link "https://github.com/sectore/purescript-iris-zed" "Zed extension"
+            , DOM.text " starts the language server in Zed. The "
+            , link "https://github.com/sectore/purescript-iris-zed#readme" "README"
+            , DOM.text " describes installation and configuration."
+            ]
+        ]
+    }
   , { id: "other-editors"
     , title: "Other editors"
     , body:
