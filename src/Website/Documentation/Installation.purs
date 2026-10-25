@@ -31,7 +31,7 @@ sections =
     , body:
         [ paragraph
             [ DOM.text
-                "Releases are available for Linux on x86-64, macOS on Intel and Apple silicon, and 64-bit Windows. To install the latest stable release, run the command for your platform:"
+                "Releases are available for Linux on x86-64 and ARM64, macOS on Intel and Apple silicon, and 64-bit Windows. To install the latest stable release, run the command for your platform:"
             ]
         , Installation.installation { fill: true }
         , paragraph
