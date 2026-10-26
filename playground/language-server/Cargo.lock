@@ -55,7 +55,7 @@ checksum = "36f64beae40a84da1b4b26ff2761a5b895c12adc41dc25aaee1c4f2bbfe97a6e"
 [[package]]
 name = "building"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "checking",
@@ -85,7 +85,7 @@ dependencies = [
 [[package]]
 name = "building-types"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "files",
  "parking_lot",
@@ -136,7 +136,7 @@ checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 [[package]]
 name = "checking"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "files",
@@ -216,7 +216,7 @@ dependencies = [
 [[package]]
 name = "documenting"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "indexing",
  "parsing",
@@ -270,7 +270,7 @@ checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
 [[package]]
 name = "files"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "rayon",
  "rustc-hash",
@@ -297,7 +297,7 @@ checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 [[package]]
 name = "foreign-javascript"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "files",
@@ -322,7 +322,7 @@ dependencies = [
 [[package]]
 name = "formatting"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "itertools",
  "lexing",
@@ -334,7 +334,7 @@ dependencies = [
 [[package]]
 name = "functional"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "checking",
@@ -544,7 +544,7 @@ dependencies = [
 [[package]]
 name = "indexing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "itertools",
  "la-arena",
@@ -568,7 +568,7 @@ dependencies = [
 [[package]]
 name = "interner"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "boxcar",
  "hashbrown 0.17.1",
@@ -580,7 +580,7 @@ dependencies = [
 [[package]]
 name = "iris-analysis"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "checking",
@@ -614,7 +614,7 @@ dependencies = [
 [[package]]
 name = "iris-diagnostics"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "checking",
@@ -670,7 +670,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "javascript"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "files",
@@ -709,7 +709,7 @@ checksum = "3752f229dcc5a481d60f385fa479ff46818033d881d2d801aa27dffcfb5e8306"
 [[package]]
 name = "lexing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "syntax",
  "unicode_categories",
@@ -749,7 +749,7 @@ dependencies = [
 [[package]]
 name = "lowering"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "files",
  "indexing",
@@ -1122,7 +1122,7 @@ dependencies = [
 [[package]]
 name = "parsing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "drop_bomb",
  "lexing",
@@ -1229,7 +1229,7 @@ dependencies = [
 [[package]]
 name = "prim-constants"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 
 [[package]]
 name = "proc-macro2"
@@ -1291,7 +1291,7 @@ dependencies = [
 [[package]]
 name = "resolving"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "files",
@@ -1417,7 +1417,7 @@ dependencies = [
 [[package]]
 name = "stabilizing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "hashbrown 0.17.1",
  "la-arena",
@@ -1457,7 +1457,7 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 [[package]]
 name = "sugar"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "building-types",
  "files",
@@ -1503,7 +1503,7 @@ dependencies = [
 [[package]]
 name = "syntax"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.12#af4a8525e5f391f5b755e373522abcc9a583bd34"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.13#7ddab4481c3b43713d790875f887c9998824d269"
 dependencies = [
  "hashbrown 0.17.1",
  "la-arena",

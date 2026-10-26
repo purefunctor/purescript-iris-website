@@ -109,7 +109,7 @@ sections =
             ]
         , Installation.installation { fill: true }
         , paragraph [ DOM.text "Once installed, you can check the current version:" ]
-        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.12" } ]
+        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.13" } ]
         , paragraph
             [ DOM.text
                 "The installer does not modify system or shell configuration. The installation locations are as follows:"
