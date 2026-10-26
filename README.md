@@ -32,6 +32,12 @@ pnpm dev
 
 This prepares PureScript output, then starts the compiler watcher and Astro with live updates. You don't need to repeat dependency installation unless dependencies change. For agent-specific orb startup commands, see [the agent guide](AGENTS.md#orb-setup-and-preview).
 
+### Inspect playground JavaScript
+
+At `/playground`, open a PureScript file and select **JavaScript** to see the module that Iris generates for it. While **Source maps** is on, hovering over code in either pane highlights its counterpart in the other, selecting code pins the highlight, and Escape clears it. Highlights in the PureScript pane cover whole lines, because source maps record where generated code starts, not the source ranges it covers. While the file has compiler errors, the pane keeps its last successful output.
+
+Stack traces in the Output tab link to PureScript locations; the **Mapped exception** template shows one. Frames in handwritten FFI modules stay in JavaScript. The JavaScript tab needs a language server with the `iris/generated` request, which the mock server lacks; see [the playground guide](playground/AGENTS.md#language-server).
+
 ### Publishing
 
 The site is prerendered at build time and served as [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/) without a Worker script or Node server. Static asset requests have no per-request Worker invocation charge.

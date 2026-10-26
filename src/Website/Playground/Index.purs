@@ -104,6 +104,8 @@ foreign import panelTabsImpl ::
     , output :: JSX
     , outputAction :: JSX
     , outputBadge :: String
+    , javascript :: JSX
+    , settings :: JSX
     , packages :: JSX
     , packagesBadge :: String
     }
@@ -312,7 +314,7 @@ styles = StyleX.create
       , width: StyleX.conditionalValue "min(var(--panel-width), 70cqw)"
           [ StyleX.conditionalCase breakpoints.upTo960 "100%" ]
       }
-  -- The panel's tabs scroll beside its settings, such as Clear, which stay put.
+  -- The panel's tabs scroll beside its settings, such as Clear and Source maps, which stay put.
   , panelBar:
       { alignItems: "stretch"
       , borderBlockEndColor: "var(--border-subtle)"
@@ -389,6 +391,113 @@ styles = StyleX.create
       , minHeight: 0
       , outlineStyle: "none"
       , overflowY: "auto"
+      }
+  -- A strip above the output, such as the note that a previous run's frames no longer navigate.
+  , subBar:
+      { alignItems: "center"
+      , borderBlockEndColor: "var(--border-subtle)"
+      , borderBlockEndStyle: "solid"
+      , borderBlockEndWidth: 1
+      , display: "flex"
+      , flexShrink: 0
+      , flexWrap: "wrap"
+      , fontFamily: "var(--font-sans)"
+      , fontSize: 12
+      , gap: 8
+      , paddingBlock: 8
+      , paddingInline: 12
+      }
+  , subBarLabel: { color: "var(--text-secondary)", overflowWrap: "anywhere" }
+  , generatedStatus:
+      { color: "var(--text-tertiary)"
+      , flexShrink: 0
+      , fontFamily: "var(--font-sans)"
+      , fontSize: 12
+      , margin: 0
+      , overflowWrap: "anywhere"
+      , paddingBlock: 6
+      , paddingInline: 12
+      }
+  -- A slide switch whose track is recessed while off and lit in the accent while on, so its
+  -- state reads at a glance. Its label never changes, so its width stays the same.
+  , switch:
+      { alignItems: "center"
+      , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
+      , borderRadius: 999
+      , borderStyle: "none"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
+      , cursor: "default"
+      , display: "inline-flex"
+      , flexShrink: 0
+      , fontFamily: "var(--font-sans)"
+      , fontSize: 12
+      , fontWeight: 500
+      , gap: 10
+      , height: 28
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , paddingBlock: 0
+      , paddingInlineEnd: 5
+      , paddingInlineStart: 12
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
+      , whiteSpace: "nowrap"
+      }
+  -- Both tracks' shadows have the same shape, so that the glow eases in and out.
+  , switchTrack:
+      { backgroundColor: "var(--granite-950)"
+      , borderRadius: 999
+      , boxShadow:
+          "inset 0 1px 2px oklch(0% 0 0 / 60%), inset 0 -1px 0 oklch(100% 0 0 / 6%), 0 0 0 oklch(from var(--accent) l c h / 0%)"
+      , display: "block"
+      , flexShrink: 0
+      , height: 18
+      , position: "relative"
+      , transitionDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "background-color, box-shadow"
+      , transitionTimingFunction: "var(--ease-out)"
+      , width: 30
+      }
+  , switchTrackOn:
+      { backgroundColor: "var(--accent)"
+      , boxShadow:
+          "inset 0 1px 2px oklch(0% 0 0 / 35%), inset 0 -1px 0 oklch(100% 0 0 / 12%), 0 0 8px oklch(from var(--accent) l c h / 45%)"
+      }
+  -- The knob is lit from above like the raised keys, but a switch slides rather than sinks, so
+  -- it has no pressed state.
+  , switchKnob:
+      { backgroundColor: "var(--granite-300)"
+      , backgroundImage: "linear-gradient(oklch(100% 0 0 / 18%), oklch(0% 0 0 / 10%))"
+      , borderRadius: 999
+      , boxShadow: "inset 0 1px 0 oklch(100% 0 0 / 35%), 0 1px 2px oklch(0% 0 0 / 55%)"
+      , height: 14
+      , insetBlockStart: 2
+      , insetInlineStart: 2
+      , position: "absolute"
+      , transitionDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "background-color, transform"
+      , transitionTimingFunction: "var(--ease-out)"
+      , width: 14
+      }
+  , switchKnobOn: { backgroundColor: "var(--granite-100)", transform: "translateX(12px)" }
+  -- A stack frame that maps to PureScript, which opens its source.
+  , stackFrame:
+      { backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
+      , borderStyle: "none"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , color: "var(--text-primary)"
+      , cursor: "default"
+      , display: "block"
+      , fontFamily: "inherit"
+      , fontSize: "inherit"
+      , marginBlock: 3
+      , maxWidth: "100%"
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , overflowWrap: "anywhere"
+      , paddingBlock: 3
+      , paddingInline: 4
+      , textAlign: "start"
       }
   -- Status pills are sans-serif with flat, high-contrast fills.
   , status:
@@ -692,7 +801,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } -
   pure $ element playgroundImpl { theme, render: playground }
 
 playground :: View -> JSX
-playground { state, actions, editor, frames } = DOM.div styleProps.page
+playground { state, actions, editor, generated, frames } = DOM.div styleProps.page
   [ DOM.header styleProps.header [ if ready then controls else mempty ]
   -- The children keep their positions in every phase, so that React keeps the editor host that
   -- the controller fills once loading finishes.
@@ -713,6 +822,8 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
       , if ready then panel else mempty
       , if ready then mempty else loading state actions.retry
       , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef frames } []
+      -- The JavaScript tab's editor stays here for the same reason as the program's frame.
+      , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef generated } []
       ]
   ]
   where
@@ -772,7 +883,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , type: "button"
         , "aria-controls": "playground-panel"
         , "aria-expanded": state.panel
-        , "aria-label": "Output and packages"
+        , "aria-label": "Output, JavaScript and packages"
         }
         [ DOM.span (StyleX.props [ styles.icon, styles.besidePanel ]) (icon Icon.panelRight)
         , DOM.span (StyleX.props [ styles.icon, styles.belowPanel ]) (icon Icon.panelBottom)
@@ -805,7 +916,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
 
   panel = element panelImpl
     { id: "playground-panel"
-    , label: "Output and packages"
+    , label: "Output, JavaScript and packages"
     , open: state.panel
     , width: state.panelWidth
     , height: state.panelHeight
@@ -827,6 +938,8 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , output: output state actions frames
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
+        , settings: sourceMapsSwitch state actions
+        , javascript: javascriptPanel state generated
         , packages: packagesPanel
             { packages: state.packages
             , busy: state.server.status == "starting" || state.server.status == "restarting"
@@ -951,17 +1064,24 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
 -- | status of its own.
 output :: State -> Actions -> Ref (Nullable Element) -> JSX
 output state actions frames = DOM.div styleProps.output
-  if run.view
-  then
-    [ element outputViewImpl { frames, className: styleProps.view.className }
-    , if null run.lines then mempty else console true
+  ( [ if state.outputStale && not (null run.lines)
+      then DOM.div styleProps.subBar
+        [ DOM.span styleProps.subBarLabel "Previous run · rerun to navigate source locations" ]
+      else mempty
     ]
-  else
-    [ case run.status, null run.lines of
-        "idle", true -> DOM.p styleProps.empty "Run the project to see what main prints or renders."
-        "done", true -> DOM.p styleProps.empty "main finished without printing anything."
-        _, _ -> console false
-    ]
+      <> if run.view
+         then
+           [ element outputViewImpl { frames, className: styleProps.view.className }
+           , if null run.lines then mempty else console true
+           ]
+         else
+           [ case run.status, null run.lines of
+               "idle", true ->
+                 DOM.p styleProps.empty "Run the project to see what main prints or renders."
+               "done", true -> DOM.p styleProps.empty "main finished without printing anything."
+               _, _ -> console false
+           ]
+  )
   where
   run = state.run
   console overlay = element consoleImpl
@@ -976,7 +1096,7 @@ output state actions frames = DOM.div styleProps.output
     , scrollerClassName: styleProps.consoleScroller.className
     , handleClassName: (StyleX.props [ styles.handle, styles.consoleHandle ]).className
     , bar: consoleBar state.console run.lines actions.toggleConsole
-    , children: fragment (map outputLine run.lines)
+    , children: fragment (map (outputLine state actions) run.lines)
     }
 
 consoleBar :: Boolean -> Array Line -> Effect Unit -> JSX
@@ -1020,10 +1140,56 @@ clearButton run clear
     DOM.button { className: styleProps.clear.className, onClick: handler_ clear, type: "button" }
       "Clear"
 
-outputLine :: Line -> JSX
-outputLine line = DOM.div (StyleX.props [ styles.line, tone ])
-  [ DOM.span styleProps.lineIcon marker, DOM.span styleProps.lineText line.text ]
+-- | The JavaScript tab: the open module's generated code, in an editor that the controller fills.
+javascriptPanel :: State -> Ref (Nullable Element) -> JSX
+javascriptPanel state host = DOM.div styleProps.output
+  [ element outputViewImpl { frames: host, className: styleProps.view.className }
+  , if state.generated.message == ""
+    then mempty
+    else DOM.p styleProps.generatedStatus state.generated.message
+  ]
+
+sourceMapsSwitch :: State -> Actions -> JSX
+sourceMapsSwitch state actions = DOM.button
+  { className: styleProps.switch.className
+  , type: "button"
+  , role: "switch"
+  , "aria-checked": state.sourceMaps
+  , onClick: handler_ actions.toggleSourceMaps
+  }
+  [ DOM.text "Source maps"
+  , DOM.span
+      { className:
+          ( StyleX.props
+              [ styles.switchTrack, StyleX.conditional state.sourceMaps styles.switchTrackOn ]
+          ).className
+      , "aria-hidden": true
+      }
+      [ DOM.span
+          ( StyleX.props
+              [ styles.switchKnob, StyleX.conditional state.sourceMaps styles.switchKnobOn ]
+          )
+          []
+      ]
+  ]
+
+outputLine :: State -> Actions -> Line -> JSX
+outputLine state actions line = DOM.div (StyleX.props [ styles.line, tone ])
+  [ DOM.span styleProps.lineIcon marker
+  , DOM.div styleProps.lineText case toMaybe line.frames of
+      Nothing -> DOM.text line.text
+      Just frames -> fragment (map frame frames)
+  ]
   where
+  frame item
+    | item.mapped && not state.outputStale = DOM.button
+      { className: styleProps.stackFrame.className
+      , type: "button"
+      , onClick: handler_ (actions.openFrame item)
+      , title: "Open PureScript source"
+      }
+      item.text
+    | otherwise = DOM.div {} item.text
   { tone, marker } = case line.kind of
     "error" -> { tone: styles.errorLine, marker: icon Icon.circleX }
     "warning" -> { tone: styles.warningLine, marker: icon Icon.triangleAlert }

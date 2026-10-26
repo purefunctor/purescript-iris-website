@@ -6,6 +6,7 @@ module Website.Playground.Types
   , Packages
   , Run
   , Server
+  , StackFrame
   , State
   , Template
   , View
@@ -39,7 +40,7 @@ type State =
   -- | sets by dragging its edge.
   , panelWidth :: Int
   , panelHeight :: Int
-  -- | The panel's selected tab, `output` or `packages`, which it keeps while closed.
+  -- | The panel's selected tab, `output`, `javascript` or `packages`, kept while closed.
   , panelTab :: String
   -- | Whether the console over a program's view shows its messages or only its bar, and its
   -- | height there in pixels, or 0 before the reader resizes it.
@@ -48,6 +49,13 @@ type State =
   , server :: Server
   , packages :: Packages
   , run :: Run
+  -- | Whether stack frames and the JavaScript tab use source maps, which applies to every tab.
+  , sourceMaps :: Boolean
+  -- | Whether the project changed since the last run, so its stack frames no longer navigate.
+  , outputStale :: Boolean
+  -- | The JavaScript tab: its `status` (`idle`, `loading`, `ready`, `stale` or `unavailable`) with
+  -- | a message to show, empty when there is none, and whether its output has mappings.
+  , generated :: { status :: String, message :: String, mapped :: Boolean }
   , templates :: Array Template
   , shared :: Boolean
   }
@@ -92,7 +100,9 @@ type Available = { name :: String, version :: String, status :: String, required
 -- | shows in the Output panel above its log.
 type Run = { status :: String, lines :: Array Line, view :: Boolean }
 
-type Line = { kind :: String, text :: String }
+type Line = { kind :: String, text :: String, frames :: Nullable (Array StackFrame) }
+
+type StackFrame = { text :: String, uri :: String, line :: Int, column :: Int, mapped :: Boolean }
 
 -- | A starting project that replaces the current one, such as `halogen`.
 type Template = { id :: String, name :: String, description :: String }
@@ -111,6 +121,8 @@ type Actions =
   , resizePanel :: { width :: Int, height :: Int } -> Effect Unit
   , closePanel :: Effect Unit
   , selectPanelTab :: String -> Effect Unit
+  , toggleSourceMaps :: Effect Unit
+  , openFrame :: StackFrame -> Effect Unit
   -- | Collapses the console over a program's view to its bar, or brings it back up.
   , toggleConsole :: Effect Unit
   -- | Opens the console over a program's view at a height in pixels.
@@ -138,5 +150,6 @@ type View =
   { state :: State
   , actions :: Actions
   , editor :: Ref (Nullable Element)
+  , generated :: Ref (Nullable Element)
   , frames :: Ref (Nullable Element)
   }

@@ -21,6 +21,9 @@ const initialState = {
   server: { kind: null, version: null, revision: null, status: "starting", message: null },
   packages: { available: [], active: 0, packageSet: null, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
   run: { status: "idle", lines: [], view: false },
+  sourceMaps: true,
+  outputStale: false,
+  generated: { status: "idle", message: "", mapped: false },
   templates: [],
   shared: false,
 };
@@ -29,6 +32,7 @@ const initialState = {
 // and hands its state and actions to the PureScript `render`.
 export function playgroundImpl({ theme, render }) {
   const editor = useRef(null);
+  const generated = useRef(null);
   const frames = useRef(null);
   const controller = useRef(null);
   const [state, setState] = useState(initialState);
@@ -40,6 +44,7 @@ export function playgroundImpl({ theme, render }) {
       .then(({ createPlayground }) =>
         createPlayground({
           editor: editor.current,
+          generated: generated.current,
           frames: frames.current,
           theme,
           onChange: setState,
@@ -78,6 +83,8 @@ export function playgroundImpl({ theme, render }) {
       resizePanel: (size) => () => call("resizePanel", size),
       closePanel: () => call("closePanel"),
       selectPanelTab: (tab) => () => call("selectPanelTab", tab),
+      toggleSourceMaps: () => call("toggleSourceMaps"),
+      openFrame: (frame) => () => call("openFrame", frame),
       toggleConsole: () => call("toggleConsole"),
       resizeConsole: (height) => () => call("resizeConsole", height),
       closeConsole: () => call("closeConsole"),
@@ -97,10 +104,10 @@ export function playgroundImpl({ theme, render }) {
     };
   }, []);
 
-  return render({ state, actions, editor, frames });
+  return render({ state, actions, editor, generated, frames });
 }
 
-// The side panel's Output and Packages tabs. The selection lives in the controller, so the panel
+// The side panel's Output, JavaScript and Packages tabs. The selection lives in the controller, so the panel
 // reopens on the tab it closed on, and a panel fades in only when the reader switches to it, not
 // when the whole panel opens.
 export function panelTabsImpl({
@@ -117,6 +124,8 @@ export function panelTabsImpl({
   output,
   outputAction,
   outputBadge,
+  javascript,
+  settings,
   packages,
   packagesBadge,
 }) {
@@ -170,15 +179,22 @@ export function panelTabsImpl({
             Output
             {outputBadge && <span className={badgeClassName}>{outputBadge}</span>}
           </Tab>
+          <Tab className={tabClassName} id="javascript">JavaScript</Tab>
           <Tab className={tabClassName} id="packages">
             Packages
             {packagesBadge && <span className={badgeClassName}>{packagesBadge}</span>}
           </Tab>
         </TabList>
-        <div className={settingsClassName}>{selected === "output" && outputAction}</div>
+        <div className={settingsClassName}>
+          {selected === "output" && outputAction}
+          {settings}
+        </div>
       </div>
       <TabPanel className={panelClass} id="output">
         {output}
+      </TabPanel>
+      <TabPanel className={panelClass} id="javascript">
+        {javascript}
       </TabPanel>
       <TabPanel className={panelClass} id="packages">
         {packages}

@@ -8,11 +8,14 @@
 // with their dependencies; changing them restarts the server, which downloads what is missing.
 
 import index from "../packages/index.json";
+import { TraceMap } from "@jridgewell/trace-mapping";
 import { resolveClosure } from "../packages/registry.js";
+import { createGeneratedOutput } from "./generated-output.js";
 import { LanguageClient } from "./language-client.js";
 import { applyDiagnostics, LANGUAGE, registerProviders } from "./monaco-bridge.js";
 import { configure, createEditor, monaco } from "./monaco.js";
 import { link, Runner } from "./runner.js";
+import { stackFrames } from "./source-maps.js";
 import { decodeProject, encodeProject, loadSavedProject, saveProject } from "./storage.js";
 import { TEMPLATES } from "./templates.js";
 
@@ -39,7 +42,7 @@ const templatePackages = (template) => [...CORE, ...template.packages];
  * @param {object} options.theme the Monaco theme computed at build time
  * @param {(state: object) => void} options.onChange
  */
-export async function createPlayground({ editor: host, frames, theme, onChange }) {
+export async function createPlayground({ editor: host, generated: generatedHost, frames, theme, onChange }) {
   const query = new URLSearchParams(location.search);
   const shared = await decodeProject(location.hash).catch(() => null);
   const project = shared ?? loadSavedProject() ?? { files: TEMPLATES[0].files, packages: templatePackages(TEMPLATES[0]) };
@@ -69,19 +72,46 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], active: 0, packageSet: index.packageSet.version, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [], view: false },
+    sourceMaps: true,
+    outputStale: false,
+    generated: { status: "idle", message: "Open a PureScript file to see its JavaScript.", mapped: false },
     templates: TEMPLATES.map(({ id, name, description }) => ({ id, name, description })),
     shared: false,
   };
   const setState = (update) => {
     state = { ...state, ...update(state) };
     onChange(state);
+    syncGenerated();
   };
 
   configure(theme);
   let editor = null;
+  let generated = null;
+  // Edits bump the revision, so that stack frames from an older run stop navigating.
+  let projectRevision = 0;
+  // Each run, stop and template load bumps the generation, so that a superseded run's results drop.
+  let runGeneration = 0;
+  // The last run's source maps, keyed by module path, which turn its stack frames into source locations.
+  let runMaps = new Map();
+  let generatedShown = null;
   const models = new Map();
   let providers = null;
   let saveTimer;
+
+  const changed = () => {
+    projectRevision++;
+    generated?.invalidate();
+    setState(() => ({ outputStale: true }));
+  };
+  // The JavaScript tab compiles only while it shows, and links only while source maps are on.
+  const syncGenerated = () => {
+    if (!generated) return;
+    const show = state.panel && state.panelTab === "javascript" && state.server.status === "ready";
+    const key = `${show} ${state.sourceMaps}`;
+    if (key === generatedShown) return;
+    generatedShown = key;
+    generated.update(show, state.sourceMaps);
+  };
 
   const uriOf = (path) => `${PROJECT}${path}`;
   const save = () => {
@@ -122,11 +152,13 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     createWorker: () => new Worker(new URL("./worker.js", import.meta.url), { type: "module", name: "iris-language-server" }),
     server: query.get("server") === "mock" ? "mock" : "auto",
     handlers: {
-      onStatus: ({ status, server, message }) =>
+      onStatus: ({ status, server, message }) => {
         setState((current) => ({
           phase: current.phase === "ready" ? "ready" : status === "failed" ? "failed" : "loading",
           server: { ...current.server, ...(server ?? {}), status, message: message ?? null },
-        })),
+        }));
+        if (status !== "ready") generated?.invalidate();
+      },
       onProgress: ({ packageSet, loaded, total, bytes, totalBytes }) =>
         setState((current) => ({
           packages: { ...current.packages, packageSet, loaded, total, bytes, totalBytes },
@@ -141,6 +173,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       // A restarted server starts empty: open every document again.
       onRestart: () => {
         for (const [path, model] of models) openDocument(path, model);
+        generated?.invalidate();
       },
     },
   });
@@ -168,6 +201,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
           text: change.text,
         })),
       });
+      changed();
       save();
     });
     models.set(path, model);
@@ -175,6 +209,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
 
   const removeModel = (path) => {
+    changed();
     const model = models.get(path);
     models.delete(path);
     client.notify("textDocument/didClose", { textDocument: { uri: uriOf(path) } });
@@ -239,6 +274,12 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     for (const [path, model] of models) openDocument(path, model);
     if (!editor) {
       editor = createEditor(host, { model: null });
+      generated = createGeneratedOutput({
+        host: generatedHost,
+        source: editor,
+        client,
+        onChange: (generated) => setState(() => ({ generated })),
+      });
       monaco.editor.registerEditorOpener({
         openCodeEditor: (_source, resource, selection) => view(resource.toString(), selection),
       });
@@ -250,6 +291,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
 
   /** Activates `packages` in place of the current ones, and restarts the server when that changes what it loads. */
   const activate = (packages) => {
+    changed();
     activated = packages;
     save();
     publishPackages();
@@ -291,7 +333,9 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   const loadTemplate = (id) => {
     const template = TEMPLATES.find((candidate) => candidate.id === id);
     if (!template) return;
+    runGeneration++;
     runner.stop();
+    runMaps = new Map();
     for (const path of [...models.keys()]) removeModel(path);
     for (const file of template.files) openDocument(file.path, addModel(file.path, file.text));
     const paths = template.files.map(({ path }) => path);
@@ -308,9 +352,19 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
 
   const run = async () => {
-    setState(() => ({ run: { status: "compiling", lines: [], view: false } }));
+    const generation = ++runGeneration;
+    const revision = projectRevision;
+    runner.stop();
+    runMaps = new Map();
+    setState(() => ({
+      run: { status: "compiling", lines: [], view: false },
+      outputStale: false,
+      panel: true,
+      panelTab: "output",
+    }));
     try {
       const emitted = await client.request("iris/emit", {});
+      if (generation !== runGeneration) return;
       if (emitted.status === "failed") {
         const lines = emitted.errors.map(({ uri, diagnostic }) => ({
           kind: "error",
@@ -328,6 +382,10 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
         }));
       }
       const linked = await link(emitted.files);
+      if (generation !== runGeneration) return;
+      if (revision !== projectRevision) {
+        return setState(() => ({ run: { status: "failed", lines: [{ kind: "info", text: "The project changed while compiling. Run it again." }], view: false } }));
+      }
       if (linked.missing.length > 0) {
         const lines = linked.missing.map((specifier) => ({
           kind: "error",
@@ -335,9 +393,11 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
         }));
         return setState(() => ({ run: { status: "failed", lines, view: false } }));
       }
+      runMaps = new Map(Object.entries(linked.maps ?? {}).map(([path, map]) => [path, new TraceMap(map)]));
       setState(() => ({ run: { status: "running", lines: [], view: false } }));
       runner.run(linked.files, entry.path, linked.css);
     } catch (error) {
+      if (generation !== runGeneration) return;
       setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }], view: false } }));
     }
   };
@@ -348,7 +408,8 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       if (event.type === "view") return { run: { ...current.run, view: true }, panel: true, panelTab: "output" };
       if (event.type === "done") return { run: { ...current.run, status: "done" } };
       const kind = event.type === "error" || event.level === "error" ? "error" : event.level === "warn" ? "warning" : "log";
-      const lines = [...current.run.lines, { kind, text: event.text }].slice(-MAX_LINES);
+      const frames = /iris-playground:\/\/\//.test(event.text) ? stackFrames(event.text, runMaps, current.sourceMaps) : null;
+      const lines = [...current.run.lines, { kind, text: event.text, frames }].slice(-MAX_LINES);
       return { run: { ...current.run, status: event.type === "error" ? "failed" : current.run.status, lines } };
     });
   });
@@ -373,6 +434,22 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     closePanel: () => setState(() => ({ panel: false })),
     selectPanelTab: (tab) => setState(() => ({ panelTab: tab })),
+    // Applies to the JavaScript tab and to the stack frames already in the output.
+    toggleSourceMaps: () =>
+      setState((current) => {
+        const sourceMaps = !current.sourceMaps;
+        const lines = current.run.lines.map((line) =>
+          line.frames ? { ...line, frames: stackFrames(line.text, runMaps, sourceMaps) } : line,
+        );
+        return { sourceMaps, run: { ...current.run, lines } };
+      }),
+    openFrame: async ({ uri, line, column }) => {
+      if (!uri || state.outputStale) return;
+      const revision = projectRevision;
+      await ensureModel(uri);
+      if (revision !== projectRevision) return;
+      view(uri, { lineNumber: line, column });
+    },
     resizeConsole: (height) => {
       safely(() => localStorage.setItem(CONSOLE_HEIGHT, String(height)));
       setState(() => ({ console: true, consoleHeight: height }));
@@ -385,6 +462,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       const path = `src/Module${index}.purs`;
       const model = addModel(path, `module Module${index} where\n\nimport Prelude\n\n`);
       openDocument(path, model);
+      changed();
       setState((current) => ({ files: [...current.files, { path, errors: 0, warnings: 0 }] }));
       openFile(path);
       return path;
@@ -421,6 +499,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     run,
     stop: () => {
+      runGeneration++;
       runner.stop();
       setState((current) => ({
         run: { status: "stopped", lines: [...current.run.lines, { kind: "info", text: "Stopped" }], view: false },
@@ -448,7 +527,10 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   return {
     actions,
     dispose: () => {
+      runGeneration++;
+      clearTimeout(saveTimer);
       runner.stop();
+      generated?.dispose();
       providers?.dispose();
       client.dispose();
       editor?.dispose();
