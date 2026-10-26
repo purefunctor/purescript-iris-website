@@ -10,6 +10,8 @@ import { renderMedia, renderStill, selectComposition } from "@remotion/renderer"
 const here = fileURLToPath(new URL(".", import.meta.url));
 const tools = process.env.IRIS_DEMO_HOME || "/tmp/iris-editor-tools";
 const recordings = resolve(process.env.IRIS_DEMO_OUTPUT || `${tools}/recordings`);
+const reviewMarginSeconds = 1;
+const settledOpeningLockupSeconds = "3.6";
 
 export function take(clip, src) {
   const raw = `${tools}/${clip}-raw.mp4`;
@@ -44,8 +46,8 @@ export async function render({ name, composition: id, timeline: { plan, chapters
     for (const slug of values.review.split(",")) {
       const index = marks.findIndex((mark) => mark.slug === slug);
       if (index < 0) throw new Error(`No feature ${slug}; choose from ${marks.map((mark) => mark.slug).join(", ")}`);
-      const from = Math.max(0, marks[index].at - 1);
-      const to = Math.min(total, (marks[index + 1]?.at ?? total) + 1);
+      const from = Math.max(0, marks[index].at - reviewMarginSeconds);
+      const to = Math.min(total, (marks[index + 1]?.at ?? total) + reviewMarginSeconds);
       const output = `${values.output}/review/${String(index + 1).padStart(2, "0")}-${slug}.mp4`;
       execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-ss", String(from), "-to", String(to),
         "-i", `${values.output}/${name}.mp4`, "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
@@ -62,18 +64,18 @@ export async function render({ name, composition: id, timeline: { plan, chapters
   const concurrency = Math.max(1, Math.floor(cpus().length / 2));
 
   const master = `${values.output}/${name}-master.mp4`;
-  function encode() {
+  function encodePublished() {
     const ffmpeg = (...args) => execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-i", master, ...args]);
-    const scale = ["-vf", "scale=1920:1080:flags=lanczos", "-pix_fmt", "yuv420p", "-an", "-movflags", "+faststart"];
-    ffmpeg(...scale, "-c:v", "libsvtav1", "-preset", "5", "-crf", values["av1-crf"], "-g", "240", "-svtav1-params", "tune=0",
+    const downscaleToStreamable1080p = ["-vf", "scale=1920:1080:flags=lanczos", "-pix_fmt", "yuv420p", "-an", "-movflags", "+faststart"];
+    ffmpeg(...downscaleToStreamable1080p, "-c:v", "libsvtav1", "-preset", "5", "-crf", values["av1-crf"], "-g", "240", "-svtav1-params", "tune=0",
       `${values.output}/${name}-av1.mp4`);
-    ffmpeg(...scale, "-c:v", "libx264", "-preset", "slow", "-crf", values.crf, "-profile:v", "high", "-level:v", "4.2",
+    ffmpeg(...downscaleToStreamable1080p, "-c:v", "libx264", "-preset", "slow", "-crf", values.crf, "-profile:v", "high", "-level:v", "4.2",
       `${values.output}/${name}.mp4`);
-    execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-ss", "3.6", "-i", master,
+    execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-ss", settledOpeningLockupSeconds, "-i", master,
       "-vf", "scale=1920:1080:flags=lanczos", "-frames:v", "1", "-c:v", "libwebp", "-quality", "85", `${values.output}/${name}.webp`]);
   }
   if (values.encode) {
-    encode();
+    encodePublished();
     console.log(values.output);
     return;
   }
@@ -112,7 +114,7 @@ export async function render({ name, composition: id, timeline: { plan, chapters
     return;
   }
 
-  encode();
+  encodePublished();
   console.log(JSON.stringify(chapters(plan(manifest).markers), null, 2));
   console.log(values.output);
 }

@@ -4,6 +4,7 @@ import { height, lines, output, recorder, run, sleep, suggestion, tools, width }
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const input = '.quick-input-widget input';
+const [tabsAndBreadcrumbsHeight, statusBarHeight] = [80, 22];
 const caret = `(() => {
   // Typing into quick input is framed on the quick input itself.
   const quick = document.activeElement?.closest('.quick-input-widget')?.getBoundingClientRect();
@@ -20,11 +21,12 @@ const {
   cdp: 9223,
   overlays: ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget', '.rename-box'],
   caret,
-  chrome: { top: 80, bottom: 22 },
+  chrome: { top: tabsAndBreadcrumbsHeight, bottom: statusBarHeight },
 });
 const press = key => (focus(), browser('press', key));
+const pressWithoutFraming = key => browser('press', key);
 
-const region = (from, to) => `(() => {
+const visibleLinesBetween = (from, to) => `(() => {
   const text = line => line.textContent.replaceAll('\\u00a0', ' ');
   const lines = [...document.querySelectorAll('.view-line')]
     .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
@@ -78,13 +80,13 @@ const setting = (key, enabled) => {
   value[key] = enabled;
   writeFileSync(settings, JSON.stringify(value, null, 2));
 };
-const semantic = enabled => setting('editor.semanticHighlighting.enabled', enabled);
-const onChange = enabled => setting('iris.server.diagnostics.onChange', enabled);
+const semanticHighlighting = enabled => setting('editor.semanticHighlighting.enabled', enabled);
+const onChangeDiagnostics = enabled => setting('iris.server.diagnostics.onChange', enabled);
 const activeTab = file => `document.querySelector('[role="tab"][aria-selected="true"][data-resource-name="${file}"]') !== null`;
 const hover = text => `document.querySelector('.monaco-hover:not(.hidden)')?.innerText.includes(${JSON.stringify(text)})`;
 const errors = `document.querySelectorAll('.squiggly-error').length`;
 const marks = `[...${highlights}].filter(e => e.getBoundingClientRect().width > 0)`;
-const on = text => `${marks}.filter(e => ${lines(text)}.some(line => {
+const highlightsOnLine = text => `${marks}.filter(e => ${lines(text)}.some(line => {
   const [a, b] = [line.getBoundingClientRect(), e.getBoundingClientRect()];
   return b.top >= a.top - 2 && b.bottom <= a.bottom + 2;
 })).length`;
@@ -93,25 +95,26 @@ const shown = text => `${lines(text)}.some(line => {
   return r.top >= v.top - 3 && r.bottom <= v.bottom + 3;
 })`;
 
-const handler = `    select number = for_ (index chapters number) \\{ at } -> do
+const chapterSelectionHandler = `    select number = for_ (index chapters number) \\{ at } -> do
       setSeek \\{ request } -> { request: request + 1, time: at }
       setTime at
       setPlaying (const true)
 `;
-const foldable = 'import Data.Foldable (for_)\n';
+const foldableImport = 'import Data.Foldable (for_)\n';
 
+const quickInputFullyFadedIn = `document.querySelector('.quick-input-widget')?.checkVisibility({ opacityProperty: true })
+    && getComputedStyle(document.querySelector('.quick-input-widget')).opacity === '1'`;
 async function quickInput(key) {
-  browser('press', key);
-  await expect(`document.querySelector('.quick-input-widget')?.checkVisibility({ opacityProperty: true })
-    && getComputedStyle(document.querySelector('.quick-input-widget')).opacity === '1'`, 'Quick input opens',
+  pressWithoutFraming(key);
+  await expect(quickInputFullyFadedIn, 'Quick input opens',
     { shows: `[document.querySelector('.quick-input-widget')]` });
   await sleep(600);
 }
 
-const lineOf = text => readFileSync(`${tools}/iris-website/src/Website/${demos}`, 'utf8').split('\n')
+const stagedDemosLine = text => readFileSync(`${tools}/iris-website/src/Website/${demos}`, 'utf8').split('\n')
   .findIndex(line => line.includes(text)) + 1;
 
-const spans = `(() => {
+const tokenColoursByLine = `(() => {
   const out = {};
   for (const line of document.querySelectorAll('.view-line')) {
     let offset = 0;
@@ -151,40 +154,49 @@ const recoloured = before => `(() => {
   }
   return changed;
 })()`;
-const roles = [
+const captionedRoles = [
   { label: 'Declarations', color: '--syn-function', example: 'styles', anchor: ['styles', 'styles ='] },
   { label: 'Record labels', color: '--syn-label', example: 'onInstall', anchor: ['fontFamily', 'fontFamily:'] },
   { label: 'Module qualifiers', color: '--syn-namespace', example: 'Hooks', anchor: ['Hooks', 'reactComponent'] },
   { label: 'Bindings', color: '--syn-parameter', example: 'setRipples', anchor: ['setRipples', 'useState 0'] },
 ];
 
-async function stage() {
+function nativeDialogOpen() {
   let dialog = '';
   try { dialog = run('xdotool', ['search', '--onlyvisible', '--name', '^Visual Studio Code$']); } catch {}
-  if (dialog) throw new Error('Dismiss the native VS Code dialog on the recording display first');
+  return dialog;
+}
+
+const panelVisible = () => evaluate(`!!document.querySelector('.part.panel')?.checkVisibility()`);
+async function discardPendingRefactorPreview() {
+  if (evaluate(`[...document.querySelectorAll('.part.panel .monaco-button')].some(b => b.textContent.trim() === 'Discard')`))
+    await clickOn(`[...document.querySelectorAll('.part.panel .monaco-button')].find(b => b.textContent.trim() === 'Discard')`);
+  await sleep(500);
+}
+
+const indexLineCentredOnOpen = 36;
+
+async function stage() {
+  if (nativeDialogOpen()) throw new Error('Dismiss the native VS Code dialog on the recording display first');
   const source = readFileSync(`${root}/src/Website/${demos}`, 'utf8');
-  if (!source.includes(handler) || !source.includes(foldable))
+  if (!source.includes(chapterSelectionHandler) || !source.includes(foldableImport))
     throw new Error('Demos.purs no longer contains the handler and import that the take writes');
-  semantic(false);
-  onChange(false);
+  semanticHighlighting(false);
+  onChangeDiagnostics(false);
   await command('File: Save All Files');
   await command('View: Close All Editors');
   for (const file of [index, player, benchmarks, copyButton, 'Components/Terminal.purs', 'Components/CodeBlock.purs', 'Components/Button.purs'])
     copyFileSync(`${root}/src/Website/${file}`, `${tools}/iris-website/src/Website/${file}`);
   writeFileSync(`${tools}/iris-website/src/Website/${demos}`,
-    source.replace(handler, '    select _ = pure unit\n').replace(foldable, ''));
+    source.replace(chapterSelectionHandler, '    select _ = pure unit\n').replace(foldableImport, ''));
   if (evaluate(`!!document.querySelector('.part.sidebar')?.checkVisibility()`)) press('Control+b');
-  if (evaluate(`!!document.querySelector('.part.panel')?.checkVisibility()`)) {
-    if (evaluate(`[...document.querySelectorAll('.part.panel .monaco-button')].some(b => b.textContent.trim() === 'Discard')`))
-      await clickOn(`[...document.querySelectorAll('.part.panel .monaco-button')].find(b => b.textContent.trim() === 'Discard')`);
-    await sleep(500);
-  }
-  if (evaluate(`!!document.querySelector('.part.panel')?.checkVisibility()`)) {
+  if (panelVisible()) await discardPendingRefactorPreview();
+  if (panelVisible()) {
     press('Control+j');
     await sleep(500);
   }
   await open(index, 1);
-  await open(index, 36);
+  await open(index, indexLineCentredOnOpen);
   if (!evaluate(`${shown('styles =')} && ${shown(', footer')}`))
     throw new Error('Index.purs lines 25–48 must all be in view');
   await move(1560 * width / 1920, 860 * height / 1080, 300);
@@ -196,19 +208,20 @@ const cases = {
     await stage();
     await capture('trailer', async () => {
       await beat('semantic-highlighting');
+      const plainCodeHold = 2200, captionedCodeHold = 7000;
       await overview(async () => {
-        await sleep(2200);
-        const before = evaluate(spans);
-        semantic(true);
+        await sleep(plainCodeHold);
+        const before = evaluate(tokenColoursByLine);
+        semanticHighlighting(true);
         await expect(`${recoloured(before)}.length > 0`, 'Semantic tokens recolour Index.purs');
         await sleep(300);
         const changed = evaluate(recoloured(before));
         const t = now();
         const styleOf = word => changed.find(span => span.word === word)?.style;
         for (const span of changed)
-          if (!roles.some(role => styleOf(role.example) === span.style))
+          if (!captionedRoles.some(role => styleOf(role.example) === span.style))
             throw new Error(`Semantic tokens recolour ${span.word}, which no caption describes`);
-        for (const role of roles) {
+        for (const role of captionedRoles) {
           const tokens = changed.filter(span => span.style === styleOf(role.example));
           const anchor = tokens.find(span => span.word === role.anchor[0] && span.line.includes(role.anchor[1]));
           if (!anchor) throw new Error(`No ${role.label} caption anchor`);
@@ -216,7 +229,7 @@ const cases = {
             anchor: { box: anchor.box, end: anchor.end } });
         }
         console.log(`PASS: ${captions.length} captions cover every recoloured token`);
-        await sleep(7000);
+        await sleep(captionedCodeHold);
       });
 
       await beat('go-to-definition');
@@ -243,12 +256,12 @@ const cases = {
       }
 
       await beat('document-highlights');
-      browser('press', 'Escape');
+      pressWithoutFraming('Escape');
       await sleep(200);
       await token('(\\chapter -> chapter.at', 'chapter', 'click');
-      await expect(`${marks}.length === 2 && ${on('(\\chapter -> chapter.at')} === 2 && ${on('chapter = index')} === 0`,
+      await expect(`${marks}.length === 2 && ${highlightsOnLine('(\\chapter -> chapter.at')} === 2 && ${highlightsOnLine('chapter = index')} === 0`,
         'The lambda parameter highlights its own use, not the chapter bound beside it',
-        { shows: region('selected = findLastIndex', 'chapter = index') });
+        { shows: visibleLinesBetween('selected = findLastIndex', 'chapter = index') });
       await sleep(1500);
 
       await beat('document-symbols');
@@ -257,11 +270,11 @@ const cases = {
       await expect(`document.querySelector('.quick-input-list .monaco-list-row.focused')?.innerText.includes('styles')`,
         'Document symbols find the style table');
       await sleep(1000);
-      browser('press', 'Enter');
+      pressWithoutFraming('Enter');
       await sleep(500);
-      await smoothScroll(lineOf('StyleX.conditionalCase breakpoints.from960'), 0.45, 450);
+      await smoothScroll(stagedDemosLine('StyleX.conditionalCase breakpoints.from960'), 0.45, 450);
       await expect(shown('StyleX.conditionalCase breakpoints.from960'), 'The style table is in view',
-        { shows: region('layout:', 'StyleX.conditionalCase breakpoints.from960') });
+        { shows: visibleLinesBetween('layout:', 'StyleX.conditionalCase breakpoints.from960') });
       await sleep(900);
 
       await beat('find-references');
@@ -271,17 +284,18 @@ const cases = {
       await expect(`['SiteNav.purs', 'Benchmarks.purs'].every(file => document.querySelector('.peekview-widget')?.innerText.includes(file))`,
         'References to breakpoints span the workspace');
       await sleep(1000);
+      const openNextModuleAtFirstReference = ['Down', 'Right', 'Down'], closeModule = ['Left', 'Left'];
       for (const file of ['Code.purs', 'JavaScript.purs']) {
-        for (const key of ['Down', 'Right', 'Down']) {
-          browser('press', key);
+        for (const key of openNextModuleAtFirstReference) {
+          pressWithoutFraming(key);
           await sleep(300);
         }
         await expect(`document.querySelector('.peekview-widget .peekview-title')?.innerText.includes(${JSON.stringify(file)})
           && [...document.querySelectorAll('.peekview-widget .view-line')].some(line => line.textContent.includes('breakpoints.'))`,
           `The preview shows a reference to breakpoints in ${file}`);
         await sleep(1300);
-        for (const key of ['Left', 'Left']) {
-          browser('press', key);
+        for (const key of closeModule) {
+          pressWithoutFraming(key);
           await sleep(250);
         }
       }
@@ -303,7 +317,7 @@ const cases = {
         await sleep(400);
       });
       await expect(shown('type Measured a'), 'The Measured declaration is in view',
-        { shows: region('type Measured a = { cold :: a, hot :: a }', 'tool :: Measured String') });
+        { shows: visibleLinesBetween('type Measured a = { cold :: a, hot :: a }', 'tool :: Measured String') });
       await sleep(900);
 
       await beat('rename', { continues: true });
@@ -315,7 +329,7 @@ const cases = {
       await sleep(400);
       press('Enter');
       await expect(`${lines('type Measured value = { cold :: value, hot :: value }')}.length === 1`,
-        'The type variable is renamed throughout its declaration', { shows: region('type Measured value', 'type Measured value') });
+        'The type variable is renamed throughout its declaration', { shows: visibleLinesBetween('type Measured value', 'type Measured value') });
       await sleep(1400);
 
       await quickInput('Control+p');
@@ -332,7 +346,7 @@ const cases = {
       await sleep(400);
       press('Enter');
       await expect(`${lines('data Size = Compact | Medium')}.length === 1 && ${lines('Compact -> iconButtonStyles.small')}.length === 1`,
-        'The constructor is renamed with its pattern', { shows: region('data Size = Compact', 'Medium -> iconButtonStyles') });
+        'The constructor is renamed with its pattern', { shows: visibleLinesBetween('data Size = Compact', 'Medium -> iconButtonStyles') });
       await sleep(900);
       await token('data Size = Compact | Medium', 'Compact', 'click');
       press('Shift+F12');
@@ -356,27 +370,28 @@ const cases = {
       await overview(async () => {
         await clickOn(`document.querySelector('[role="tab"][data-resource-name="Demos.purs"]')`);
         await expect(activeTab('Demos.purs'), 'The Demos.purs tab returns to the component');
-        await smoothScroll(lineOf('select _ = pure unit'), 0.5);
+        await smoothScroll(stagedDemosLine('select _ = pure unit'), 0.5);
         await expect(shown('select _ = pure unit'), 'The stub handler is in view');
       });
       await sleep(400);
 
-      const zoom = 1.3, [frameWidth, frameHeight] = [width / zoom, height / zoom];
+      const handlerZoom = 1.3, [frameWidth, frameHeight] = [width / handlerZoom, height / handlerZoom];
       const centreOf = text => evaluate(`(() => {
         const r = ${lines(text)}[0].getBoundingClientRect();
         return (r.top + r.height / 2) * devicePixelRatio;
       })()`);
-      const fractionAt = y => evaluate(`(() => {
+      const viewportFractionAt = y => evaluate(`(() => {
         const view = [...document.querySelectorAll('.monaco-editor .monaco-scrollable-element.editor-scrollable')]
           .find(e => e.checkVisibility()).getBoundingClientRect();
         return (${y} / devicePixelRatio - view.top) / view.height;
       })()`);
       const stubAt = centreOf('select _ = pure unit');
-      const top = Math.min(height - frameHeight, Math.max(0, stubAt - 0.35 * frameHeight));
-      const handler = { zoom, box: [0, top, frameWidth, top + frameHeight] };
+      const stubFromFrameTop = 0.35;
+      const top = Math.min(height - frameHeight, Math.max(0, stubAt - stubFromFrameTop * frameHeight));
+      const handlerFraming = { zoom: handlerZoom, box: [0, top, frameWidth, top + frameHeight] };
 
       await beat('automatic-import');
-      await steadily(handler, async () => {
+      await steadily(handlerFraming, async () => {
         await token('select _ = pure unit', '_', 'select');
         press('Shift+End');
         await type('number = for_');
@@ -387,10 +402,11 @@ const cases = {
         await expect(`${lines('select number = for_')}.length === 1`, 'Completion inserts for_');
         await sleep(400);
         const staged = readFileSync(`${tools}/iris-website/src/Website/${demos}`, 'utf8').split('\n');
-        await smoothScroll(staged.findLastIndex(line => line.startsWith('import ')) + 2, fractionAt(top + frameHeight / 2));
+        const appendedImportLine = staged.findLastIndex(line => line.startsWith('import ')) + 2;
+        await smoothScroll(appendedImportLine, viewportFractionAt(top + frameHeight / 2));
         await expect(`${lines('import Data.Foldable (for_)')}.length === 1`, 'Completion adds the Data.Foldable import');
         await sleep(1200);
-        await smoothScroll(lineOf('select _ = pure unit') + 1, fractionAt(stubAt));
+        await smoothScroll(stagedDemosLine('select _ = pure unit') + 1, viewportFractionAt(stubAt));
         await expect(shown('select number = for_'), 'The handler is back in view');
         await keys(' (index chapters number) \\{ at } -> do', 55);
 
@@ -416,7 +432,7 @@ const cases = {
         press('End');
 
         await beat('live-diagnostics');
-        onChange(true);
+        onChangeDiagnostics(true);
         await sleep(500);
         press('Enter');
         await type('setTime at');
@@ -446,10 +462,10 @@ const cases = {
       'Components/CodeBlock.purs': original('Components/CodeBlock.purs').replaceAll('CopyButton.Small', 'CopyButton.Compact'),
       'Components/Button.purs': original('Components/Button.purs'),
     };
-    const unordered = text => text.replace(foldable, '');
-    if (seeded(demos).split(foldable).length !== 2) throw new Error('The take does not import for_ exactly once');
+    const ignoringAppendedImport = text => text.replace(foldableImport, '');
+    if (seeded(demos).split(foldableImport).length !== 2) throw new Error('The take does not import for_ exactly once');
     for (const [file, text] of Object.entries(expected))
-      if (unordered(seeded(file)) !== unordered(text)) {
+      if (ignoringAppendedImport(seeded(file)) !== ignoringAppendedImport(text)) {
         writeFileSync(`${output}/trailer-${file.split('/').at(-1)}`, seeded(file));
         throw new Error(`The take's ${file} differs from the expected result; see ${output}`);
       }
@@ -459,12 +475,14 @@ const cases = {
   },
 };
 
+const displayMetrics = () => evaluate('({width:innerWidth,height:innerHeight,scale:devicePixelRatio})');
 try {
-  let display = evaluate('({width:innerWidth,height:innerHeight,scale:devicePixelRatio})');
-  if (display.width * display.scale !== width) {
+  let display = displayMetrics();
+  const leftFullscreenAfterDisplayRestart = display.width * display.scale !== width;
+  if (leftFullscreenAfterDisplayRestart) {
     browser('press', 'F11');
     await sleep(3000);
-    display = evaluate('({width:innerWidth,height:innerHeight,scale:devicePixelRatio})');
+    display = displayMetrics();
   }
   if (display.width * display.scale !== width || display.height * display.scale !== height)
     throw new Error(`VS Code must be fullscreen (F11) on the ${width}×${height} desktop`);

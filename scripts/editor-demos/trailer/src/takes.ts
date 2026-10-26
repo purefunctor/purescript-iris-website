@@ -2,7 +2,7 @@
 export const fps = 60;
 export const width = 1920;
 export const height = 1080;
-export const margin = 120;
+export const cardLeftEdge = 120;
 
 export type Box = [left: number, top: number, right: number, bottom: number];
 export type Caption = { t: number; label: string; color: string; boxes: Box[]; anchor: { box: Box; end: number } };
@@ -21,7 +21,7 @@ export const timing = {
   crossfade: 0.8,
   end: 6.5,
 };
-export const tail = 1.6;
+export const lastResultHold = 1.6;
 
 export const sec = (seconds: number) => Math.round(seconds * fps);
 
@@ -40,6 +40,9 @@ export function retime(from: number, to: number, fast: [start: number, end: numb
   }
   return times;
 }
+
+export const fromFirstFeatureToLastResult = (take: Take) =>
+  retime(Math.max(0, take.beats[0].t - 0.8), Math.min(take.duration - 1 / fps, take.last + lastResultHold));
 
 export const chapters = (markers: { feature: { slug: string; title: string }; from: number }[]) =>
   markers.map((marker) => ({ slug: marker.feature.slug, title: marker.feature.title, at: Math.round((marker.from / fps) * 10) / 10 }));

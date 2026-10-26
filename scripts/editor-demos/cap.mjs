@@ -4,11 +4,13 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-export const [width, height] = { 150: [1920, 1080], 200: [2560, 1440], 300: [3840, 2160] }[process.env.IRIS_DEMO_SCALE || 150];
+const displaySizeByScale = { 150: [1920, 1080], 200: [2560, 1440], 300: [3840, 2160] };
+export const [width, height] = displaySizeByScale[process.env.IRIS_DEMO_SCALE || 150];
 const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
 const command = (process.env.IRIS_DEMO_CAP || `${tools}/cap-cli`).split(' ');
-export const speed = 0.85;
-export const crf = 28;
+export const reviewSpeed = 0.85;
+export const reviewCrf = 28;
+export const slowWithFinalFrameHold = speed => `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`;
 
 function cap(...args) {
   const out = execFileSync(command[0], [...command.slice(1), ...args, '--json'],
@@ -26,29 +28,36 @@ export function start(project) {
 
 export const stop = id => cap('record', 'stop', '--id', id);
 
-function offset(actions, moves) {
-  const first = actions.find(a => a.x !== undefined);
-  if (!first) return 0;
-  const hit = moves.find(m => Math.abs(m.x * width - first.x) <= 2 && Math.abs(m.y * height - first.y) <= 2
-    && m.time_ms / 1000 > first.t - 2);
-  return hit ? hit.time_ms / 1000 - first.t : 0;
+function offsetToPointerLog(actions, moves) {
+  const firstPointerAction = actions.find(a => a.x !== undefined);
+  if (!firstPointerAction) return 0;
+  const firstSighting = moves.find(m => Math.abs(m.x * width - firstPointerAction.x) <= 2
+    && Math.abs(m.y * height - firstPointerAction.y) <= 2 && m.time_ms / 1000 > firstPointerAction.t - 2);
+  return firstSighting ? firstSighting.time_ms / 1000 - firstPointerAction.t : 0;
 }
 
-const travel = (p, amount) => Math.min(1, Math.max(0, (p - 0.5 / amount) / (1 - 1 / amount)));
+const travelSpaceCentre = (p, amount) => Math.min(1, Math.max(0, (p - 0.5 / amount) / (1 - 1 / amount)));
 
-function box(action) {
+function boxInView(action) {
   const boxes = [...action.boxes ?? []];
-  const reach = 24 * width / 1920;
-  if (action.x !== undefined) boxes.push([action.x - reach, action.y - reach, action.x + reach, action.y + reach]);
+  const pointerReach = 24 * width / 1920;
+  if (action.x !== undefined) boxes.push([action.x - pointerReach, action.y - pointerReach, action.x + pointerReach, action.y + pointerReach]);
   if (!boxes.length) return undefined;
   const [left, top] = [0, 1].map(i => Math.max(0, Math.min(...boxes.map(b => b[i]))));
   return [left, top, Math.min(width, Math.max(...boxes.map(b => b[2]))), Math.min(height, Math.max(...boxes.map(b => b[3])))];
 }
 const union = (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
+const overlayLoggedAfterAppearing = 0.2;
+const pointerLoggedAfterMoveStarted = 0.5;
 
 export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, margin = 48 * width / 1920, hold = 3, settle = 1, bridge = 2 } = {}) {
   const zoom = b => Math.min(amount, width / (b[2] - b[0] + 2 * margin), height / (b[3] - b[1] + 2 * margin));
   const runs = [];
+  const endFramingBefore = (last, start) => {
+    const bridgesPause = last && !last.closed && start - last.end < bridge;
+    if (bridgesPause) last.end = start;
+    else if (last) last.end = Math.min(last.end, start);
+  };
   for (const a of actions) {
     const last = runs.at(-1);
     if (a.action === 'beat') {
@@ -60,30 +69,28 @@ export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, m
         last.end = Math.max(last.end, a.t + hold);
         continue;
       }
-      if (last && !last.closed && a.t - last.end < bridge) last.end = a.t;
-      else if (last) last.end = Math.min(last.end, a.t);
+      endFramingBefore(last, a.t);
       runs.push({ start: a.t, end: a.t + hold, box: a.box, zoom: a.zoom, steady: true });
       continue;
     }
-    const b = box(a);
+    const b = boxInView(a);
     if (!b) {
       if (a.action === 'overview' && last) Object.assign(last, { end: Math.min(last.end, a.t), closed: true });
       continue;
     }
-    const start = a.t - (a.action === 'ui' ? 0.2 : 0.5);
+    const start = a.t - (a.action === 'ui' ? overlayLoggedAfterAppearing : pointerLoggedAfterMoveStarted);
     const joined = last && !last.split && start < last.end && union(last.box, b);
     if (joined && zoom(joined) >= last.zoom - 0.05) {
       Object.assign(last, { box: joined, zoom: zoom(joined), end: Math.max(last.end, a.t + hold) });
       continue;
     }
-    const contains = last && !last.split && start < last.end && b[0] <= last.box[0] && b[1] <= last.box[1]
+    const widensCurrentFraming = last && !last.split && start < last.end && b[0] <= last.box[0] && b[1] <= last.box[1]
       && b[2] >= last.box[2] && b[3] >= last.box[3];
-    if (contains) {
+    if (widensCurrentFraming) {
       Object.assign(last, { box: b, zoom: zoom(b), end: Math.max(last.end, a.t + hold) });
       continue;
     }
-    if (last && !last.closed && start - last.end < bridge) last.end = start;
-    else if (last) last.end = Math.min(last.end, start);
+    endFramingBefore(last, start);
     runs.push({ start, end: a.t + hold, box: b, zoom: zoom(b) });
   }
   return runs
@@ -92,8 +99,8 @@ export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, m
     .map(r => ({
       start: r.start, end: r.end, amount: r.zoom,
       mode: { manual: {
-        x: travel((r.box[0] + r.box[2]) / 2 / width, r.zoom),
-        y: travel((r.box[1] + r.box[3]) / 2 / height, r.zoom),
+        x: travelSpaceCentre((r.box[0] + r.box[2]) / 2 / width, r.zoom),
+        y: travelSpaceCentre((r.box[1] + r.box[3]) / 2 / height, r.zoom),
       } },
       glideDirection: 'none', glideSpeed: 0.5, instantAnimation: false, edgeSnapRatio: 0.25,
     }));
@@ -117,7 +124,7 @@ export function render(project, actions, output, { zoom = true, ripple = true, a
   const config = json('project-config.json');
   const moves = (meta.segments ?? [meta.segment]).flatMap(s => s.cursor ? json(s.cursor).moves : []);
   const duration = config.timeline.segments.reduce((sum, s) => sum + (s.end - s.start) / s.timescale, 0);
-  const shift = offset(actions, moves);
+  const shift = offsetToPointerLog(actions, moves);
   const aligned = actions.map(a => ({ ...a, t: a.t + shift }));
   const cursor = (meta.segments ?? [meta.segment]).at(-1).cursor;
   if (cursor && aligned.length) holdRestingShape(`${project}/${cursor}`, aligned.at(-1).t);
@@ -142,8 +149,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   })));
   mkdirSync(output, { recursive: true });
   execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
-    '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-pix_fmt', 'yuv420p',
+    '-vf', slowWithFinalFrameHold(reviewSpeed),
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(reviewCrf), '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart', `${output}/${name}.mp4`]);
   console.log(`Exported ${output}/${name}.mp4`);
 }

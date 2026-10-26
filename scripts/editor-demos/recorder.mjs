@@ -11,7 +11,9 @@ export const env = { ...process.env, DISPLAY: ':94' };
 export const run = (name, args) => execFileSync(name, args, { env, encoding: 'utf8' }).trim();
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const backend = process.env.IRIS_DEMO_RECORDER || 'cap';
-const [speed, crf] = backend === 'cap' ? [cap.speed, cap.crf] : [0.75, 23];
+const [reviewSpeed, reviewCrf] = backend === 'cap' ? [cap.reviewSpeed, cap.reviewCrf] : [0.75, 23];
+const resultHoldBeforeBeat = 500;
+const clickHoldForCapPointerPolling = 50;
 
 export const lines = (...texts) => `[...document.querySelectorAll('.view-line')].filter(line => ${JSON.stringify(texts)}
   .some(text => line.textContent.replaceAll('\\u00a0', ' ').includes(text)))`;
@@ -39,16 +41,17 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     try { await action(); } finally { wide = false; }
   }
   async function beat(slug, { continues = false } = {}) {
-    await sleep(500);
+    await sleep(resultHoldBeforeBeat);
     beats.push({ slug, t: now() });
-    if (epoch && !steady && !continues) actions.push({ t: now(), action: 'beat' });
+    const startsNewFraming = epoch && !steady && !continues;
+    if (startsNewFraming) actions.push({ t: now(), action: 'beat' });
     await sleep(200);
   }
 
-  const pointer = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
+  const lastPointerAction = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
   const focus = () => {
     if (!epoch) return;
-    const at = evaluate(caret) ?? pointer();
+    const at = evaluate(caret) ?? lastPointerAction();
     if (at) mark(at.x, at.y, { action: 'key' });
   };
 
@@ -95,7 +98,7 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     for (let i = 0; i < count; i++) {
       if (i) await sleep(70);
       run('xdotool', ['mousedown', '1']);
-      await sleep(50);
+      await sleep(clickHoldForCapPointerPolling);
       run('xdotool', ['mouseup', '1']);
     }
   }
@@ -155,16 +158,16 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
         return { top: r.top, bottom: r.bottom, end: text ? text.getBoundingClientRect().right : -Infinity };
       });
       const clear = (x, y, gap) => lines.every(l => l.bottom < y - gap || l.top > y + gap || l.end + 24 < x);
-      const popups = (x, y) => x > px - 40 && x < px + 520 && y > py - 80 && y < py + 260;
-      const [x0, y0] = [px + 160, py + 200];
+      const wherePopupsOpen = (x, y) => x > px - 40 && x < px + 520 && y > py - 80 && y < py + 260;
+      const [preferredX, preferredY] = [px + 160, py + 200];
       const candidates = [];
       for (let y = bounds.top + 24; y <= bounds.bottom - 40; y += 12)
         for (let x = bounds.left + 24; x <= bounds.right - 40; x += 24)
-          if (!popups(x, y)) candidates.push([x, y]);
+          if (!wherePopupsOpen(x, y)) candidates.push([x, y]);
       // Points above or left of the caret count as further away.
-      const cost = ([x, y]) => Math.hypot(x - x0, y - y0) + (y < py + 24 ? 400 : 0) + (x < px ? 400 : 0);
+      const cost = ([x, y]) => Math.hypot(x - preferredX, y - preferredY) + (y < py + 24 ? 400 : 0) + (x < px ? 400 : 0);
       const [x, y] = [36, 12].map(gap => candidates.filter(([x, y]) => clear(x, y, gap)).sort((a, b) => cost(a) - cost(b))[0])
-        .find(Boolean) ?? [Math.min(x0, bounds.right - 40), Math.min(y0, bounds.bottom - 40)];
+        .find(Boolean) ?? [Math.min(preferredX, bounds.right - 40), Math.min(preferredY, bounds.bottom - 40)];
       return { x: Math.round(x * devicePixelRatio), y: Math.round(y * devicePixelRatio) };
     })()`);
     await move(target.x, target.y, 300);
@@ -183,9 +186,10 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
           .sort((a, b) => a[1].top - b[1].top)[0];
         return r.top + (${line} - number + 0.5) * r.height - view.top - ${at} * view.height;
       };
+      const [wheelDeltaPerNotch, monacoPixelsPerNotch] = [120, 50];
       const wheel = pixels => {
         const r = scrollable.getBoundingClientRect();
-        scrollable.dispatchEvent(new WheelEvent('wheel', { deltaY: -pixels * 120 / 50, deltaMode: 0, bubbles: true,
+        scrollable.dispatchEvent(new WheelEvent('wheel', { deltaY: -pixels * wheelDeltaPerNotch / monacoPixelsPerNotch, deltaMode: 0, bubbles: true,
           cancelable: true, clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 }));
       };
       const distance = offset(), started = performance.now();
@@ -209,6 +213,13 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     await sleep(300);
   }
 
+  async function logRestingCursorShape() {
+    run('xdotool', ['mousemove_relative', '--', '1', '0']);
+    await sleep(50);
+    run('xdotool', ['mousemove_relative', '--', '-1', '0']);
+    await sleep(50);
+  }
+
   async function capture(name, action) {
     const raw = `${tools}/${name}-raw.mp4`;
     const project = `${tools}/cap/${name}.cap`;
@@ -226,10 +237,7 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     } finally {
       epoch = undefined;
       if (backend === 'cap') {
-        run('xdotool', ['mousemove_relative', '--', '1', '0']);
-        await sleep(50);
-        run('xdotool', ['mousemove_relative', '--', '-1', '0']);
-        await sleep(50);
+        await logRestingCursorShape();
         cap.stop(recording);
       } else {
         recording.stdin.end('q\n');
@@ -242,17 +250,17 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
       writeFileSync(`${project}/iris-planner.json`, JSON.stringify(planner));
       const rendered = cap.render(project, actions, raw, { planner });
       console.log(JSON.stringify(rendered));
-      const align = t => t + rendered.shift;
+      const onRawExportTimeline = t => t + rendered.shift;
       writeFileSync(`${output}/${name}.pace.json`, JSON.stringify({
-        first: align(actions[0]?.t ?? 0),
-        last: align(actions.at(-1)?.t ?? 0),
-        beats: beats.map(({ slug, t }) => ({ slug, t: align(t) })),
-        captions: captions.map(caption => ({ ...caption, t: align(caption.t) })),
+        first: onRawExportTimeline(actions[0]?.t ?? 0),
+        last: onRawExportTimeline(actions.at(-1)?.t ?? 0),
+        beats: beats.map(({ slug, t }) => ({ slug, t: onRawExportTimeline(t) })),
+        captions: captions.map(caption => ({ ...caption, t: onRawExportTimeline(caption.t) })),
       }, null, 2));
     }
     run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
-      '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
-      '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-pix_fmt', 'yuv420p',
+      '-vf', cap.slowWithFinalFrameHold(reviewSpeed),
+      '-c:v', 'libx264', '-preset', 'slow', '-crf', String(reviewCrf), '-pix_fmt', 'yuv420p',
       '-movflags', '+faststart', `${output}/${name}.mp4`]);
     writeFileSync(`${output}/${name}.txt`, browser('snapshot', '-i'));
     console.log(`Recorded ${name}`);

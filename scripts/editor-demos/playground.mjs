@@ -15,7 +15,7 @@ const caret = `(() => {
   const r = document.querySelector('.monaco-editor.focused .cursor')?.getBoundingClientRect();
   return r && r.height > 0 ? { x: Math.round(r.x * devicePixelRatio), y: Math.round((r.y + r.height / 2) * devicePixelRatio) } : null;
 })()`;
-let top = 0;
+let pageTop = 0;
 const {
   browser, evaluate, actions, beats, now, mark, overview, beat, focus, expect,
   move, clickAt, centre, clickOn, tokenPoint, aside: moveAside, smoothScroll: scrollTo, capture,
@@ -24,15 +24,17 @@ const {
   cdp: 9224,
   overlays: ['.suggest-widget', '.monaco-hover'],
   caret,
-  offset: () => top,
+  offset: () => pageTop,
   planner: { amount: 1.8, hold: 4, bridge: 6, minimum: 1.1 },
 });
 const key = (...keys) => (focus(), run('xdotool', ['key', '--clearmodifiers', ...keys]));
-const newline = () => key('Escape', 'Return');
+const closeSuggestions = 'Escape';
+const newline = () => key(closeSuggestions, 'Return');
 const aside = () => moveAside(evaluate(caret) ?? undefined);
 
 const button = label => `[...document.querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent.trim()) === ${JSON.stringify(label)})`;
-const tab = name => `[...document.querySelectorAll('button')].filter(b => b.textContent.trim().replace(/\\d+$/, '') === ${JSON.stringify(name)}).at(-1)`;
+const trailingErrorCount = '/\\d+$/';
+const editorTab = name => `[...document.querySelectorAll('button')].filter(b => b.textContent.trim().replace(${trailingErrorCount}, '') === ${JSON.stringify(name)}).at(-1)`;
 
 const token = (line, text, options) => clickAt(tokenPoint(line, text, options), options);
 
@@ -43,13 +45,13 @@ const ready = `!!${button('Run')} && !${button('Run')}.disabled`;
 
 async function smoothScroll(line, at = 0.45, duration = 700, { arrive = true } = {}) {
   if (arrive) {
-    const area = evaluate(`(() => {
+    const whereLineLands = evaluate(`(() => {
       const r = [...document.querySelectorAll('.monaco-editor .monaco-scrollable-element.editor-scrollable')]
         .find(e => e.checkVisibility()).getBoundingClientRect();
       const y = r.top + ${at} * r.height;
       return [r.left, y - 200, Math.min(r.right, r.left + 900), y + 200].map(v => Math.round(v * devicePixelRatio));
     })()`);
-    mark(undefined, undefined, { action: 'ui', boxes: [area] });
+    mark(undefined, undefined, { action: 'ui', boxes: [whereLineLands] });
     await sleep(900);
   }
   await scrollTo(line, at, duration);
@@ -82,9 +84,10 @@ function frameElement(role, name) {
   const box = Object.fromEntries(browser('get', 'box', `@${ref}`).split('\n').map(l => l.split(':').map(s => s.trim()))
     .map(([k, v]) => [k, Number(v)]));
   const frame = evaluate(`(() => { const r = document.querySelector('iframe[title="Program view"]').getBoundingClientRect(); return { x: r.x, y: r.y, scale: devicePixelRatio } })()`);
-  return { x: Math.round((frame.x + box.x + box.width / 2) * frame.scale), y: Math.round((frame.y + box.y + box.height / 2) * frame.scale) + top };
+  return { x: Math.round((frame.x + box.x + box.width / 2) * frame.scale), y: Math.round((frame.y + box.y + box.height / 2) * frame.scale) + pageTop };
 }
-let running;
+let runClickAwaitingProgram;
+const headingAboveElement = 100, rowsBelowElement = 220;
 async function program(role, name, message) {
   const deadline = Date.now() + 15000;
   while (!frameSnapshot().includes(`${role} "${name}"`)) {
@@ -92,36 +95,46 @@ async function program(role, name, message) {
     await sleep(250);
   }
   const at = frameElement(role, name);
-  const app = evaluate(`(() => {
+  const programFraming = evaluate(`(() => {
     const r = document.querySelector('iframe[title="Program view"]').getBoundingClientRect();
     const [left, upper, right, lower] = [r.left, r.top, r.right, r.bottom].map(v => Math.round(v * devicePixelRatio));
-    return [left, Math.max(upper + ${top}, ${at.y - 100}), right, Math.min(lower + ${top}, ${at.y + 220})];
+    return [left, Math.max(upper + ${pageTop}, ${at.y - headingAboveElement}), right, Math.min(lower + ${pageTop}, ${at.y + rowsBelowElement})];
   })()`);
-  if (running) running.boxes = [app];
-  running = undefined;
-  mark(undefined, undefined, { action: 'ui', boxes: [app] });
+  if (runClickAwaitingProgram) runClickAwaitingProgram.boxes = [programFraming];
+  runClickAwaitingProgram = undefined;
+  mark(undefined, undefined, { action: 'ui', boxes: [programFraming] });
   console.log(`PASS: ${message}`);
 }
 const clickProgram = (role, name, options) => clickAt(frameElement(role, name), options);
 
 async function clickRun() {
   await clickOn(button('Run'));
-  running = actions.findLast(a => a.action === 'click');
+  runClickAwaitingProgram = actions.findLast(a => a.action === 'click');
 }
 
 async function runProject(expectation) {
   await expect(ready, 'The project is ready to run', { timeout: 60000 });
   await clickRun();
   await expectation();
-  running = undefined;
+  runClickAwaitingProgram = undefined;
+}
+
+async function pushConsoleOverProgramAndBack() {
+  const handle = centre(`document.querySelector('[aria-label="Resize console"]')`);
+  await move(handle.x, handle.y, 500);
+  mark(handle.x, handle.y, { action: 'click' });
+  run('xdotool', ['mousedown', '1']);
+  await move(handle.x, handle.y - 330, 900);
+  await sleep(700);
+  await move(handle.x, handle.y + 60, 900);
+  run('xdotool', ['mouseup', '1']);
+  await sleep(600);
 }
 
 const { TEMPLATES } = await import('../../playground/client/templates.js');
 const template = id => TEMPLATES.find(t => t.id === id).files[0].text;
 
-async function stage() {
-  browser('open', page);
-  await expect(ready, 'The playground loads', { timeout: 120000 });
+async function cacheTakePackages() {
   const index = JSON.parse(readFileSync(new URL('../../playground/packages/index.json', import.meta.url), 'utf8'));
   const core = Object.keys(index.packages).filter(n => ['purescript', 'purescript-contrib'].includes(index.packages[n].owner));
   evaluate(`(async () => {
@@ -132,6 +145,12 @@ async function stage() {
   })()`);
   browser('reload');
   await expect(ready, 'The take\'s packages are cached', { timeout: 180000 });
+}
+
+async function stage() {
+  browser('open', page);
+  await expect(ready, 'The playground loads', { timeout: 120000 });
+  await cacheTakePackages();
   evaluate(`(() => { localStorage.clear(); return true })()`);
   browser('reload');
   await expect(`${ready} && ${shown('log (greet "Iris")')}`, 'The playground opens the Console template', { timeout: 60000 });
@@ -197,15 +216,7 @@ async function playground() {
     }
     await expect(`${log}.includes('count: 4')`, 'The console shows each count', { shows: `[document.querySelector('#playground-console').parentElement]` });
     await sleep(800);
-    const handle = centre(`document.querySelector('[aria-label="Resize console"]')`);
-    await move(handle.x, handle.y, 500);
-    mark(handle.x, handle.y, { action: 'click' });
-    run('xdotool', ['mousedown', '1']);
-    await move(handle.x, handle.y - 330, 900);
-    await sleep(700);
-    await move(handle.x, handle.y + 60, 900);
-    run('xdotool', ['mouseup', '1']);
-    await sleep(600);
+    await pushConsoleOverProgramAndBack();
     await clickOn(`document.querySelector('[aria-controls="playground-console"][aria-expanded]')`);
     await expect(`document.querySelector('[aria-controls="playground-console"][aria-expanded]').getAttribute('aria-expanded') === 'false'`, 'The console collapses to its bar');
     await sleep(900);
@@ -281,32 +292,33 @@ async function playground() {
     await aside();
     await type('Iris.StyleX as StyleX');
     key('Escape');
-    await clickOn(tab('Main.purs'));
+    await clickOn(editorTab('Main.purs'));
     await expect(`${shown('module Main where')} || ${shown('mkTodos')} || ${shown('styles = StyleX.create')}`, 'Main.purs is back');
-    const first = todos.findIndex(l => l.startsWith('-- The program runs')) + 1;
-    const last = todos.findIndex(l => l.startsWith('styleProps = StyleX.recordProps styles')) + 1;
-    await smoothScroll(first, 0.2);
+    const colorsCommentLine = todos.findIndex(l => l.startsWith('-- The program runs')) + 1;
+    const stylePropsLine = todos.findIndex(l => l.startsWith('styleProps = StyleX.recordProps styles')) + 1;
+    await smoothScroll(colorsCommentLine, 0.2);
     await token('-- The program runs', 'The');
     key('Home');
     await expect(`document.querySelector('.monaco-editor.focused .current-line') !== null && ${lines('-- The program runs')}.some(line => Math.abs(line.getBoundingClientRect().top - document.querySelector('.monaco-editor.focused .cursor').getBoundingClientRect().top) < 4)`, 'The caret is on the colors comment');
-    await smoothScroll(last + 1, 0.7, 1100, { arrive: false });
+    await smoothScroll(stylePropsLine + 1, 0.7, 1100, { arrive: false });
     await clickAt(tokenPoint('styleProps = StyleX.recordProps styles', 'styles', { occurrence: 0, end: true }), { shift: true });
     key('shift+Down');
     await sleep(700);
     key('ctrl+x');
     await sleep(600);
-    await clickOn(tab('Styles.purs'));
+    await clickOn(editorTab('Styles.purs'));
     await expect(`${shown('module Styles where')}`, 'Styles.purs is back');
-    await clickAt(evaluate(`(() => {
+    const belowLastLine = evaluate(`(() => {
       const r = [...document.querySelectorAll('.monaco-editor .monaco-scrollable-element.editor-scrollable')].find(e => e.checkVisibility()).getBoundingClientRect();
       return { x: Math.round((r.left + 240) * devicePixelRatio), y: Math.round((r.top + r.height * 0.4) * devicePixelRatio) };
-    })()`));
+    })()`);
+    await clickAt(belowLastLine);
     key('ctrl+End');
     key('ctrl+v');
     await sleep(800);
     await expect(`${shown('styleProps = StyleX.recordProps styles')}`, 'The styles move into Styles.purs');
     await sleep(900);
-    await clickOn(tab('Main.purs'));
+    await clickOn(editorTab('Main.purs'));
     await smoothScroll(todos.findIndex(l => l === 'import Iris.StyleX as StyleX') + 1, 0.4);
     await token('import Iris.StyleX as StyleX', 'StyleX', { occurrence: 1, end: true });
     key('End');
@@ -338,13 +350,16 @@ async function playground() {
   console.log(`PASS: The share link (${shared.length} characters) carries both modules and heckin`);
 }
 
+const addressBarMiddleAbovePage = 19;
+const showTabsAndAddressBar = () => run('xdotool', ['key', 'F11']);
+
 async function share() {
   spawn(browserPath, [`--user-data-dir=${tools}/playground-profile`, '--incognito', '--new-window', 'about:blank'],
     { env, detached: true, stdio: 'ignore' }).unref();
   await sleep(3000);
   const window = run('xdotool', ['getactivewindow']);
   if (!run('xdotool', ['getwindowname', window]).startsWith('about:blank')) throw new Error('The incognito window did not open');
-  run('xdotool', ['key', 'F11']);
+  showTabsAndAddressBar();
   await sleep(1500);
   run('xdotool', ['windowmove', window, '0', '0', 'windowsize', window, String(width), String(height)]);
   await sleep(500);
@@ -352,15 +367,15 @@ async function share() {
   const incognito = browser('tab', 'list').split('\n').find(l => l.includes('about:blank'))?.match(/\[(t\d+)\]/)?.[1];
   if (!incognito) throw new Error('The agent cannot see the incognito tab');
   browser('tab', incognito);
-  top = evaluate('Math.round((outerHeight - innerHeight) * devicePixelRatio)');
-  const bar = { x: Math.round(width * 0.2), y: top - 19 };
+  pageTop = evaluate('Math.round((outerHeight - innerHeight) * devicePixelRatio)');
+  const addressBar = { x: Math.round(width * 0.2), y: pageTop - addressBarMiddleAbovePage };
   await capture('playground-share', async () => {
     await sleep(600);
     await beat('open-link');
-    await clickAt(bar, { duration: 700 });
+    await clickAt(addressBar, { duration: 700 });
     await sleep(500);
     run('xdotool', ['key', 'ctrl+v']);
-    mark(bar.x, bar.y, { action: 'ui', boxes: [[0, top - 40, Math.round(width * 0.62), top]] });
+    mark(addressBar.x, addressBar.y, { action: 'ui', boxes: [[0, pageTop - 40, Math.round(width * 0.62), pageTop]] });
     await sleep(1500);
     await overview(async () => {
       beats.push({ slug: 'loading', t: now() });
@@ -370,9 +385,9 @@ async function share() {
       beats.push({ slug: 'shared-loaded', t: now() });
       await sleep(800);
     });
-    await clickOn(tab('Styles.purs'));
+    await clickOn(editorTab('Styles.purs'));
     await sleep(1500);
-    await clickOn(tab('Main.purs'));
+    await clickOn(editorTab('Main.purs'));
     await sleep(600);
     await clickRun();
     await program('heading', 'React todos', 'The shared project runs');
@@ -382,7 +397,7 @@ async function share() {
     await program('checkbox', 'It Works Everywhere', 'The shared project title-cases todos too');
     await sleep(1500);
   });
-  top = 0;
+  pageTop = 0;
   run('xdotool', ['key', 'ctrl+shift+w']);
 }
 

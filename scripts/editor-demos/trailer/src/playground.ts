@@ -1,5 +1,5 @@
 import type { Feature } from "./chapters.ts";
-import { beat, fps, retime, sec, tail, timing, type Take } from "./takes.ts";
+import { beat, fps, fromFirstFeatureToLastResult, lastResultHold, retime, sec, timing, type Take } from "./takes.ts";
 
 export { chapters } from "./takes.ts";
 
@@ -25,7 +25,8 @@ export const panel = { width: 1920 * split.scale, height: 1080 * split.scale };
 export const left = { x: (1920 - 2 * panel.width - split.gap) / 2, y: (1080 - panel.height) / 2 };
 export const right = { x: left.x + panel.width + split.gap, y: left.y };
 
-const caption = 2.8;
+const captionDuration = 2.8;
+const shareResultHoldBeforeSplit = 0.4;
 const loadingSpeed = 6;
 
 export type Marker = { feature: Feature; index: number; from: number; duration: number };
@@ -35,13 +36,12 @@ export function plan({ take, share }: Manifest) {
   const fade = sec(timing.crossfade);
   const from = sec(timing.open - timing.crossfade);
 
-  const mainTimes = retime(Math.max(0, take.beats[0].t - 0.8), Math.min(take.duration - 1 / fps, take.last + tail));
-  const splitFrom = from + Math.max(0, mainTimes.findIndex((t) => t >= take.last + 0.4));
+  const mainTimes = fromFirstFeatureToLastResult(take);
+  const splitFrom = from + Math.max(0, mainTimes.findIndex((t) => t >= take.last + shareResultHoldBeforeSplit));
   const loading = beat(share, "loading");
   const loaded = beat(share, "shared-loaded");
-  const shareTimes = retime(Math.max(0, share.first - 0.6), Math.min(share.duration - 1 / fps, share.last + tail), [
-    [loading + 0.6, loaded - 0.6, loadingSpeed],
-  ]);
+  const hurriedDownload: [number, number, number] = [loading + 0.6, loaded - 0.6, loadingSpeed];
+  const shareTimes = retime(Math.max(0, share.first - 0.6), Math.min(share.duration - 1 / fps, share.last + lastResultHold), [hurriedDownload]);
   const shareFrom = splitFrom + sec(0.3);
   const endFrom = shareFrom + shareTimes.length - fade;
   const fadeOut = (f: number) => Math.min(1, (endFrom + fade - f) / fade);
@@ -64,7 +64,7 @@ export function plan({ take, share }: Manifest) {
     feature,
     index,
     from: frameAt(feature.take, beat(feature.take === "take" ? take : share, feature.slug)),
-    duration: sec(caption),
+    duration: sec(captionDuration),
   }));
   return {
     open: { from: 0, duration: sec(timing.open) },

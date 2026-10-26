@@ -1,6 +1,6 @@
 import { readColorTokens } from "#src/lib/colorTokens.ts";
 
-const alpha = (hex: string, opacity: number) =>
+const withAlpha = (hex: string, opacity: number) =>
   `${hex}${Math.round(opacity * 255).toString(16).padStart(2, "0")}`;
 
 export async function themeSettings(): Promise<Record<string, unknown>> {
@@ -24,7 +24,7 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
   const accent = color("accent");
   const accentText = color("accent-text");
   const focus = color("focus-ring");
-  const border = alpha(text, 0.08);
+  const border = withAlpha(text, 0.08);
 
   const syntax = {
     keyword: color("syn-keyword"),
@@ -53,7 +53,7 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
       disabledForeground: muted,
       errorForeground: color("red-300"),
       "icon.foreground": secondary,
-      "selection.background": alpha(accent, 0.3),
+      "selection.background": withAlpha(accent, 0.3),
       "textLink.foreground": accentText,
       "textLink.activeForeground": color("signal-200"),
       "widget.border": line,
@@ -95,7 +95,7 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
       "list.activeSelectionForeground": strong,
       "list.inactiveSelectionBackground": surface,
       "list.inactiveSelectionForeground": text,
-      "list.hoverBackground": alpha(text, 0.05),
+      "list.hoverBackground": withAlpha(text, 0.05),
       "list.hoverForeground": text,
       "list.focusOutline": focus,
       "list.focusAndSelectionOutline": focus,
@@ -126,23 +126,23 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
       "editorCursor.foreground": accent,
       "editor.lineHighlightBackground": surface,
       "editor.lineHighlightBorder": "#00000000",
-      "editor.selectionBackground": alpha(accent, 0.3),
-      "editor.inactiveSelectionBackground": alpha(accent, 0.16),
-      "editor.selectionHighlightBackground": alpha(accent, 0.14),
-      "editor.wordHighlightBackground": alpha(accent, 0.16),
+      "editor.selectionBackground": withAlpha(accent, 0.3),
+      "editor.inactiveSelectionBackground": withAlpha(accent, 0.16),
+      "editor.selectionHighlightBackground": withAlpha(accent, 0.14),
+      "editor.wordHighlightBackground": withAlpha(accent, 0.16),
       "editor.wordHighlightBorder": "#00000000",
-      "editor.wordHighlightStrongBackground": alpha(accent, 0.24),
+      "editor.wordHighlightStrongBackground": withAlpha(accent, 0.24),
       "editor.wordHighlightStrongBorder": "#00000000",
-      "editor.hoverHighlightBackground": alpha(accent, 0.16),
-      "editor.findMatchBackground": alpha(focus, 0.4),
-      "editor.findMatchHighlightBackground": alpha(focus, 0.2),
-      "editor.rangeHighlightBackground": alpha(accent, 0.09),
-      "editor.symbolHighlightBackground": alpha(accent, 0.2),
+      "editor.hoverHighlightBackground": withAlpha(accent, 0.16),
+      "editor.findMatchBackground": withAlpha(focus, 0.4),
+      "editor.findMatchHighlightBackground": withAlpha(focus, 0.2),
+      "editor.rangeHighlightBackground": withAlpha(accent, 0.09),
+      "editor.symbolHighlightBackground": withAlpha(accent, 0.2),
       "editorLink.activeForeground": accentText,
-      "editorIndentGuide.background1": alpha(text, 0.06),
-      "editorIndentGuide.activeBackground1": alpha(text, 0.16),
+      "editorIndentGuide.background1": withAlpha(text, 0.06),
+      "editorIndentGuide.activeBackground1": withAlpha(text, 0.16),
       "editorWhitespace.foreground": line,
-      "editorBracketMatch.background": alpha(text, 0.1),
+      "editorBracketMatch.background": withAlpha(text, 0.1),
       "editorBracketMatch.border": "#00000000",
       "editorError.foreground": color("red-300"),
       "editorWarning.foreground": color("yellow-400"),
@@ -152,14 +152,14 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
       "editorOverviewRuler.border": "#00000000",
       "editorOverviewRuler.errorForeground": color("red-300"),
       "editorOverviewRuler.warningForeground": color("yellow-400"),
-      "editorOverviewRuler.selectionHighlightForeground": alpha(accent, 0.6),
-      "editorOverviewRuler.wordHighlightForeground": alpha(accent, 0.6),
+      "editorOverviewRuler.selectionHighlightForeground": withAlpha(accent, 0.6),
+      "editorOverviewRuler.wordHighlightForeground": withAlpha(accent, 0.6),
       "editorOverviewRuler.wordHighlightStrongForeground": accent,
-      "editorOverviewRuler.rangeHighlightForeground": alpha(accent, 0.6),
+      "editorOverviewRuler.rangeHighlightForeground": withAlpha(accent, 0.6),
       "scrollbar.shadow": "#00000000",
-      "scrollbarSlider.background": alpha(text, 0.1),
-      "scrollbarSlider.hoverBackground": alpha(text, 0.18),
-      "scrollbarSlider.activeBackground": alpha(text, 0.26),
+      "scrollbarSlider.background": withAlpha(text, 0.1),
+      "scrollbarSlider.hoverBackground": withAlpha(text, 0.18),
+      "scrollbarSlider.activeBackground": withAlpha(text, 0.26),
 
       "editorWidget.background": surface,
       "editorWidget.foreground": text,
@@ -194,13 +194,13 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
       "peekViewTitleDescription.foreground": subtle,
       "peekViewEditor.background": canvas,
       "peekViewEditorGutter.background": canvas,
-      "peekViewEditor.matchHighlightBackground": alpha(accent, 0.3),
+      "peekViewEditor.matchHighlightBackground": withAlpha(accent, 0.3),
       "peekViewResult.background": surface,
       "peekViewResult.fileForeground": text,
       "peekViewResult.lineForeground": secondary,
       "peekViewResult.selectionBackground": raised,
       "peekViewResult.selectionForeground": strong,
-      "peekViewResult.matchHighlightBackground": alpha(accent, 0.3),
+      "peekViewResult.matchHighlightBackground": withAlpha(accent, 0.3),
 
       "quickInput.background": surface,
       "quickInput.foreground": text,
@@ -214,7 +214,7 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
       "input.foreground": text,
       "input.border": line,
       "input.placeholderForeground": muted,
-      "inputOption.activeBackground": alpha(accent, 0.2),
+      "inputOption.activeBackground": withAlpha(accent, 0.2),
       "inputOption.activeBorder": accent,
       "inputOption.activeForeground": strong,
       "inputValidation.errorBackground": surface,
@@ -244,8 +244,8 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
 
       "settings.headerForeground": strong,
       "settings.modifiedItemIndicator": accent,
-      "settings.focusedRowBackground": alpha(text, 0.04),
-      "settings.rowHoverBackground": alpha(text, 0.03),
+      "settings.focusedRowBackground": withAlpha(text, 0.04),
+      "settings.rowHoverBackground": withAlpha(text, 0.03),
       "settings.focusedRowBorder": focus,
       "settings.dropdownBackground": surface,
       "settings.dropdownBorder": line,

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { AbsoluteFill, Freeze, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { plan, type Manifest } from "./editor";
-import { Backdrop, EndScene, OpenScene, out, sans } from "./Scenes";
+import { Backdrop, EndScene, OpenScene, sans, siteEaseOut } from "./Scenes";
 import { fps, height, width, type Caption } from "./takes";
 
 function Take({ src, track, captions, scale }: { src: string; track: { source: number; opacity: number }[]; captions: (Caption & { until: number })[]; scale: number }) {
@@ -23,10 +23,12 @@ function Take({ src, track, captions, scale }: { src: string; track: { source: n
 }
 
 const tagColumn = 1600;
+const clearsBeforeNextBeat = 0.9;
+const clearingDuration = 0.4;
 function CaptionMark({ caption, order, source }: { caption: Caption & { until: number }; order: number; source: number }) {
   const appear = caption.t + 0.35 + order * 0.8;
-  const t = (delay: number, length: number) => out(Math.min(1, Math.max(0, (source - appear - delay) / length)));
-  const gone = 1 - Math.min(1, Math.max(0, (source - (caption.until - 0.9)) / 0.4));
+  const t = (delay: number, length: number) => siteEaseOut(Math.min(1, Math.max(0, (source - appear - delay) / length)));
+  const gone = 1 - Math.min(1, Math.max(0, (source - (caption.until - clearsBeforeNextBeat)) / clearingDuration));
   if (source < appear || gone <= 0) return null;
   const color = `var(${caption.color})`;
   const [, top, , bottom] = caption.anchor.box;
@@ -76,13 +78,15 @@ function CaptionMark({ caption, order, source }: { caption: Caption & { until: n
   );
 }
 
+const nextBeatAfter = (beats: { t: number }[], time: number) => Math.min(...beats.map((b) => b.t).filter((t) => t > time));
+
 export function Trailer({ manifest }: { manifest: Manifest }) {
   const { scenes, track } = useMemo(() => plan(manifest), [manifest]);
   const captions = useMemo(
     () =>
       manifest.take.captions.map((caption) => ({
         ...caption,
-        until: Math.min(...manifest.take.beats.map((b) => b.t).filter((t) => t > caption.t)),
+        until: nextBeatAfter(manifest.take.beats, caption.t),
       })),
     [manifest],
   );

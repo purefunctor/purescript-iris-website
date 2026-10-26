@@ -11,10 +11,11 @@ if [[ ! -f "$TOOLS/cap-0.6.0.deb" ]]; then
 fi
 echo "$SHA256  $TOOLS/cap-0.6.0.deb" | sha256sum -c -
 
+JAMMY_SCRIPT_FOR_NOBLE=/usr/share/debootstrap/scripts/jammy
 if [[ ! -x "$ROOT/usr/bin/apt-get" ]]; then
   sudo apt-get install -y -qq debootstrap
   sudo debootstrap --variant=minbase --components=main,universe noble "$ROOT" \
-    http://archive.ubuntu.com/ubuntu /usr/share/debootstrap/scripts/jammy
+    http://archive.ubuntu.com/ubuntu "$JAMMY_SCRIPT_FOR_NOBLE"
 fi
 
 cat > "$TOOLS/cap-cli" <<EOF

@@ -13,7 +13,7 @@ import {
 } from "remotion";
 import { marks } from "../../../../src/Website/Components/Logo.js";
 import { Lattice, type Ripple } from "./Lattice";
-import { fps, height, margin, sec, timing, width } from "./takes";
+import { cardLeftEdge, fps, height, sec, timing, width } from "./takes";
 
 const fonts = delayRender("Loading Geist");
 Promise.all(
@@ -22,9 +22,9 @@ Promise.all(
   ),
 ).then(() => continueRender(fonts));
 
-export const out = Easing.bezier(0.2, 0.7, 0.2, 1);
+export const siteEaseOut = Easing.bezier(0.2, 0.7, 0.2, 1);
 export const inOut = Easing.bezier(0.75, 0, 0.2, 1);
-export const progress = (frame: number, start: number, duration: number, easing = out) =>
+export const progress = (frame: number, start: number, duration: number, easing = siteEaseOut) =>
   interpolate(frame, [start, start + duration], [0, 1], { easing, extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
 export const sans: CSSProperties = { fontFamily: "var(--font-sans)" };
@@ -34,7 +34,8 @@ function Logo({ size, frame = Infinity, start = 0 }: { size: number; frame?: num
   return (
     <svg viewBox="0 0 32 32" width={size} height={size} style={{ overflow: "visible", flexShrink: 0 }}>
       {marks.map((mark: { x: number; y: number; radius: number; color: string }, index: number) => {
-        const order = mark.color === "violet" ? marks.length : index;
+        const isCentre = mark.color === "violet";
+        const order = isCentre ? marks.length : index;
         const t = progress(frame, start + order * 3, 22, Easing.bezier(0.3, 1.6, 0.5, 1));
         return (
           <circle
@@ -92,11 +93,12 @@ export function OpenScene({
   const subtitleAt = sec(1.55);
   const typing = sec(2.35);
   const typed = Math.floor(interpolate(frame, [typing + sec(0.3), typing + sec(1.1)], [0, command.length + 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
-  const typedAt = typing + sec(1.1);
-  const caret = frame < typing + sec(0.15) ? 0 : frame < typedAt || Math.floor((frame - typedAt) / sec(0.5)) % 2 === 0 ? 1 : 0;
+  const lastKeystrokeAt = typing + sec(1.1);
+  const blinkPhase = sec(0.5);
+  const caret = frame < typing + sec(0.15) ? 0 : frame < lastKeystrokeAt || Math.floor((frame - lastKeystrokeAt) / blinkPhase) % 2 === 0 ? 1 : 0;
   return (
     <AbsoluteFill style={{ opacity: 1 - gone }}>
-      <div style={{ position: "absolute", left: margin, top: 300, display: "flex", flexDirection: "column", gap: 34 }}>
+      <div style={{ position: "absolute", left: cardLeftEdge, top: 300, display: "flex", flexDirection: "column", gap: 34 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 30, fontSize: 250 }}>
           <span
             style={{
@@ -154,7 +156,7 @@ export function EndScene({
   const t = (delay: number) => progress(frame, enter + sec(delay), sec(0.6));
   return (
     <AbsoluteFill>
-      <div style={{ position: "absolute", left: margin, top: 300, display: "flex", flexDirection: "column", gap: 34 }}>
+      <div style={{ position: "absolute", left: cardLeftEdge, top: 300, display: "flex", flexDirection: "column", gap: 34 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 30, fontSize: 250 }}>
           <span style={{ ...sans, fontWeight: 900, letterSpacing: "-0.05em", lineHeight: 0.8, marginLeft: "-0.045em", color: "var(--text-primary)" }}>
             <Rise at={enter + sec(0.15)} frame={frame} distance={1.7}>
@@ -188,13 +190,15 @@ export function EndScene({
   );
 }
 
+const logoCentre = { x: 820, y: 400 };
+
 export function Backdrop({ endFrom }: { endFrom: number }) {
-  const ripples = useMemo<Ripple[]>(() => [{ x: 820, y: 400, frame: sec(0.5) }, { x: 820, y: 400, frame: endFrom + sec(0.6) }], [endFrom]);
+  const ripples = useMemo<Ripple[]>(() => [{ ...logoCentre, frame: sec(0.5) }, { ...logoCentre, frame: endFrom + sec(0.6) }], [endFrom]);
   const frame = useCurrentFrame();
   const reveal = useCallback(
     (x: number, y: number) => {
-      const radius = interpolate(frame, [sec(0.3), sec(2.4)], [0, 2400], { easing: out, extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-      const distance = Math.hypot(x - 820, y - 400);
+      const radius = interpolate(frame, [sec(0.3), sec(2.4)], [0, 2400], { easing: siteEaseOut, extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+      const distance = Math.hypot(x - logoCentre.x, y - logoCentre.y);
       return Math.min(1, Math.max(0, (radius - distance) / 260));
     },
     [frame],
@@ -204,6 +208,7 @@ export function Backdrop({ endFrom }: { endFrom: number }) {
 
 export function Clip({ src, pose, box }: { src: string; pose?: { source: number; opacity: number }; box: { x: number; y: number; scale: number } }) {
   if (!pose) return null;
+  const isSplitPanel = box.scale < 1;
   return (
     <div
       style={{
@@ -215,7 +220,7 @@ export function Clip({ src, pose, box }: { src: string; pose?: { source: number;
         opacity: pose.opacity,
         transform: `translate(${box.x}px, ${box.y}px) scale(${box.scale})`,
         transformOrigin: "0 0",
-        boxShadow: box.scale < 1 ? "0 0 0 2px var(--border-default), 0 30px 80px oklch(0% 0 0 / 55%)" : "none",
+        boxShadow: isSplitPanel ? "0 0 0 2px var(--border-default), 0 30px 80px oklch(0% 0 0 / 55%)" : "none",
         overflow: "hidden",
       }}
     >

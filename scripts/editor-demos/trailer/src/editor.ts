@@ -1,5 +1,5 @@
 import { acts, type Act, type Feature } from "./chapters.ts";
-import { beat, fps, retime, sec, tail, timing, type Take } from "./takes.ts";
+import { beat, fromFirstFeatureToLastResult, sec, timing, type Take } from "./takes.ts";
 
 export { chapters } from "./takes.ts";
 export type Manifest = { take: Take };
@@ -8,7 +8,7 @@ export type Marker = { feature: Feature; index: number; act: Act; from: number }
 export type Scene = { kind: "open"; from: number; duration: number } | { kind: "end"; from: number; duration: number };
 
 export function plan({ take }: Manifest) {
-  const times = retime(Math.max(0, take.beats[0].t - 0.8), Math.min(take.duration - 1 / fps, take.last + tail));
+  const times = fromFirstFeatureToLastResult(take);
   const from = sec(timing.open - timing.crossfade);
   const fade = sec(timing.crossfade);
   const track: { source: number; opacity: number }[] = [];
