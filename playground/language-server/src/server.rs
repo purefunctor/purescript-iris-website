@@ -61,6 +61,11 @@ struct SetPackagesParams {
 }
 
 #[derive(Deserialize)]
+struct GeneratedParams {
+    uri: Uri,
+}
+
+#[derive(Deserialize)]
 struct PackageParams {
     name: String,
     files: Vec<PackageFileParams>,
@@ -160,6 +165,11 @@ impl Server {
                 let change = self.workspace.set_packages(packages.collect());
                 self.schedule(&change, None, outgoing);
                 Ok(json!({ "sources": self.workspace.package_sources() }))
+            }
+            "iris/generated" => {
+                let params: GeneratedParams = decode(params)?;
+                let generated = emit::generated(&self.workspace, params.uri.as_str())?;
+                Ok(serde_json::to_value(generated).expect("invariant violated: must serialize"))
             }
             "iris/emit" => {
                 let emitted = emit::emit(&self.workspace)

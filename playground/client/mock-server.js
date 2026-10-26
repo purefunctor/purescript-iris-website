@@ -125,6 +125,13 @@ export class MockServer {
           return [{ range: { start: { line, character: trimmed.length }, end: { line, character: text.length } }, newText: "" }];
         });
       }
+      case "iris/generated": {
+        const document = this.#documents.get(params.uri);
+        if (!document) throw new Error("No open document at this URI");
+        const name = /^module\s+([\w.]+)/m.exec(document.text)?.[1] ?? "Main";
+        return { status: "generated", path: `${name}/index.js`, map: null,
+          text: "// Mock language server: no compiled JavaScript or source maps.\n// Build or download the Iris language server to inspect this module.\n" };
+      }
       case "iris/emit": {
         const modules = [...this.#documents.keys()]
           .filter((uri) => uri.endsWith(".purs"))
