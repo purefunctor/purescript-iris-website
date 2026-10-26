@@ -7,6 +7,9 @@ import MenuIcon from "~icons/lucide/menu";
 import XIcon from "~icons/lucide/x";
 import { NavigationLink } from "#src/Website/Components/NavigationLink.jsx";
 
+const minimumReadingLinePixels = 160;
+const scrollPauseMilliseconds = 150;
+
 function useActiveSection(sections) {
   const [active, setActive] = useState(null);
   const ids = sections.map(({ id }) => id).join(" ");
@@ -17,26 +20,28 @@ function useActiveSection(sections) {
     let settle = 0;
     let frame = 0;
 
-    const spy = () => {
-      const line = Math.max(window.innerHeight / 3, 160);
-      const end = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+    const sectionPastReadingLine = () => {
+      const readingLine = Math.max(window.innerHeight / 3, minimumReadingLinePixels);
+      const scrolledToEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
       let current = null;
       for (const id of targets) {
         const section = document.getElementById(id);
-        if (section && section.getBoundingClientRect().top <= line) current = id;
+        if (section && section.getBoundingClientRect().top <= readingLine) current = id;
       }
-      return end && targets.length ? targets[targets.length - 1] : current;
+      return scrolledToEnd && targets.length ? targets[targets.length - 1] : current;
     };
+    const scrolledAwayFromLanding = () =>
+      pinned?.landed != null && Math.abs(window.scrollY - pinned.landed) > window.innerHeight / 3;
     const update = () => {
       frame = 0;
-      if (pinned?.landed != null && Math.abs(window.scrollY - pinned.landed) > window.innerHeight / 3) {
+      if (scrolledAwayFromLanding()) {
         pinned = null;
       }
-      setActive(pinned ? pinned.id : spy());
+      setActive(pinned ? pinned.id : sectionPastReadingLine());
     };
     const awaitLanding = () => {
       clearTimeout(settle);
-      settle = setTimeout(() => { if (pinned) pinned.landed = window.scrollY; }, 150);
+      settle = setTimeout(() => { if (pinned) pinned.landed = window.scrollY; }, scrollPauseMilliseconds);
     };
     const pin = hash => {
       const id = decodeURIComponent(hash.slice(1));
@@ -107,14 +112,14 @@ export function navigationBarImpl({ sections, links, pages, classes }) {
   const title = sections.find(({ id }) => id === active)?.title;
 
   useEffect(() => {
-    const resize = () => {
+    const closeMenusHiddenByBreakpoint = () => {
       if (getComputedStyle(bar.current).display === "none") setMenu(null);
       else if (getComputedStyle(pagesButton.current).display === "none") {
         setMenu(current => (current === "pages" ? null : current));
       }
     };
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    window.addEventListener("resize", closeMenusHiddenByBreakpoint);
+    return () => window.removeEventListener("resize", closeMenusHiddenByBreakpoint);
   }, []);
 
   const trigger = name => ({

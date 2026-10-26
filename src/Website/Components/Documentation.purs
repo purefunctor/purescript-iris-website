@@ -67,6 +67,12 @@ foreign import navigationBarImpl ::
         }
     }
 
+articleGutter :: String
+articleGutter = "clamp(24px, 4.5vw, 72px)"
+
+articleMeasure :: String
+articleMeasure = "72ch"
+
 fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
 fadeOut = StyleX.keyframes { from: { opacity: 1 }, to: { opacity: 0 } }
 
@@ -133,7 +139,7 @@ styles = StyleX.create
           StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo720 "flex" ]
       , flexShrink: 0
       , gap: 8
-      , paddingInlineStart: "clamp(24px, 4.5vw, 72px)"
+      , paddingInlineStart: articleGutter
       , borderInlineEndColor: "var(--border-subtle)"
       , borderInlineEndStyle: "solid"
       , borderInlineEndWidth: 1
@@ -141,9 +147,9 @@ styles = StyleX.create
   , sectionsTrigger:
       { flexGrow: 1
       , minWidth: 0
-      , paddingInlineStart: StyleX.conditionalValue "clamp(24px, 4.5vw, 72px)"
+      , paddingInlineStart: StyleX.conditionalValue articleGutter
           [ StyleX.conditionalCase breakpoints.upTo720 "16px" ]
-      , paddingInlineEnd: "clamp(24px, 4.5vw, 72px)"
+      , paddingInlineEnd: articleGutter
       }
   , barLabel: { flexShrink: 0, fontWeight: 600 }
   , barCurrent:
@@ -166,7 +172,7 @@ styles = StyleX.create
       }
   , pagesPopover: { height: "calc(100dvh - var(--nav-height) - 48px)" }
   , popoverDialog:
-      { paddingInline: "calc(clamp(24px, 4.5vw, 72px) - 12px)"
+      { paddingInline: "calc(" <> articleGutter <> " - 12px)"
       , paddingBlockStart: 8
       , paddingBlockEnd: 16
       , outline: "none"
@@ -207,8 +213,8 @@ styles = StyleX.create
       { display: "inline-flex", flexShrink: 0, fontSize: 11, color: "var(--text-tertiary)" }
   , article:
       { marginInline: "auto"
-      , maxWidth: "calc(72ch + 2 * clamp(24px, 4.5vw, 72px))"
-      , paddingInline: "clamp(24px, 4.5vw, 72px)"
+      , maxWidth: "calc(" <> articleMeasure <> " + 2 * " <> articleGutter <> ")"
+      , paddingInline: articleGutter
       , fontSize: "clamp(16px, 0.25vw + 12.4px, 18px)"
       , paddingBlockStart:
           StyleX.conditionalValue 56 [ StyleX.conditionalCase breakpoints.upTo720 32 ]

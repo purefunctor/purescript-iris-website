@@ -123,8 +123,8 @@ tokenStyle = case _ of
   "punct" -> styles.punct
   _ -> styles.text
 
-languageName :: Language -> String
-languageName = case _ of
+tokenizerLanguage :: Language -> String
+tokenizerLanguage = case _ of
   PureScript -> "purescript"
   JavaScript -> "javascript"
   JSON -> "javascript"
@@ -141,7 +141,7 @@ codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =
         ]
     , DOM.pre styleProps.pre
         ( DOM.code styleProps.code
-            (mapWithIndex renderLine (tokenizeImpl (languageName language) code))
+            (mapWithIndex renderLine (tokenizeImpl (tokenizerLanguage language) code))
         )
     ]
   where

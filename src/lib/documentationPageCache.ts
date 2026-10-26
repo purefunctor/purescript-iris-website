@@ -4,6 +4,9 @@ import type { TransitionBeforePreparationEvent } from "astro:transitions/client"
 const pages = new Map<string, Promise<string | null>>();
 const modules = new Set<string>();
 const parser = new DOMParser();
+const linkIntentEvents = ["pointerover", "focusin", "pointerdown"];
+const idlePrefetchTimeoutMilliseconds = 2000;
+const prefetchDelayWithoutIdleCallbackMilliseconds = 200;
 
 function isDocumentationPage(url: URL) {
   return url.origin === location.origin && url.pathname.startsWith("/docs/");
@@ -18,13 +21,13 @@ function linkTarget(target: EventTarget | null) {
   return isDocumentationPage(url) ? url : null;
 }
 
-function speculationAllowed() {
+function connectionAllowsPrefetching() {
   const connection = (navigator as { connection?: { saveData?: boolean; effectiveType?: string } })
     .connection;
   return !connection?.saveData && !/2g/.test(connection?.effectiveType ?? "");
 }
 
-function load(url: URL, priority: RequestPriority) {
+function loadPage(url: URL, priority: RequestPriority) {
   const key = url.pathname + url.search;
   let page = pages.get(key);
   if (page) return page;
@@ -55,8 +58,11 @@ function loadIslands(html: string) {
   }
 }
 
-function swappable(newDocument: Document) {
-  if (!newDocument.querySelector('meta[name="astro-view-transitions-enabled"]')) return false;
+function usesClientRouter(newDocument: Document) {
+  return newDocument.querySelector('meta[name="astro-view-transitions-enabled"]') !== null;
+}
+
+function stylesheetsAlreadyLoaded(newDocument: Document) {
   for (const link of newDocument.querySelectorAll('head link[rel="stylesheet"]')) {
     const href = CSS.escape(link.getAttribute("href") ?? "");
     if (!document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) return false;
@@ -67,19 +73,26 @@ function swappable(newDocument: Document) {
 function prefetchLinks() {
   for (const anchor of document.querySelectorAll("a[href]")) {
     const url = linkTarget(anchor);
-    if (url) load(url, "low");
+    if (url) loadPage(url, "low");
   }
+}
+
+function prefetchLinksWhenIdle() {
+  if ("requestIdleCallback" in window)
+    requestIdleCallback(prefetchLinks, { timeout: idlePrefetchTimeoutMilliseconds });
+  else setTimeout(prefetchLinks, prefetchDelayWithoutIdleCallbackMilliseconds);
 }
 
 function prepare(event: TransitionBeforePreparationEvent) {
   if (event.formData || !isDocumentationPage(event.to)) return;
-  const page = load(event.to, "high");
+  const page = loadPage(event.to, "high");
   const loadDefault = event.loader;
   event.loader = async () => {
     const html = await page;
     if (event.signal.aborted) return;
     const newDocument = html === null ? null : parser.parseFromString(html, "text/html");
-    if (newDocument === null || !swappable(newDocument)) return loadDefault();
+    if (newDocument === null) return loadDefault();
+    if (!usesClientRouter(newDocument) || !stylesheetsAlreadyLoaded(newDocument)) return loadDefault();
     newDocument.querySelectorAll("noscript").forEach((element) => element.remove());
     event.newDocument = newDocument;
   };
@@ -90,17 +103,14 @@ export function cacheDocumentationPages() {
     prepare(event as TransitionBeforePreparationEvent),
   );
 
-  if (!speculationAllowed()) return;
-  document.addEventListener("astro:page-load", () => {
-    if ("requestIdleCallback" in window) requestIdleCallback(prefetchLinks, { timeout: 2000 });
-    else setTimeout(prefetchLinks, 200);
-  });
-  for (const type of ["pointerover", "focusin", "pointerdown"]) {
+  if (!connectionAllowsPrefetching()) return;
+  document.addEventListener("astro:page-load", prefetchLinksWhenIdle);
+  for (const type of linkIntentEvents) {
     document.addEventListener(
       type,
       (event) => {
         const url = linkTarget(event.target);
-        if (url) load(url, "high");
+        if (url) loadPage(url, "high");
       },
       { capture: true, passive: true },
     );
