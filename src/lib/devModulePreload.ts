@@ -21,10 +21,10 @@ export function devModulePreload(): AstroIntegration {
   };
 }
 
-const importsOf = new WeakMap<TransformResult, string[]>();
+const staticImportsByTransformResult = new WeakMap<TransformResult, string[]>();
 
 function staticImports(url: string, result: TransformResult): string[] {
-  let imports = importsOf.get(result);
+  let imports = staticImportsByTransformResult.get(result);
   if (!imports) {
     const base = new URL(url, "http://localhost");
     imports = [];
@@ -33,7 +33,7 @@ function staticImports(url: string, result: TransformResult): string[] {
       const resolved = new URL(n, base);
       imports.push(resolved.pathname + resolved.search);
     }
-    importsOf.set(result, imports);
+    staticImportsByTransformResult.set(result, imports);
   }
   return imports;
 }

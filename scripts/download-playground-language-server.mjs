@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 const REPOSITORY = "purefunctor/purescript-iris-website";
 const ASSET = "playground-language-server.tar.gz";
-const INPUTS = ["playground/language-server", "scripts/build-playground-language-server.mjs"];
+const CANARY_INPUTS = ["playground/language-server", "scripts/build-playground-language-server.mjs"];
 const NOT_PUBLISHED = 3;
 
 const root = new URL("..", import.meta.url).pathname;
@@ -16,7 +16,7 @@ const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8"
 if (git("rev-parse", "--is-shallow-repository") === "true") {
   fail("The checkout is shallow, so it cannot find the server's last change. Run: git fetch --unshallow");
 }
-const revision = git("log", "-1", "--format=%H", "--", ...INPUTS);
+const revision = git("log", "-1", "--format=%H", "--", ...CANARY_INPUTS);
 if (!/^[0-9a-f]{40}$/.test(revision)) {
   fail("Git history has no commit that changed the language server. Fetch the full history.");
 }

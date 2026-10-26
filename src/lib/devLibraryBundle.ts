@@ -8,9 +8,13 @@ const bundleId = "virtual:iris-library";
 const resolvedBundleId = `\0${bundleId}`;
 const entryId = "\0iris-library-entry";
 
-const exportName = (module: string) => module.replaceAll(".", "$");
+const bundleExportName = (module: string) => module.replaceAll(".", "$");
 
 type ModuleMetadata = { version: number; editable: boolean; source: string };
+
+const isBareImport = (id: string) => !id.startsWith("\0") && !id.startsWith(".") && !path.isAbsolute(id);
+
+const fileExists = (file: string) => access(file).then(() => true, () => false);
 
 const namespaceImport = /^import\s*\*\s*as\s+([\w$]+)\s+from\s*["'][^"']+["']\s*;?$/;
 const namedImport = /^import\s*\{([^}]*)\}\s*from\s*["'][^"']+["']\s*;?$/;
@@ -23,7 +27,7 @@ export function devLibraryBundle(): Plugin {
   const warned = new Set<string>();
   const metadata = new Map<string, Promise<ModuleMetadata | undefined>>();
 
-  const moduleOf = (file: string) => {
+  const outputModuleOf = (file: string) => {
     const relative = path.relative(output, file.split("?", 1)[0]);
     const [module, ...rest] = relative.split(path.sep);
     return rest.length && !module.startsWith(".") ? module : undefined;
@@ -53,7 +57,7 @@ export function devLibraryBundle(): Plugin {
   };
   const isLibrary = async (module: string) => (await metadataOf(module))?.editable === false;
   const isEditableIndex = async (file: string) => {
-    const module = moduleOf(file);
+    const module = outputModuleOf(file);
     return !!module && path.basename(file.split("?", 1)[0]) === "index.js" && (await metadataOf(module))?.editable === true;
   };
 
@@ -62,7 +66,7 @@ export function devLibraryBundle(): Plugin {
       parse(code)[0].map(async (entry) => {
         if (entry.d !== -1 || !entry.n?.startsWith(".")) return [];
         const target = path.resolve(path.dirname(file), entry.n);
-        const module = moduleOf(target);
+        const module = outputModuleOf(target);
         if (!module || path.basename(target) !== "index.js" || !(await isLibrary(module))) return [];
         return [{ ...entry, module }];
       }),
@@ -70,7 +74,7 @@ export function devLibraryBundle(): Plugin {
     return imports.flat();
   };
 
-  const frontier = async () => {
+  const libraryModulesImportedByEditableModules = async () => {
     await init;
     const modules = new Set<string>();
     await Promise.all(
@@ -78,7 +82,7 @@ export function devLibraryBundle(): Plugin {
         if (!entry.isDirectory() || entry.name.startsWith(".")) return;
         const directory = entry.name;
         const record = await metadataOf(directory);
-        if (!record?.editable || !(await access(record.source).then(() => true, () => false))) return;
+        if (!record?.editable || !(await fileExists(record.source))) return;
         const file = path.join(output, directory, "index.js");
         const code = await readFile(file, "utf8").catch(() => "");
         for (const { module } of await libraryImports(file, code)) modules.add(module);
@@ -88,13 +92,13 @@ export function devLibraryBundle(): Plugin {
   };
 
   const build = async () => {
-    const modules = await frontier();
+    const modules = await libraryModulesImportedByEditableModules();
     const entry = modules
-      .map((module) => `export * as ${exportName(module)} from ${JSON.stringify(path.join(output, module, "index.js"))};`)
+      .map((module) => `export * as ${bundleExportName(module)} from ${JSON.stringify(path.join(output, module, "index.js"))};`)
       .join("\n");
     const bundle = await rolldown({
       input: entryId,
-      external: (id) => !id.startsWith("\0") && !id.startsWith(".") && !path.isAbsolute(id),
+      external: isBareImport,
       plugins: [
         {
           name: "iris-library-entry",
@@ -137,7 +141,7 @@ export function devLibraryBundle(): Plugin {
         building ??= build();
         return building.then((code) => ({ code, map: { mappings: "" } }));
       }
-      const module = moduleOf(id);
+      const module = outputModuleOf(id);
       if (!module) return null;
       return isLibrary(module).then((library) => {
         if (library && !warned.has(id)) {
@@ -150,7 +154,7 @@ export function devLibraryBundle(): Plugin {
     transform: {
       order: "pre",
       async handler(code, id) {
-        if (!moduleOf(id) || !/\.js(?:\?|$)/.test(id)) return null;
+        if (!outputModuleOf(id) || !/\.js(?:\?|$)/.test(id)) return null;
         let rewritten = code;
         if (await isEditableIndex(id)) {
           await init;
@@ -158,12 +162,12 @@ export function devLibraryBundle(): Plugin {
           if (bundled && imports.some(({ module }) => !bundled!.has(module))) reload(this.environment as DevEnvironment);
           for (const { ss, se, module } of imports.reverse()) {
             const statement = code.slice(ss, se);
-            const local = `$iris_${exportName(module)}`;
-            const source = `import { ${exportName(module)} as ${local} } from "${bundleId}";`;
+            const local = `$iris_${bundleExportName(module)}`;
+            const source = `import { ${bundleExportName(module)} as ${local} } from "${bundleId}";`;
             const namespace = namespaceImport.exec(statement);
             const named = namedImport.exec(statement);
             const replacement = namespace
-              ? `import { ${exportName(module)} as ${namespace[1]} } from "${bundleId}";`
+              ? `import { ${bundleExportName(module)} as ${namespace[1]} } from "${bundleId}";`
               : named
                 ? `${source} const { ${named[1]
                     .split(",")
@@ -183,7 +187,7 @@ export function devLibraryBundle(): Plugin {
       },
     },
     async hotUpdate({ file }) {
-      const module = moduleOf(file);
+      const module = outputModuleOf(file);
       if (!module) return;
       let library = await isLibrary(module);
       if (path.basename(file) === "metadata.json") {

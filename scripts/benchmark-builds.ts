@@ -43,8 +43,8 @@ function time(cmd: string[]): number {
 }
 
 const pursVersion = output([purs, "--version"], tmpdir());
-const spagoPurs = output(["sh", "-c", "purs --version"], tmpdir());
-if (spagoPurs !== pursVersion) throw new Error(`Spago would run purs ${spagoPurs}, not ${pursVersion}`);
+const pursVersionOnPath = output(["sh", "-c", "purs --version"], tmpdir());
+if (pursVersionOnPath !== pursVersion) throw new Error(`Spago would run purs ${pursVersionOnPath}, not ${pursVersion}`);
 
 if (options.fresh) rmSync(project, { recursive: true, force: true });
 if (!existsSync(join(project, "spago.yaml"))) {

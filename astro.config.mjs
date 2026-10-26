@@ -8,12 +8,16 @@ import { devModulePreload } from "./src/lib/devModulePreload.ts";
 import { inlineStyleHashes } from "./src/lib/inlineStyles.ts";
 import { monacoStyles } from "./src/lib/monacoStyles.ts";
 
-const monacoModules = Array.from(
+const monacoEditorModuleImport = /^import (?:\* as \w+ from |\{[^}]*\} from )?"(monaco-editor\/[^"?]+\.js)";$/gm;
+
+const playgroundMonacoModules = Array.from(
   readFileSync(new URL("./playground/client/monaco.js", import.meta.url), "utf8").matchAll(
-    /^import (?:\* as \w+ from |\{[^}]*\} from )?"(monaco-editor\/[^"?]+\.js)";$/gm,
+    monacoEditorModuleImport,
   ),
   (match) => match[1],
 );
+
+const babelSourceMapPreset = () => ({ sourceMaps: true });
 
 const development = process.env.NODE_ENV === "development";
 
@@ -62,7 +66,7 @@ export default defineConfig({
         "react-aria-components/Tooltip",
         "es-module-lexer/js",
         "@jridgewell/trace-mapping",
-        ...monacoModules,
+        ...playgroundMonacoModules,
       ],
     },
     build: { cssCodeSplit: false },
@@ -74,7 +78,7 @@ export default defineConfig({
         dev: development,
         runtimeInjection: false,
         useCSSLayers: true,
-        babelConfig: { presets: [() => ({ sourceMaps: true })] },
+        babelConfig: { presets: [babelSourceMapPreset] },
       }),
     ],
     server: {

@@ -55,7 +55,9 @@ main = launchAff_ do
   liftEffect $ log $ show (fromMaybe 0 firstEven)
 `;
 
-const pool = async (items, action) => {
+const CONCURRENT_DOWNLOADS = 16;
+
+const mapConcurrently = async (items, action) => {
   const results = new Array(items.length);
   let next = 0;
   const worker = async () => {
@@ -64,7 +66,7 @@ const pool = async (items, action) => {
       results[index] = await action(items[index]);
     }
   };
-  await Promise.all(Array.from({ length: 16 }, worker));
+  await Promise.all(Array.from({ length: CONCURRENT_DOWNLOADS }, worker));
   return results;
 };
 
@@ -112,7 +114,7 @@ const closure = all
   ? Object.entries(index.packages).map(([name, entry]) => ({ name, ...entry }))
   : resolveClosure(index, ROOTS);
 const packages = await time(`Fetch and unpack ${closure.length} packages`, () =>
-  pool(
+  mapConcurrently(
     closure,
     async (entry) => {
       const cached = join(archives, `${entry.name}-${entry.version}.tar.gz`);
