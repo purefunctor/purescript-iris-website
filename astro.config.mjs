@@ -68,6 +68,7 @@ export default defineConfig({
         "react-aria-components/Tabs",
         "react-aria-components/Tooltip",
         "es-module-lexer/js",
+        "@jridgewell/trace-mapping",
         ...monacoModules,
       ],
     },

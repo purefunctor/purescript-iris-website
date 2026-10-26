@@ -18,7 +18,8 @@
     "playground:packages": "node scripts/generate-playground-packages.mjs",
     "playground:language-server": "node scripts/build-playground-language-server.mjs",
     "playground:language-server:download": "node scripts/download-playground-language-server.mjs",
-    "test:playground-language-server": "node scripts/test-playground-language-server.mjs"
+    "test:playground-language-server": "node scripts/test-playground-language-server.mjs",
+    "test:playground-client": "node --test playground/client/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/react": "6.0.4",
@@ -27,6 +28,7 @@
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@fontsource/geist": "5.3.0",
     "@fontsource/geist-mono": "5.3.0",
+    "@jridgewell/trace-mapping": "0.3.31",
     "@stylexjs/stylex": "0.19.0",
     "astro": "7.2.9",
     "es-module-lexer": "2.3.2",
