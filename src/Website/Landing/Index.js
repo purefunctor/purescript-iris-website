@@ -1,3 +1,39 @@
+const stillFramesOnceSettled = 6;
+const unmovedScrollTimeoutMilliseconds = 300;
+const longestScrollMilliseconds = 4000;
+
+const afterScrollSettles = onSettled => {
+  const started = performance.now();
+  let done = false;
+  let frame = 0;
+  let lastY = window.scrollY;
+  let moved = false;
+  let still = 0;
+  const settle = () => {
+    if (done) return;
+    done = true;
+    cancelAnimationFrame(frame);
+    window.removeEventListener("scrollend", settle);
+    onSettled();
+  };
+  const watch = now => {
+    if (window.scrollY !== lastY) {
+      lastY = window.scrollY;
+      moved = true;
+      still = 0;
+    } else {
+      still++;
+    }
+    const elapsed = now - started;
+    const stopped = moved && still >= stillFramesOnceSettled;
+    const neverStarted = !moved && elapsed > unmovedScrollTimeoutMilliseconds;
+    if (stopped || neverStarted || elapsed > longestScrollMilliseconds) settle();
+    else frame = requestAnimationFrame(watch);
+  };
+  window.addEventListener("scrollend", settle);
+  frame = requestAnimationFrame(watch);
+};
+
 export const revealInstall = installRef => onRevealed => () => {
   const install = installRef.current;
   if (!install) return;
@@ -15,39 +51,14 @@ export const revealInstall = installRef => onRevealed => () => {
     return;
   }
 
-  (install.closest("section") ?? install).scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  const hero = install.closest("section") ?? install;
+  hero.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   if (reduced) {
     finish();
     return;
   }
 
-  const started = performance.now();
-  let done = false;
-  let frame = 0;
-  let lastY = window.scrollY;
-  let moved = false;
-  let still = 0;
-  const settle = () => {
-    if (done) return;
-    done = true;
-    cancelAnimationFrame(frame);
-    window.removeEventListener("scrollend", settle);
-    finish();
-  };
-  const watch = now => {
-    if (window.scrollY !== lastY) {
-      lastY = window.scrollY;
-      moved = true;
-      still = 0;
-    } else {
-      still++;
-    }
-    const elapsed = now - started;
-    if ((moved && still >= 6) || (!moved && elapsed > 300) || elapsed > 4000) settle();
-    else frame = requestAnimationFrame(watch);
-  };
-  window.addEventListener("scrollend", settle);
-  frame = requestAnimationFrame(watch);
+  afterScrollSettles(finish);
 };
 
 export const enableCopyEditing = () => {

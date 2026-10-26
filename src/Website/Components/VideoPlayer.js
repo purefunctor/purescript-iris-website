@@ -11,7 +11,7 @@ export const wholeSeconds = seconds => Math.floor(seconds || 0);
 
 const players = new WeakMap();
 
-const load = video => {
+const loadInMemoryCopy = video => {
   const player = players.get(video);
   if (!player) return Promise.resolve();
   if (!player.loaded) {
@@ -37,17 +37,17 @@ export const setPlayback = videoRef => shouldPlay => () => {
   player.playing = shouldPlay;
   if (!shouldPlay) video.pause();
   else if (video.src) video.play().catch(() => {});
-  else load(video);
+  else loadInMemoryCopy(video);
 };
 
 export const seekTo = videoRef => time => () => {
   const video = videoRef.current;
   const player = video && players.get(video);
   if (!player) return;
-  if (video.readyState >= 1) video.currentTime = time;
+  if (video.readyState >= HTMLMediaElement.HAVE_METADATA) video.currentTime = time;
   else {
     player.target = time;
-    load(video);
+    loadInMemoryCopy(video);
   }
 };
 
@@ -142,7 +142,7 @@ export const observePlayer = ({
     update();
   };
   const focus = () => update();
-  const intent = () => void load(video);
+  const intent = () => void loadInMemoryCopy(video);
   const visibility = new IntersectionObserver(([entry]) => onVisible(entry.isIntersecting)(), { threshold: 0.25 });
 
   for (const name of ["timeupdate", "loadedmetadata", "durationchange", "emptied"]) video.addEventListener(name, update);

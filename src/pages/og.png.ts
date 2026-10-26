@@ -3,7 +3,7 @@ import { renderOpenGraphImage } from "#src/lib/openGraphImage";
 
 export const prerender = true;
 
-const seed = 5138;
+const evenCoverageSeed = 5138;
 
 export const GET: APIRoute = async () =>
-  new Response(await renderOpenGraphImage({ seed }), { headers: { "Content-Type": "image/png" } });
+  new Response(await renderOpenGraphImage({ seed: evenCoverageSeed }), { headers: { "Content-Type": "image/png" } });

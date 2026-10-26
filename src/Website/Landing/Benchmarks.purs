@@ -47,6 +47,15 @@ type Tick = { label :: String, position :: Measured StyleX.Style }
 
 grow = StyleX.keyframes { from: { transform: "scaleX(0)" }, to: { transform: "scaleX(1)" } }
 
+raceDuration :: String
+raceDuration = "1.5s"
+
+morphDuration :: String
+morphDuration = "0.8s"
+
+strongEaseOut :: String
+strongEaseOut = "cubic-bezier(0.16, 1, 0.3, 1)"
+
 styles = StyleX.create
   { root: { display: "flex", flexDirection: "column", gap: 32 }
   , panel: { display: "flex", flexDirection: "column" }
@@ -119,18 +128,20 @@ styles = StyleX.create
       { backgroundColor: "var(--border-subtle)"
       , insetBlock: 0
       , position: "absolute"
-      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionDuration:
+          { default: morphDuration, "@media (prefers-reduced-motion: reduce)": "0s" }
       , transitionProperty: "left, opacity"
-      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionTimingFunction: strongEaseOut
       , width: 1
       }
   , marker:
       { backgroundColor: "var(--accent)"
       , insetBlock: 0
       , position: "absolute"
-      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionDuration:
+          { default: morphDuration, "@media (prefers-reduced-motion: reduce)": "0s" }
       , transitionProperty: "left"
-      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionTimingFunction: strongEaseOut
       , width: 1
       }
   , rows: { listStyle: "none", padding: 0, position: "relative" }
@@ -151,18 +162,19 @@ styles = StyleX.create
       , display: "block"
       , height: StyleX.conditionalValue 32 [ StyleX.conditionalCase breakpoints.upTo600 24 ]
       , transformOrigin: "left"
-      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionDuration:
+          { default: morphDuration, "@media (prefers-reduced-motion: reduce)": "0s" }
       , transitionProperty: "width"
-      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionTimingFunction: strongEaseOut
       }
   , irisBar: { backgroundColor: "var(--accent)" }
   , waiting:
       { transform: { default: "scaleX(0)", "@media (prefers-reduced-motion: reduce)": "none" } }
   , racing:
-      { animationDuration: "1.5s"
+      { animationDuration: raceDuration
       , animationFillMode: "both"
       , animationName: { default: grow, "@media (prefers-reduced-motion: reduce)": "none" }
-      , animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+      , animationTimingFunction: strongEaseOut
       }
   , badge:
       { backgroundColor: "var(--surface-2)"
@@ -173,9 +185,10 @@ styles = StyleX.create
       , paddingBlock: 4
       , paddingInline: 8
       , position: "absolute"
-      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionDuration:
+          { default: morphDuration, "@media (prefers-reduced-motion: reduce)": "0s" }
       , transitionProperty: "left"
-      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionTimingFunction: strongEaseOut
       , whiteSpace: "nowrap"
       }
   , badgeComparison:
@@ -214,9 +227,10 @@ styles = StyleX.create
       , fontFamily: "var(--font-mono)"
       , fontSize: 12
       , position: "absolute"
-      , transitionDuration: { default: "0.8s", "@media (prefers-reduced-motion: reduce)": "0s" }
+      , transitionDuration:
+          { default: morphDuration, "@media (prefers-reduced-motion: reduce)": "0s" }
       , transitionProperty: "left, opacity"
-      , transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
+      , transitionTimingFunction: strongEaseOut
       }
   , methodology:
       { color: "var(--text-tertiary)"

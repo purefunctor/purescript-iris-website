@@ -1,10 +1,17 @@
 import { createElement, useEffect, useId, useRef, useState } from "react";
 
+const isPlainPrimaryClick = event =>
+  !event.defaultPrevented && event.button === 0 && !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+
+const linksToCurrentPage = href => {
+  const target = new URL(href, window.location.href);
+  return target.origin === window.location.origin && target.pathname === window.location.pathname;
+};
+
+const isKeyboardActivation = clickEvent => clickEvent.detail === 0;
+
 export const scrollToTop = event => {
-  if (event.defaultPrevented || event.button !== 0) return;
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  const target = new URL(event.currentTarget.href, window.location.href);
-  if (target.origin !== window.location.origin || target.pathname !== window.location.pathname) return;
+  if (!isPlainPrimaryClick(event) || !linksToCurrentPage(event.currentTarget.href)) return;
 
   event.preventDefault();
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -92,7 +99,7 @@ export function spectrumInstallButtonImpl({ className, pressedClassName, label, 
       if (event.button === 0) setPressed(true);
     },
     onClick: event => {
-      if (event.detail === 0) setPressed(true);
+      if (isKeyboardActivation(event)) setPressed(true);
       onPress();
     },
   }, ...content);

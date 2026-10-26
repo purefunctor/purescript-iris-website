@@ -9,7 +9,7 @@ import { palette, stillField } from "#src/Website/Components/Backdrop.js";
 
 const width = 1200;
 const markSize = 272;
-const dotScale = 1.8;
+const socialPreviewDotScale = 1.8;
 
 export async function renderOpenGraphImage({ seed, height = 630 }: { seed?: number; height?: number } = {}): Promise<Uint8Array> {
   const [color, black, mark] = await Promise.all([
@@ -53,7 +53,7 @@ function renderField(color: Record<string, string>, height: number, seed?: numbe
   const fills = palette.map((token) => color[token.slice(2)]);
   const dots = stillField(width, height, { clearing: false, seed })
     .map(({ x, y, radius, alpha, color: index }) =>
-      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(radius * dotScale).toFixed(2)}" fill="${fills[index]}" fill-opacity="${alpha.toFixed(3)}"/>`,
+      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(radius * socialPreviewDotScale).toFixed(2)}" fill="${fills[index]}" fill-opacity="${alpha.toFixed(3)}"/>`,
     )
     .join("");
   const canvas = color["bg-canvas"];
