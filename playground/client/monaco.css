@@ -22,7 +22,6 @@
   margin-inline-start: 8px;
 }
 
-/* Source lines and their generated spans. Maps do not provide source expression ranges. */
 .monaco-editor .iris-map-line,
 .monaco-editor .iris-map-span {
   background: var(--accent-soft);

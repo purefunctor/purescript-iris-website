@@ -1,11 +1,7 @@
-// The JavaScript tab: a read-only editor for the open module's generated code, and the
-// highlights that link it to the source editor through the module's source map. The page sees
-// only the plain state this publishes, never Monaco objects.
 import { createEditor, monaco } from "./monaco.js";
 import { mappingIndex, matchingSegments } from "./source-maps.js";
 
 const NO_MODULE = "Open a PureScript file to see its JavaScript.";
-// Requests wait for a pause in typing, because each one compiles the module.
 const DEBOUNCE = 300;
 
 export function createGeneratedOutput({ host, source, client, onChange }) {
@@ -13,7 +9,6 @@ export function createGeneratedOutput({ host, source, client, onChange }) {
   const editor = createEditor(host, {
     model,
     readOnly: true,
-    // Generated lines stay whole, so that stack frame locations match the line numbers.
     wordWrap: "off",
     ariaLabel: "Generated JavaScript",
     occurrencesHighlight: "off",
@@ -34,7 +29,6 @@ export function createGeneratedOutput({ host, source, client, onChange }) {
   let uri = "";
   let visible = false;
   let enabled = true;
-  // Edits bump the revision, so a response for older source is dropped and requested again.
   let revision = 0;
   let requesting = false;
   let disposed = false;
@@ -45,7 +39,6 @@ export function createGeneratedOutput({ host, source, client, onChange }) {
 
   const publish = (update) => {
     state = { ...state, ...update };
-    // Hovers would cover the linked code, so the source editor shows them only while unlinked.
     if (update.status !== undefined) source.updateOptions({ hover: { enabled: !linked() } });
     onChange(state);
   };
@@ -61,8 +54,6 @@ export function createGeneratedOutput({ host, source, client, onChange }) {
     pin(false);
   };
 
-  // Source maps record where generated code starts, not the source ranges it covers, so the
-  // source side highlights whole lines.
   const highlight = (matches, { pinning = false, reveal = false } = {}) => {
     if (!linked()) return;
     const lines = new Set(matches.map((segment) => segment.sourceLine));
@@ -84,7 +75,6 @@ export function createGeneratedOutput({ host, source, client, onChange }) {
     pin(pinning && first !== undefined);
     if (reveal && first) {
       source.revealLineInCenterIfOutsideViewport(first.sourceLine);
-      // Without wrapping, the span can sit past the pane's right edge.
       editor.revealRangeInCenterIfOutsideViewport(
         new monaco.Range(first.line, first.start, first.line, Math.max(first.end, first.start)),
       );
@@ -159,7 +149,6 @@ export function createGeneratedOutput({ host, source, client, onChange }) {
     schedule();
   };
 
-  // Hovering previews the code linked to the pointer, and selecting pins it until Escape.
   const subscriptions = [source.onDidChangeModel(invalidate)];
   for (const [side, pane] of panes) {
     subscriptions.push(
@@ -195,13 +184,11 @@ export function createGeneratedOutput({ host, source, client, onChange }) {
 
   return {
     invalidate,
-    /** Shows or hides the tab, and turns linking on or off. */
     update(show, mapsEnabled) {
       const opened = show && !visible;
       visible = show;
       enabled = mapsEnabled;
       host.inert = !visible;
-      // While linking, Monaco's own occurrence and selection highlights would compete with it.
       const linking = visible && enabled;
       source.updateOptions({
         occurrencesHighlight: linking ? "off" : "singleFile",

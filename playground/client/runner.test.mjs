@@ -43,7 +43,6 @@ test("rewriting restores sparse mapping state and preserves unmapped regions", a
   const text = `import "./foreign.js"; mapped(); unmapped();\nraw();`;
   const literal = text.indexOf("./foreign.js");
   const unmapped = text.indexOf("unmapped()");
-  // The active mapping after the import starts inside the replaced literal, not at its end.
   const map = sourceMap([[[0], [literal + 2, 0, 8, 3], [unmapped]], []]);
   const result = await link([{ path: "Main/index.js", text, map }, foreign]);
   const linkedMap = result.maps["Main/index.js"];
@@ -79,7 +78,6 @@ test("unchanged maps, missing imports and unmapped FFI retain the public link co
 });
 
 test("StyleX composes source locations through Babel and import rewriting", async (t) => {
-  // Exercise the actual compiler bundle exposed by the endpoint, without a server or network.
   const { bundlePlaygroundStylex } = await import("../../src/lib/playgroundStylex.ts");
   const compiler = await bundlePlaygroundStylex();
   const hooks = registerHooks({
@@ -111,7 +109,6 @@ test("StyleX composes source locations through Babel and import rewriting", asyn
   assert.match(result.css, /color:red/);
   assert.doesNotMatch(result.files["iris-output/Styled/index.js"], /stylex\.create/);
   assert.deepEqual(location(result.maps["Styled/index.js"], result.files["iris-output/Styled/index.js"], "throw"), {
-    // Babel emits names for identifiers, not the throw keyword; the source position survives.
     source, line: 11, column: text.indexOf("throw"), name: null,
   });
   assert.deepEqual(Object.keys(result.maps), ["Styled/index.js", "Main/index.js"]);

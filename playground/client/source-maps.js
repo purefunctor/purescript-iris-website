@@ -1,7 +1,5 @@
 import { TraceMap, decodedMappings, originalPositionFor } from "@jridgewell/trace-mapping";
 
-// Source maps contain origin points, not AST ranges. Generated spans stop at the next segment
-// (including unmapped segments), and never extend across a newline.
 export function mappingIndex(map, javascript) {
   const trace = new TraceMap(map);
   const lines = javascript.split("\n");
@@ -20,8 +18,6 @@ export function mappingIndex(map, javascript) {
   return { trace, segments };
 }
 
-// Source maps give points on the source side, and half-open spans on the generated side.
-// A source caret previews its line; a selection includes only the origin points it covers.
 export function matchingSegments(segments, side, selection) {
   const empty = selection.startLineNumber === selection.endLineNumber && selection.startColumn === selection.endColumn;
   return segments.filter((segment) => {
@@ -36,8 +32,6 @@ export function matchingSegments(segments, side, selection) {
   });
 }
 
-// Error.stack is not source-mapped by browsers. Keep every raw line, including FFI and browser
-// frames, but give mapped project/package frames a source location the editor can navigate to.
 export function stackFrames(text, maps, enabled) {
   return text.split("\n").map((raw) => {
     const match = /iris-playground:\/\/\/([^\s)]+):(\d+):(\d+)/.exec(raw);

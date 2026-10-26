@@ -45,7 +45,6 @@ pub struct EmittedFile {
     map: Option<Value>,
 }
 
-/// Generates only the requested source, even when an unrelated project source has errors.
 pub fn generated(workspace: &Workspace, uri: &str) -> Result<Generated, Rejection> {
     let file_id = workspace
         .files
@@ -69,7 +68,6 @@ pub fn generated(workspace: &Workspace, uri: &str) -> Result<Generated, Rejectio
     })
 }
 
-/// Preserve the compiler's v3 mappings (UTF-16 points, not inferred source ranges).
 fn source_map(workspace: &Workspace, file_id: FileId) -> Result<Value, QueryError> {
     let map = workspace
         .engine

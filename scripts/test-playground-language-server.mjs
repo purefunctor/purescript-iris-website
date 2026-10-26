@@ -170,8 +170,6 @@ assert.ok(generated.map.mappings.length > 0);
 assert.match(generated.text, /export/);
 assert.equal(generated.files, undefined, "generated returns one module, not its dependency closure");
 
-// Source-map points use zero-based UTF-16 columns, regardless of LSP position negotiation.
-// The astral character precedes another mapped literal on the same source and generated line.
 const coordinatesUri = PROJECT + "src/Coordinates.purs";
 const COORDINATES = 'module Coordinates where\n\nvalues = [ "😀", "next" ]\n';
 open("src/Coordinates.purs", COORDINATES);
@@ -186,7 +184,6 @@ assert.equal(mapped.originalColumn, sourcePoint.character);
 assert.equal(mapped.generatedLine, generatedPoint.line);
 assert.equal(mapped.generatedColumn, generatedPoint.character);
 
-// A location-only edit must invalidate the map even when JavaScript stays unchanged.
 notify("textDocument/didChange", {
   textDocument: { uri: coordinatesUri, version: 2 },
   contentChanges: [{ text: COORDINATES.replace("values =", "\nvalues =") }],
