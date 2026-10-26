@@ -158,7 +158,7 @@ export class MockServer {
         const document = this.#documents.get(uri);
         if (!document) return [];
         for (const change of params.contentChanges) {
-          document.text = change.range ? splice(document.text, change.range, change.text) : change.text;
+          document.text = change.range ? replaceRange(document.text, change.range, change.text) : change.text;
         }
         document.version = version;
         this.#pending.push(uri);
@@ -191,7 +191,7 @@ export class MockServer {
   }
 }
 
-function splice(text, range, replacement) {
+function replaceRange(text, range, replacement) {
   const offset = ({ line, character }) => {
     let index = 0;
     for (let current = 0; current < line; current++) index = text.indexOf("\n", index) + 1;

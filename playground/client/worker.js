@@ -5,7 +5,8 @@ import { MockServer } from "./mock-server.js";
 
 const CACHE = "iris-playground-registry-v1";
 const SERVER_BASE = "/playground/language-server/";
-const CONCURRENCY = 16;
+const CONCURRENT_DOWNLOADS = 16;
+const REQUEST_CANCELLED = -32800;
 
 let server;
 let packages;
@@ -77,11 +78,11 @@ function drain() {
     for (const message of batch) {
       if (message.method === "$/cancelRequest") continue;
       if (message.id !== undefined && cancelled.has(message.id)) {
-        send({ jsonrpc: "2.0", id: message.id, error: { code: -32800, message: "Request cancelled" } });
+        send({ jsonrpc: "2.0", id: message.id, error: { code: REQUEST_CANCELLED, message: "Request cancelled" } });
         continue;
       }
       for (const reply of JSON.parse(server.handle(JSON.stringify(message)))) send(reply);
-      if (message.method === "initialized") setPackages();
+      if (message.method === "initialized") handPackagesToServer();
     }
   } catch (error) {
     return fail(error);
@@ -89,7 +90,7 @@ function drain() {
   idle = setTimeout(collectDiagnostics, 0);
 }
 
-function setPackages() {
+function handPackagesToServer() {
   const message = { jsonrpc: "2.0", id: "packages", method: "iris/setPackages", params: { packages } };
   packages = null;
   const [reply, ...notifications] = JSON.parse(server.handle(JSON.stringify(message)));
@@ -127,7 +128,7 @@ async function downloadPackages(cache, names) {
   const packageSet = index.packageSet.version;
   const report = () => self.postMessage({ type: "progress", packageSet, loaded, total, bytes, totalBytes });
   report();
-  return mapConcurrently(entries, CONCURRENCY, async (entry) => {
+  return mapConcurrently(entries, CONCURRENT_DOWNLOADS, async (entry) => {
     const files = await loadPackage(cache, entry);
     loaded += 1;
     bytes += entry.bytes;

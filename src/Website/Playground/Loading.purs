@@ -137,4 +137,5 @@ loading state retry =
 megabytes :: Int -> String
 megabytes bytes = show (tenths / 10) <> "." <> show (tenths `mod` 10)
   where
-  tenths = (bytes + 50000) / 100000
+  bytesPerTenth = 100000
+  tenths = (bytes + bytesPerTenth / 2) / bytesPerTenth

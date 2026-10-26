@@ -1,7 +1,10 @@
 
 import * as monaco from "monaco-editor/editor/editor.api.js";
+import { REQUEST_CANCELLED } from "./language-client.js";
 
 export const LANGUAGE = "purescript";
+
+const CONTENT_MODIFIED = -32801;
 
 const toPosition = (position) => ({ line: position.lineNumber - 1, character: position.column - 1 });
 
@@ -15,7 +18,7 @@ const SEVERITY = {
   4: monaco.MarkerSeverity.Hint,
 };
 
-const COMPLETION_KIND = (() => {
+const MONACO_COMPLETION_KIND_BY_LSP_KIND = (() => {
   const kinds = monaco.languages.CompletionItemKind;
   return [
     null, kinds.Text, kinds.Method, kinds.Function, kinds.Constructor, kinds.Field, kinds.Variable,
@@ -34,7 +37,7 @@ const markdown = (contents) => {
   });
 };
 
-const published = new Map();
+const publishedDiagnostics = new Map();
 
 const intersects = (a, b) =>
   !(
@@ -60,7 +63,7 @@ export function registerProviders({ client, ensureModel, capabilities }) {
     return client()
       .request(method, params, controller.signal)
       .catch((error) => {
-        if ([-32800, -32801].includes(error.code)) return null;
+        if ([REQUEST_CANCELLED, CONTENT_MODIFIED].includes(error.code)) return null;
         throw error;
       });
   };
@@ -221,7 +224,7 @@ export function registerProviders({ client, ensureModel, capabilities }) {
     monaco.languages.registerCodeActionProvider(LANGUAGE, {
       async provideCodeActions(model, range, context, token) {
         const lspRange = { start: toPosition(range.getStartPosition()), end: toPosition(range.getEndPosition()) };
-        const diagnostics = (published.get(model.uri.toString()) ?? []).filter((diagnostic) =>
+        const diagnostics = (publishedDiagnostics.get(model.uri.toString()) ?? []).filter((diagnostic) =>
           intersects(diagnostic.range, lspRange),
         );
         const params = {
@@ -266,7 +269,7 @@ function completionItem(item, fallback) {
   const range = edit ? toRange(edit.range ?? edit.insert) : fallback;
   return {
     label: item.labelDetails ? { label: item.label, detail: item.labelDetails.detail, description: item.labelDetails.description } : item.label,
-    kind: COMPLETION_KIND[item.kind] ?? monaco.languages.CompletionItemKind.Text,
+    kind: MONACO_COMPLETION_KIND_BY_LSP_KIND[item.kind] ?? monaco.languages.CompletionItemKind.Text,
     detail: item.detail,
     documentation: documentation(item.documentation),
     insertText: edit?.newText ?? item.insertText ?? item.label,
@@ -279,7 +282,7 @@ function completionItem(item, fallback) {
 }
 
 export function applyDiagnostics(params) {
-  published.set(params.uri, params.diagnostics);
+  publishedDiagnostics.set(params.uri, params.diagnostics);
   const model = monaco.editor.getModel(monaco.Uri.parse(params.uri));
   const counts = { errors: 0, warnings: 0 };
   if (!model) return counts;

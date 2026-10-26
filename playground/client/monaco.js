@@ -45,6 +45,11 @@ export { monaco };
 
 let configured = false;
 
+const PEEK_VIEW_LAYOUT_KEY = "peekViewLayout";
+const PROFILE_SCOPE = 0;
+const MACHINE_TARGET = 1;
+const EVEN_REFERENCES_LAYOUT = { ratio: 0.5, heightInLines: 18 };
+
 export function configure(theme) {
   if (configured) return;
   configured = true;
@@ -77,12 +82,17 @@ export function configure(theme) {
 
 function widenReferences() {
   const storage = StandaloneServices.get(IStorageService);
-  const key = "peekViewLayout";
-  if (!storage.get(key, 0)) storage.store(key, JSON.stringify({ ratio: 0.5, heightInLines: 18 }), 0, 1);
+  if (!storage.get(PEEK_VIEW_LAYOUT_KEY, PROFILE_SCOPE)) {
+    storage.store(PEEK_VIEW_LAYOUT_KEY, JSON.stringify(EVEN_REFERENCES_LAYOUT), PROFILE_SCOPE, MACHINE_TARGET);
+  }
+}
+
+function shareThemeWithDetachedWidgets(element) {
+  element.classList.add("monaco-component");
 }
 
 export function createEditor(element, options) {
-  element.classList.add("monaco-component");
+  shareThemeWithDetachedWidgets(element);
   const editor = monaco.editor.create(element, {
     theme: "iris",
     automaticLayout: true,

@@ -38,11 +38,15 @@ export async function unpackPackage(entry, archive) {
   const files = [];
   const decoder = new TextDecoder("utf-8", { fatal: true });
   for (const { path, data } of readTar(tar)) {
-    const relative = path.slice(path.indexOf("/") + 1);
+    const relative = withoutArchiveRoot(path);
     if (!/^src\/.+\.(purs|js|jsx)$/.test(relative) || relative.split("/").includes("..")) continue;
     files.push({ path: relative, text: decoder.decode(data) });
   }
   return files;
+}
+
+function withoutArchiveRoot(path) {
+  return path.slice(path.indexOf("/") + 1);
 }
 
 async function gunzip(bytes) {

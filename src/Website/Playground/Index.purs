@@ -906,15 +906,19 @@ iconAction label icon' onPress = DOM.button
   }
   (DOM.span styleProps.icon (icon icon'))
 
+stopAppearsAfter :: Milliseconds
+stopAppearsAfter = Milliseconds 500.0
+
 runButton ::
   ReactComponent { status :: String, ready :: Boolean, run :: Effect Unit, stop :: Effect Unit }
 runButton = unsafePerformEffect $ Hooks.reactComponent "RunButton" \{ status, ready, run, stop } ->
   Hooks.do
     let
       running = status == "running"
-    started <- useAff running (if running then delay (Milliseconds 500.0) $> true else pure false)
+    ranLongEnoughToStop <-
+      useAff running (if running then delay stopAppearsAfter $> true else pure false)
     let
-      stoppable = running && started == Just true
+      stoppable = running && ranLongEnoughToStop == Just true
       busy = status == "compiling" || running && not stoppable
       disabled = busy || not ready && not stoppable
     pure $ DOM.button

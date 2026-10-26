@@ -12,13 +12,15 @@ import { decodeProject, encodeProject, loadSavedProject, saveProject } from "./s
 import { TEMPLATES } from "./templates.js";
 
 const PROJECT = "file:///project/";
-const NARROW = "(max-width: 720px)";
+const SIDEBAR_OVERLAYS_EDITOR = "(max-width: 720px)";
 const MAX_LINES = 1000;
-const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
-const PANEL_SIZE = "iris-playground-panel-size";
-const CONSOLE_HEIGHT = "iris-playground-console-height";
-const CORE = Object.keys(index.packages).filter((name) => ["purescript", "purescript-contrib"].includes(index.packages[name].owner));
-const templatePackages = (template) => [...CORE, ...template.packages];
+const SIDEBAR_WIDTH_STORAGE_KEY = "iris-playground-sidebar-width";
+const PANEL_SIZE_STORAGE_KEY = "iris-playground-panel-size";
+const CONSOLE_HEIGHT_STORAGE_KEY = "iris-playground-console-height";
+const CORE_OWNERS = ["purescript", "purescript-contrib"];
+const CORE_PACKAGES = Object.keys(index.packages).filter((name) => CORE_OWNERS.includes(index.packages[name].owner));
+const templatePackages = (template) => [...CORE_PACKAGES, ...template.packages];
+const PACKAGES_OF_PROJECTS_SAVED_BEFORE_PACKAGE_CHOICE = TEMPLATES.flatMap(templatePackages);
 
 
 export async function createPlayground({ editor: host, generated: generatedHost, frames, theme, onChange }) {
@@ -30,23 +32,23 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   const paths = project.files.map(({ path }) => path);
   const open = (project.open ?? paths).filter((path) => paths.includes(path));
   const active = open.includes(project.active) ? project.active : open[0] ?? null;
-  let activated = (project.packages ?? TEMPLATES.flatMap(templatePackages)).filter((name, at, names) => index.packages[name] && names.indexOf(name) === at);
+  let activated = (project.packages ?? PACKAGES_OF_PROJECTS_SAVED_BEFORE_PACKAGE_CHOICE).filter((name, at, names) => index.packages[name] && names.indexOf(name) === at);
   let installed = new Set();
-  const panelSize = safely(() => JSON.parse(localStorage.getItem(PANEL_SIZE))) ?? {};
+  const panelSize = ifStorageAvailable(() => JSON.parse(localStorage.getItem(PANEL_SIZE_STORAGE_KEY))) ?? {};
   let state = {
     phase: "loading",
     files: paths.map((path) => ({ path, errors: 0, warnings: 0 })),
     open,
     active,
     viewing: null,
-    sidebar: !matchMedia(NARROW).matches,
-    sidebarWidth: Number(safely(() => localStorage.getItem(SIDEBAR_WIDTH))) || 240,
+    sidebar: !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
+    sidebarWidth: Number(ifStorageAvailable(() => localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY))) || 240,
     panel: true,
     panelWidth: Number(panelSize.width) || 380,
     panelHeight: Number(panelSize.height) || Math.round(innerHeight * 0.4),
     panelTab: "output",
     console: true,
-    consoleHeight: Number(safely(() => localStorage.getItem(CONSOLE_HEIGHT))) || 0,
+    consoleHeight: Number(ifStorageAvailable(() => localStorage.getItem(CONSOLE_HEIGHT_STORAGE_KEY))) || 0,
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], active: 0, packageSet: index.packageSet.version, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [], view: false },
@@ -107,10 +109,11 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     for (const name of active) {
       for (const dependency of index.packages[name].dependencies) dependents.get(dependency).push(name);
     }
+    const canDeactivate = (name) => activated.includes(name) && dependents.get(name).length === 0;
     const statusOf = (name) =>
       !loaded.has(name)
         ? installed.has(name) ? "installed" : "available"
-        : activated.includes(name) && dependents.get(name).length === 0 ? "active" : "dependency";
+        : canDeactivate(name) ? "active" : "dependency";
     const available = Object.entries(index.packages).map(([name, { version }]) => ({
       name,
       version,
@@ -143,7 +146,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
         }));
       },
       onRestart: () => {
-        for (const [path, model] of models) openDocument(path, model);
+        openEveryDocument();
         generated?.invalidate();
       },
     },
@@ -158,6 +161,10 @@ export async function createPlayground({ editor: host, generated: generatedHost,
         text: model.getValue(),
       },
     });
+
+  const openEveryDocument = () => {
+    for (const [path, model] of models) openDocument(path, model);
+  };
 
   const addModel = (path, text) => {
     const model = monaco.editor.createModel(text, path.endsWith(".purs") ? LANGUAGE : "javascript", monaco.Uri.parse(uriOf(path)));
@@ -224,33 +231,35 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   for (const file of project.files) addModel(file.path, file.text);
   onChange(state);
 
-  let work = Promise.resolve();
-  let loaded = null;
-  const serially = (action) => (work = work.then(action));
+  let serverWork = Promise.resolve();
+  let serverPackageList = null;
+  const serially = (action) => (serverWork = serverWork.then(action));
+
+  const createEditorView = () => {
+    editor = createEditor(host, { model: null });
+    generated = createGeneratedOutput({
+      host: generatedHost,
+      source: editor,
+      client,
+      onChange: (generated) => setState(() => ({ generated })),
+    });
+    monaco.editor.registerEditorOpener({
+      openCodeEditor: (_source, resource, selection) => view(resource.toString(), selection),
+    });
+    providers = registerProviders({ client: () => client, ensureModel, capabilities: client.capabilities });
+    show(state.active);
+  };
 
   const start = () => serially(async () => {
     setState((current) => ({ phase: current.phase === "ready" ? "ready" : "loading" }));
     const names = activePackages();
     const info = await client.start(names);
     if (!info) return;
-    loaded = names.join();
+    serverPackageList = names.join();
     installed = new Set(info.installed);
     publishPackages();
-    for (const [path, model] of models) openDocument(path, model);
-    if (!editor) {
-      editor = createEditor(host, { model: null });
-      generated = createGeneratedOutput({
-        host: generatedHost,
-        source: editor,
-        client,
-        onChange: (generated) => setState(() => ({ generated })),
-      });
-      monaco.editor.registerEditorOpener({
-        openCodeEditor: (_source, resource, selection) => view(resource.toString(), selection),
-      });
-      providers = registerProviders({ client: () => client, ensureModel, capabilities: client.capabilities });
-      show(state.active);
-    }
+    openEveryDocument();
+    if (!editor) createEditorView();
     setState(() => ({ phase: "ready" }));
   });
 
@@ -261,10 +270,10 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     publishPackages();
     serially(async () => {
       const names = activePackages();
-      if (loaded === null || names.join() === loaded) return;
+      if (serverPackageList === null || names.join() === serverPackageList) return;
       const info = await client.restart(names);
       if (!info) return;
-      loaded = names.join();
+      serverPackageList = names.join();
       installed = new Set(info.installed);
       publishPackages();
     });
@@ -277,7 +286,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       open: current.open.includes(path) ? current.open : [...current.open, path],
       active: path,
       viewing: null,
-      sidebar: current.sidebar && !matchMedia(NARROW).matches,
+      sidebar: current.sidebar && !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
     }));
     save();
   };
@@ -306,7 +315,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       open: paths,
       active: paths[0],
       viewing: null,
-      sidebar: current.sidebar && !matchMedia(NARROW).matches,
+      sidebar: current.sidebar && !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
       run: { status: "idle", lines: [], view: false },
     }));
     show(paths[0]);
@@ -384,13 +393,13 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     },
     toggleSidebar: () => setState((current) => ({ sidebar: !current.sidebar })),
     resizeSidebar: (width) => {
-      safely(() => localStorage.setItem(SIDEBAR_WIDTH, String(width)));
+      ifStorageAvailable(() => localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(width)));
       setState(() => ({ sidebar: true, sidebarWidth: width }));
     },
     closeSidebar: () => setState(() => ({ sidebar: false })),
     togglePanel: () => setState((current) => ({ panel: !current.panel })),
     resizePanel: ({ width, height }) => {
-      safely(() => localStorage.setItem(PANEL_SIZE, JSON.stringify({ width, height })));
+      ifStorageAvailable(() => localStorage.setItem(PANEL_SIZE_STORAGE_KEY, JSON.stringify({ width, height })));
       setState(() => ({ panel: true, panelWidth: width, panelHeight: height }));
     },
     closePanel: () => setState(() => ({ panel: false })),
@@ -411,7 +420,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       view(uri, { lineNumber: line, column });
     },
     resizeConsole: (height) => {
-      safely(() => localStorage.setItem(CONSOLE_HEIGHT, String(height)));
+      ifStorageAvailable(() => localStorage.setItem(CONSOLE_HEIGHT_STORAGE_KEY, String(height)));
       setState(() => ({ console: true, consoleHeight: height }));
     },
     toggleConsole: () => setState((current) => ({ console: !current.console })),
@@ -498,7 +507,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   };
 }
 
-function safely(action) {
+function ifStorageAvailable(action) {
   try {
     return action();
   } catch {

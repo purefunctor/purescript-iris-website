@@ -2,13 +2,15 @@
 import { parse } from "es-module-lexer/js";
 import { TraceMap, decodedMappings, encodedMappings, traceSegment } from "@jridgewell/trace-mapping";
 
-const PREFIX = "iris-output/";
+const IMPORT_MAP_PREFIX = "iris-output/";
 const SANDBOX = "/playground/sandbox.html";
 const STYLEX = "@stylexjs/stylex";
-const PROVIDED = /^(react(-dom)?(\/|$)|@stylexjs\/stylex$)/;
+const PROVIDED_NPM_SPECIFIER = /^(react(-dom)?(\/|$)|@stylexjs\/stylex$)/;
 const NPM_DIRECTORY = "npm/";
+const STATIC_IMPORT = -1;
+const IMPORT_META = -2;
 
-const once = (load) => {
+const onceRetryingFailures = (load) => {
   let promise = null;
   return () =>
     (promise ??= load().catch((error) => {
@@ -17,14 +19,14 @@ const once = (load) => {
     }));
 };
 
-const loadModules = once(async () => {
+const loadModules = onceRetryingFailures(async () => {
   const response = await fetch("/playground/modules.json");
   if (!response.ok) throw new Error(`Could not load npm modules: ${response.status}`);
   return response.json();
 });
 const STYLEX_COMPILER = "/playground/stylex.js";
-const loadStylex = once(() => import(/* @vite-ignore */ STYLEX_COMPILER));
-const loadTheme = once(async () => {
+const loadStylex = onceRetryingFailures(() => import(/* @vite-ignore */ STYLEX_COMPILER));
+const loadTheme = onceRetryingFailures(async () => {
   const response = await fetch("/playground/frame.json");
   if (!response.ok) throw new Error(`Could not load the frame's theme: ${response.status}`);
   const { css, fonts } = await response.json();
@@ -36,27 +38,28 @@ const loadTheme = once(async () => {
 
 export async function link(files) {
   const first = rewrite(files, {});
-  if (!first.missing.some((specifier) => PROVIDED.test(specifier))) return { ...first, css: "" };
+  if (!first.missing.some((specifier) => PROVIDED_NPM_SPECIFIER.test(specifier))) return { ...first, css: "" };
   const [bundle, compiler] = await Promise.all([
     loadModules(),
     first.missing.includes(STYLEX) ? loadStylex() : null,
   ]);
-  let css = "";
-  if (compiler) {
-    const rules = [];
-    files = files.map((file) => {
-      if (!file.path.endsWith(".js") || !file.text.includes(STYLEX)) return file;
-      const compiled = compiler.compile(file.text, `/${file.path}`, file.map);
-      rules.push(...compiled.rules);
-      return { path: file.path, text: compiled.code, map: compiled.map };
-    });
-    css = compiler.styleSheet(rules);
-  }
+  const compiled = compiler ? compileStylexBeforeRewrite(files, compiler) : { files, css: "" };
   const vendor = Object.entries(bundle.files).map(([name, text]) => ({ path: `${NPM_DIRECTORY}${name}`, text }));
   const provided = Object.fromEntries(
     Object.entries(bundle.entries).map(([specifier, name]) => [specifier, `${NPM_DIRECTORY}${name}`]),
   );
-  return { ...rewrite([...files, ...vendor], provided), css };
+  return { ...rewrite([...compiled.files, ...vendor], provided), css: compiled.css };
+}
+
+function compileStylexBeforeRewrite(files, compiler) {
+  const rules = [];
+  const compiled = files.map((file) => {
+    if (!file.path.endsWith(".js") || !file.text.includes(STYLEX)) return file;
+    const result = compiler.compile(file.text, `/${file.path}`, file.map);
+    rules.push(...result.rules);
+    return { path: file.path, text: result.code, map: result.map };
+  });
+  return { files: compiled, css: compiler.styleSheet(rules) };
 }
 
 function rewrite(files, provided) {
@@ -71,7 +74,7 @@ function rewrite(files, provided) {
     let text = "";
     let last = 0;
     for (const { n: specifier, s: start, e: end, d: dynamic } of imports) {
-      if (specifier === undefined || dynamic === -2) continue;
+      if (specifier === undefined || dynamic === IMPORT_META) continue;
       const relative = specifier.startsWith("./") || specifier.startsWith("../");
       if (!relative && !Object.hasOwn(provided, specifier)) {
         missing.add(specifier);
@@ -81,13 +84,14 @@ function rewrite(files, provided) {
         ? new URL(specifier, `https://iris.invalid/${file.path}`).pathname.slice(1)
         : provided[specifier];
       if (!paths.has(resolved)) missing.add(`${resolved} (imported by ${file.path})`);
-      const replacement = dynamic === -1 ? `${PREFIX}${resolved}` : JSON.stringify(`${PREFIX}${resolved}`);
+      const importMapKey = `${IMPORT_MAP_PREFIX}${resolved}`;
+      const replacement = dynamic === STATIC_IMPORT ? importMapKey : JSON.stringify(importMapKey);
       edits.push({ start, end, replacement });
       text += file.text.slice(last, start) + replacement;
       last = end;
     }
     const code = text + file.text.slice(last);
-    linked[`${PREFIX}${file.path}`] = code;
+    linked[`${IMPORT_MAP_PREFIX}${file.path}`] = code;
     if (file.map) maps[file.path] = rewriteMap(file.map, file.text, code, edits);
   }
   return { files: linked, maps, missing: [...missing].sort() };
@@ -175,12 +179,12 @@ export class Runner {
     frame.tabIndex = -1;
     frame.title = "Program sandbox";
     frame.style.cssText = "display:block;width:100%;height:100%;border:0;visibility:hidden";
-    const theme = loadTheme().catch(() => null);
+    const themeOrUnstyled = loadTheme().catch(() => null);
     this.#listener = ({ source, data }) => {
       if (source !== frame.contentWindow || typeof data !== "object" || data === null) return;
       if (data.type === "ready") {
-        theme.then((theme) => {
-          if (this.#frame === frame) frame.contentWindow.postMessage({ type: "run", files, entry: `${PREFIX}${entry}`, css, theme }, "*");
+        themeOrUnstyled.then((theme) => {
+          if (this.#frame === frame) frame.contentWindow.postMessage({ type: "run", files, entry: `${IMPORT_MAP_PREFIX}${entry}`, css, theme }, "*");
         });
       } else if (data.type === "view") {
         frame.removeAttribute("aria-hidden");

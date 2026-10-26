@@ -97,7 +97,10 @@ export function playgroundImpl({ theme, render }) {
       activatePackage: (name) => () => call("activatePackage", name),
       deactivatePackage: (name) => () => call("deactivatePackage", name),
       reset: () => call("reset"),
-      retry: () => (controller.current ? call("retry") : location.reload()),
+      retry: () => {
+        const pageFailedToLoad = !controller.current;
+        return pageFailedToLoad ? location.reload() : call("retry");
+      },
     };
   }, []);
 
@@ -214,21 +217,21 @@ export function outputViewImpl({ frames, className }) {
     observer.observe(element);
     observer.observe(container.parentElement);
     let frame = 0;
-    const follow = () => {
+    const followSlotWhilePanelAnimates = () => {
       place();
-      frame = requestAnimationFrame(follow);
+      frame = requestAnimationFrame(followSlotWhilePanelAnimates);
     };
-    const moving = (event) => {
+    const onPanelAnimation = (event) => {
       if (!event.target.contains(element)) return;
       cancelAnimationFrame(frame);
-      if (event.type === "animationstart") follow();
+      if (event.type === "animationstart") followSlotWhilePanelAnimates();
       else place();
     };
     const events = ["animationstart", "animationend", "animationcancel"];
-    for (const type of events) container.parentElement.addEventListener(type, moving);
+    for (const type of events) container.parentElement.addEventListener(type, onPanelAnimation);
     return () => {
       cancelAnimationFrame(frame);
-      for (const type of events) container.parentElement.removeEventListener(type, moving);
+      for (const type of events) container.parentElement.removeEventListener(type, onPanelAnimation);
       observer.disconnect();
       for (const property of ["inset-inline-start", "inset-block-start", "width", "height"]) {
         container.style.removeProperty(property);
@@ -239,6 +242,8 @@ export function outputViewImpl({ frames, className }) {
 }
 
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const SETTLE_WITHOUT_ANIMATION_END = 400;
 
 function usePresence(open, animate) {
   const [phase, setPhase] = useState(open ? "open" : "closed");
@@ -251,7 +256,7 @@ function usePresence(open, animate) {
   }, [open, animate]);
   useEffect(() => {
     if (phase !== "entering" && phase !== "exiting") return undefined;
-    const timeout = setTimeout(() => setPhase((current) => settled(current)), 400);
+    const timeout = setTimeout(() => setPhase((current) => settled(current)), SETTLE_WITHOUT_ANIMATION_END);
     return () => clearTimeout(timeout);
   }, [phase]);
   return {
@@ -268,9 +273,9 @@ function usePresence(open, animate) {
 
 const settled = (phase) => (phase === "exiting" ? "closed" : phase === "entering" ? "open" : phase);
 
-const STEP = 16;
+const KEYBOARD_RESIZE_STEP = 16;
 
-function dragging(cursor) {
+function keepDragCursorAndIgnoreFrames(cursor) {
   if (cursor) document.documentElement.style.cursor = cursor;
   else document.documentElement.style.removeProperty("cursor");
   for (const frame of document.querySelectorAll("iframe")) {
@@ -278,7 +283,7 @@ function dragging(cursor) {
     else frame.style.removeProperty("pointer-events");
   }
 }
-const SHRINK = { ArrowRight: "ArrowLeft", ArrowLeft: "ArrowRight", ArrowUp: "ArrowDown", ArrowDown: "ArrowUp" };
+const SHRINK_KEY_FOR_GROW_KEY = { ArrowRight: "ArrowLeft", ArrowLeft: "ArrowRight", ArrowUp: "ArrowDown", ArrowDown: "ArrowUp" };
 
 function useResizable({ id, label, open, size, min, max, collapse, vertical, fromEnd, share = 1, resize, close }) {
   const [drag, setDrag] = useState(null);
@@ -286,21 +291,21 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
   const current = drag ? drag.size : size;
   const presence = usePresence(shown, !drag);
   const limit = (value, most = max) => Math.min(most, Math.max(min, Math.round(value)));
-  const grow = vertical ? (fromEnd ? "ArrowUp" : "ArrowDown") : fromEnd ? "ArrowLeft" : "ArrowRight";
+  const growKey = vertical ? (fromEnd ? "ArrowUp" : "ArrowDown") : fromEnd ? "ArrowLeft" : "ArrowRight";
 
   const end = () => {
     if (!drag) return;
-    dragging(null);
+    keepDragCursorAndIgnoreFrames(null);
     setDrag(null);
     if (drag.open) resize(drag.size)();
     else close();
   };
   const onKeyDown = (event) => {
-    if (event.key === SHRINK[grow] && open) {
-      if (size - STEP < min) close();
-      else resize(size - STEP)();
-    } else if (event.key === grow) {
-      resize(open ? limit(size + STEP) : size)();
+    if (event.key === SHRINK_KEY_FOR_GROW_KEY[growKey] && open) {
+      if (size - KEYBOARD_RESIZE_STEP < min) close();
+      else resize(size - KEYBOARD_RESIZE_STEP)();
+    } else if (event.key === growKey) {
+      resize(open ? limit(size + KEYBOARD_RESIZE_STEP) : size)();
     } else if (event.key === "Enter") {
       if (open) close();
       else resize(size)();
@@ -310,6 +315,8 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
     event.preventDefault();
   };
 
+  const handleOrientation = vertical ? "horizontal" : "vertical";
+
   return {
     shown,
     current,
@@ -317,7 +324,7 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
     handleProps: {
       "aria-controls": id,
       "aria-label": label,
-      "aria-orientation": vertical ? "horizontal" : "vertical",
+      "aria-orientation": handleOrientation,
       "aria-valuemax": max,
       "aria-valuemin": 0,
       "aria-valuenow": shown ? current : 0,
@@ -329,7 +336,7 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
         if (event.button !== 0) return;
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
-        dragging(vertical ? "row-resize" : "col-resize");
+        keepDragCursorAndIgnoreFrames(vertical ? "row-resize" : "col-resize");
         setDrag({ bounds: event.currentTarget.parentElement.getBoundingClientRect(), size, open });
       },
       onPointerMove: (event) => {
@@ -374,10 +381,10 @@ export function sidebarImpl({ id, open, width, resize, close, className, handleC
   );
 }
 
-const BELOW = "(max-width: 960px)";
+const PANEL_BELOW_EDITOR = "(max-width: 960px)";
 
 export function panelImpl({ id, label, open, width, height, resize, close, className, handleClassName, children }) {
-  const vertical = useMediaQuery(BELOW);
+  const vertical = useMediaQuery(PANEL_BELOW_EDITOR);
   const area = useResizable({
     id,
     label: `Resize ${label.toLowerCase()}`,
@@ -430,8 +437,15 @@ export function pillImpl({ href, label, accessibleLabel, tooltip, className, ico
   );
 }
 
-const CONSOLE_BAR = 1 + 28;
-const CONSOLE_MIN = CONSOLE_BAR + 10 * 23;
+const CONSOLE_BORDER = 1;
+const CONSOLE_BAR_HEIGHT = 28;
+const CONSOLE_LINE_HEIGHT = 18;
+const CONSOLE_LINE_PADDING = 2;
+const CONSOLE_SEPARATOR = 1;
+const CONSOLE_ROW = CONSOLE_LINE_HEIGHT + 2 * CONSOLE_LINE_PADDING + CONSOLE_SEPARATOR;
+const CONSOLE_MIN_ROWS = 10;
+const CONSOLE_BAR = CONSOLE_BORDER + CONSOLE_BAR_HEIGHT;
+const CONSOLE_MIN = CONSOLE_BAR + CONSOLE_MIN_ROWS * CONSOLE_ROW;
 
 export function consoleImpl({ overlay, open, height, resize, close, className, scrollerClassName, handleClassName, bar, children }) {
   const scroller = useRef(null);

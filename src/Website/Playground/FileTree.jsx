@@ -9,7 +9,7 @@ import JavaScriptIcon from "~icons/material-icon-theme/javascript";
 import PureScriptIcon from "~icons/material-icon-theme/purescript";
 import ReactIcon from "~icons/material-icon-theme/react";
 
-const fileIcons = {
+const fileIconsByExtension = {
   purs: PureScriptIcon,
   js: JavaScriptIcon,
   jsx: ReactIcon,
@@ -17,7 +17,7 @@ const fileIcons = {
 
 function iconFor(name) {
   const dot = name.lastIndexOf(".");
-  return (dot > 0 && fileIcons[name.slice(dot + 1)]) || FileIcon;
+  return (dot > 0 && fileIconsByExtension[name.slice(dot + 1)]) || FileIcon;
 }
 
 function buildTree(files) {

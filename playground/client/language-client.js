@@ -1,6 +1,7 @@
 
 const RESTART_LIMIT = 3;
 const RESTART_WINDOW = 60_000;
+export const REQUEST_CANCELLED = -32800;
 
 export class LanguageClient {
   #createWorker;
@@ -30,7 +31,7 @@ export class LanguageClient {
       worker.onmessage = ({ data }) => {
         if (data.type === "started") resolve(data);
         else if (data.type === "progress") this.#handlers.onProgress(data);
-        else if (data.type === "failed") reject(Object.assign(new Error(data.error), { startup: true }));
+        else if (data.type === "failed") reject(Object.assign(new Error(data.error), { retryWouldFailAgain: true }));
         else if (data.type === "crashed") reject(new Error(data.error));
         else this.#receive(data);
       };
@@ -40,7 +41,7 @@ export class LanguageClient {
     try {
       this.info = await started;
     } catch (error) {
-      if (!error.startup) return this.#crash(error);
+      if (!error.retryWouldFailAgain) return this.#crash(error);
       this.dispose();
       this.#handlers.onStatus({ status: "failed", message: error.message });
       return null;
@@ -139,7 +140,7 @@ export class LanguageClient {
   #stop() {
     this.dispose();
     const stopped = new Error("The language server restarted");
-    stopped.code = -32800;
+    stopped.code = REQUEST_CANCELLED;
     for (const { reject } of this.#pending.values()) reject(stopped);
     for (const resolve of this.#reads.values()) resolve(null);
     this.#pending.clear();

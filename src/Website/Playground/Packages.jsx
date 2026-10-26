@@ -26,9 +26,9 @@ export function packagesImpl({
 }) {
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
-  const [kept, setKept] = useState(() => new Set());
+  const [rowsKeptAfterDeactivating, setRowsKeptAfterDeactivating] = useState(() => new Set());
   const isActive = (entry) =>
-    entry.status === "active" || entry.status === "dependency" || kept.has(entry.name);
+    entry.status === "active" || entry.status === "dependency" || rowsKeptAfterDeactivating.has(entry.name);
   const found = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return packages.available;
@@ -37,15 +37,15 @@ export function packagesImpl({
     return found;
   }, [packages.available, query]);
   const matches = showAll ? found : found.filter(isActive);
-  const leave = (name) => {
-    if (!showAll) setKept(new Set([...kept, ...matches.map((entry) => entry.name)]));
+  const deactivateKeepingShownRows = (name) => {
+    if (!showAll) setRowsKeptAfterDeactivating(new Set([...rowsKeptAfterDeactivating, ...matches.map((entry) => entry.name)]));
     return deactivate(name);
   };
 
   const filter = (all, label) => (
     <button aria-pressed={showAll === all} className={filterClassName} onClick={() => {
         setShowAll(all);
-        setKept(new Set());
+        setRowsKeptAfterDeactivating(new Set());
       }} type="button">
       {label}
     </button>
@@ -86,7 +86,7 @@ export function packagesImpl({
               activate={activate}
               busy={busy}
               classNames={toggleClassNames}
-              deactivate={leave}
+              deactivate={deactivateKeepingShownRows}
               entry={entry}
             />
           </li>
@@ -102,8 +102,8 @@ export function packagesImpl({
 }
 
 
-const CROSS = "M3 3 L9 9 M9 3 L3 9";
-const CHECK = "M2.5 6.5 L5 9 M5 9 L9.5 3";
+const CROSS_AS_TWO_STROKES = "M3 3 L9 9 M9 3 L3 9";
+const CHECK_AS_TWO_STROKES = "M2.5 6.5 L5 9 M5 9 L9.5 3";
 
 function PackageToggle({ entry, busy, activate, deactivate, classNames }) {
   const locked = entry.status === "dependency";
@@ -121,7 +121,7 @@ function PackageToggle({ entry, busy, activate, deactivate, classNames }) {
     >
       <span className={on ? classNames.knobOn : classNames.knob}>
         <svg aria-hidden="true" className={classNames.icon} viewBox="0 0 12 12">
-          <path className={on ? classNames.markOn : classNames.mark} d={on ? CHECK : CROSS} />
+          <path className={on ? classNames.markOn : classNames.mark} d={on ? CHECK_AS_TWO_STROKES : CROSS_AS_TWO_STROKES} />
         </svg>
       </span>
     </button>
