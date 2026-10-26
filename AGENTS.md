@@ -73,7 +73,7 @@ import Website.Landing.Index (landingPage)
 
 ### Comments
 
-Agents must not write new comments in any form: `--` and `{- -}` comments in PureScript, `-- |`
+Agents must not write comments in any form: `--` and `{- -}` comments in PureScript, `-- |`
 documentation, or `//` and `/* */` comments in JavaScript, TypeScript, and Astro files. Humans write
 the website's comments and documentation.
 
