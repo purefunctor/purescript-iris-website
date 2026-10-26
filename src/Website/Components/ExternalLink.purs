@@ -18,11 +18,9 @@ styles = StyleX.create
       }
   }
 
--- | Appended to the accessible names of links that open in a new tab.
 newTabLabel :: String
 newTabLabel = " (opens in a new tab)"
 
--- | A link to another site. It opens in a new tab and says so to assistive technology.
 externalLink :: { className :: String, href :: String } -> Array JSX -> JSX
 externalLink { className, href } content =
   DOM.a { className, href, rel: "noopener noreferrer", target: targetBlank }

@@ -1,16 +1,3 @@
-// Installs the published canary of the playground language server into
-// `public/playground/language-server`, where the playground loads it from.
-//
-// Every change to the server's inputs on main publishes a canary release tagged
-// `playground-language-server-dev.<revision>`, where the revision is the last commit that changed
-// those inputs; see `.github/workflows/playground-canary.yml`. This script finds the same revision
-// from Git history, so it needs a checkout with that history.
-//
-// Usage: node scripts/download-playground-language-server.mjs [--verify] [--print-tag]
-//
-// `--verify` checks the archive's build provenance with `gh attestation verify`, which the deploy
-// requires. `--print-tag` prints the tag and exits. The script exits with status 3 when the
-// canary has not been published yet.
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -19,7 +6,6 @@ import { join } from "node:path";
 
 const REPOSITORY = "purefunctor/purescript-iris-website";
 const ASSET = "playground-language-server.tar.gz";
-// The canary workflow's path filter lists the same inputs.
 const INPUTS = ["playground/language-server", "scripts/build-playground-language-server.mjs"];
 const NOT_PUBLISHED = 3;
 

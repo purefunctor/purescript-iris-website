@@ -6,12 +6,6 @@ const serverKey = Symbol.for("iris-website.dev-module-preload");
 
 type Global = typeof globalThis & { [serverKey]?: DevEnvironment };
 
-/**
- * Development only: lists every module statically reachable from a page's
- * client entries as `<link rel="modulepreload">`. Unbundled PureScript output
- * is about 20 imports deep, so without this the browser discovers the graph
- * one network round trip per level.
- */
 export function devModulePreload(): AstroIntegration {
   return {
     name: "iris-website:dev-module-preload",
@@ -27,10 +21,8 @@ export function devModulePreload(): AstroIntegration {
   };
 }
 
-// Transform results are replaced on invalidation, so their imports can be cached by identity.
 const importsOf = new WeakMap<TransformResult, string[]>();
 
-/** The URL the browser requests for each static import, exactly as Vite rewrote it. */
 function staticImports(url: string, result: TransformResult): string[] {
   let imports = importsOf.get(result);
   if (!imports) {
@@ -46,7 +38,6 @@ function staticImports(url: string, result: TransformResult): string[] {
   return imports;
 }
 
-/** The module ID that Vite's transform middleware derives from a request URL. */
 function requestId(url: string): string {
   const [pathname, query = ""] = url.split("?", 2);
   const params = new URLSearchParams(query);

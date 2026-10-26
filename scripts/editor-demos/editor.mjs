@@ -1,14 +1,9 @@
-// Records the editor trailer's one continuous take in the disposable native VS Code that
-// editor-launch.sh starts, never the seed editor. See editor-screenplay.md.
-//   node scripts/editor-demos/editor.mjs trailer
 import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { height, lines, output, recorder, run, sleep, suggestion, tools, width } from './recorder.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const input = '.quick-input-widget input';
-// Keyboard work in an editor is framed on its text cursor, in quick input on the quick input, and
-// elsewhere on the last pointer action.
 const caret = `(() => {
   // Typing into quick input is framed on the quick input itself.
   const quick = document.activeElement?.closest('.quick-input-widget')?.getBoundingClientRect();
@@ -23,17 +18,12 @@ const {
 } = recorder({
   session: 'iriscode',
   cdp: 9223,
-  // Overlays that the take shows.
   overlays: ['.monaco-hover', '.suggest-widget', '.peekview-widget', '.quick-input-widget', '.action-widget', '.rename-box'],
   caret,
-  // The tabs and breadcrumbs above the editor, and the status bar below it, in CSS pixels.
   chrome: { top: 80, bottom: 22 },
 });
-// Keys go to VS Code through CDP, framed on the text cursor. Keys pressed with `browser('press', …)`
-// instead are not framed, for keys whose text cursor is somewhere the camera should not go.
 const press = key => (focus(), browser('press', key));
 
-// The visible lines from the one containing `from` to the one containing `to`.
 const region = (from, to) => `(() => {
   const text = line => line.textContent.replaceAll('\\u00a0', ' ');
   const lines = [...document.querySelectorAll('.view-line')]
@@ -61,7 +51,6 @@ async function open(file, line = 1) {
   await sleep(700);
 }
 
-// Moves to a token and hovers it, or clicks or double-clicks (`select`) it.
 async function token(line, text, action = 'hover', occurrence = 0) {
   const { x, y } = tokenPoint(line, text, { occurrence });
   await move(x, y);
@@ -90,25 +79,20 @@ const setting = (key, enabled) => {
   writeFileSync(settings, JSON.stringify(value, null, 2));
 };
 const semantic = enabled => setting('editor.semanticHighlighting.enabled', enabled);
-// Iris reports diagnostics on open and save by default. On-change diagnostics are opt-in, and the
-// take turns them on only for their own beat, so typing elsewhere does not flash parse errors.
 const onChange = enabled => setting('iris.server.diagnostics.onChange', enabled);
 const activeTab = file => `document.querySelector('[role="tab"][aria-selected="true"][data-resource-name="${file}"]') !== null`;
 const hover = text => `document.querySelector('.monaco-hover:not(.hidden)')?.innerText.includes(${JSON.stringify(text)})`;
 const errors = `document.querySelectorAll('.squiggly-error').length`;
 const marks = `[...${highlights}].filter(e => e.getBoundingClientRect().width > 0)`;
-// The highlighted words on the line containing `text`.
 const on = text => `${marks}.filter(e => ${lines(text)}.some(line => {
   const [a, b] = [line.getBoundingClientRect(), e.getBoundingClientRect()];
   return b.top >= a.top - 2 && b.bottom <= a.bottom + 2;
 })).length`;
-// Whether the line containing `text` sits wholly inside the editor's viewport.
 const shown = text => `${lines(text)}.some(line => {
   const r = line.getBoundingClientRect(), v = line.closest('.monaco-scrollable-element').getBoundingClientRect();
   return r.top >= v.top - 3 && r.bottom <= v.bottom + 3;
 })`;
 
-// The chapter selection handler that Act II writes, and the import that it needs.
 const handler = `    select number = for_ (index chapters number) \\{ at } -> do
       setSeek \\{ request } -> { request: request + 1, time: at }
       setTime at
@@ -116,24 +100,17 @@ const handler = `    select number = for_ (index chapters number) \\{ at } -> do
 `;
 const foldable = 'import Data.Foldable (for_)\n';
 
-// Opens quick input and frames it before typing, so the camera has arrived by the first keystroke.
 async function quickInput(key) {
-  // Pressed without framing the text cursor, so the camera moves once, straight to the quick input.
   browser('press', key);
-  // It fades in, so wait until it is opaque enough to be logged as in view.
   await expect(`document.querySelector('.quick-input-widget')?.checkVisibility({ opacityProperty: true })
     && getComputedStyle(document.querySelector('.quick-input-widget')).opacity === '1'`, 'Quick input opens',
     { shows: `[document.querySelector('.quick-input-widget')]` });
   await sleep(600);
 }
 
-// The 1-based line of the staged Demos.purs that contains `text`. Until Act II adds the import, the
-// editor's lines are the staged file's.
 const lineOf = text => readFileSync(`${tools}/iris-website/src/Website/${demos}`, 'utf8').split('\n')
   .findIndex(line => line.includes(text)) + 1;
 
-// Each visible token span with its offset in its line, keyed by the line's position, so that the
-// colours of the same text can be compared before and after semantic tokens arrive.
 const spans = `(() => {
   const out = {};
   for (const line of document.querySelectorAll('.view-line')) {
@@ -146,7 +123,6 @@ const spans = `(() => {
   }
   return out;
 })()`;
-// The spans whose colour differs from `before`, with their screen boxes in device pixels.
 const recoloured = before => `(() => {
   const before = ${JSON.stringify(before)}, scale = devicePixelRatio;
   const changed = [];
@@ -175,8 +151,6 @@ const recoloured = before => `(() => {
   }
   return changed;
 })()`;
-// The roles that Iris recolours in Index.purs, each named by a token that carries it and captioned
-// at one of its tokens. `color` is the site token that the editor theme gives the role.
 const roles = [
   { label: 'Declarations', color: '--syn-function', example: 'styles', anchor: ['styles', 'styles ='] },
   { label: 'Record labels', color: '--syn-label', example: 'onInstall', anchor: ['fontFamily', 'fontFamily:'] },
@@ -184,9 +158,7 @@ const roles = [
   { label: 'Bindings', color: '--syn-parameter', example: 'setRipples', anchor: ['setRipples', 'useState 0'] },
 ];
 
-// Before the take, the handler gives way to a stub and its import goes, so that Act II writes them.
 async function stage() {
-  // A native dialog, such as an unsaved-changes prompt, takes all input and is invisible to CDP.
   let dialog = '';
   try { dialog = run('xdotool', ['search', '--onlyvisible', '--name', '^Visual Studio Code$']); } catch {}
   if (dialog) throw new Error('Dismiss the native VS Code dialog on the recording display first');
@@ -195,7 +167,6 @@ async function stage() {
     throw new Error('Demos.purs no longer contains the handler and import that the take writes');
   semantic(false);
   onChange(false);
-  // A failed take can leave edits unsaved; saving them first lets the editors close without asking.
   await command('File: Save All Files');
   await command('View: Close All Editors');
   for (const file of [index, player, benchmarks, copyButton, 'Components/Terminal.purs', 'Components/CodeBlock.purs', 'Components/Button.purs'])
@@ -203,7 +174,6 @@ async function stage() {
   writeFileSync(`${tools}/iris-website/src/Website/${demos}`,
     source.replace(handler, '    select _ = pure unit\n').replace(foldable, ''));
   if (evaluate(`!!document.querySelector('.part.sidebar')?.checkVisibility()`)) press('Control+b');
-  // A failed take can leave a panel open, such as a pending refactor preview.
   if (evaluate(`!!document.querySelector('.part.panel')?.checkVisibility()`)) {
     if (evaluate(`[...document.querySelectorAll('.part.panel .monaco-button')].some(b => b.textContent.trim() === 'Discard')`))
       await clickOn(`[...document.querySelectorAll('.part.panel .monaco-button')].find(b => b.textContent.trim() === 'Discard')`);
@@ -213,8 +183,6 @@ async function stage() {
     press('Control+j');
     await sleep(500);
   }
-  // Line 47, which the take clicks, stays clear of the horizontal scrollbar along the bottom. From
-  // the top of the file, line 36 is out of view, so the editor centres it.
   await open(index, 1);
   await open(index, 36);
   if (!evaluate(`${shown('styles =')} && ${shown(', footer')}`))
@@ -224,15 +192,11 @@ async function stage() {
 }
 
 const cases = {
-  // One continuous take that shows every feature; see editor-screenplay.md. The trailer lays its semantic
-  // highlighting captions over the take as it plays, so the pacing here is the trailer's.
   async trailer() {
     await stage();
     await capture('trailer', async () => {
-      // Act I: Reading code.
       await beat('semantic-highlighting');
       await overview(async () => {
-        // The section marker reads over the plain code before the code lights up.
         await sleep(2200);
         const before = evaluate(spans);
         semantic(true);
@@ -252,12 +216,10 @@ const cases = {
             anchor: { box: anchor.box, end: anchor.end } });
         }
         console.log(`PASS: ${captions.length} captions cover every recoloured token`);
-        // The recoloured code holds with all four captions up before the next feature.
         await sleep(7000);
       });
 
       await beat('go-to-definition');
-      // The camera stays on the whole editor until the definition opens; hover zooms in from there.
       await overview(async () => {
         await token('element Demos.component {}', 'component', 'click');
         await sleep(300);
@@ -281,8 +243,6 @@ const cases = {
       }
 
       await beat('document-highlights');
-      // The last hover card covers the lambda on the line above. Pressed without framing the text
-      // cursor, which is still at the top of the component, so the camera moves once, to the lambda.
       browser('press', 'Escape');
       await sleep(200);
       await token('(\\chapter -> chapter.at', 'chapter', 'click');
@@ -297,8 +257,6 @@ const cases = {
       await expect(`document.querySelector('.quick-input-list .monaco-list-row.focused')?.innerText.includes('styles')`,
         'Document symbols find the style table');
       await sleep(1000);
-      // The camera moves from the quick input straight to the style table, without zooming out: the
-      // jump lands on `styles`, and the editor scrolls on to the layout's breakpoint.
       browser('press', 'Enter');
       await sleep(500);
       await smoothScroll(lineOf('StyleX.conditionalCase breakpoints.from960'), 0.45, 450);
@@ -313,8 +271,6 @@ const cases = {
       await expect(`['SiteNav.purs', 'Benchmarks.purs'].every(file => document.querySelector('.peekview-widget')?.innerText.includes(file))`,
         'References to breakpoints span the workspace');
       await sleep(1000);
-      // Each module's references are listed under its collapsed entry. Open the next modules' entries
-      // in turn and step onto their first reference, so that the preview shows it, then close them.
       for (const file of ['Code.purs', 'JavaScript.purs']) {
         for (const key of ['Down', 'Right', 'Down']) {
           browser('press', key);
@@ -339,7 +295,6 @@ const cases = {
       await expect(`document.querySelector('.quick-input-list .monaco-list-row.focused')?.innerText.includes('Measured')`,
         'Workspace symbols find the benchmark chart\'s Measured type');
       await sleep(600);
-      // As with document symbols, the camera returns to the whole editor before the jump.
       await overview(async () => {
         await sleep(600);
         press('Enter');
@@ -347,14 +302,11 @@ const cases = {
           'Workspace-symbol selection opens Measured in Benchmarks.purs');
         await sleep(400);
       });
-      // The framing leaves room below the declaration for the rename box, so that rename continues in it.
       await expect(shown('type Measured a'), 'The Measured declaration is in view',
-        { shows: region('-- | A value for each measurement', 'tool :: Measured String') });
+        { shows: region('type Measured a = { cold :: a, hot :: a }', 'tool :: Measured String') });
       await sleep(900);
 
-      // Act II: Writing code.
       await beat('rename', { continues: true });
-      // Type variables rename within their own declaration.
       await token('type Measured a = { cold :: a, hot :: a }', 'a', 'click', 1);
       press('F2');
       await sleep(400);
@@ -372,7 +324,6 @@ const cases = {
       press('Enter');
       await expect(`${activeTab('CopyButton.purs')} && ${shown('data Size = Small | Medium')}`, 'CopyButton.purs opens');
       await sleep(300);
-      // A constructor renames across the workspace: its pattern here, and qualified uses elsewhere.
       await token('data Size = Small | Medium', 'Small', 'click');
       press('F2');
       await sleep(400);
@@ -388,7 +339,6 @@ const cases = {
       await expect(`['Terminal.purs', 'CodeBlock.purs'].every(file => document.querySelector('.peekview-widget')?.innerText.includes(file))`,
         'The renamed constructor is used in other modules');
       await sleep(700);
-      // Open each other module's entry, so the preview shows its qualified use, renamed.
       const previewed = file => `document.querySelector('.peekview-widget .peekview-title')?.innerText.includes(${JSON.stringify(file)})
         && [...document.querySelectorAll('.peekview-widget .view-line')].some(line => line.textContent.includes('CopyButton.Compact'))`;
       for (const [row, file] of [['Home', 'CodeBlock.purs'], ['End', 'Terminal.purs']]) {
@@ -403,8 +353,6 @@ const cases = {
       press('Escape');
       await sleep(300);
 
-      // Back to the component's stub, below the style table where Demos.purs was left: the camera shows
-      // the whole editor while the tab returns and the editor scrolls down to it.
       await overview(async () => {
         await clickOn(`document.querySelector('[role="tab"][data-resource-name="Demos.purs"]')`);
         await expect(activeTab('Demos.purs'), 'The Demos.purs tab returns to the component');
@@ -413,14 +361,11 @@ const cases = {
       });
       await sleep(400);
 
-      // From here to the end the handler is written in place, so one framing holds throughout: the
-      // gutter and the handler's lines, with room below them for suggestions and quick fixes.
       const zoom = 1.3, [frameWidth, frameHeight] = [width / zoom, height / zoom];
       const centreOf = text => evaluate(`(() => {
         const r = ${lines(text)}[0].getBoundingClientRect();
         return (r.top + r.height / 2) * devicePixelRatio;
       })()`);
-      // Where a screen position sits in the editor's viewport, as a fraction of its height.
       const fractionAt = y => evaluate(`(() => {
         const view = [...document.querySelectorAll('.monaco-editor .monaco-scrollable-element.editor-scrollable')]
           .find(e => e.checkVisibility()).getBoundingClientRect();
@@ -441,8 +386,6 @@ const cases = {
         press('Enter');
         await expect(`${lines('select number = for_')}.length === 1`, 'Completion inserts for_');
         await sleep(400);
-        // The import is added after the existing ones, near the top of the file. It scrolls into the
-        // same framing, and the handler scrolls back to where it was.
         const staged = readFileSync(`${tools}/iris-website/src/Website/${demos}`, 'utf8').split('\n');
         await smoothScroll(staged.findLastIndex(line => line.startsWith('import ')) + 2, fractionAt(top + frameHeight / 2));
         await expect(`${lines('import Data.Foldable (for_)')}.length === 1`, 'Completion adds the Data.Foldable import');
@@ -476,7 +419,6 @@ const cases = {
         onChange(true);
         await sleep(500);
         press('Enter');
-        // Moves the pointer, which the quick fix left as a hand over the code, aside first.
         await type('setTime at');
         press('Enter');
         await keys('setPlaying true');
@@ -491,9 +433,6 @@ const cases = {
         await sleep(900);
       });
     });
-    // Every edit in the take, checked at once against the repository's files with the take's renames
-    // applied. Iris appends an automatic import after the existing ones, so imports compare in either
-    // order. Button.purs has constructors of the same names, which the rename must leave alone.
     await command('File: Save All Files');
     await sleep(800);
     const seeded = file => readFileSync(`${tools}/iris-website/src/Website/${file}`, 'utf8');
@@ -522,7 +461,6 @@ const cases = {
 
 try {
   let display = evaluate('({width:innerWidth,height:innerHeight,scale:devicePixelRatio})');
-  // VS Code can leave F11 fullscreen when the display restarts, such as after the orb pauses.
   if (display.width * display.scale !== width) {
     browser('press', 'F11');
     await sleep(3000);
@@ -538,6 +476,5 @@ try {
     await cases[name]();
   }
 } finally {
-  // Disconnect from the external Electron browser without closing VS Code.
   browser('close');
 }

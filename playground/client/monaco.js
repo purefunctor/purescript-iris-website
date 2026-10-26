@@ -1,5 +1,3 @@
-// Monaco with only the editor features the playground uses, the PureScript grammar for syntax
-// highlighting before the language server answers, and the site's colors.
 
 import * as monaco from "monaco-editor/editor/editor.api.js";
 import "monaco-editor/editor/browser/coreCommands.js";
@@ -47,7 +45,6 @@ export { monaco };
 
 let configured = false;
 
-/** Registers PureScript and the `iris` theme once, from colors computed at build time. */
 export function configure(theme) {
   if (configured) return;
   configured = true;
@@ -78,18 +75,13 @@ export function configure(theme) {
   monaco.editor.defineTheme("iris", theme);
 }
 
-// Monaco gives the references view's preview 70% of its width, which leaves the list of
-// references too narrow beside a sidebar. Readers can still drag the divider.
 function widenReferences() {
   const storage = StandaloneServices.get(IStorageService);
   const key = "peekViewLayout";
-  // Profile scope, machine target, as `ReferencesController` stores it.
   if (!storage.get(key, 0)) storage.store(key, JSON.stringify({ ratio: 0.5, heightInLines: 18 }), 0, 1);
 }
 
 export function createEditor(element, options) {
-  // The context menu mounts beside the editor, outside `.monaco-editor`, and reads the theme's
-  // colors from variables that Monaco also defines for `.monaco-component`.
   element.classList.add("monaco-component");
   const editor = monaco.editor.create(element, {
     theme: "iris",

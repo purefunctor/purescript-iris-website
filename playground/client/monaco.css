@@ -1,27 +1,15 @@
-/*
- * Monaco's widgets, such as hovers, menus and the references view, use the site's sans-serif
- * instead of the system font. StyleX cannot reach Monaco's elements, so these rules live beside
- * the editor.
- */
 .monaco-editor,
 .monaco-component,
 .monaco-editor .reference-zone-widget .ref-tree {
   font-family: var(--font-sans);
 }
 
-/*
- * Monaco is written for the browser's default box model. The site's reset makes everything
- * border-box, which squeezes padded parts such as the references tree's twisties into their
- * content. This rule outranks the layered reset, and has no specificity, so Monaco's own
- * box-sizing rules still apply.
- */
 :where(.monaco-editor, .monaco-component) *,
 :where(.monaco-editor, .monaco-component) *::before,
 :where(.monaco-editor, .monaco-component) *::after {
   box-sizing: content-box;
 }
 
-/* The references list is narrow beside the preview, so its rows get room between their parts. */
 .monaco-editor .reference-zone-widget .ref-tree {
   font-size: 13px;
 }

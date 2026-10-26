@@ -1,8 +1,5 @@
 name: Playground language server canary
 
-# Publishes the playground's language server for every change to its inputs on main, as the Iris
-# repository publishes compiler canaries. The deploy installs the canary of the last commit that
-# changed these paths, which `scripts/download-playground-language-server.mjs` finds the same way.
 on:
   push:
     branches: [main]

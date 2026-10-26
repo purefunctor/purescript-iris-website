@@ -1,7 +1,3 @@
-//! Capability negotiation and the server capabilities.
-//!
-//! This mirrors `compiler-executable/iris-lsp-workspace/src/capabilities.rs` in the Iris
-//! repository, except that the playground has no files to save.
 
 use iris_analysis::AnalyzerCapabilities;
 use iris_analysis::position::PositionEncoding;

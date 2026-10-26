@@ -1,13 +1,3 @@
-// Runs the built playground language server in Node against real Registry packages, checks the
-// main editor features, and reports timings, memory and the module's size.
-//
-// `--stress` also replays typing a module one character at a time, requesting diagnostics, hover
-// and completion along the way, so that incomplete code at every step goes through the analyzer.
-//
-// `--all` loads the whole package set, as the playground does, instead of the starter closure.
-//
-// Usage: node scripts/test-playground-language-server.mjs [--stress] [--all]
-// Build the server first with `node scripts/build-playground-language-server.mjs`.
 
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -65,8 +55,6 @@ main = launchAff_ do
   liftEffect $ log $ show (fromMaybe 0 firstEven)
 `;
 
-// Maps `items` with at most 16 actions in flight, so the whole package set does not open hundreds
-// of connections at once.
 const pool = async (items, action) => {
   const results = new Array(items.length);
   let next = 0;
@@ -88,7 +76,6 @@ const time = async (label, action) => {
   return result;
 };
 
-// Load the server.
 const { default: _init, initSync, LanguageServer } = await import(join(dist, "language_server.js"));
 const module = readFileSync(join(dist, "language_server_bg.wasm"));
 const exports = await time("Instantiate", () => initSync({ module }));
@@ -120,7 +107,6 @@ const initialized = request("initialize", {
 console.log(`Server: ${initialized.serverInfo.name} ${initialized.serverInfo.version}`);
 notify("initialized", {});
 
-// Load the starter packages from the Registry, caching archives on disk.
 const index = JSON.parse(readFileSync(join(root, "playground/packages/index.json"), "utf8"));
 const closure = all
   ? Object.entries(index.packages).map(([name, entry]) => ({ name, ...entry }))
@@ -154,7 +140,6 @@ const loaded = await time("iris/setPackages", () => request("iris/setPackages", 
 assert.ok(loaded.sources > 200, `expected package sources, got ${loaded.sources}`);
 const packagesMemory = exports.memory.buffer.byteLength;
 
-// Open the project and collect its first diagnostics, which checks everything Main imports.
 const open = (path, text, languageId = "purescript") =>
   notify("textDocument/didOpen", { textDocument: { uri: PROJECT + path, languageId, version: 1, text } });
 open("src/Util.js", UTIL_JS, "javascript");
@@ -245,7 +230,6 @@ const definition = await time("Definition", () =>
 );
 assert.match(JSON.stringify(definition), /file:\/\/\/packages\/aff\/src\/Effect\/Aff\.purs/);
 
-// From the definition in Util, references reach the use in Main.
 const references = await time("References", () =>
   request("textDocument/references", {
     textDocument: { uri: PROJECT + "src/Util.purs" },
@@ -262,7 +246,6 @@ const formatted = await time("Formatting", () =>
 );
 assert.ok(Array.isArray(formatted));
 
-// An edit that breaks a definition, then one that fixes it again.
 const change = (version, needle, replacement) => {
   const start = at(MAIN, needle);
   const end = at(MAIN, needle, needle.length);
@@ -287,7 +270,6 @@ notify("textDocument/didChange", { textDocument: { uri: main, version: 3 }, cont
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 assert.deepEqual(request("iris/generated", { uri: main }), generated, "fixing the source restores generation");
 
-// Completion offers imports from package modules that nothing in the project imports yet.
 const UNIMPORTED = MAIN + "\nmatches = unsafeRege\n";
 notify("textDocument/didChange", { textDocument: { uri: main, version: 4 }, contentChanges: [{ text: UNIMPORTED }] });
 drainDiagnostics();
@@ -304,7 +286,6 @@ assert.ok(
 notify("textDocument/didChange", { textDocument: { uri: main, version: 5 }, contentChanges: [{ text: MAIN }] });
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 
-// The emitted JavaScript runs: write it out, import Main and capture what main logs.
 const emitted = await time("iris/emit", () => request("iris/emit", {}));
 assert.equal(emitted.status, "emitted");
 assert.deepEqual(emitted.modules.map((module) => module.name), ["Main", "Util"]);
@@ -345,7 +326,6 @@ try {
 }
 assert.deepEqual(logged, ["SUM: 152", "4"]);
 
-// Removing Util breaks Main's import.
 notify("textDocument/didClose", { textDocument: { uri: PROJECT + "src/Util.purs" } });
 const removed = drainDiagnostics();
 assert.ok(errors(removed.get(main)).length > 0, "Main should report the missing Util module");

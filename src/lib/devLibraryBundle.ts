@@ -8,23 +8,13 @@ const bundleId = "virtual:iris-library";
 const resolvedBundleId = `\0${bundleId}`;
 const entryId = "\0iris-library-entry";
 
-/** The bundle export for a PureScript module; `$` cannot occur in module names. */
 const exportName = (module: string) => module.replaceAll(".", "$");
 
-/** The fields of Iris's `output/<Module>/metadata.json` record that the bundle reads. */
 type ModuleMetadata = { version: number; editable: boolean; source: string };
 
 const namespaceImport = /^import\s*\*\s*as\s+([\w$]+)\s+from\s*["'][^"']+["']\s*;?$/;
 const namedImport = /^import\s*\{([^}]*)\}\s*from\s*["'][^"']+["']\s*;?$/;
 
-/**
- * Development only: serves every library module that the client reaches from
- * editable modules as one bundle instead of ~170 requests. Iris's module
- * metadata says which modules come from editable workspace packages and which
- * from Registry or git packages. Library output only changes with dependencies
- * or the compiler, in which case the bundle is rebuilt and the page reloaded.
- * Editable modules keep HMR.
- */
 export function devLibraryBundle(): Plugin {
   let output = "";
   let logger: Logger | undefined;
@@ -33,14 +23,12 @@ export function devLibraryBundle(): Plugin {
   const warned = new Set<string>();
   const metadata = new Map<string, Promise<ModuleMetadata | undefined>>();
 
-  /** The PureScript module that owns `file`, if it is in the output directory. */
   const moduleOf = (file: string) => {
     const relative = path.relative(output, file.split("?", 1)[0]);
     const [module, ...rest] = relative.split(path.sep);
     return rest.length && !module.startsWith(".") ? module : undefined;
   };
 
-  /** The module's metadata record, or `undefined` if Iris hasn't written one. */
   const metadataOf = (module: string) => {
     let record = metadata.get(module);
     if (!record) {
@@ -51,7 +39,6 @@ export function devLibraryBundle(): Plugin {
           return parsed;
         },
         () => {
-          // Only a missing record is retried; Iris writes it after the module's JavaScript.
           metadata.delete(module);
           if (!warned.has(module)) {
             warned.add(module);
@@ -70,7 +57,6 @@ export function devLibraryBundle(): Plugin {
     return !!module && path.basename(file.split("?", 1)[0]) === "index.js" && (await metadataOf(module))?.editable === true;
   };
 
-  /** Library modules imported by generated editable code, with each import statement. */
   const libraryImports = async (file: string, code: string) => {
     const imports = await Promise.all(
       parse(code)[0].map(async (entry) => {
@@ -84,10 +70,6 @@ export function devLibraryBundle(): Plugin {
     return imports.flat();
   };
 
-  /**
-   * Library modules imported by current editable modules. Iris never deletes
-   * output, so a module whose source file is gone is a stale leftover.
-   */
   const frontier = async () => {
     await init;
     const modules = new Set<string>();
@@ -112,7 +94,6 @@ export function devLibraryBundle(): Plugin {
       .join("\n");
     const bundle = await rolldown({
       input: entryId,
-      // Bare imports such as `react` stay external so Vite resolves them to its optimized dependencies.
       external: (id) => !id.startsWith("\0") && !id.startsWith(".") && !path.isAbsolute(id),
       plugins: [
         {
@@ -154,7 +135,6 @@ export function devLibraryBundle(): Plugin {
     load(id) {
       if (id === resolvedBundleId) {
         building ??= build();
-        // The bundle is served as-is; a source map would only point back into itself.
         return building.then((code) => ({ code, map: { mappings: "" } }));
       }
       const module = moduleOf(id);
@@ -167,7 +147,6 @@ export function devLibraryBundle(): Plugin {
         return null;
       });
     },
-    // Rewrite before StyleX, which loads each import of a module it transforms.
     transform: {
       order: "pre",
       async handler(code, id) {
@@ -183,7 +162,6 @@ export function devLibraryBundle(): Plugin {
             const source = `import { ${exportName(module)} as ${local} } from "${bundleId}";`;
             const namespace = namespaceImport.exec(statement);
             const named = namedImport.exec(statement);
-            // Keep each replacement on one line so later source maps stay aligned.
             const replacement = namespace
               ? `import { ${exportName(module)} as ${namespace[1]} } from "${bundleId}";`
               : named
@@ -201,9 +179,6 @@ export function devLibraryBundle(): Plugin {
             rewritten = rewritten.slice(0, ss) + replacement + rewritten.slice(se);
           }
         }
-        // Return no map: Vite then keeps the `index.js.map` that Iris writes beside
-        // each module, and chains StyleX's map after it. An empty `{ mappings: "" }`
-        // would drop that chain and leave the module without a map.
         return rewritten === code ? null : { code: rewritten, map: null };
       },
     },
@@ -212,7 +187,6 @@ export function devLibraryBundle(): Plugin {
       if (!module) return;
       let library = await isLibrary(module);
       if (path.basename(file) === "metadata.json") {
-        // A package that moves between editable and library changes the bundle.
         metadata.delete(module);
         library ||= await isLibrary(module);
       }

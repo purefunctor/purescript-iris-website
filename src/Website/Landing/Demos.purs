@@ -18,12 +18,8 @@ import Website.Components.VideoPlayer as VideoPlayer
 import Website.Landing.Section as Section
 import Yoga.React.DOM as DOM
 
--- | A feature's chapter in the trailer. `at` is where the feature starts, in seconds, as printed by
--- | `scripts/editor-demos/trailer/render-editor.mjs`.
 type Chapter = { title :: String, description :: String, at :: Number }
 
--- | The trailer in AV1, for browsers that decode it, and in H.264 for the rest. Both come from
--- | `scripts/editor-demos/trailer/render-editor.mjs`.
 trailer :: Array { src :: String, type :: String }
 trailer =
   [ { src: "/editor-demos/trailer-av1.mp4", type: "video/mp4; codecs=\"av01.0.09M.08\"" }
@@ -96,7 +92,6 @@ chapters = reading <> writing
 styles = StyleX.create
   { introduction:
       { display: "flex", flexDirection: "column", gap: 14, marginBlockEnd: 40, maxWidth: 640 }
-  -- The playlist keeps a narrow column beside the player and moves below it on smaller screens.
   , layout:
       { alignItems: "start"
       , display: "grid"
@@ -157,11 +152,9 @@ styleProps = StyleX.recordProps styles
 component :: ReactComponent {}
 component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks.do
   time /\ setTime <- Hooks.useState' 0.0
-  -- The trailer waits for the visitor's first play or chapter selection.
   playing /\ setPlaying <- Hooks.useState false
   seek /\ setSeek <- Hooks.useState { request: 0, time: 0.0 }
   let
-    -- No chapter is selected or captioned until the first one starts.
     selected = findLastIndex (\chapter -> chapter.at <= time) chapters
     chapter = index chapters =<< selected
     select number = for_ (index chapters number) \{ at } -> do

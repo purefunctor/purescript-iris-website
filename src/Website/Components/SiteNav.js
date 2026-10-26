@@ -1,7 +1,5 @@
 import { createElement, useEffect, useId, useRef, useState } from "react";
 
-// On the page the brand links to, scroll back to the top instead of reloading. Modified and
-// non-primary clicks keep their usual behaviour, such as opening a new tab.
 export const scrollToTop = event => {
   if (event.defaultPrevented || event.button !== 0) return;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -14,7 +12,6 @@ export const scrollToTop = event => {
   if (window.location.hash) history.replaceState(history.state, "", window.location.pathname + window.location.search);
 };
 
-// A non-modal disclosure keeps navigation in normal tab order and closes when it loses focus.
 export function mobileNavigationImpl({ className, buttonClassName, panelClassName, openIcon, closeIcon, content }) {
   const [open, setOpen] = useState(false);
   const root = useRef(null);
@@ -70,8 +67,6 @@ export function mobileNavigationImpl({ className, buttonClassName, panelClassNam
   }, content));
 }
 
-// A press plays the bars' wave to the end, however briefly the button is held. Pointer presses
-// start it on pointer down; keyboard activation, which has no pointer down, starts it on click.
 export function spectrumInstallButtonImpl({ className, pressedClassName, label, onPress, content }) {
   const [pressed, setPressed] = useState(false);
   const button = useRef(null);

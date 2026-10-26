@@ -40,11 +40,6 @@ foreign import observePlayer ::
   , video :: Ref (Nullable Element)
   } -> Effect (Effect Unit)
 
--- | A muted recording with custom controls. The caller owns the playing intent so that it can
--- | reflect it elsewhere; playback also waits until the player is on screen. `onTime` reports the
--- | playback position, and each new `seek.request` moves it to `seek.time`. The player plays the
--- | first of `sources` whose `type` the browser supports, so list the most efficient encoding first.
--- | It fetches the recording into memory on demand, so that it can seek without Range requests.
 type VideoPlayer =
   { label :: String
   , onEnded :: Effect Unit
@@ -57,7 +52,6 @@ type VideoPlayer =
   }
 
 styles = StyleX.create
-  -- Recordings are letterboxed with plain black bars, on the page and in full screen.
   { frame:
       { aspectRatio: "16 / 9"
       , backgroundColor: "oklch(0% 0 0)"
@@ -76,8 +70,6 @@ styles = StyleX.create
       , position: "absolute"
       , width: "100%"
       }
-  -- Controls fade out during playback unless the player is hovered or holds keyboard focus;
-  -- focus left behind by a mouse click does not keep them visible.
   , controls:
       { "WebkitBackdropFilter": "blur(30px)"
       , alignItems: "center"
@@ -109,7 +101,6 @@ styles = StyleX.create
       , lineHeight: 1.3
       , paddingInlineEnd: 6
       }
-  -- The script sets --seek-progress and --seek-pointer (0 to 1) and data-seeking while dragging.
   , slider:
       { "--seek-height": { default: "4px", "[data-seeking]": "6px" }
       , "--seek-thumb":

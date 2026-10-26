@@ -1,5 +1,3 @@
-// The pieces that every trailer composes: the opening and closing lockups, the hero's dot lattice
-// behind them, and a take placed in the frame. They use the site's tokens, fonts and logo.
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import {
@@ -13,7 +11,6 @@ import {
   staticFile,
   useCurrentFrame,
 } from "remotion";
-// The logo's dots, as the site's header and favicon draw them.
 import { marks } from "../../../../src/Website/Components/Logo.js";
 import { Lattice, type Ripple } from "./Lattice";
 import { fps, height, margin, sec, timing, width } from "./takes";
@@ -25,7 +22,6 @@ Promise.all(
   ),
 ).then(() => continueRender(fonts));
 
-// The site's --ease-out, and a symmetric curve for moves that start and stop on screen.
 export const out = Easing.bezier(0.2, 0.7, 0.2, 1);
 export const inOut = Easing.bezier(0.75, 0, 0.2, 1);
 export const progress = (frame: number, start: number, duration: number, easing = out) =>
@@ -38,7 +34,6 @@ function Logo({ size, frame = Infinity, start = 0 }: { size: number; frame?: num
   return (
     <svg viewBox="0 0 32 32" width={size} height={size} style={{ overflow: "visible", flexShrink: 0 }}>
       {marks.map((mark: { x: number; y: number; radius: number; color: string }, index: number) => {
-        // The ring pops in order around the centre, then the violet centre lands.
         const order = mark.color === "violet" ? marks.length : index;
         const t = progress(frame, start + order * 3, 22, Easing.bezier(0.3, 1.6, 0.5, 1));
         return (
@@ -55,7 +50,6 @@ function Logo({ size, frame = Infinity, start = 0 }: { size: number; frame?: num
   );
 }
 
-// Text that rises into place behind a hard mask, one line or word at a time.
 function Rise({ children, at, frame, distance = 1.6, style }: { children: ReactNode; at: number; frame: number; distance?: number; style?: CSSProperties }) {
   const t = progress(frame, at, sec(0.7));
   return (
@@ -81,7 +75,6 @@ function Words({ text, at, frame, stagger = 4 }: { text: string; at: number; fra
 }
 
 
-// The opening lockup. The playground trailer passes its own line and command.
 export function OpenScene({
   duration,
   subtitle = "Language analysis for PureScript, in the editor.",
@@ -99,8 +92,6 @@ export function OpenScene({
   const subtitleAt = sec(1.55);
   const typing = sec(2.35);
   const typed = Math.floor(interpolate(frame, [typing + sec(0.3), typing + sec(1.1)], [0, command.length + 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
-  // The caret holds while typing, then blinks from the last keystroke: on, off, and on again as the
-  // opening leaves, which timing.open allows for.
   const typedAt = typing + sec(1.1);
   const caret = frame < typing + sec(0.15) ? 0 : frame < typedAt || Math.floor((frame - typedAt) / sec(0.5)) % 2 === 0 ? 1 : 0;
   return (
@@ -149,7 +140,6 @@ export function OpenScene({
   );
 }
 
-// The closing lockup. The playground trailer passes its own command and link.
 export function EndScene({
   command = "curl -fsSL https://iris-lang.com/install.sh | sh",
   link = "iris-lang.com/docs/language-server",
@@ -198,8 +188,6 @@ export function EndScene({
   );
 }
 
-// The hero's dot lattice behind everything. It grows out from the logo as the trailer opens, and
-// ripples cross it as the logo lands, at the start and at the end card, which starts at `endFrom`.
 export function Backdrop({ endFrom }: { endFrom: number }) {
   const ripples = useMemo<Ripple[]>(() => [{ x: 820, y: 400, frame: sec(0.5) }, { x: 820, y: 400, frame: endFrom + sec(0.6) }], [endFrom]);
   const frame = useCurrentFrame();
@@ -214,7 +202,6 @@ export function Backdrop({ endFrom }: { endFrom: number }) {
   return <Lattice ripples={ripples} reveal={frame < sec(3) ? reveal : undefined} />;
 }
 
-// One take at a frame of the trailer, placed by `box` in the composition's pixels.
 export function Clip({ src, pose, box }: { src: string; pose?: { source: number; opacity: number }; box: { x: number; y: number; scale: number } }) {
   if (!pose) return null;
   return (
@@ -228,7 +215,6 @@ export function Clip({ src, pose, box }: { src: string; pose?: { source: number;
         opacity: pose.opacity,
         transform: `translate(${box.x}px, ${box.y}px) scale(${box.scale})`,
         transformOrigin: "0 0",
-        // The split's panels read as two windows, with a hard edge against the lattice.
         boxShadow: box.scale < 1 ? "0 0 0 2px var(--border-default), 0 30px 80px oklch(0% 0 0 / 55%)" : "none",
         overflow: "hidden",
       }}

@@ -127,7 +127,6 @@ languageName :: Language -> String
 languageName = case _ of
   PureScript -> "purescript"
   JavaScript -> "javascript"
-  -- JSON values are JavaScript expressions, so the JavaScript tokenizer highlights them.
   JSON -> "javascript"
   Shell -> "shell"
 

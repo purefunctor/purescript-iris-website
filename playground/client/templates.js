@@ -1,7 +1,3 @@
-// Projects that the sidebar offers as starting points. The first is the default project, which a
-// new visit opens and Reset restores. Each one is a complete project that loads in place of the
-// current one, and activates the core packages and its own `packages`. The program's frame gives it the site's background, text color and fonts; every
-// other color is written out in the module, so the code reads on its own.
 
 const COLORS = String.raw`-- The program runs in its own document, so it brings its own colors: the playground's.
 colors =

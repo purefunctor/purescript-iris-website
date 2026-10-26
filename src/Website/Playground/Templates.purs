@@ -14,7 +14,6 @@ styles = StyleX.create
       , borderBlockStartColor: "var(--border-subtle)"
       , borderBlockStartStyle: "solid"
       , borderBlockStartWidth: 1
-      -- Files and Templates share the sidebar's height equally, and each scrolls on its own.
       , flexBasis: 0
       , flexGrow: 1
       , minHeight: 0
@@ -51,7 +50,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | Starting projects below the file tree. Choosing one replaces the project, as Reset does.
 templateList :: { templates :: Array Template, actions :: Actions } -> JSX
 templateList { templates, actions } =
   DOM.nav { className: styleProps.root.className, "aria-labelledby": "playground-templates" }

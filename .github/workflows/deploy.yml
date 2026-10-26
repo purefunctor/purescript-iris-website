@@ -3,7 +3,6 @@ name: Deploy website
 on:
   push:
     branches: [main]
-  # A push that changes the playground's language server deploys once its canary is published.
   workflow_run:
     workflows: [Playground language server canary]
     branches: [main]
@@ -24,7 +23,6 @@ jobs:
       - name: Check out website
         uses: actions/checkout@v4
         with:
-          # The playground's language server is found by the last commit that changed it.
           fetch-depth: 0
           persist-credentials: false
 

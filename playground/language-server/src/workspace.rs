@@ -1,11 +1,3 @@
-//! The query engine, the documents and package sources it reads, and the analyzer host over them.
-//!
-//! Everything runs on one thread. Analysis borrows the engine directly instead of taking a
-//! snapshot, because an input change waits for every snapshot to be dropped, and on a single
-//! thread that wait can never finish.
-//!
-//! The engine loads every package source it receives, because completion offers imports only from
-//! loaded modules.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -23,8 +15,6 @@ use iris_analysis::{AnalyzerCapabilities, AnalyzerContext, AnalyzerHost};
 use lsp_types::Uri;
 use prim_constants::MODULE_MAP;
 
-/// Where the playground's documents live. Project files are opened by the editor; package and Prim
-/// sources are read-only.
 pub const PROJECT_ROOT: &str = "file:///project/";
 pub const PACKAGES_ROOT: &str = "file:///packages/";
 pub const PRIM_ROOT: &str = "file:///prim/";
@@ -36,7 +26,6 @@ pub enum SourceMetadata {
     Project,
 }
 
-/// A package source file, relative to the package root, such as `src/Data/Maybe.purs`.
 pub struct PackageFile {
     pub path: String,
     pub text: String,
@@ -57,12 +46,9 @@ pub struct Workspace {
     packages: PackageSources,
 }
 
-/// Every package file, all of which are loaded in the engine.
 #[derive(Default)]
 struct PackageSources {
-    /// File contents by locator.
     texts: HashMap<String, Arc<str>>,
-    /// Source units, with the foreign kinds of each.
     units: HashMap<SourceUnitKey, Vec<ForeignSourceKind>>,
 }
 
@@ -108,7 +94,6 @@ impl Workspace {
         }
     }
 
-    /// The analyzer together with the caches that some requests update while they read it.
     pub fn analyzer_with_caches(
         &mut self,
     ) -> (Analyzer<'_>, &mut SuggestionsCache, &mut WorkspaceSymbolsCache) {
@@ -133,7 +118,6 @@ impl Workspace {
         change
     }
 
-    /// Replaces every package source. Sources that are unchanged keep their analysis.
     pub fn set_packages(&mut self, packages: Vec<Package>) -> LifecycleChange {
         let mut next = PackageSources::default();
         let mut foreign_units = Vec::new();
@@ -160,7 +144,6 @@ impl Workspace {
             }
         }
 
-        // Remove the sources that went away, then load every source.
         let mut events = Vec::new();
         for (unit, kinds) in &self.packages.units {
             let current = next.units.get(unit);
@@ -190,17 +173,14 @@ impl Workspace {
         self.apply(events)
     }
 
-    /// The text of a package file, including foreign files.
     pub fn package_text(&self, locator: &str) -> Option<Arc<str>> {
         self.packages.texts.get(locator).cloned()
     }
 
-    /// The number of package sources.
     pub fn package_sources(&self) -> usize {
         self.packages.units.len()
     }
 
-    /// Project sources, which are the only ones that receive diagnostics.
     pub fn project_sources(&self) -> impl Iterator<Item = FileId> + '_ {
         self.files.source_ids().filter(|file_id| {
             self.files.source_metadata(*file_id) == Some(&SourceMetadata::Project)
@@ -208,7 +188,6 @@ impl Workspace {
     }
 }
 
-/// The events that load a package unit and its foreign sources.
 fn load_events(
     texts: &HashMap<String, Arc<str>>,
     unit: &SourceUnitKey,
@@ -304,12 +283,10 @@ pub fn document_kind(locator: &str) -> Option<DocumentKind> {
     }
 }
 
-/// The source unit a `.purs` locator belongs to, with its foreign siblings.
 pub fn source_unit(source: &str) -> SourceUnitKey {
     SourceUnitKey::with_foreign_sources(source, sibling(source, "js"), sibling(source, "jsx"))
 }
 
-/// The source unit of any document locator, `.purs` or foreign.
 pub fn document_unit(locator: &str) -> Option<(DocumentKind, SourceUnitKey)> {
     let kind = document_kind(locator)?;
     let unit = match kind {

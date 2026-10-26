@@ -9,8 +9,6 @@ import JavaScriptIcon from "~icons/material-icon-theme/javascript";
 import PureScriptIcon from "~icons/material-icon-theme/purescript";
 import ReactIcon from "~icons/material-icon-theme/react";
 
-// Icons by file extension, from Material Icon Theme, whose icons share a 16px grid so every entry
-// renders at one size. Files with other extensions use `FileIcon`.
 const fileIcons = {
   purs: PureScriptIcon,
   js: JavaScriptIcon,
@@ -22,7 +20,6 @@ function iconFor(name) {
   return (dot > 0 && fileIcons[name.slice(dot + 1)]) || FileIcon;
 }
 
-/** Folders and files from slash-separated paths, folders first, each sorted by name. */
 function buildTree(files) {
   const root = { folders: new Map(), files: [] };
   for (const file of files) {
@@ -45,8 +42,6 @@ function errorsIn(node) {
   return errors;
 }
 
-// The project's files as a tree. Paths are the only structure, so folders appear and disappear
-// with the files in them. Files open on click, and rename or delete from their row.
 export function fileTreeImpl({
   files,
   active,
@@ -86,7 +81,6 @@ export function fileTreeImpl({
     if (editing) input.current?.select();
   }, [editing]);
 
-  // The list scrolls, which would clip a message below the input, so it renders in the body.
   useLayoutEffect(() => {
     if (!problem || !input.current) return setAnchor(null);
     const box = input.current.getBoundingClientRect();

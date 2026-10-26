@@ -8,8 +8,6 @@ styles = StyleX.create
       { scrollbarGutter:
           StyleX.conditionalValue "stable" [ StyleX.conditionalCase breakpoints.upTo800 "auto" ]
       }
-  -- Pages that fill the viewport, such as the playground, never scroll on wide screens, so a
-  -- reserved gutter would only leave an empty strip beside them.
   , application: { scrollbarGutter: "auto" }
   }
 

@@ -1,8 +1,3 @@
-//! Analysis requests.
-//!
-//! This mirrors `analysis_job` and its handlers in the Iris repository's
-//! `compiler-executable/iris-lsp-workspace/src/handlers.rs`, minus snapshots and tracing. When the
-//! Iris tag changes, compare the two and carry over new requests and changed parameters.
 
 use building::QueryError;
 use iris_analysis::AnalyzerError;
@@ -71,7 +66,6 @@ fn rejection(error: AnalyzerError) -> Rejection {
     }
 }
 
-/// Turns [`AnalyzerError::NonFatal`] into `item`.
 fn on_non_fatal<T>(result: Result<T, AnalyzerError>, item: T) -> Result<T, AnalyzerError> {
     match result {
         Err(AnalyzerError::NonFatal) => Ok(item),

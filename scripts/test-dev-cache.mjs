@@ -2,8 +2,6 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 
-// Requires agent-browser and a running dev server. Runs a production build
-// while the dev server and its browser module graph remain alive.
 const base = process.argv[2] || "http://localhost:4321";
 const session = `dev-cache-${process.pid}`;
 const browser = (...args) => execFileSync("agent-browser", ["--session", session, ...args], {

@@ -1,9 +1,5 @@
-// The site's granite and signal palette as VS Code settings for the editor demo recordings. Every
-// color comes from `src/global.css`, so the recordings follow the site's tokens. Run from the
-// repository root: `readColorTokens` reads `src/global.css` relative to the working directory.
 import { readColorTokens } from "#src/lib/colorTokens.ts";
 
-// Appends an alpha channel to a `#rrggbb` color.
 const alpha = (hex: string, opacity: number) =>
   `${hex}${Math.round(opacity * 255).toString(16).padStart(2, "0")}`;
 
@@ -40,18 +36,14 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
     operator: color("syn-operator"),
     punct: color("syn-punct"),
     text: color("syn-text"),
-    // Semantic roles beyond the site's tokenizer. Labels sit beside types, because records and rows
-    // are type-level structure; qualifiers recede so that `StyleX.props` reads as `props`.
     label: color("syn-label"),
     parameter: color("syn-parameter"),
     namespace: color("syn-namespace"),
     declaration: color("syn-declaration"),
-    // Like the site's tokenizer, constructors share the type color.
     constructor: color("syn-type"),
   };
 
   return {
-    // Fills anything not customized below with a neutral dark theme.
     "workbench.colorTheme": "Default Dark Modern",
     "editor.bracketPairColorization.enabled": false,
     "workbench.colorCustomizations": {
@@ -329,8 +321,6 @@ export async function themeSettings(): Promise<Record<string, unknown>> {
         { scope: ["punctuation", "meta.brace"], settings: { foreground: syntax.punct } },
       ],
     },
-    // Iris classifies tokens by syntax: every reference is a variable, and only declarations, binders,
-    // labels, qualifiers, constructors and type variables carry their own roles.
     "editor.semanticTokenColorCustomizations": {
       rules: {
         namespace: syntax.namespace,

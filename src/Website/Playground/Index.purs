@@ -42,7 +42,6 @@ foreign import sidebarImpl ::
     , children :: JSX
     }
 
--- | A status pill with a tooltip. An empty `href` makes it a focusable label instead of a link.
 foreign import pillImpl ::
   ReactComponent
     { href :: String
@@ -68,13 +67,9 @@ foreign import panelImpl ::
     , children :: JSX
     }
 
--- | Shows the program's frame, which lives in `frames`, where this renders.
 foreign import outputViewImpl ::
   ReactComponent { frames :: Ref (Nullable Element), className :: String }
 
--- | The program's messages, which follow new ones while scrolled to the bottom. An `overlay`
--- | console lies over the program's view below its `bar`, `height` pixels tall and at least ten
--- | messages, and collapses to the bar while not `open`.
 foreign import consoleImpl ::
   ReactComponent
     { overlay :: Boolean
@@ -120,7 +115,6 @@ styles = StyleX.create
       , fontSize: 14
       , height: "100dvh"
       }
-  -- The playground's own header replaces the site navigation with the project's controls.
   , header:
       { alignItems: "center"
       , backgroundColor: "var(--granite-950)"
@@ -133,8 +127,6 @@ styles = StyleX.create
       , height: "var(--nav-height)"
       , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
       }
-  -- Motion stays short and eases out, and reduced motion turns it off. The controls rise in once
-  -- the playground is ready, as the workspace fades in below them.
   , controls:
       { alignItems: "center"
       , animationDuration: "260ms"
@@ -146,9 +138,6 @@ styles = StyleX.create
       , minWidth: 0
       }
   , spacer: { flexGrow: 1 }
-  -- The editor and its panel meet at a hard edge; the panel drops below the editor on narrow
-  -- screens. The workspace is the container that sizes the panel's contents, and it clips the
-  -- program's frame as the panel slides in from its edge.
   , workspace:
       { containerType: "size"
       , display: "flex"
@@ -159,7 +148,6 @@ styles = StyleX.create
       , overflow: "hidden"
       , position: "relative"
       }
-  -- Switching between Output and Packages fades the new panel in.
   , switched:
       { animationDuration: "160ms"
       , animationName: { default: fadeIn, "@media (prefers-reduced-motion: reduce)": "none" }
@@ -178,14 +166,11 @@ styles = StyleX.create
       , minWidth: 0
       , position: "relative"
       }
-  -- The sidebar sits beside the editor, and over it on phones.
   , sidebar:
       { display: "flex"
       , flexShrink: 0
       , insetBlock: 0
       , insetInlineStart: 0
-      -- Opening and closing grow and shrink the sidebar, so the editor follows its edge. Its
-      -- sections keep their width at that edge, so they slide in rather than squeeze.
       , justifyContent: "flex-end"
       , position: StyleX.conditionalValue "relative"
           [ StyleX.conditionalCase breakpoints.upTo720 "absolute" ]
@@ -198,7 +183,6 @@ styles = StyleX.create
       , animationTimingFunction: "var(--ease-out)"
       , overflow: "hidden"
       }
-  -- Files take the sidebar's height above the templates.
   , sidebarSections:
       { borderInlineEndColor: StyleX.conditionalValue "var(--border-subtle)"
           [ StyleX.conditionalCase breakpoints.upTo720 "var(--border-strong)" ]
@@ -210,7 +194,6 @@ styles = StyleX.create
       , width: StyleX.conditionalValue "var(--sidebar-width)"
           [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
       }
-  -- The sidebar's and the panel's edges, which drag to resize and close them below a minimum size.
   , handle:
       { backgroundColor:
           { default: "transparent"
@@ -227,7 +210,6 @@ styles = StyleX.create
       , transitionProperty: "background-color"
       , zIndex: 4
       }
-  -- Phones open the sidebar over the editor instead, so they have no handle.
   , sidebarHandle:
       { cursor: "col-resize"
       , display:
@@ -236,8 +218,6 @@ styles = StyleX.create
       , paddingInline: 2
       , width: 6
       }
-  -- The panel's handle follows its leading edge: its start beside the editor, its top below it.
-  -- It reads the panel's capped size, so it stays on the edge at any window size.
   , panelHandle:
       { cursor: StyleX.conditionalValue "col-resize"
           [ StyleX.conditionalCase breakpoints.upTo960 "row-resize" ]
@@ -282,8 +262,6 @@ styles = StyleX.create
       , position: "absolute"
       }
   , panel:
-      -- The panel's size is its flex basis, which runs along the workspace beside the editor and
-      -- down it below, so one animation opens the panel in both places.
       { flexBasis: StyleX.conditionalValue "min(var(--panel-width), 70%)"
           [ StyleX.conditionalCase breakpoints.upTo960 "min(var(--panel-height), 70%)" ]
       , flexShrink: 0
@@ -295,8 +273,6 @@ styles = StyleX.create
       , animationName: { default: "none", "[data-entering]": basisIn, "[data-exiting]": basisOut }
       , animationTimingFunction: "var(--ease-out)"
       }
-  -- The tabs keep the panel's open size at its leading edge, so they slide in rather than squeeze.
-  -- The workspace's container units match the 70% cap of the panel's flex basis.
   , tabs:
       { backgroundColor: "var(--granite-950)"
       , borderInlineStartColor: "var(--border-subtle)"
@@ -314,7 +290,6 @@ styles = StyleX.create
       , width: StyleX.conditionalValue "min(var(--panel-width), 70cqw)"
           [ StyleX.conditionalCase breakpoints.upTo960 "100%" ]
       }
-  -- The panel's tabs scroll beside its settings, such as Clear and Source maps, which stay put.
   , panelBar:
       { alignItems: "stretch"
       , borderBlockEndColor: "var(--border-subtle)"
@@ -324,7 +299,6 @@ styles = StyleX.create
       , flexShrink: 0
       , height: 36
       }
-  -- panelTabsImpl marks the edges that hide tabs, and a fade there shows that the list scrolls.
   , tabList:
       { display: "flex"
       , flexGrow: 1
@@ -392,7 +366,6 @@ styles = StyleX.create
       , outlineStyle: "none"
       , overflowY: "auto"
       }
-  -- A strip above the output, such as the note that a previous run's frames no longer navigate.
   , subBar:
       { alignItems: "center"
       , borderBlockEndColor: "var(--border-subtle)"
@@ -418,8 +391,6 @@ styles = StyleX.create
       , paddingBlock: 6
       , paddingInline: 12
       }
-  -- A slide switch whose track is recessed while off and lit in the accent while on, so its
-  -- state reads at a glance. Its label never changes, so its width stays the same.
   , switch:
       { alignItems: "center"
       , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
@@ -444,7 +415,6 @@ styles = StyleX.create
       , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
       }
-  -- Both tracks' shadows have the same shape, so that the glow eases in and out.
   , switchTrack:
       { backgroundColor: "var(--granite-950)"
       , borderRadius: 999
@@ -464,8 +434,6 @@ styles = StyleX.create
       , boxShadow:
           "inset 0 1px 2px oklch(0% 0 0 / 35%), inset 0 -1px 0 oklch(100% 0 0 / 12%), 0 0 8px oklch(from var(--accent) l c h / 45%)"
       }
-  -- The knob is lit from above like the raised keys, but a switch slides rather than sinks, so
-  -- it has no pressed state.
   , switchKnob:
       { backgroundColor: "var(--granite-300)"
       , backgroundImage: "linear-gradient(oklch(100% 0 0 / 18%), oklch(0% 0 0 / 10%))"
@@ -481,7 +449,6 @@ styles = StyleX.create
       , width: 14
       }
   , switchKnobOn: { backgroundColor: "var(--granite-100)", transform: "translateX(12px)" }
-  -- A stack frame that maps to PureScript, which opens its source.
   , stackFrame:
       { backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
       , borderStyle: "none"
@@ -499,7 +466,6 @@ styles = StyleX.create
       , paddingInline: 4
       , textAlign: "start"
       }
-  -- Status pills are sans-serif with flat, high-contrast fills.
   , status:
       { alignItems: "center"
       , borderRadius: 999
@@ -516,9 +482,6 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , statusReady: { backgroundColor: "var(--green-400)" }
-  -- The ready pill links to the release, so it brightens on hover like the other controls.
-  -- The version and package set pills are raised like the Run key, from their own hues. The
-  -- version links to its release, so it also brightens on hover and sinks while pressed.
   , statusLink:
       { backgroundColor: "var(--green-400)"
       , backgroundImage:
@@ -543,7 +506,6 @@ styles = StyleX.create
       , transform: { default: "none", ":active": "translateY(1px)" }
       }
   , commit: { fontFamily: "var(--font-mono)" }
-  -- Lucide icons render at 1.2em, so the arrow sits a little smaller than the pill's label.
   , externalIcon: { flexShrink: 0, fontSize: 10, marginInlineStart: -1 }
   , statusBusy:
       { backgroundColor: "var(--surface-2)"
@@ -551,10 +513,7 @@ styles = StyleX.create
       , color: "var(--text-primary)"
       }
   , statusFailed: { backgroundColor: "var(--red-300)" }
-  -- Round keys hold their width, so a crowded header cannot squeeze them into ovals.
   , iconOnly: { flexShrink: 0, paddingInline: 0, justifyContent: "center", width: 32 }
-  -- While compiling, and running until Stop appears, the key stays held down rather than greying
-  -- out, so a quick run reads as one press.
   , pressed:
       { backgroundColor: "var(--accent-press)"
       , boxShadow:
@@ -563,7 +522,6 @@ styles = StyleX.create
       , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
       , transform: "translateY(1px)"
       }
-  -- Stop, Share and Reset are the Run key without its accent.
   , neutral:
       { backgroundColor:
           { default: "var(--surface-3)"
@@ -595,12 +553,8 @@ styles = StyleX.create
       , outline: { default: "revert", ":focus-visible": "none" }
       , paddingInline: 10
       }
-  -- The console reads like a browser's: one row per message, split by hairlines, with warnings
-  -- and errors tinted in their own hues and marked by an icon. consoleImpl's minimum height is its
-  -- bar and ten of these rows, so keep its arithmetic in step with their sizes.
   , console: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
   , consoleScroller: { flexGrow: 1, minHeight: 0, overflowY: "auto" }
-  -- A program that renders fills the panel, and its console lies over the view's lower edge.
   , view: { flexGrow: 1, minHeight: 0 }
   , overlayConsole:
       { backgroundColor: "var(--granite-950)"
@@ -617,7 +571,6 @@ styles = StyleX.create
       , zIndex: 5
       }
   , consoleHandle: { cursor: "row-resize", height: 6, insetInline: 0, paddingBlock: 2, zIndex: 6 }
-  -- The bar collapses and brings up the console, and counts its messages, warnings and errors.
   , consoleBar:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -670,7 +623,6 @@ styles = StyleX.create
       , paddingInlineEnd: 12
       , paddingInlineStart: 8
       }
-  -- The icon centers on the message's first line, which is as tall as the icon's box.
   , lineIcon:
       { alignItems: "center"
       , display: "inline-flex"
@@ -683,7 +635,6 @@ styles = StyleX.create
   , lineText: { minWidth: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
   , logLine: { color: "var(--text-secondary)" }
   , infoLine: { color: "var(--text-tertiary)" }
-  -- A tinted row also tints the separator above it, as browsers do.
   , warningLine:
       { backgroundColor: "oklch(from var(--yellow-300) l c h / 8%)"
       , borderBlockEndColor: "oklch(from var(--yellow-300) l c h / 22%)"
@@ -720,9 +671,6 @@ styles = StyleX.create
       , display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       }
-  -- Run and Stop, and Share and Copied, share one grid cell, so each button keeps its widest
-  -- label's width. Compiling, and running until Stop appears, keep the Run label and turn its
-  -- icon into a spinner.
   , labels: { display: "grid" }
   , label:
       { alignItems: "center"
@@ -734,14 +682,12 @@ styles = StyleX.create
       , transitionProperty: "opacity, visibility"
       , transitionTimingFunction: "var(--ease-out)"
       }
-  -- Labels crossfade, and a hidden one stays in the grid to hold the button's width.
   , inactiveLabel: { opacity: 0, visibility: "hidden" }
   , popped:
       { animationDuration: "240ms"
       , animationName: { default: pop, "@media (prefers-reduced-motion: reduce)": "none" }
       , animationTimingFunction: "var(--ease-out)"
       }
-  -- The panel toggle's icon shows where the panel sits: beside the editor, or below it.
   , besidePanel:
       { display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
@@ -754,7 +700,6 @@ styles = StyleX.create
       { display:
           StyleX.conditionalValue "grid" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
       }
-  -- Without its label, Share is a round key like Reset beside it.
   , shareKey:
       { flexShrink: 0
       , justifyContent: "center"
@@ -787,7 +732,6 @@ pop = StyleX.keyframes
   , to: { transform: "none" }
   }
 
--- Without a `to` frame, these open to the element's own size.
 widthIn = StyleX.keyframes { from: { width: 0 } }
 
 widthOut = StyleX.keyframes { to: { width: 0 } }
@@ -803,8 +747,6 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } -
 playground :: View -> JSX
 playground { state, actions, editor, generated, frames } = DOM.div styleProps.page
   [ DOM.header styleProps.header [ if ready then controls else mempty ]
-  -- The children keep their positions in every phase, so that React keeps the editor host that
-  -- the controller fills once loading finishes.
   , DOM.main (StyleX.props [ styles.workspace, StyleX.conditional ready styles.revealed ])
       [ DOM.div styleProps.upper
           [ if ready then sidebar else mempty
@@ -822,7 +764,6 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
       , if ready then panel else mempty
       , if ready then mempty else loading state actions.retry
       , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef frames } []
-      -- The JavaScript tab's editor stays here for the same reason as the program's frame.
       , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef generated } []
       ]
   ]
@@ -965,8 +906,6 @@ iconAction label icon' onPress = DOM.button
   }
   (DOM.span styleProps.icon (icon icon'))
 
--- | The Run key. Stop takes its place only once a program has run for half a second, so that
--- | quick programs do not flash Stop; until then the key stays Run and keeps compiling's spinner.
 runButton ::
   ReactComponent { status :: String, ready :: Boolean, run :: Effect Unit, stop :: Effect Unit }
 runButton = unsafePerformEffect $ Hooks.reactComponent "RunButton" \{ status, ready, run, stop } ->
@@ -1022,8 +961,6 @@ runButton = unsafePerformEffect $ Hooks.reactComponent "RunButton" \{ status, re
     }
     (icons <> [ DOM.text text ])
 
--- | One of several labels that share a grid cell, so that a button keeps its widest label's
--- | width as the label changes.
 stackedLabel :: String -> Boolean -> JSX
 stackedLabel text current = DOM.span
   { className:
@@ -1036,7 +973,6 @@ stackedLabel text current = DOM.span
 status :: State -> JSX
 status state = case server.status, toMaybe server.kind, toMaybe server.version of
   "failed", _, _ -> pill "Language server stopped" styles.statusFailed
-  -- A restart keeps the same release, so a known version stays in place.
   "restarting", _, Nothing -> pill "Restarting the language server" styles.statusBusy
   "starting", _, _ -> pill "Starting the language server" styles.statusBusy
   _, Just "mock", _ -> mempty
@@ -1059,9 +995,6 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
     }
     label
 
--- | What `main` printed, below what it rendered, if it did. The Run key already shows whether the
--- | project is compiling or running, and errors and stops arrive as lines, so the output has no
--- | status of its own.
 output :: State -> Actions -> Ref (Nullable Element) -> JSX
 output state actions frames = DOM.div styleProps.output
   ( [ if state.outputStale && not (null run.lines)
@@ -1140,7 +1073,6 @@ clearButton run clear
     DOM.button { className: styleProps.clear.className, onClick: handler_ clear, type: "button" }
       "Clear"
 
--- | The JavaScript tab: the open module's generated code, in an editor that the controller fills.
 javascriptPanel :: State -> Ref (Nullable Element) -> JSX
 javascriptPanel state host = DOM.div styleProps.output
   [ element outputViewImpl { frames: host, className: styleProps.view.className }

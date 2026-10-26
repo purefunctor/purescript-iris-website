@@ -37,7 +37,6 @@ foreign import packagesImpl ::
     }
 
 styles = StyleX.create
-  -- The list scrolls on its own, so the search and the filters stay in place.
   { root: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
   , search:
       { borderBlockEndColor: "var(--border-subtle)"
@@ -63,8 +62,6 @@ styles = StyleX.create
       , paddingInline: 16
       , flexGrow: 1
       }
-  -- A two-way switch: a recessed track with one raised key, like the Run key, that slides under
-  -- the chosen side. Both sides take the same width, so the key covers either exactly.
   , filters:
       { backgroundColor: "var(--granite-950)"
       , borderRadius: 999
@@ -145,7 +142,6 @@ styles = StyleX.create
       , minHeight: 36
       , paddingInline: 16
       }
-  -- Package names are text-styled links, so they keep the pointing-hand cursor.
   , name:
       { color: { default: "var(--text-primary)", ":hover": "var(--accent-text)" }
       , flexGrow: 1
@@ -158,10 +154,6 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , version: { color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", fontSize: 12 }
-  -- The Run key's raised shape at row size: it sinks while pressed and flattens while disabled.
-  -- Every state keeps one width, so versions line up whatever a row offers.
-  -- A recessed track whose raised knob, like the Run key, slides to the right when the package is
-  -- on, while its X morphs into a check. Both states stay gray. A restart or a dependency dims it.
   , track:
       { backgroundColor: "var(--granite-950)"
       , borderRadius: 999
@@ -222,9 +214,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | The package panel: a search over the package set, which activates and deactivates packages.
--- | Either restarts the language server, which is `busy` until it loads the active packages; the
--- | header's status reports the restart, so the list keeps its rows in place.
 packagesPanel ::
   { packages :: Packages
   , busy :: Boolean

@@ -9,10 +9,8 @@ import { palette, stillField } from "#src/Website/Components/Backdrop.js";
 
 const width = 1200;
 const markSize = 272;
-// Social previews are shown at a fraction of full size, so the field's dots are drawn larger.
 const dotScale = 1.8;
 
-/** Render the build-time social image: the site icon and wordmark centred on the hero's still dot field. */
 export async function renderOpenGraphImage({ seed, height = 630 }: { seed?: number; height?: number } = {}): Promise<Uint8Array> {
   const [color, black, mark] = await Promise.all([
     readColorTokens(),
@@ -51,7 +49,6 @@ export async function renderOpenGraphImage({ seed, height = 630 }: { seed?: numb
   return sharp(Buffer.from(svg)).png().toBuffer();
 }
 
-/** The hero's dot field without its clearing, dimmed behind the lockup, plus grain, rasterised so Satori embeds a single image. */
 function renderField(color: Record<string, string>, height: number, seed?: number): Promise<Buffer> {
   const fills = palette.map((token) => color[token.slice(2)]);
   const dots = stillField(width, height, { clearing: false, seed })

@@ -1,7 +1,3 @@
-// The page's side of the playground worker: JSON-RPC over postMessage, startup progress, and
-// restarts. When the server panics or the active packages change, the worker is replaced, which
-// loads the packages from the cache and downloads new ones, and `onRestart` replays the project's
-// documents into the new one.
 
 const RESTART_LIMIT = 3;
 const RESTART_WINDOW = 60_000;
@@ -19,19 +15,12 @@ export class LanguageClient {
   capabilities = {};
   info = null;
 
-  /**
-   * @param {object} options
-   * @param {() => Worker} options.createWorker
-   * @param {"auto" | "mock"} options.server
-   * @param {object} options.handlers onStatus, onProgress, onNotification and onRestart callbacks
-   */
   constructor({ createWorker, server, handlers }) {
     this.#createWorker = createWorker;
     this.#server = server;
     this.#handlers = handlers;
   }
 
-  /** Starts a worker with the named packages, which `restart` replaces. */
   async start(packages = this.#packages) {
     this.#packages = packages;
     this.#handlers.onStatus({ status: this.info ? "restarting" : "starting" });
@@ -51,8 +40,6 @@ export class LanguageClient {
     try {
       this.info = await started;
     } catch (error) {
-      // Packages that could not be downloaded fail the same way on an automatic retry, so the
-      // page offers one instead.
       if (!error.startup) return this.#crash(error);
       this.dispose();
       this.#handlers.onStatus({ status: "failed", message: error.message });
@@ -94,7 +81,6 @@ export class LanguageClient {
     this.#post({ type: "lsp", message: { jsonrpc: "2.0", method, params } });
   }
 
-  /** The text of a read-only package or Prim source. */
   readSource(uri) {
     const id = this.#nextId++;
     return new Promise((resolve) => {
@@ -103,7 +89,6 @@ export class LanguageClient {
     });
   }
 
-  /** Replaces the worker with one that loads `packages`, and replays the documents into it. */
   async restart(packages) {
     this.#stop();
     const info = await this.start(packages);
@@ -151,7 +136,6 @@ export class LanguageClient {
     }
   }
 
-  /** Stops the worker and fails whatever waited on it. */
   #stop() {
     this.dispose();
     const stopped = new Error("The language server restarted");

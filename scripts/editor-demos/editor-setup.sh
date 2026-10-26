@@ -4,7 +4,6 @@ ROOT=$(git rev-parse --show-toplevel)
 TOOLS=${IRIS_DEMO_HOME:-/tmp/iris-editor-tools}
 mkdir -p "$TOOLS/profile/User" "$TOOLS/extensions" "$TOOLS/iris-website"
 
-# Native VS Code, rather than a recreation of its UI. See AGENTS.md for apt prerequisites.
 if [[ ! -x "$TOOLS/VSCode-linux-x64/code" ]]; then
   curl -fLsS --retry 2 https://update.code.visualstudio.com/1.139.0/linux-x64/stable -o "$TOOLS/code.tar.gz"
   tar xzf "$TOOLS/code.tar.gz" -C "$TOOLS"
@@ -25,7 +24,6 @@ for extension in nwolverson.language-purescript@0.2.10 "$TOOLS/iris.vsix"; do
     --install-extension "$extension" --force
 done
 
-# Only disposable recording data is reset. Never edit the seed checkout for a take.
 rm -rf "$TOOLS/iris-website/src"
 cp -a "$ROOT/src" "$ROOT/spago.yaml" "$ROOT/spago.lock" "$TOOLS/iris-website/"
 ln -sfn "$ROOT/.spago" "$TOOLS/iris-website/.spago"

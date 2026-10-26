@@ -1,8 +1,3 @@
-// A JavaScript stand-in for the Iris language server, with the same interface as its WebAssembly
-// build, so the playground works without building Rust. Its answers come from plain text, not
-// from the compiler: they exercise the editor, never Iris itself.
-//
-// Diagnostics: a line containing `???` is an error and a line containing `TODO` is a warning.
 
 const KEYWORDS = "module where import data type newtype class instance derive let in case of if then else do ado forall foreign as hiding infixl infixr infix".split(" ");
 const WORD = /[A-Za-z_][\w']*/g;
@@ -196,7 +191,6 @@ export class MockServer {
   }
 }
 
-/** Replaces a range given in UTF-16 line and character positions, as Monaco sends them. */
 function splice(text, range, replacement) {
   const offset = ({ line, character }) => {
     let index = 0;

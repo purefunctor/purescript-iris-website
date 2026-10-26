@@ -2,12 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components/Tabs";
 import { particleField } from "#src/Website/Landing/Particles.js";
 
-// The bars race once the chart is on screen. One panel follows the selected tab rather than one
-// panel per tab, so switching keeps the chart mounted and its styles transition between the
-// measurements. Motion-reduced styles show the finished chart instead.
-//
-// Selecting a tab bursts its temperature's particles from it: snowflakes for a cold build, sparks
-// for a hot rebuild.
 
 export function benchmarkChartImpl({
   chart,

@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Unpack Helium's portable Linux build for the playground trailer into $TOOLS/helium. Its .deb
-# depends on Ubuntu's t64 library names, which Debian 12 lacks, so the take uses the tarball.
 set -euo pipefail
 TOOLS=${IRIS_DEMO_HOME:-/tmp/iris-editor-tools}
 VERSION=0.19.4.1

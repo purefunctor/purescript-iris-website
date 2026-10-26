@@ -1,11 +1,3 @@
-// Generates `playground/packages/index.json`, the packages the playground can install.
-//
-// The selection matches the compiler's compatibility check for the Iris tag the language server
-// pins: the newest Registry package set, limited to the `core` and `acme` presets in the
-// compiler's `tests-compatibility`, plus whatever those packages depend on. Rerun it whenever the
-// tag in `playground/language-server/Cargo.toml` changes.
-//
-// Usage: node scripts/generate-playground-packages.mjs
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -60,7 +52,6 @@ while (queue.length > 0) {
   const published = metadata.published[version];
   if (!published) throw new Error(`${name}@${version} has no published metadata`);
   const dependencies = Object.keys(manifest.dependencies ?? {}).sort();
-  // The playground's core is what the `purescript` and `purescript-contrib` organizations publish.
   const owner = metadata.location.githubOwner ?? null;
   packages[name] = { version, owner, dependencies, integrity: published.hash, bytes: published.bytes };
   queue.push(...dependencies);

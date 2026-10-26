@@ -8,7 +8,6 @@ import Yoga.React.DOM as DOM
 
 type Mark = { x :: Number, y :: Number, radius :: Number, color :: String }
 
--- | The logo's dots, named by spectrum color.
 foreign import marks :: Array Mark
 
 styles = StyleX.create
@@ -23,7 +22,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | The decorative dot mark; `className` sets its size.
 logo :: { className :: String } -> JSX
 logo { className } = DOM.createBuiltinElement "svg"
   { className, viewBox: "0 0 32 32", "aria-hidden": true, focusable: "false" } (map dot marks)

@@ -1,10 +1,7 @@
-// Noise-driven dot lattice floating on a Gerstner-wave surface. The field morphs from one noise
-// seed to the next instead of scrolling, and holds a still frame when motion is reduced.
 const seed = 5139;
 const spacing = 22;
 const clearRadius = 0.62;
 const morphMilliseconds = 2600;
-// Ripples travel in pixels per millisecond and fade out before reaching the far corner.
 const rippleSpeed = 0.9;
 const rippleWidth = 90;
 export const palette = [
@@ -89,9 +86,6 @@ export function makeOcean(oceanSeed) {
 
 export const makeField = fieldSeed => ({ noise: makeNoise(fieldSeed), hue: makeNoise(fieldSeed + 7) });
 
-// Lays out one frame: each mark's position, radius, opacity and palette index. `ring` reports the
-// strongest ripple at a point, or is null when no ripples are travelling. Without `clearing`, marks
-// cover the whole frame instead of leaving the top-left corner open for copy.
 export function layoutField(width, height, time, { noise, hue, ocean }, ring, clearing = true) {
   const narrow = width < 1100;
   const rowHeight = spacing * 0.866;
@@ -104,7 +98,6 @@ export function layoutField(width, height, time, { noise, hue, ocean }, ring, cl
       const y = y0;
       const distance = Math.hypot(x, y) / Math.hypot(width, height);
       const [wave, dx, dy] = ring ? ring(x, y) : [0, 0, 0];
-      // A passing ripple reveals marks even inside the clearing behind the copy.
       const open = clearing ? smoothstep(clearRadius * 0.58, clearRadius, distance) * (narrow ? 0.55 : 1) : 1;
       const mask = Math.max(open, wave);
       if (mask < 0.02) continue;
@@ -115,8 +108,6 @@ export function layoutField(width, height, time, { noise, hue, ocean }, ring, cl
   }
   if (!points.length) return [];
 
-  // Threshold at a percentile so roughly half of the visible points swell, and rank hues so
-  // each palette step receives an even share of patches.
   const noises = points.map(point => point[3]).sort((a, b) => a - b);
   const hues = points.map(point => point[4]).sort((a, b) => a - b);
   const rank = value => {
@@ -148,8 +139,6 @@ export function layoutField(width, height, time, { noise, hue, ocean }, ring, cl
   return dots;
 }
 
-// The first frame, as shown when motion is reduced. Social images render it at build time, and may
-// choose another seed.
 export const stillField = (width, height, { clearing = true, seed: fieldSeed = seed } = {}) => {
   const first = makeField(fieldSeed);
   return layoutField(width, height, 0, { ...first, ocean: makeOcean(fieldSeed) }, null, clearing);
@@ -203,7 +192,6 @@ export const startField = canvasRef => () => {
     context.clearRect(0, 0, width, height);
     if (!width || !height) return;
 
-    // Ripples start on the first frame drawn after they are requested.
     for (const ripple of ripples) if (ripple.start == null) ripple.start = time;
     ripples = ripples.filter(ripple => (time - ripple.start) * rippleSpeed < ripple.reach + rippleWidth);
     const ring = (x, y) => {
@@ -260,7 +248,6 @@ export const startField = canvasRef => () => {
   motion.addEventListener("change", update);
 
   return {
-    // Starts a ripple at the centre of an element. Motion-reduced fields stay still.
     ripple: originRef => () => {
       const origin = originRef.current;
       if (!origin || motion.matches) return;

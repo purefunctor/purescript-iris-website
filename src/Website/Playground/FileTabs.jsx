@@ -3,8 +3,6 @@ import XIcon from "~icons/lucide/x";
 
 const label = (path) => path.replace(/^src\//, "");
 
-// One tab per open file, plus a tab for a read-only source that navigation opened. Closing a tab
-// keeps the file; the sidebar creates, renames and deletes files.
 export function fileTabsImpl({
   files,
   open,

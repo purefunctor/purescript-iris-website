@@ -1,11 +1,3 @@
-// The playground's controller. It owns the project's files, the editor, the language client and the
-// runner, and publishes one plain state object for the UI to render. The UI never sees Monaco or
-// LSP: it calls the actions returned by `createPlayground`.
-//
-// The page starts in the `loading` phase while the worker downloads the project's active packages
-// and loads the language server. The editor is created once both are ready, so the first thing it
-// shows is a checked project. The project activates packages by name, and the server loads them
-// with their dependencies; changing them restarts the server, which downloads what is missing.
 
 import index from "../packages/index.json";
 import { TraceMap } from "@jridgewell/trace-mapping";
@@ -20,28 +12,15 @@ import { decodeProject, encodeProject, loadSavedProject, saveProject } from "./s
 import { TEMPLATES } from "./templates.js";
 
 const PROJECT = "file:///project/";
-// The sidebar overlays the editor up to Website.Breakpoints' upTo720, so it starts closed there and
-// closes once a file opens.
 const NARROW = "(max-width: 720px)";
 const MAX_LINES = 1000;
-// The reader's sidebar width, kept apart from the project so that shared links do not carry it.
 const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
-// The panel's width beside the editor and its height below it, kept the same way.
 const PANEL_SIZE = "iris-playground-panel-size";
-// The height of the console over a program's view, kept the same way.
 const CONSOLE_HEIGHT = "iris-playground-console-height";
-// Every template activates what the `purescript` and `purescript-contrib` organizations publish.
 const CORE = Object.keys(index.packages).filter((name) => ["purescript", "purescript-contrib"].includes(index.packages[name].owner));
 const templatePackages = (template) => [...CORE, ...template.packages];
 
 
-/**
- * @param {object} options
- * @param {HTMLElement} options.editor the element Monaco fills
- * @param {HTMLElement} options.frames where program frames live
- * @param {object} options.theme the Monaco theme computed at build time
- * @param {(state: object) => void} options.onChange
- */
 export async function createPlayground({ editor: host, generated: generatedHost, frames, theme, onChange }) {
   const query = new URLSearchParams(location.search);
   const shared = await decodeProject(location.hash).catch(() => null);
@@ -51,7 +30,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   const paths = project.files.map(({ path }) => path);
   const open = (project.open ?? paths).filter((path) => paths.includes(path));
   const active = open.includes(project.active) ? project.active : open[0] ?? null;
-  // A project saved before it chose packages gets every template's, which its code may rely on.
   let activated = (project.packages ?? TEMPLATES.flatMap(templatePackages)).filter((name, at, names) => index.packages[name] && names.indexOf(name) === at);
   let installed = new Set();
   const panelSize = safely(() => JSON.parse(localStorage.getItem(PANEL_SIZE))) ?? {};
@@ -87,11 +65,8 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   configure(theme);
   let editor = null;
   let generated = null;
-  // Edits bump the revision, so that stack frames from an older run stop navigating.
   let projectRevision = 0;
-  // Each run, stop and template load bumps the generation, so that a superseded run's results drop.
   let runGeneration = 0;
-  // The last run's source maps, keyed by module path, which turn its stack frames into source locations.
   let runMaps = new Map();
   let generatedShown = null;
   const models = new Map();
@@ -103,7 +78,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     generated?.invalidate();
     setState(() => ({ outputStale: true }));
   };
-  // The JavaScript tab compiles only while it shows, and links only while source maps are on.
   const syncGenerated = () => {
     if (!generated) return;
     const show = state.panel && state.panelTab === "javascript" && state.server.status === "ready";
@@ -125,7 +99,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     packages: activated,
   });
 
-  /** The packages the server loads: the activated ones and their dependencies. */
   const activePackages = () => resolveClosure(index, activated).map(({ name }) => name);
   const publishPackages = () => {
     const active = activePackages();
@@ -134,7 +107,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     for (const name of active) {
       for (const dependency of index.packages[name].dependencies) dependents.get(dependency).push(name);
     }
-    // Only what no other active package needs can be deactivated; the rest is a dependency.
     const statusOf = (name) =>
       !loaded.has(name)
         ? installed.has(name) ? "installed" : "available"
@@ -170,7 +142,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
           files: current.files.map((file) => (uriOf(file.path) === params.uri ? { ...file, ...counts } : file)),
         }));
       },
-      // A restarted server starts empty: open every document again.
       onRestart: () => {
         for (const [path, model] of models) openDocument(path, model);
         generated?.invalidate();
@@ -217,7 +188,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     model.dispose();
   };
 
-  // Read-only models for package and Prim sources, created when navigation reaches them.
   const ensureModel = async (uri) => {
     const parsed = monaco.Uri.parse(uri);
     if (monaco.editor.getModel(parsed)) return;
@@ -254,14 +224,10 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   for (const file of project.files) addModel(file.path, file.text);
   onChange(state);
 
-  // Starts and restarts run one at a time. `loaded` is the package list the server has, or null
-  // until it first starts.
   let work = Promise.resolve();
   let loaded = null;
   const serially = (action) => (work = work.then(action));
 
-  // Starts the worker, which downloads the packages and loads the server, then creates the editor
-  // the first time it succeeds.
   const start = () => serially(async () => {
     setState((current) => ({ phase: current.phase === "ready" ? "ready" : "loading" }));
     const names = activePackages();
@@ -270,7 +236,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     loaded = names.join();
     installed = new Set(info.installed);
     publishPackages();
-    // Documents open before the editor asks for semantic tokens, which it does once per model.
     for (const [path, model] of models) openDocument(path, model);
     if (!editor) {
       editor = createEditor(host, { model: null });
@@ -289,7 +254,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     setState(() => ({ phase: "ready" }));
   });
 
-  /** Activates `packages` in place of the current ones, and restarts the server when that changes what it loads. */
   const activate = (packages) => {
     changed();
     activated = packages;
@@ -318,7 +282,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     save();
   };
 
-  /** Closes `path`'s tab and shows its neighbour, without touching the file. */
   const closeFile = (path) => {
     const index = state.open.indexOf(path);
     if (index === -1) return;
@@ -329,7 +292,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     save();
   };
 
-  /** Replaces the project with a template's files, and stops the previous project's program. */
   const loadTemplate = (id) => {
     const template = TEMPLATES.find((candidate) => candidate.id === id);
     if (!template) return;
@@ -402,7 +364,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     }
   };
 
-  // A program's view stays until it runs again or stops, and opens the Output panel.
   const runner = new Runner(frames, (event) => {
     setState((current) => {
       if (event.type === "view") return { run: { ...current.run, view: true }, panel: true, panelTab: "output" };
@@ -434,7 +395,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     },
     closePanel: () => setState(() => ({ panel: false })),
     selectPanelTab: (tab) => setState(() => ({ panelTab: tab })),
-    // Applies to the JavaScript tab and to the stack frames already in the output.
     toggleSourceMaps: () =>
       setState((current) => {
         const sourceMaps = !current.sourceMaps;
@@ -467,7 +427,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       openFile(path);
       return path;
     },
-    /** Returns an error message, or null when the file was renamed. */
     renameFile: (from, to) => {
       const target = to.trim();
       const problem = validatePath(target, from, models);
@@ -539,7 +498,6 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   };
 }
 
-/** Storage can be unavailable, such as in some private windows; the layout then resets. */
 function safely(action) {
   try {
     return action();
@@ -562,7 +520,6 @@ function validatePath(path, from, models) {
   return null;
 }
 
-/** Updates `module Old.Name` to match a renamed file, when it matched the old name. */
 function renameModuleHeader(text, from, to) {
   if (!from.endsWith(".purs")) return text;
   const name = (path) => path.slice("src/".length, -".purs".length).replaceAll("/", ".");

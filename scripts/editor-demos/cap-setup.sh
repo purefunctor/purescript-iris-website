@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Install Cap 0.6.0 for IRIS_DEMO_RECORDER=cap. Its Linux binaries need glibc 2.39, so on Debian 12
-# they run from an Ubuntu 24.04 chroot that shares /tmp (the X socket and recording paths) with the host.
-# Writes $TOOLS/cap-cli, which cap.mjs runs by default.
 set -euo pipefail
 TOOLS=${IRIS_DEMO_HOME:-/tmp/iris-editor-tools}
 ROOT=${IRIS_CAP_CHROOT:-/srv/cap-noble}
@@ -16,14 +13,12 @@ echo "$SHA256  $TOOLS/cap-0.6.0.deb" | sha256sum -c -
 
 if [[ ! -x "$ROOT/usr/bin/apt-get" ]]; then
   sudo apt-get install -y -qq debootstrap
-  # Debian 12's debootstrap has no noble script; jammy's works unchanged.
   sudo debootstrap --variant=minbase --components=main,universe noble "$ROOT" \
     http://archive.ubuntu.com/ubuntu /usr/share/debootstrap/scripts/jammy
 fi
 
 cat > "$TOOLS/cap-cli" <<EOF
 #!/usr/bin/env bash
-# Cap's CLI in the noble chroot, as the calling user, on the recording display.
 set -euo pipefail
 for d in proc sys dev dev/pts tmp; do
   mountpoint -q "$ROOT/\$d" || sudo mount --rbind "/\$d" "$ROOT/\$d"

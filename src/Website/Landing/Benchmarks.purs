@@ -12,15 +12,6 @@ import Website.Landing.Section as Section
 import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank)
 
--- Medians of five runs (twenty edits for `iris watch`) of `scripts/benchmark-builds.ts` on acme:
--- an Apple M3 Pro with 12 cores and 36 GB of memory, macOS 27.0.1, Iris 0.1.2-dev.759b9415a48e,
--- purs 0.15.16 and Spago 1.0.4.
---
--- The site's content security policy rules out inline styles, so every position is a fixed
--- style below. Positions are percentages of the axis: 70 s for cold builds, 4 s for rebuilds.
--- The bars race in over 1.5 s once the chart is on screen. Switching between the two morphs the
--- one chart over 0.8 s: the bars resize, the axis rescales and the figures crossfade.
-
 foreign import benchmarkChartImpl ::
   ReactComponent
     { chart :: { selected :: String, started :: Boolean } -> JSX
@@ -35,7 +26,6 @@ foreign import benchmarkChartImpl ::
     , tabs :: Array Tab
     }
 
--- | Each tab takes its temperature's colors; selecting it bursts that temperature's particles.
 type Tab =
   { className :: String
   , icon :: ReactComponent Icon.IconProps
@@ -44,7 +34,6 @@ type Tab =
   , label :: String
   }
 
--- | A value for each measurement: a cold build, and a rebuild after an edit.
 type Measured a = { cold :: a, hot :: a }
 
 type Bar =
@@ -71,7 +60,6 @@ styles = StyleX.create
       }
   , introduction: { display: "flex", flexDirection: "column", gap: 14 }
   , controls: { alignItems: "center", display: "flex", gap: 8, position: "relative" }
-  -- Particles may drift past the tabs, so the canvas extends beyond the controls.
   , particles:
       { height: "calc(100% + 200px)"
       , insetBlockStart: -140
@@ -82,7 +70,6 @@ styles = StyleX.create
       , width: "calc(100% + 160px)"
       , zIndex: 1
       }
-  -- Lucide icons render at 1.2em.
   , tabIcon: { flexShrink: 0, fontSize: 11 }
   , coldIcon: { color: "var(--frost-400)" }
   , hotIcon: { color: "var(--ember-400)" }
@@ -111,17 +98,12 @@ styles = StyleX.create
           }
       }
   , chart: { position: "relative" }
-  -- Use responsive properties directly: StyleX's unlayered custom-property defaults
-  -- otherwise outrank the layered overrides generated from imported conditions.
   , grid:
       { columnGap: StyleX.conditionalValue 24 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
       , display: "grid"
       , gridTemplateColumns: StyleX.conditionalValue "168px minmax(0, 1fr) 96px"
           [ StyleX.conditionalCase breakpoints.upTo600 "92px minmax(0, 1fr) 64px" ]
       }
-  -- Gridlines and the Iris marker sit behind the bars, across the plot column. Ticks that are off
-  -- the current axis wait far beyond it, so the overlay and the axis clip just past its end.
-  -- Match the grid's label/value widths and gaps, leaving 16px past the plot's end.
   , overlay:
       { insetBlock: 0
       , insetInlineEnd: StyleX.conditionalValue "calc(96px + 24px - 16px)"
@@ -180,7 +162,6 @@ styles = StyleX.create
       { animationDuration: "1.5s"
       , animationFillMode: "both"
       , animationName: { default: grow, "@media (prefers-reduced-motion: reduce)": "none" }
-      -- A strong ease-out: bars shoot out and settle on their result without overshooting it.
       , animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
       }
   , badge:
@@ -211,7 +192,6 @@ styles = StyleX.create
       , justifyContent: "flex-end"
       }
   , irisValue: { color: "var(--text-primary)", fontWeight: 600 }
-  -- Both figures share one grid cell; the outgoing one fades before the incoming one appears.
   , swap: { display: "inline-grid", justifyItems: "center" }
   , variant:
       { gridRowStart: 1
@@ -251,7 +231,6 @@ styles = StyleX.create
       , textUnderlineOffset: 3
       }
   , tick0: { left: "0%" }
-  -- Cold build on a 70 s axis: 4.25 s, 49.3 s and 66.3 s. The rebuild's ticks fade out at 0 s.
   , coldIrisWidth: { width: "6.07%" }
   , coldPursWidth: { width: "70.43%" }
   , coldSpagoWidth: { width: "94.71%" }
@@ -264,8 +243,6 @@ styles = StyleX.create
   , cold20s: { left: "28.571%" }
   , cold40s: { left: "57.143%" }
   , cold60s: { left: "85.714%" }
-  -- Rebuild after an edit on a 4 s axis: 0.28 s, 2.71 s and 3.57 s. The cold build's ticks fade
-  -- out past the clipped end of the axis.
   , hotIrisWidth: { width: "7%" }
   , hotPursWidth: { width: "67.75%" }
   , hotSpagoWidth: { width: "89.25%" }
@@ -413,7 +390,6 @@ chart { selected, started } = fragment
   pick :: forall a. Measured a -> a
   pick measured = if hot then measured.hot else measured.cold
 
-  -- Keeps both measurements' figures in place so that switching crossfades between them.
   swap :: Measured (Array JSX) -> JSX
   swap measured =
     DOM.span styleProps.swap [ variant (not hot) measured.cold, variant hot measured.hot ]

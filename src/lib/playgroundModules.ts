@@ -1,20 +1,9 @@
-// Bundles the npm modules that playground programs may import. Programs run in a sandbox without
-// network access, so they cannot load npm packages otherwise. The Registry's React bindings import
-// React's specifiers, and Iris compiles Iris.StyleX to calls into @stylexjs/stylex, whose runtime
-// merges the compiled styles; the page compiles the calls themselves, with playgroundStylex.ts.
-// The site's own versions are used, so the playground's React and StyleX match the site's.
-//
-// React's entries re-export one CommonJS package each as an ES module with a default export, which
-// the bindings import, and its named exports, which a project's own FFI may import. The entries
-// share one React through common chunks, which import each other by relative path, as generated
-// PureScript does, so the runner links them the same way.
 
 import { createRequire } from "node:module";
 import { rolldown } from "rolldown";
 
 const require = createRequire(import.meta.url);
 
-// The browser build of the server renderer needs no Node streams.
 const ENTRIES: Record<string, { file: string; source: string; esm?: boolean }> = {
   react: { file: "react.js", source: "react" },
   "react-dom": { file: "react-dom.js", source: "react-dom" },
@@ -24,7 +13,6 @@ const ENTRIES: Record<string, { file: string; source: string; esm?: boolean }> =
 };
 
 export type PlaygroundModules = {
-  /** The file under `files` that each specifier resolves to. */
   entries: Record<string, string>;
   files: Record<string, string>;
 };

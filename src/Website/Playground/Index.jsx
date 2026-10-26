@@ -28,8 +28,6 @@ const initialState = {
   shared: false,
 };
 
-// Loads the controller, with Monaco and the language server worker, only once the page renders,
-// and hands its state and actions to the PureScript `render`.
 export function playgroundImpl({ theme, render }) {
   const editor = useRef(null);
   const generated = useRef(null);
@@ -99,7 +97,6 @@ export function playgroundImpl({ theme, render }) {
       activatePackage: (name) => () => call("activatePackage", name),
       deactivatePackage: (name) => () => call("deactivatePackage", name),
       reset: () => call("reset"),
-      // Without a controller, the page itself failed to load, so it loads again.
       retry: () => (controller.current ? call("retry") : location.reload()),
     };
   }, []);
@@ -107,9 +104,6 @@ export function playgroundImpl({ theme, render }) {
   return render({ state, actions, editor, generated, frames });
 }
 
-// The side panel's Output, JavaScript and Packages tabs. The selection lives in the controller, so the panel
-// reopens on the tab it closed on, and a panel fades in only when the reader switches to it, not
-// when the whole panel opens.
 export function panelTabsImpl({
   selected,
   select,
@@ -132,8 +126,6 @@ export function panelTabsImpl({
   const [switched, setSwitched] = useState(false);
   const panelClass = switched ? switchedPanelClassName : panelClassName;
   const tabList = useRef(null);
-  // The tabs scroll beside the static settings when the panel is narrow. The list marks which of
-  // its edges hide tabs so that its styles fade them, and a vertical wheel scrolls it sideways.
   useLayoutEffect(() => {
     const list = tabList.current;
     if (!list) return undefined;
@@ -203,9 +195,6 @@ export function panelTabsImpl({
   );
 }
 
-// Where the program's view shows in the Output panel. Moving a frame in the document reloads it, so
-// the program's frame stays in the workspace's `frames` container, which this places over the slot
-// while it is mounted, and shrinks to nothing once the panel closes or switches tabs.
 export function outputViewImpl({ frames, className }) {
   const slot = useRef(null);
   useLayoutEffect(() => {
@@ -221,11 +210,9 @@ export function outputViewImpl({ frames, className }) {
       container.style.height = `${inner.height}px`;
     };
     place();
-    // The slot's size changes as the panel resizes or the window does.
     const observer = new ResizeObserver(place);
     observer.observe(element);
     observer.observe(container.parentElement);
-    // The panel opens and closes at its full size, so while it animates, the slot only moves.
     let frame = 0;
     const follow = () => {
       place();
@@ -253,9 +240,6 @@ export function outputViewImpl({ frames, className }) {
 
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Keeps an element mounted while it animates out, and marks its `data-entering` and
-// `data-exiting` phases for its styles to animate. The first render, changes while `animate` is
-// false, such as during a drag, and reduced motion all switch at once.
 function usePresence(open, animate) {
   const [phase, setPhase] = useState(open ? "open" : "closed");
   useLayoutEffect(() => {
@@ -265,7 +249,6 @@ function usePresence(open, animate) {
       return current === "closed" ? current : moving ? "exiting" : "closed";
     });
   }, [open, animate]);
-  // A style without an animation never ends one, so phases also settle on a timer.
   useEffect(() => {
     if (phase !== "entering" && phase !== "exiting") return undefined;
     const timeout = setTimeout(() => setPhase((current) => settled(current)), 400);
@@ -287,8 +270,6 @@ const settled = (phase) => (phase === "exiting" ? "closed" : phase === "entering
 
 const STEP = 16;
 
-// A drag keeps the page's cursor, and frames, such as a program's view, ignore the pointer, because
-// a frame under it takes its events from the handle that captured it.
 function dragging(cursor) {
   if (cursor) document.documentElement.style.cursor = cursor;
   else document.documentElement.style.removeProperty("cursor");
@@ -297,15 +278,8 @@ function dragging(cursor) {
     else frame.style.removeProperty("pointer-events");
   }
 }
-// Shrinks are named by the key that grows each kind of area.
 const SHRINK = { ArrowRight: "ArrowLeft", ArrowLeft: "ArrowRight", ArrowUp: "ArrowDown", ArrowDown: "ArrowUp" };
 
-// An area that the reader resizes by dragging the handle on one of its edges, or with the arrow
-// keys on the focused handle. Dragging below `collapse` closes the area, and dragging the handle
-// out again opens it. A drag previews locally and reaches the controller once it ends, so the rest
-// of the page renders once per drag. `vertical` areas resize by height, and `fromEnd` areas sit at
-// the end of their parent, so their handle is on their leading edge. A `share` below 1 keeps the
-// area from taking more than that part of its parent.
 function useResizable({ id, label, open, size, min, max, collapse, vertical, fromEnd, share = 1, resize, close }) {
   const [drag, setDrag] = useState(null);
   const shown = drag ? drag.open : open;
@@ -343,7 +317,6 @@ function useResizable({ id, label, open, size, min, max, collapse, vertical, fro
     handleProps: {
       "aria-controls": id,
       "aria-label": label,
-      // A separator's orientation is its own: a side panel's edge runs vertically.
       "aria-orientation": vertical ? "horizontal" : "vertical",
       "aria-valuemax": max,
       "aria-valuemin": 0,
@@ -387,8 +360,6 @@ function useMediaQuery(query) {
   return matches;
 }
 
-// The sidebar and the handle on its edge. Without the sidebar, the handle stays at the editor's
-// edge, so dragging it out opens the sidebar again.
 export function sidebarImpl({ id, open, width, resize, close, className, handleClassName, children }) {
   const area = useResizable({ id, label: "Resize files", open, size: width, min: 180, max: 480, collapse: 120, resize, close });
   return (
@@ -403,12 +374,8 @@ export function sidebarImpl({ id, open, width, resize, close, className, handleC
   );
 }
 
-// Website.Breakpoints' upTo960, where the panel moves below the editor.
 const BELOW = "(max-width: 960px)";
 
-// The Output and Packages panel and the handle on its leading edge. It sits beside the editor and
-// resizes by width, or below it and resizes by height, keeping a size for each. Its styles cap it
-// at 70% of the workspace, so the editor stays usable whatever size a wider window left it at.
 export function panelImpl({ id, label, open, width, height, resize, close, className, handleClassName, children }) {
   const vertical = useMediaQuery(BELOW);
   const area = useResizable({
@@ -441,8 +408,6 @@ export function panelImpl({ id, label, open, width, height, resize, close, class
   );
 }
 
-// A status pill with a tooltip. With an `href` it links out and shows the external link icon;
-// without one it is a focusable label, so that keyboard readers reach its tooltip too.
 export function pillImpl({ href, label, accessibleLabel, tooltip, className, iconClassName, tooltipClassName }) {
   return (
     <TooltipTrigger closeDelay={100} delay={300}>
@@ -465,18 +430,9 @@ export function pillImpl({ href, label, accessibleLabel, tooltip, className, ico
   );
 }
 
-// The console's bar with the border above it, and ten single-line messages below it, from the
-// console's styles in Index.purs: a 28px bar, and rows of an 18px line, 2px of padding above and
-// below, and a 1px separator.
 const CONSOLE_BAR = 1 + 28;
 const CONSOLE_MIN = CONSOLE_BAR + 10 * 23;
 
-// The program's messages, which follow new ones while scrolled to the bottom and stay put once the
-// reader scrolls up. Without a view they fill the output. Over a view, they lie on its lower edge
-// below `bar`, opening at ten messages' height, and the handle on their top edge resizes them;
-// dragging it below the bar's height, or the bar's toggle, collapses them to the bar. The handle
-// measures from the console's parent, which must be positioned, and the console's styles cap it at
-// that parent's height, so a height kept from a taller window keeps the bar in reach.
 export function consoleImpl({ overlay, open, height, resize, close, className, scrollerClassName, handleClassName, bar, children }) {
   const scroller = useRef(null);
   const following = useRef(true);
@@ -499,7 +455,6 @@ export function consoleImpl({ overlay, open, height, resize, close, className, s
     const element = scroller.current;
     if (element && following.current) element.scrollTop = element.scrollHeight;
   };
-  // Every render may add messages, and a resize moves the bottom.
   useLayoutEffect(follow);
   useEffect(() => {
     const observer = new ResizeObserver(follow);

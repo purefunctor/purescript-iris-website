@@ -1,6 +1,5 @@
 import { layoutField, makeField, makeOcean, palette } from "#src/Website/Components/Backdrop.js";
 
-// Fade the site's actual coloured ocean in and out; flow while interacting.
 export function createNavigationOcean(canvas) {
   const context = canvas.getContext("2d");
   const motion = window.matchMedia("(prefers-reduced-motion: reduce)");

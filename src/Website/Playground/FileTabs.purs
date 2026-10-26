@@ -38,7 +38,6 @@ styles = StyleX.create
       , overflowX: "auto"
       , scrollbarWidth: "none"
       }
-  -- Flat tabs that fill the toolbar's height; the open file takes the editor's surface.
   , tab:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -54,7 +53,6 @@ styles = StyleX.create
       , transitionDuration: "140ms"
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
-      -- A newly opened tab settles into the strip.
       , animationDuration: "180ms"
       , animationName: { default: tabIn, "@media (prefers-reduced-motion: reduce)": "none" }
       , animationTimingFunction: "var(--ease-out)"
@@ -95,7 +93,6 @@ styles = StyleX.create
       }
   , errorCount: { backgroundColor: "var(--red-300)", color: "var(--granite-950)" }
   , warningCount: { backgroundColor: "var(--yellow-400)", color: "var(--granite-950)" }
-  -- Inactive tabs show their close button on hover or focus, and always on touch screens.
   , close:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
@@ -121,7 +118,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | The open files as tabs, with the read-only source that navigation opened.
 fileTabs ::
   { files :: Array File
   , open :: Array String

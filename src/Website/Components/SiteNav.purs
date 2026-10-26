@@ -35,9 +35,6 @@ foreign import spectrumInstallButtonImpl ::
     , content :: Array JSX
     }
 
--- Staggered bars carry a wave across the button. Each bar sinks by moving rather than by clipping,
--- so the wave adds to the fill's own transitions instead of interrupting them, and its label copy
--- moves the opposite way to stay aligned with the label beneath.
 installWave = StyleX.keyframes { "40%": { transform: "translateY(20%)" } }
 installLabelWave = StyleX.keyframes { "40%": { transform: "translateY(-20%)" } }
 
@@ -73,8 +70,6 @@ styles = StyleX.create
       }
   , containedContent:
       { gap: 0, marginInline: "auto", maxWidth: "var(--container-wide)", paddingInline: 0 }
-  -- Where the documentation shows its rail, the brand spans the rail's width and navigation
-  -- starts at the rail's edge.
   , brandCell:
       { display: "flex"
       , flexShrink: 0
@@ -108,7 +103,6 @@ styles = StyleX.create
       , flexGrow: 1
       , minWidth: 0
       }
-  -- Header links are flat tabs that fill the header's height.
   , link:
       { position: "relative"
       , isolation: "isolate"
@@ -130,7 +124,6 @@ styles = StyleX.create
       , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
       }
-  -- The current page keeps the base background; only an underline marks it.
   , current:
       { color: "var(--text-primary)"
       , textDecorationLine: "underline"
@@ -138,7 +131,6 @@ styles = StyleX.create
       , textDecorationThickness: 1
       , textUnderlineOffset: 6
       }
-  -- Share interaction states; size related controls together rather than every item alike.
   , landingItem:
       { alignSelf: "stretch"
       , backgroundColor:
@@ -158,8 +150,6 @@ styles = StyleX.create
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
       }
-  -- Section links fit their labels on narrow desktops, where four of them at full width would
-  -- run into the actions.
   , sectionLink:
       { width:
           StyleX.conditionalValue "112px" [ StyleX.conditionalCase breakpoints.upTo1160 "auto" ]
@@ -207,8 +197,6 @@ styles = StyleX.create
       , color: "var(--text-on-accent)"
       , cursor: "default"
       }
-  -- Hard spectrum bars, a strip along the bottom edge at rest, rise in turn to fill the button.
-  -- Each bar clips its own dark copy of the label, so the bars mask the text as they rise.
   , spectrumInstall:
       { backgroundColor: "transparent"
       , color: "var(--text-primary)"
@@ -221,7 +209,6 @@ styles = StyleX.create
       , textTransform: "uppercase"
       , width: 168
       , "--install-fill": { default: "0.07", ":hover": "1", ":focus-visible": "1" }
-      -- The bars would cover the header's focus outline, so the ring is drawn above them.
       , outlineStyle: "none"
       , "--install-ring": { default: "transparent", ":focus-visible": "var(--focus-ring)" }
       , "::after":
@@ -248,7 +235,6 @@ styles = StyleX.create
       , position: "absolute"
       , zIndex: 1
       }
-  -- The clip extends past each side so that bars meet without anti-aliased seams.
   , bar:
       { clipPath: "inset(calc((1 - var(--install-fill, 0.07)) * 100%) -1px 0 -1px)"
       , flexBasis: 0
@@ -281,7 +267,6 @@ styles = StyleX.create
       , animationDelay: "270ms"
       , transitionDelay: "168ms"
       }
-  -- Each copy spans the whole button, offset so it lines up with the label beneath.
   , barLabel:
       { alignItems: "center"
       , animationDelay: "inherit"
@@ -307,7 +292,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | Shared site chrome, with a contained landing layout or a viewport-wide rail layout.
 siteHeader :: { contained :: Boolean } -> Array JSX -> JSX
 siteHeader { contained } navigation =
   DOM.header (StyleX.props [ styles.header, StyleX.conditional contained styles.containedHeader ])
@@ -338,7 +322,6 @@ siteHeader { contained } navigation =
         )
     ]
 
--- | `onInstall` runs when the Install action is pressed.
 siteNav :: { onInstall :: Effect Unit } -> JSX
 siteNav { onInstall } = siteHeader { contained: true }
   [ DOM.nav { className: styleProps.links.className, "aria-label": "Explore Iris" }
@@ -440,7 +423,6 @@ siteNav { onInstall } = siteHeader { contained: true }
     , content: DOM.span styleProps.label "Documentation"
     }
 
--- | A link in a site header's navigation, marked when it leads to the current page.
 headerLink :: { href :: String, label :: String, current :: Boolean } -> JSX
 headerLink { href, label, current } = NavigationLink.navigationLink
   { href

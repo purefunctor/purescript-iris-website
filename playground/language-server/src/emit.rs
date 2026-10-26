@@ -1,9 +1,3 @@
-//! `iris/emit`: the JavaScript for the project and every module it reaches, for the Run button.
-//!
-//! This follows `collect_modules` and the output layout in the Iris repository's
-//! `compiler-executable/iris-build`, so generated imports such as `../Data.Maybe/index.js` and
-//! `./foreign.js` resolve between the returned paths. Like `iris build`, nothing is emitted while
-//! a project source has errors.
 
 use std::collections::HashSet;
 
@@ -36,7 +30,6 @@ pub struct ProjectError {
     diagnostic: Diagnostic,
 }
 
-/// A project module and the path of its generated entry, such as `Main/index.js`.
 #[derive(Serialize)]
 pub struct EmittedModule {
     name: String,

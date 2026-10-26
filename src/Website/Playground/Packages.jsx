@@ -5,9 +5,6 @@ const TITLES = {
   installed: () => "Installed, so activating needs no download",
 };
 
-// Searches the package set and activates or deactivates packages, linking each one to its
-// documentation on Pursuit. It shows the active packages until the reader switches to all of them;
-// the switch's thumb slides under the chosen side.
 export function packagesImpl({
   packages,
   busy,
@@ -29,9 +26,6 @@ export function packagesImpl({
 }) {
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
-  // Deactivating a package in the Active view keeps the rows it showed, its own and the
-  // dependencies it frees, until the reader switches filters or leaves the Packages pane, which
-  // unmounts this panel. Their switches slide off in place and can slide back on.
   const [kept, setKept] = useState(() => new Set());
   const isActive = (entry) =>
     entry.status === "active" || entry.status === "dependency" || kept.has(entry.name);
@@ -108,13 +102,9 @@ export function packagesImpl({
 }
 
 
-// The X and the check share one shape, two strokes, so browsers that animate `d` morph one into
-// the other while the knob slides.
 const CROSS = "M3 3 L9 9 M9 3 L3 9";
 const CHECK = "M2.5 6.5 L5 9 M5 9 L9.5 3";
 
-// A package's switch. A dependency's stays on and disabled, since it leaves with the packages
-// that need it.
 function PackageToggle({ entry, busy, activate, deactivate, classNames }) {
   const locked = entry.status === "dependency";
   const on = locked || entry.status === "active";

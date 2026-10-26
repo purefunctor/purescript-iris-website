@@ -1,5 +1,3 @@
-// Brings the hero and its installation commands into view, scrolling only when they are off screen, then
-// focuses the selected command's copy button and runs `onRevealed` once scrolling has settled.
 export const revealInstall = installRef => onRevealed => () => {
   const install = installRef.current;
   if (!install) return;
@@ -17,15 +15,12 @@ export const revealInstall = installRef => onRevealed => () => {
     return;
   }
 
-  // The hero fills the first screen, so bring all of it back rather than only the commands.
   (install.closest("section") ?? install).scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   if (reduced) {
     finish();
     return;
   }
 
-  // Wait until scrolling has settled: `scrollend` where supported, otherwise a few frames
-  // without movement. Safari lacks `scrollend`, and long smooth scrolls outlast a fixed delay.
   const started = performance.now();
   let done = false;
   let frame = 0;
@@ -55,8 +50,6 @@ export const revealInstall = installRef => onRevealed => () => {
   frame = requestAnimationFrame(watch);
 };
 
-// Development only: visiting with `?edit` makes all copy editable in place for drafting and
-// screenshots. Production builds remove this branch.
 export const enableCopyEditing = () => {
   if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("edit")) return () => {};
   document.designMode = "on";

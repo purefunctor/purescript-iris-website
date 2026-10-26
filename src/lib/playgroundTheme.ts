@@ -3,11 +3,6 @@ import { themeSettings } from "../../scripts/editor-demos/theme.ts";
 
 type Rule = { token: string; foreground?: string; fontStyle?: string };
 
-/**
- * The playground editor's Monaco theme, computed at build time because Monaco only accepts hex
- * colors. It reuses the editor demos' VS Code theme, so the playground matches the landing page's
- * recordings, and colors the PureScript grammar with the site's code tokens.
- */
 export async function playgroundTheme() {
   const settings = await themeSettings();
   const tokens = await readColorTokens();

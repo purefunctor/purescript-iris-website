@@ -12,7 +12,6 @@ import Yoga.React.DOM as DOM
 type Place =
   { icon :: ReactComponent Icon.IconProps, title :: String, body :: Array JSX, command :: String }
 
--- The tools the hero names, each backed by an `iris` subcommand.
 placeList :: Array Place
 placeList =
   [ { icon: Icon.codeXml

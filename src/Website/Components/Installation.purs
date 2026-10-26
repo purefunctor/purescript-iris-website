@@ -32,7 +32,6 @@ styles = StyleX.create
       , gap: 8
       , justifyContent: "space-between"
       }
-  -- Opens the selected platform's installation script.
   , source:
       { alignItems: "center"
       , backgroundColor: { default: "var(--glass-fill)", ":hover": "var(--glass-fill-strong)" }
@@ -56,10 +55,8 @@ styles = StyleX.create
       , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
       }
-  -- Lucide icons render at 1.2em.
   , sourceIcon: { flexShrink: 0, fontSize: 11 }
   , system: { alignItems: "center", display: "inline-flex", gap: 6 }
-  -- Simple Icons render at 1.2em; 11px keeps each logo near the label's cap height.
   , icon: { flexShrink: 0, fontSize: 11 }
   , panel:
       { "WebkitBackdropFilter": "blur(12px)"
@@ -70,7 +67,6 @@ styles = StyleX.create
       , borderStyle: "solid"
       , borderWidth: 1
       , display: "flex"
-      -- Fits the longer command and copy button without stretching the header to the article width.
       , fontFamily: "var(--font-mono)"
       , fontSize: 14
       , gap: 12
@@ -97,8 +93,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | Without `fill`, the command panel fits the longer command; with it, the installer spans its
--- | container, matching the text around it.
 installation :: { fill :: Boolean } -> JSX
 installation { fill } = element installationImpl
   { commandClassName: styleProps.command.className

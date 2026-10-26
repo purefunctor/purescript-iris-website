@@ -5,10 +5,6 @@ import { layerOrder } from "#src/lib/inlineStyles";
 
 export const prerender = true;
 
-// The base look of the frame that playground programs run in, which is a separate document
-// without network access: the site's background, text color and fonts. It defines no tokens, so
-// a program's styles never depend on names it cannot see. The runner sends this to every frame;
-// base styles stay in the reset layer, below StyleX's layers.
 const FONTS = [
   { family: "Geist Variable", file: "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2" },
   {

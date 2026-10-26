@@ -1,6 +1,3 @@
-// Connects Monaco to the language client: converts between LSP and Monaco shapes, registers a
-// provider for each feature the server advertises, and shows published diagnostics as markers.
-// Monaco works without any of it; every provider here only adds to the plain editor.
 
 import * as monaco from "monaco-editor/editor/editor.api.js";
 
@@ -18,7 +15,6 @@ const SEVERITY = {
   4: monaco.MarkerSeverity.Hint,
 };
 
-// LSP completion kinds start at Text = 1; Monaco's are in a different order.
 const COMPLETION_KIND = (() => {
   const kinds = monaco.languages.CompletionItemKind;
   return [
@@ -38,7 +34,6 @@ const markdown = (contents) => {
   });
 };
 
-// The latest diagnostics for each document, which code actions send back to the server.
 const published = new Map();
 
 const intersects = (a, b) =>
@@ -54,15 +49,6 @@ const documentation = (value) => {
   return typeof value === "string" ? value : { value: value.value };
 };
 
-/**
- * Registers the providers the server supports.
- *
- * @param {object} options
- * @param {() => import("./language-client.js").LanguageClient} options.client the current client
- * @param {(uri: string) => Promise<void>} options.ensureModel creates a read-only model for a
- *   package or Prim source before Monaco navigates to it
- * @param {object} options.capabilities the server's capabilities from `initialize`
- */
 export function registerProviders({ client, ensureModel, capabilities }) {
   const disposables = [];
   const register = (enabled, create) => {
@@ -74,7 +60,6 @@ export function registerProviders({ client, ensureModel, capabilities }) {
     return client()
       .request(method, params, controller.signal)
       .catch((error) => {
-        // Cancelled, superseded or restarted requests are not editor errors.
         if ([-32800, -32801].includes(error.code)) return null;
         throw error;
       });
@@ -293,7 +278,6 @@ function completionItem(item, fallback) {
   };
 }
 
-/** Shows published diagnostics as markers and returns per-severity counts. */
 export function applyDiagnostics(params) {
   published.set(params.uri, params.diagnostics);
   const model = monaco.editor.getModel(monaco.Uri.parse(params.uri));

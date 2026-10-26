@@ -60,7 +60,6 @@ styles = StyleX.create
       }
   , title: { color: "var(--text-tertiary)", fontSize: 12, fontWeight: 600, margin: 0 }
   , scroll: { flexGrow: 1, minHeight: 0, overflowY: "auto", paddingBlockEnd: 12 }
-  -- An expanded folder's files settle in below it.
   , list:
       { animationDuration: "180ms"
       , animationName: { default: listIn, "@media (prefers-reduced-motion: reduce)": "none" }
@@ -70,7 +69,6 @@ styles = StyleX.create
       , padding: 0
       }
   , item: { position: "relative" }
-  -- Rows indent by the depth that the tree sets as a variable on each row.
   , row:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -124,7 +122,6 @@ styles = StyleX.create
   , warningCount: { backgroundColor: "var(--yellow-400)", color: "var(--granite-950)" }
   , errorDot:
       { backgroundColor: "var(--red-300)", borderRadius: 999, flexShrink: 0, height: 7, width: 7 }
-  -- A file's actions show while its row is hovered or focused, and always on touch screens.
   , actions:
       { display: "flex"
       , gap: 2
@@ -187,7 +184,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | The project's files as a tree of the folders in their paths.
 fileTree ::
   { files :: Array File
   , active :: Nullable String
@@ -205,7 +201,6 @@ fileTree { files, active, viewing, actions } = element fileTreeImpl
   , newFileClassName: styleProps.action.className
   , scrollClassName: styleProps.scroll.className
   , listClassName: styleProps.list.className
-  -- Only file items carry the marker, so hovering a file reveals that file's actions alone.
   , folderClassName: styleProps.item.className
   , itemClassName: (StyleX.props [ styles.item, StyleX.defaultMarker ]).className
   , rowClassName: styleProps.row.className

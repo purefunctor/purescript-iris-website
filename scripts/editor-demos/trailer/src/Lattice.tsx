@@ -1,12 +1,9 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useCurrentFrame } from "remotion";
-// The site's hero backdrop, rendered frame by frame instead of on requestAnimationFrame.
 import { layoutField, makeField, makeOcean, palette } from "../../../../src/Website/Components/Backdrop.js";
 import { fps, height, width } from "./takes";
 
 const seed = 5139;
-// The video is watched smaller than the page it borrows from, so the lattice is laid out at
-// two-thirds size and drawn enlarged.
 const scale = 1.5;
 const morph = 2.6;
 const rippleSpeed = 900;
@@ -19,7 +16,6 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-// The noise fields for one moment: the field morphs into the next one every `morph` seconds.
 const fields = new Map<number, ReturnType<typeof makeField>>();
 const field = (step: number) => {
   if (!fields.has(step)) fields.set(step, makeField(seed + step));
@@ -27,7 +23,6 @@ const field = (step: number) => {
 };
 const ocean = makeOcean(seed);
 
-// `reveal` maps each point to how far the lattice has appeared there, from 0 to 1.
 export function Lattice({
   ripples,
   reveal,
@@ -49,7 +44,6 @@ export function Lattice({
   useLayoutEffect(() => {
     const context = canvas.current?.getContext("2d");
     if (!context) return;
-    // Remotion renders the 4K master at twice the composition's size; the canvas keeps up.
     const ratio = window.devicePixelRatio || 1;
     const seconds = frame / fps;
     const step = Math.floor(seconds / morph);

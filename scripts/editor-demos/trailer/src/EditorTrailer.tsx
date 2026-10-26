@@ -4,7 +4,6 @@ import { plan, type Manifest } from "./editor";
 import { Backdrop, EndScene, OpenScene, out, sans } from "./Scenes";
 import { fps, height, width, type Caption } from "./takes";
 
-// The take, full screen and playing throughout, under the overlays.
 function Take({ src, track, captions, scale }: { src: string; track: { source: number; opacity: number }[]; captions: (Caption & { until: number })[]; scale: number }) {
   const frame = useCurrentFrame();
   const pose = track[frame];
@@ -23,14 +22,10 @@ function Take({ src, track, captions, scale }: { src: string; track: { source: n
   );
 }
 
-// One semantic role, captioned on the code: its tokens underlined in the role's editor color, and a
-// flat tag in that color in the margin beside one of them. Captions keep to the take's own clock, so
-// they hold while its frame holds, and leave before the next feature starts.
 const tagColumn = 1600;
 function CaptionMark({ caption, order, source }: { caption: Caption & { until: number }; order: number; source: number }) {
   const appear = caption.t + 0.35 + order * 0.8;
   const t = (delay: number, length: number) => out(Math.min(1, Math.max(0, (source - appear - delay) / length)));
-  // Captions clear before the take's hold and zoom out ahead of the next beat.
   const gone = 1 - Math.min(1, Math.max(0, (source - (caption.until - 0.9)) / 0.4));
   if (source < appear || gone <= 0) return null;
   const color = `var(${caption.color})`;
@@ -83,7 +78,6 @@ function CaptionMark({ caption, order, source }: { caption: Caption & { until: n
 
 export function Trailer({ manifest }: { manifest: Manifest }) {
   const { scenes, track } = useMemo(() => plan(manifest), [manifest]);
-  // Captions clear before the beat that follows them.
   const captions = useMemo(
     () =>
       manifest.take.captions.map((caption) => ({

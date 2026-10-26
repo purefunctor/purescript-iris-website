@@ -24,7 +24,6 @@ component = unsafePerformEffect $ Hooks.reactComponent "ModuleMetadata" \_ ->
     , sections
     }
 
--- | A list item that describes a metadata field.
 field :: String -> Array JSX -> JSX
 field name description = item ([ inlineCode name, DOM.text " " ] <> description)
 

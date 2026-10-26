@@ -17,7 +17,6 @@ import Yoga.React.DOM as DOM
 
 styles = StyleX.create
   { noteRow: { display: "flex", alignItems: "flex-start", gap: 12 }
-  -- Center the logo on the first line of the note's text.
   , noteLogo: { width: 20, height: 20, flexShrink: 0, marginBlockStart: 2 }
   }
 

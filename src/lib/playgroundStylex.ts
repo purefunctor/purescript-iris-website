@@ -1,10 +1,3 @@
-// Bundles the StyleX compiler for the playground page. Iris compiles Iris.StyleX to
-// `@stylexjs/stylex` calls that the StyleX Babel plugin must compile to CSS, as
-// @stylexjs/unplugin does for the site. The runner loads this module only when a program imports
-// StyleX, and runs it on the generated modules before linking them.
-//
-// The plugin's browser build runs on @babel/standalone, Babel's own build for browsers, which
-// also runs the plugin here.
 
 import { rolldown } from "rolldown";
 
