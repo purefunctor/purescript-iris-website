@@ -6,10 +6,23 @@ const keywords = {
 const patterns = {
   purescript: /(--[^\n]*)|(\{-[\s\S]*?-\})|("(?:\\.|[^"\\])*")|('(?:\\.|[^'\\])')|(\b\d+(?:\.\d+)?\b)|(\b[A-Z][\w']*(?:\.[A-Z][\w']*)*)|(\b[a-z_][\w']*)|(::|->|<-|=>|>>>|<<<|<=|>=|<>|<\$>|<\*>|>>=|==|#|\/=|&&|\|\||[=\\|$<>+\-*\/.@])|([()[\]{},;`])/g,
   javascript: /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b\d+(?:\.\d+)?\b)|(\b[A-Z][\w$]*)|(\b[a-z_$][\w$]*)|(=>|===|!==|==|&&|\|\||[=+\-*\/<>!?:.])|([()[\]{},;])/g,
+  shell: /(#.*$)|("(?:\\.|[^"\\])*"|'[^']*')|(https?:\/\/[^\s|]+)|(\$env:[\w]+|\$[A-Za-z_][\w]*|\b[A-Z_][A-Z_0-9]*(?==))|(-{1,2}[\w-]+)|(\bv?\d+(?:\.\d+)+\b)|(\b[A-Za-z_][\w-]*\b)|([=|])/gm,
 };
 
 function classify(language, match, source, end) {
   const text = match[0];
+  if (language === "shell") {
+    if (match[1]) return "comment";
+    if (match[2] || match[3] || match[6]) return "string";
+    if (match[4]) return "type";
+    if (match[5]) return "keyword";
+    if (match[7]) {
+      if (text === "export" || text === "unset") return "keyword";
+      if (["curl", "sh", "irm", "iex"].includes(text)) return "function";
+      return "text";
+    }
+    return "operator";
+  }
   if (language === "purescript") {
     if (match[1] || match[2]) return "comment";
     if (match[3] || match[4]) return "string";
@@ -35,7 +48,7 @@ function classify(language, match, source, end) {
 export const tokenizeImpl = language => code => {
   const source = code.replace(/\n$/, "");
   if (!patterns[language]) return source.split("\n").map((line) => (line ? [{ kind: "text", text: line }] : []));
-  const pattern = new RegExp(patterns[language].source, "g");
+  const pattern = new RegExp(patterns[language].source, patterns[language].flags);
   const tokens = [];
   let last = 0;
   let match;
