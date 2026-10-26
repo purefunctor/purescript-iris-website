@@ -96,6 +96,7 @@ foreign import panelTabsImpl ::
     , rootClassName :: String
     , barClassName :: String
     , tabListClassName :: String
+    , settingsClassName :: String
     , tabClassName :: String
     , panelClassName :: String
     , switchedPanelClassName :: String
@@ -311,20 +312,42 @@ styles = StyleX.create
       , width: StyleX.conditionalValue "min(var(--panel-width), 70cqw)"
           [ StyleX.conditionalCase breakpoints.upTo960 "100%" ]
       }
-  -- The panel's tabs share their row with the selected tab's actions, such as Clear.
+  -- The panel's tabs scroll beside its settings, such as Clear, which stay put.
   , panelBar:
-      { alignItems: "center"
+      { alignItems: "stretch"
       , borderBlockEndColor: "var(--border-subtle)"
       , borderBlockEndStyle: "solid"
       , borderBlockEndWidth: 1
       , display: "flex"
       , flexShrink: 0
-      , gap: 8
       , height: 36
-      , justifyContent: "space-between"
-      , paddingInlineEnd: 8
       }
-  , tabList: { alignSelf: "stretch", display: "flex" }
+  -- panelTabsImpl marks the edges that hide tabs, and a fade there shows that the list scrolls.
+  , tabList:
+      { display: "flex"
+      , flexGrow: 1
+      , maskImage:
+          { default: "none"
+          , "[data-overflow=start]": "linear-gradient(to right, transparent, black 24px)"
+          , "[data-overflow=end]": "linear-gradient(to left, transparent, black 24px)"
+          , "[data-overflow=both]":
+              "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)"
+          }
+      , minWidth: 0
+      , overflowX: "auto"
+      , overscrollBehaviorX: "contain"
+      , scrollbarWidth: "none"
+      }
+  , panelSettings:
+      { alignItems: "center"
+      , borderInlineStartColor: "var(--border-subtle)"
+      , borderInlineStartStyle: "solid"
+      , borderInlineStartWidth: 1
+      , display: "flex"
+      , flexShrink: 0
+      , gap: 6
+      , paddingInline: 8
+      }
   , tab:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -343,7 +366,7 @@ styles = StyleX.create
       , outlineOffset: -2
       , outlineStyle: { default: "none", "[data-focus-visible]": "solid" }
       , outlineWidth: 2
-      , paddingInline: 16
+      , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 8 ]
       , transitionDuration: "140ms"
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
@@ -796,6 +819,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , rootClassName: styleProps.tabs.className
         , barClassName: styleProps.panelBar.className
         , tabListClassName: styleProps.tabList.className
+        , settingsClassName: styleProps.panelSettings.className
         , tabClassName: styleProps.tab.className
         , panelClassName: styleProps.tabPanel.className
         , switchedPanelClassName: (StyleX.props [ styles.tabPanel, styles.switched ]).className

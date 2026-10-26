@@ -109,6 +109,7 @@ export function panelTabsImpl({
   rootClassName,
   barClassName,
   tabListClassName,
+  settingsClassName,
   tabClassName,
   panelClassName,
   switchedPanelClassName,
@@ -121,6 +122,39 @@ export function panelTabsImpl({
 }) {
   const [switched, setSwitched] = useState(false);
   const panelClass = switched ? switchedPanelClassName : panelClassName;
+  const tabList = useRef(null);
+  // The tabs scroll beside the static settings when the panel is narrow. The list marks which of
+  // its edges hide tabs so that its styles fade them, and a vertical wheel scrolls it sideways.
+  useLayoutEffect(() => {
+    const list = tabList.current;
+    if (!list) return undefined;
+    const mark = () => {
+      const start = list.scrollLeft > 1;
+      const end = list.scrollLeft + list.clientWidth < list.scrollWidth - 1;
+      if (start && end) list.dataset.overflow = "both";
+      else if (start) list.dataset.overflow = "start";
+      else if (end) list.dataset.overflow = "end";
+      else delete list.dataset.overflow;
+    };
+    const wheel = (event) => {
+      if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) list.scrollLeft += event.deltaY;
+    };
+    mark();
+    const observer = new ResizeObserver(mark);
+    observer.observe(list);
+    list.addEventListener("scroll", mark, { passive: true });
+    list.addEventListener("wheel", wheel, { passive: true });
+    return () => {
+      observer.disconnect();
+      list.removeEventListener("scroll", mark);
+      list.removeEventListener("wheel", wheel);
+    };
+  }, []);
+  useEffect(() => {
+    tabList.current
+      ?.querySelector("[data-selected]")
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [selected]);
   return (
     <Tabs
       className={rootClassName}
@@ -131,7 +165,7 @@ export function panelTabsImpl({
       selectedKey={selected}
     >
       <div className={barClassName}>
-        <TabList aria-label="Playground panels" className={tabListClassName}>
+        <TabList aria-label="Playground panels" className={tabListClassName} ref={tabList}>
           <Tab className={tabClassName} id="output">
             Output
             {outputBadge && <span className={badgeClassName}>{outputBadge}</span>}
@@ -141,7 +175,7 @@ export function panelTabsImpl({
             {packagesBadge && <span className={badgeClassName}>{packagesBadge}</span>}
           </Tab>
         </TabList>
-        {selected === "output" && outputAction}
+        <div className={settingsClassName}>{selected === "output" && outputAction}</div>
       </div>
       <TabPanel className={panelClass} id="output">
         {output}
