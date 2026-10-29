@@ -840,7 +840,8 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
     , className: styleProps.sidebar.className
     , handleClassName: (StyleX.props [ styles.handle, styles.sidebarHandle ]).className
     , children: DOM.div styleProps.sidebarSections
-        [ fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
+        [ element fileTree
+            { files: state.files, active: state.active, viewing: state.viewing, actions }
         , templateList { templates: state.templates, actions }
         ]
     }
