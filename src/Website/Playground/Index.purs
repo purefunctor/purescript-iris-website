@@ -5,8 +5,11 @@ import Prelude
 import Data.Array (filter, length, null)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Nullable (Nullable, toMaybe)
+import Data.String (toLower)
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (Milliseconds(..), delay)
+import Effect.Uncurried (EffectFn1, mkEffectFn1)
 import Effect.Unsafe (unsafePerformEffect)
 import Foreign (Foreign)
 import Iris.StyleX as StyleX
@@ -14,96 +17,66 @@ import React.Basic (JSX, ReactComponent, Ref, element, fragment)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import React.Basic.Hooks.Aff (useAff)
+import Record (merge)
 import Web.DOM.Element (Element)
 import Website.Breakpoints (breakpoints)
 import Website.Components.ExternalLink (newTabLabel)
 import Website.Components.Icon as Icon
 import Website.Components.IconButton.Styles (iconButtonStyles)
+import Website.Jotai as Jotai
 import Website.Playground.Button.Styles (buttonStyles)
 import Website.Playground.FileTabs (fileTabs)
 import Website.Playground.FileTree (fileTree)
+import Website.Playground.Hooks
+  ( HandleProps
+  , useFollowOutput
+  , useFrameSlot
+  , usePanelBelowEditor
+  , usePlayground
+  , useResizable
+  , useTabListOverflow
+  )
 import Website.Playground.Loading (loading)
 import Website.Playground.Packages (packagesPanel)
 import Website.Playground.Templates (templateList)
 import Website.Playground.Types (Actions, Line, Run, State, View)
 import Yoga.React.DOM as DOM
 
-foreign import playgroundImpl :: ReactComponent { theme :: Foreign, render :: View -> JSX }
-
-foreign import sidebarImpl ::
+foreign import tabs ::
   ReactComponent
-    { id :: String
-    , open :: Boolean
-    , width :: Int
-    , resize :: Int -> Effect Unit
-    , close :: Effect Unit
-    , className :: String
-    , handleClassName :: String
+    { className :: String
+    , onSelectionChange :: EffectFn1 String Unit
+    , selectedKey :: String
     , children :: JSX
     }
 
-foreign import pillImpl ::
+foreign import tabList ::
   ReactComponent
-    { href :: String
-    , label :: String
-    , accessibleLabel :: String
-    , tooltip :: String
-    , className :: String
-    , iconClassName :: String
-    , tooltipClassName :: String
-    }
+    { "aria-label" :: String, className :: String, ref :: Ref (Nullable Element), children :: JSX }
 
-foreign import panelImpl ::
+foreign import tab :: ReactComponent { className :: String, id :: String, children :: JSX }
+
+foreign import tabPanel :: ReactComponent { className :: String, id :: String, children :: JSX }
+
+foreign import tooltipTrigger :: ReactComponent { closeDelay :: Int, delay :: Int, children :: JSX }
+
+foreign import tooltip ::
+  ReactComponent { className :: String, offset :: Int, placement :: String, children :: JSX }
+
+foreign import focusable :: ReactComponent { children :: JSX }
+
+foreign import link ::
   ReactComponent
-    { id :: String
-    , label :: String
-    , open :: Boolean
-    , width :: Int
-    , height :: Int
-    , resize :: { width :: Int, height :: Int } -> Effect Unit
-    , close :: Effect Unit
+    { "aria-label" :: String
     , className :: String
-    , handleClassName :: String
+    , href :: String
+    , rel :: String
+    , target :: String
     , children :: JSX
     }
 
-foreign import outputViewImpl ::
-  ReactComponent { frames :: Ref (Nullable Element), className :: String }
-
-foreign import consoleImpl ::
-  ReactComponent
-    { overlay :: Boolean
-    , open :: Boolean
-    , height :: Int
-    , resize :: Int -> Effect Unit
-    , close :: Effect Unit
-    , className :: String
-    , scrollerClassName :: String
-    , handleClassName :: String
-    , bar :: JSX
-    , children :: JSX
-    }
-
-foreign import panelTabsImpl ::
-  ReactComponent
-    { selected :: String
-    , select :: String -> Effect Unit
-    , rootClassName :: String
-    , barClassName :: String
-    , tabListClassName :: String
-    , settingsClassName :: String
-    , tabClassName :: String
-    , panelClassName :: String
-    , switchedPanelClassName :: String
-    , badgeClassName :: String
-    , output :: JSX
-    , outputAction :: JSX
-    , outputBadge :: String
-    , javascript :: JSX
-    , settings :: JSX
-    , packages :: JSX
-    , packagesBadge :: String
-    }
+foreign import externalLinkIcon ::
+  ReactComponent { "aria-hidden" :: Boolean, className :: String, focusable :: Boolean }
 
 styles = StyleX.create
   { page:
@@ -742,7 +715,12 @@ basisOut = StyleX.keyframes { to: { flexBasis: 0 } }
 
 component :: ReactComponent { theme :: Foreign }
 component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } ->
-  pure $ element playgroundImpl { theme, render: playground }
+  pure $ element Jotai.provider { children: element workspace { theme } }
+
+workspace :: ReactComponent { theme :: Foreign }
+workspace = unsafePerformEffect $ Hooks.reactComponent "PlaygroundWorkspace" \{ theme } -> Hooks.do
+  view <- usePlayground theme
+  pure (playground view)
 
 playground :: View -> JSX
 playground { state, actions, editor, generated, frames } = DOM.div styleProps.page
@@ -785,7 +763,7 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
     , DOM.div styleProps.spacer []
     , status state
     , case toMaybe state.packages.packageSet of
-        Just packageSet -> element pillImpl
+        Just packageSet -> tooltipPill
           { href: ""
           , label: packageSet
           , accessibleLabel: "Package set " <> packageSet
@@ -831,15 +809,12 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
         ]
     ]
 
-  sidebar = element sidebarImpl
-    { id: "playground-sidebar"
-    , open: state.sidebar
+  sidebar = element sidebarArea
+    { open: state.sidebar
     , width: state.sidebarWidth
     , resize: actions.resizeSidebar
     , close: actions.closeSidebar
-    , className: styleProps.sidebar.className
-    , handleClassName: (StyleX.props [ styles.handle, styles.sidebarHandle ]).className
-    , children: DOM.div styleProps.sidebarSections
+    , content: DOM.div styleProps.sidebarSections
         [ element fileTree
             { files: state.files, active: state.active, viewing: state.viewing, actions }
         , templateList { templates: state.templates, actions }
@@ -856,27 +831,16 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
         }
     ]
 
-  panel = element panelImpl
-    { id: "playground-panel"
-    , label: "Output, JavaScript and packages"
+  panel = element panelArea
+    { label: "Output, JavaScript and packages"
     , open: state.panel
     , width: state.panelWidth
     , height: state.panelHeight
     , resize: actions.resizePanel
     , close: actions.closePanel
-    , className: styleProps.panel.className
-    , handleClassName: (StyleX.props [ styles.handle, styles.panelHandle ]).className
-    , children: element panelTabsImpl
+    , content: element panelTabs
         { selected: state.panelTab
         , select: actions.selectPanelTab
-        , rootClassName: styleProps.tabs.className
-        , barClassName: styleProps.panelBar.className
-        , tabListClassName: styleProps.tabList.className
-        , settingsClassName: styleProps.panelSettings.className
-        , tabClassName: styleProps.tab.className
-        , panelClassName: styleProps.tabPanel.className
-        , switchedPanelClassName: (StyleX.props [ styles.tabPanel, styles.switched ]).className
-        , badgeClassName: styleProps.badge.className
         , output: output state actions frames
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
@@ -981,7 +945,7 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
   "restarting", _, Nothing -> pill "Restarting the language server" styles.statusBusy
   "starting", _, _ -> pill "Starting the language server" styles.statusBusy
   _, Just "mock", _ -> mempty
-  _, _, Just version -> element pillImpl
+  _, _, Just version -> tooltipPill
     { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
     , label: version
     , accessibleLabel: "Iris " <> version <> " release" <> newTabLabel
@@ -1008,10 +972,7 @@ output state actions frames = DOM.div styleProps.output
       else mempty
     ]
       <> if run.view
-         then
-           [ element outputViewImpl { frames, className: styleProps.view.className }
-           , if null run.lines then mempty else console true
-           ]
+         then [ element outputView { frames }, if null run.lines then mempty else console true ]
          else
            [ case run.status, null run.lines of
                "idle", true ->
@@ -1022,19 +983,14 @@ output state actions frames = DOM.div styleProps.output
   )
   where
   run = state.run
-  console overlay = element consoleImpl
+  console overlay = element consoleArea
     { overlay
     , open: state.console
     , height: state.consoleHeight
     , resize: actions.resizeConsole
     , close: actions.closeConsole
-    , className:
-        ( StyleX.props [ styles.console, StyleX.conditional overlay styles.overlayConsole ]
-        ).className
-    , scrollerClassName: styleProps.consoleScroller.className
-    , handleClassName: (StyleX.props [ styles.handle, styles.consoleHandle ]).className
     , bar: consoleBar state.console run.lines actions.toggleConsole
-    , children: fragment (map (outputLine state actions) run.lines)
+    , content: fragment (map (outputLine state actions) run.lines)
     }
 
 consoleBar :: Boolean -> Array Line -> Effect Unit -> JSX
@@ -1080,7 +1036,7 @@ clearButton run clear
 
 javascriptPanel :: State -> Ref (Nullable Element) -> JSX
 javascriptPanel state host = DOM.div styleProps.output
-  [ element outputViewImpl { frames: host, className: styleProps.view.className }
+  [ element outputView { frames: host }
   , if state.generated.message == ""
     then mempty
     else DOM.p styleProps.generatedStatus state.generated.message
@@ -1132,3 +1088,285 @@ outputLine state actions line = DOM.div (StyleX.props [ styles.line, tone ])
     "warning" -> { tone: styles.warningLine, marker: icon Icon.triangleAlert }
     "info" -> { tone: styles.infoLine, marker: mempty }
     _ -> { tone: styles.logLine, marker: mempty }
+
+sidebarId :: String
+sidebarId = "playground-sidebar"
+
+sidebarArea ::
+  ReactComponent
+    { open :: Boolean
+    , width :: Int
+    , resize :: Int -> Effect Unit
+    , close :: Effect Unit
+    , content :: JSX
+    }
+sidebarArea = unsafePerformEffect $ Hooks.reactComponent "PlaygroundSidebar" \props -> Hooks.do
+  area <- useResizable
+    { id: sidebarId
+    , label: "Resize files"
+    , open: props.open
+    , size: props.width
+    , min: 180
+    , max: 480
+    , collapse: 120
+    , vertical: false
+    , fromEnd: false
+    , share: 1.0
+    , resize: props.resize
+    , close: props.close
+    }
+  pure $ fragment
+    [ if area.rendered
+      then DOM.div
+        ( merge
+            { className: styleProps.sidebar.className
+            , id: sidebarId
+            , style: DOM.css { "--sidebar-width": pixels area.current }
+            }
+            area.presenceProps
+        )
+        props.content
+      else mempty
+    , resizeHandle [ styles.handle, styles.sidebarHandle ]
+        (DOM.css { insetInlineStart: if area.shown then area.current - 3 else 0 }) area.handleProps
+    ]
+
+panelId :: String
+panelId = "playground-panel"
+
+panelArea ::
+  ReactComponent
+    { label :: String
+    , open :: Boolean
+    , width :: Int
+    , height :: Int
+    , resize :: { width :: Int, height :: Int } -> Effect Unit
+    , close :: Effect Unit
+    , content :: JSX
+    }
+panelArea = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPanel" \props -> Hooks.do
+  vertical <- usePanelBelowEditor
+  area <- useResizable
+    { id: panelId
+    , label: "Resize " <> toLower props.label
+    , open: props.open
+    , size: if vertical then props.height else props.width
+    , min: if vertical then 120 else 240
+    , max: if vertical then 800 else 900
+    , collapse: if vertical then 80 else 160
+    , vertical
+    , fromEnd: true
+    , share: 0.7
+    , resize: \size ->
+        props.resize
+          if vertical
+          then { width: props.width, height: size }
+          else { width: size, height: props.height }
+    , close: props.close
+    }
+  let
+    sizes :: Boolean -> DOM.CSS
+    sizes shown = DOM.css
+      { "--panel-width":
+          pixels if not shown then 0 else if vertical then props.width else area.current
+      , "--panel-height":
+          pixels if not shown then 0 else if vertical then area.current else props.height
+      }
+  pure $ fragment
+    [ if area.rendered
+      then DOM.aside
+        ( merge
+            { "aria-label": props.label
+            , className: styleProps.panel.className
+            , id: panelId
+            , style: sizes true
+            }
+            area.presenceProps
+        )
+        props.content
+      else mempty
+    , resizeHandle [ styles.handle, styles.panelHandle ] (sizes area.shown) area.handleProps
+    ]
+
+consoleBarHeight :: Int
+consoleBarHeight = 1 + 28
+
+consoleMinHeight :: Int
+consoleMinHeight = consoleBarHeight + 10 * (18 + 2 * 2 + 1)
+
+consoleArea ::
+  ReactComponent
+    { overlay :: Boolean
+    , open :: Boolean
+    , height :: Int
+    , resize :: Int -> Effect Unit
+    , close :: Effect Unit
+    , bar :: JSX
+    , content :: JSX
+    }
+consoleArea = unsafePerformEffect $ Hooks.reactComponent "PlaygroundConsole" \props -> Hooks.do
+  area <- useResizable
+    { id: "playground-console"
+    , label: "Resize console"
+    , open: props.open
+    , size: max consoleMinHeight props.height
+    , min: consoleMinHeight
+    , max: 4000
+    , collapse: consoleBarHeight + 40
+    , vertical: true
+    , fromEnd: true
+    , share: 0.9
+    , resize: props.resize
+    , close: props.close
+    }
+  follow <- useFollowOutput
+  let
+    shown :: Int
+    shown = if area.shown then area.current else consoleBarHeight
+  pure $ fragment
+    [ if props.overlay
+      then resizeHandle [ styles.handle, styles.consoleHandle ]
+        (DOM.css { insetBlockEnd: "calc(min(" <> pixels shown <> ", 100%) - 3px)" })
+        area.handleProps
+      else mempty
+    , DOM.div
+        { className:
+            ( StyleX.props
+                [ styles.console, StyleX.conditional props.overlay styles.overlayConsole ]
+            ).className
+        , style: if props.overlay then DOM.css { height: shown } else mempty
+        }
+        [ if props.overlay then props.bar else mempty
+        , DOM.div
+            { "aria-live": "polite"
+            , className: styleProps.consoleScroller.className
+            , id: "playground-console"
+            , onScroll: follow.onScroll
+            , ref: DOM.reactRef follow.scroller
+            , role: "log"
+            }
+            props.content
+        ]
+    ]
+
+resizeHandle :: Array StyleX.Style -> DOM.CSS -> HandleProps -> JSX
+resizeHandle styles' style props = DOM.createBuiltinElement_ "div"
+  (merge { className: (StyleX.props styles').className, style } props)
+
+pixels :: Int -> String
+pixels n = show n <> "px"
+
+switchedAtom :: Jotai.Atom Boolean
+switchedAtom = unsafePerformEffect (Jotai.atom false)
+
+panelTabs ::
+  ReactComponent
+    { selected :: String
+    , select :: String -> Effect Unit
+    , output :: JSX
+    , outputAction :: JSX
+    , outputBadge :: String
+    , javascript :: JSX
+    , settings :: JSX
+    , packages :: JSX
+    , packagesBadge :: String
+    }
+panelTabs = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPanelTabs" \props -> Hooks.do
+  switched /\ setSwitched <- Jotai.useAtom switchedAtom
+  tabListRef <- useTabListOverflow props.selected
+  let
+    panelClassName :: String
+    panelClassName =
+      (StyleX.props [ styles.tabPanel, StyleX.conditional switched styles.switched ]).className
+  pure $ element tabs
+    { className: styleProps.tabs.className
+    , onSelectionChange: mkEffectFn1 \key -> setSwitched (const true) *> props.select key
+    , selectedKey: props.selected
+    , children: fragment
+        [ DOM.div styleProps.panelBar
+            [ element tabList
+                { "aria-label": "Playground panels"
+                , className: styleProps.tabList.className
+                , ref: tabListRef
+                , children: fragment
+                    [ panelTabLabel "output" "Output" props.outputBadge
+                    , panelTabLabel "javascript" "JavaScript" ""
+                    , panelTabLabel "packages" "Packages" props.packagesBadge
+                    ]
+                }
+            , DOM.div styleProps.panelSettings
+                [ if props.selected == "output" then props.outputAction else mempty
+                , props.settings
+                ]
+            ]
+        , panelTabContent panelClassName "output" props.output
+        , panelTabContent panelClassName "javascript" props.javascript
+        , panelTabContent panelClassName "packages" props.packages
+        ]
+    }
+
+panelTabLabel :: String -> String -> String -> JSX
+panelTabLabel id label badge = element tab
+  { className: styleProps.tab.className
+  , id
+  , children:
+      fragment [ DOM.text label, if badge == "" then mempty else DOM.span styleProps.badge badge ]
+  }
+
+panelTabContent :: String -> String -> JSX -> JSX
+panelTabContent className id children = element tabPanel { className, id, children }
+
+outputView :: ReactComponent { frames :: Ref (Nullable Element) }
+outputView = unsafePerformEffect $ Hooks.reactComponent "PlaygroundOutputView" \{ frames } ->
+  Hooks.do
+    slot <- useFrameSlot frames
+    pure $ DOM.div { className: styleProps.view.className, ref: DOM.reactRef slot } []
+
+type PillProps =
+  { href :: String
+  , label :: String
+  , accessibleLabel :: String
+  , tooltip :: String
+  , className :: String
+  , iconClassName :: String
+  , tooltipClassName :: String
+  }
+
+tooltipPill :: PillProps -> JSX
+tooltipPill props = element tooltipTrigger
+  { closeDelay: 100
+  , delay: 300
+  , children: fragment
+      [ pillTrigger props
+      , element tooltip
+          { className: props.tooltipClassName
+          , offset: 8
+          , placement: "bottom"
+          , children: DOM.text props.tooltip
+          }
+      ]
+  }
+
+pillTrigger :: PillProps -> JSX
+pillTrigger props
+  | props.href == "" = element focusable
+    { children: DOM.span
+        { "aria-label": props.accessibleLabel
+        , className: props.className
+        , role: "img"
+        , tabIndex: 0
+        }
+        props.label
+    }
+  | otherwise = element link
+    { "aria-label": props.accessibleLabel
+    , className: props.className
+    , href: props.href
+    , rel: "noopener noreferrer"
+    , target: "_blank"
+    , children: fragment
+        [ DOM.text props.label
+        , element externalLinkIcon
+            { "aria-hidden": true, className: props.iconClassName, focusable: false }
+        ]
+    }
