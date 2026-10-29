@@ -118,6 +118,23 @@ sections =
             ]
         ]
     }
+  , { id: "install-with-nix"
+    , title: "Install with Nix"
+    , body:
+        [ paragraph
+            [ DOM.text "Nix users can use the community-maintained "
+            , link "https://github.com/sectore/purescript-iris-nix" "purescript-iris-nix"
+            , DOM.text
+                " flake instead of the install scripts. It builds Iris from source and provides the "
+            , inlineCode "iris"
+            , DOM.text " command. Its "
+            , link "https://github.com/sectore/purescript-iris-nix#readme" "README"
+            , DOM.text " describes how to use it. Update Iris through the flake rather than with "
+            , inlineCode "iris self update"
+            , DOM.text "."
+            ]
+        ]
+    }
   , { id: "update-iris"
     , title: "Update Iris"
     , body:
