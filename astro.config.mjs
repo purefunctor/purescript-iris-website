@@ -3,6 +3,7 @@ import stylex from "@stylexjs/unplugin";
 import icons from "unplugin-icons/vite";
 import { defineConfig } from "astro/config";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { devLibraryBundle } from "./src/lib/devLibraryBundle.ts";
 import { devModulePreload } from "./src/lib/devModulePreload.ts";
 import { inlineStyleHashes } from "./src/lib/inlineStyles.ts";
@@ -16,6 +17,13 @@ const playgroundMonacoModules = Array.from(
   ),
   (match) => match[1],
 );
+
+const packageImports = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).imports;
+
+const packageImportAliases = Object.entries(packageImports).map(([specifier, target]) => ({
+  find: specifier.replace(/\/\*$/, ""),
+  replacement: fileURLToPath(new URL(target.replace(/\/\*$/, ""), import.meta.url)),
+}));
 
 const babelSourceMapPreset = () => ({ sourceMaps: true });
 
@@ -54,6 +62,7 @@ export default defineConfig({
     cacheDir: development
       ? "node_modules/.vite-dev"
       : "node_modules/.vite-build",
+    resolve: { alias: packageImportAliases },
     optimizeDeps: {
       include: [
         "@stylexjs/stylex",
