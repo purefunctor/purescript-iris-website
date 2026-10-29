@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createNavigationOcean } from "#src/Website/Components/NavigationOcean.js";
 
-// Fade the site's ocean in behind the link while it is hovered or focused, and pulse it on press.
 export function NavigationLink({ href, className, canvasClassName, contentClassName, ariaCurrent, children }) {
   const canvas = useRef(null);
   const field = useRef(null);

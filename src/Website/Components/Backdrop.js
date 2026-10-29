@@ -1,11 +1,8 @@
-// Noise-driven dot lattice floating on a Gerstner-wave surface. The field morphs from one noise
-// seed to the next instead of scrolling, and holds a still frame when motion is reduced.
 const seed = 5139;
 const spacing = 22;
 const clearRadius = 0.62;
 const morphMilliseconds = 2600;
-// Ripples travel in pixels per millisecond and fade out before reaching the far corner.
-const rippleSpeed = 0.9;
+const ripplePixelsPerMillisecond = 0.9;
 const rippleWidth = 90;
 export const palette = [
   "--spectrum-red",
@@ -89,9 +86,6 @@ export function makeOcean(oceanSeed) {
 
 export const makeField = fieldSeed => ({ noise: makeNoise(fieldSeed), hue: makeNoise(fieldSeed + 7) });
 
-// Lays out one frame: each mark's position, radius, opacity and palette index. `ring` reports the
-// strongest ripple at a point, or is null when no ripples are travelling. Without `clearing`, marks
-// cover the whole frame instead of leaving the top-left corner open for copy.
 export function layoutField(width, height, time, { noise, hue, ocean }, ring, clearing = true) {
   const narrow = width < 1100;
   const rowHeight = spacing * 0.866;
@@ -104,7 +98,6 @@ export function layoutField(width, height, time, { noise, hue, ocean }, ring, cl
       const y = y0;
       const distance = Math.hypot(x, y) / Math.hypot(width, height);
       const [wave, dx, dy] = ring ? ring(x, y) : [0, 0, 0];
-      // A passing ripple reveals marks even inside the clearing behind the copy.
       const open = clearing ? smoothstep(clearRadius * 0.58, clearRadius, distance) * (narrow ? 0.55 : 1) : 1;
       const mask = Math.max(open, wave);
       if (mask < 0.02) continue;
@@ -115,11 +108,9 @@ export function layoutField(width, height, time, { noise, hue, ocean }, ring, cl
   }
   if (!points.length) return [];
 
-  // Threshold at a percentile so roughly half of the visible points swell, and rank hues so
-  // each palette step receives an even share of patches.
   const noises = points.map(point => point[3]).sort((a, b) => a - b);
   const hues = points.map(point => point[4]).sort((a, b) => a - b);
-  const rank = value => {
+  const hueRank = value => {
     let low = 0;
     let high = hues.length;
     while (low < high) {
@@ -129,27 +120,26 @@ export function layoutField(width, height, time, { noise, hue, ocean }, ring, cl
     }
     return low / hues.length;
   };
-  const low = noises[Math.floor(noises.length * 0.5)];
-  const high = Math.max(low + 0.02, noises[Math.floor(noises.length * 0.95)]);
+  const percentile = fraction => noises[Math.floor(noises.length * fraction)];
+  const swellFrom = percentile(0.5);
+  const swellTo = Math.max(swellFrom + 0.02, percentile(0.95));
   const dots = [];
   for (const [x, y, mask, n, h, z, wave] of points) {
     const edge = smoothstep(0.02, 0.55, mask);
     if (edge < 0.02) continue;
     const lift = (1 + z * 0.45) * (1 + wave * 0.8);
-    const value = smoothstep(low, high, n) * mask;
+    const value = smoothstep(swellFrom, swellTo, n) * mask;
     dots.push({
       x,
       y,
       radius: spacing * (0.03 * (0.4 + 0.6 * edge) + value * 0.045 + wave * 0.06) * lift,
       alpha: Math.min(1, (0.45 + value * 0.55) * edge * (0.82 + z * 0.22) + wave * 0.5),
-      color: Math.min(palette.length - 1, Math.floor(rank(h) * palette.length)),
+      color: Math.min(palette.length - 1, Math.floor(hueRank(h) * palette.length)),
     });
   }
   return dots;
 }
 
-// The first frame, as shown when motion is reduced. Social images render it at build time, and may
-// choose another seed.
 export const stillField = (width, height, { clearing = true, seed: fieldSeed = seed } = {}) => {
   const first = makeField(fieldSeed);
   return layoutField(width, height, 0, { ...first, ocean: makeOcean(fieldSeed) }, null, clearing);
@@ -203,15 +193,14 @@ export const startField = canvasRef => () => {
     context.clearRect(0, 0, width, height);
     if (!width || !height) return;
 
-    // Ripples start on the first frame drawn after they are requested.
     for (const ripple of ripples) if (ripple.start == null) ripple.start = time;
-    ripples = ripples.filter(ripple => (time - ripple.start) * rippleSpeed < ripple.reach + rippleWidth);
+    ripples = ripples.filter(ripple => (time - ripple.start) * ripplePixelsPerMillisecond < ripple.reach + rippleWidth);
     const ring = (x, y) => {
       let strength = 0;
       let dx = 0;
       let dy = 0;
       for (const ripple of ripples) {
-        const radius = (time - ripple.start) * rippleSpeed;
+        const radius = (time - ripple.start) * ripplePixelsPerMillisecond;
         const distance = Math.hypot(x - ripple.x, y - ripple.y) || 1;
         const wave = Math.exp(-(((distance - radius) / rippleWidth) ** 2)) * Math.sqrt(Math.max(0, 1 - radius / ripple.reach));
         if (wave > strength) {
@@ -260,7 +249,6 @@ export const startField = canvasRef => () => {
   motion.addEventListener("change", update);
 
   return {
-    // Starts a ripple at the centre of an element. Motion-reduced fields stay still.
     ripple: originRef => () => {
       const origin = originRef.current;
       if (!origin || motion.matches) return;

@@ -1,7 +1,3 @@
-// Projects that the sidebar offers as starting points. The first is the default project, which a
-// new visit opens and Reset restores. Each one is a complete project that loads in place of the
-// current one, and activates the core packages and its own `packages`. The program's frame gives it the site's background, text color and fonts; every
-// other color is written out in the module, so the code reads on its own.
 
 const COLORS = String.raw`-- The program runs in its own document, so it brings its own colors: the playground's.
 colors =
@@ -175,6 +171,46 @@ import Web.HTML.Window (document)`;
 
 const REACT = ["react-basic", "react-basic-dom", "react-basic-hooks"];
 
+const MAPPED_EXCEPTION = {
+  id: "source-maps",
+  packages: [],
+  name: "Mapped exception",
+  description: "Follow a runtime error back to PureScript",
+  files: [
+    {
+      path: "src/Main.purs",
+      text: String.raw`module Main where
+
+import Prelude
+
+import Effect (Effect)
+import Effect.Console (log)
+
+foreign import reserve :: String -> Effect Unit
+
+checkout :: String -> Effect Unit
+checkout sku = do
+  log ("Checking stock for " <> sku)
+  reserve sku
+  log "Reservation complete"
+
+main :: Effect Unit
+main = do
+  log "Starting checkout"
+  checkout "IRIS-042"
+  log "Checkout complete"
+`,
+    },
+    {
+      path: "src/Main.js",
+      text: String.raw`export const reserve = (sku) => () => {
+  throw new Error("Out of stock: " + sku);
+};
+`,
+    },
+  ],
+};
+
 export const TEMPLATES = [
   {
     id: "console",
@@ -212,6 +248,7 @@ greet name = "Hello, " <> name <> "!"
       },
     ],
   },
+  MAPPED_EXCEPTION,
   {
     id: "halogen-counter",
     packages: ["halogen"],

@@ -1,8 +1,3 @@
-// A JavaScript stand-in for the Iris language server, with the same interface as its WebAssembly
-// build, so the playground works without building Rust. Its answers come from plain text, not
-// from the compiler: they exercise the editor, never Iris itself.
-//
-// Diagnostics: a line containing `???` is an error and a line containing `TODO` is a warning.
 
 const KEYWORDS = "module where import data type newtype class instance derive let in case of if then else do ado forall foreign as hiding infixl infixr infix".split(" ");
 const WORD = /[A-Za-z_][\w']*/g;
@@ -125,6 +120,13 @@ export class MockServer {
           return [{ range: { start: { line, character: trimmed.length }, end: { line, character: text.length } }, newText: "" }];
         });
       }
+      case "iris/generated": {
+        const document = this.#documents.get(params.uri);
+        if (!document) throw new Error("No open document at this URI");
+        const name = /^module\s+([\w.]+)/m.exec(document.text)?.[1] ?? "Main";
+        return { status: "generated", path: `${name}/index.js`, map: null,
+          text: "// Mock language server: no compiled JavaScript or source maps.\n// Build or download the Iris language server to inspect this module.\n" };
+      }
       case "iris/emit": {
         const modules = [...this.#documents.keys()]
           .filter((uri) => uri.endsWith(".purs"))
@@ -156,7 +158,7 @@ export class MockServer {
         const document = this.#documents.get(uri);
         if (!document) return [];
         for (const change of params.contentChanges) {
-          document.text = change.range ? splice(document.text, change.range, change.text) : change.text;
+          document.text = change.range ? replaceRange(document.text, change.range, change.text) : change.text;
         }
         document.version = version;
         this.#pending.push(uri);
@@ -189,8 +191,7 @@ export class MockServer {
   }
 }
 
-/** Replaces a range given in UTF-16 line and character positions, as Monaco sends them. */
-function splice(text, range, replacement) {
+function replaceRange(text, range, replacement) {
   const offset = ({ line, character }) => {
     let index = 0;
     for (let current = 0; current < line; current++) index = text.indexOf("\n", index) + 1;

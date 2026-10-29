@@ -1,5 +1,3 @@
-// Keeps the project in local storage and encodes it into share links, with the packages it
-// activated.
 
 const KEY = "iris-playground-project";
 const VERSION = 1;
@@ -16,11 +14,9 @@ export function saveProject(project) {
   try {
     localStorage.setItem(KEY, JSON.stringify({ version: VERSION, ...project }));
   } catch {
-    // Storage can be full or disabled; the project still lives in the page.
   }
 }
 
-/** A `#project=` fragment holding the project, compressed and base64url-encoded. */
 export async function encodeProject(project) {
   const { files, open, active, packages } = project;
   const json = JSON.stringify({ version: VERSION, files, open, active, packages });
@@ -47,7 +43,6 @@ function validate(project) {
   );
   if (files.length === 0) return null;
   const open = Array.isArray(project.open) ? project.open.filter((path) => typeof path === "string") : undefined;
-  // Projects saved before packages were activated have none, and the controller chooses them.
   const packages = Array.isArray(project.packages) ? project.packages.filter((name) => typeof name === "string") : undefined;
   return { files, open, active: typeof project.active === "string" ? project.active : undefined, packages };
 }

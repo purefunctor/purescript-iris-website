@@ -14,13 +14,9 @@ data Page = GettingStarted | Installation | LanguageServer | Formatting | Module
 
 derive instance Eq Page
 
--- | Pages in navigation order. The compiler README links to these
--- | routes.
 pages :: Array Page
 pages = [ GettingStarted, Installation, LanguageServer, Formatting, ModuleMetadata ]
 
--- | Production serves each page at its trailing-slash URL and redirects the bare form, so links
--- | use that URL to avoid a round trip.
 pageHref :: Page -> String
 pageHref = case _ of
   GettingStarted -> "/docs/getting-started/"
@@ -71,12 +67,17 @@ foreign import navigationBarImpl ::
         }
     }
 
+articleGutter :: String
+articleGutter = "clamp(24px, 4.5vw, 72px)"
+
+articleMeasure :: String
+articleMeasure = "72ch"
+
 fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
 fadeOut = StyleX.keyframes { from: { opacity: 1 }, to: { opacity: 0 } }
 
 styles = StyleX.create
   { page: { fontSize: 16, lineHeight: 1.75, color: "var(--text-secondary)" }
-  -- The header's links end where the rail's text does, matching the logo on the other side.
   , headerLinks:
       { display: "flex"
       , alignSelf: "stretch"
@@ -84,8 +85,6 @@ styles = StyleX.create
       , marginInlineStart: "auto"
       , marginInlineEnd: -16
       }
-  -- Desktop frames the article with two rails of equal width. Tablets keep the page rail and move
-  -- the sections into a bar above the article; phones move both into that bar.
   , layout:
       { display: "grid"
       , gridTemplateColumns:
@@ -135,13 +134,12 @@ styles = StyleX.create
       , outlineColor: "var(--focus-ring)"
       , outlineOffset: -2
       }
-  -- The bar's text lines up with the article's, which uses the same clamped gutter.
   , pagesTrigger:
       { display:
           StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo720 "flex" ]
       , flexShrink: 0
       , gap: 8
-      , paddingInlineStart: "clamp(24px, 4.5vw, 72px)"
+      , paddingInlineStart: articleGutter
       , borderInlineEndColor: "var(--border-subtle)"
       , borderInlineEndStyle: "solid"
       , borderInlineEndWidth: 1
@@ -149,9 +147,9 @@ styles = StyleX.create
   , sectionsTrigger:
       { flexGrow: 1
       , minWidth: 0
-      , paddingInlineStart: StyleX.conditionalValue "clamp(24px, 4.5vw, 72px)"
+      , paddingInlineStart: StyleX.conditionalValue articleGutter
           [ StyleX.conditionalCase breakpoints.upTo720 "16px" ]
-      , paddingInlineEnd: "clamp(24px, 4.5vw, 72px)"
+      , paddingInlineEnd: articleGutter
       }
   , barLabel: { flexShrink: 0, fontWeight: 600 }
   , barCurrent:
@@ -172,10 +170,9 @@ styles = StyleX.create
       , animationName: { default: "none", "[data-entering]": fadeIn, "[data-exiting]": fadeOut }
       , animationDuration: { default: "140ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
       }
-  -- The page list covers the article below the bar, like a page of its own.
   , pagesPopover: { height: "calc(100dvh - var(--nav-height) - 48px)" }
   , popoverDialog:
-      { paddingInline: "calc(clamp(24px, 4.5vw, 72px) - 12px)"
+      { paddingInline: "calc(" <> articleGutter <> " - 12px)"
       , paddingBlockStart: 8
       , paddingBlockEnd: 16
       , outline: "none"
@@ -205,7 +202,6 @@ styles = StyleX.create
       , textDecoration: "none"
       , outlineColor: "var(--focus-ring)"
       }
-  -- Keep the regular weight so marking a page or section never rewraps its title.
   , current:
       { color: "var(--text-primary)"
       , textDecorationLine: "underline"
@@ -215,12 +211,10 @@ styles = StyleX.create
       }
   , resourceIcon:
       { display: "inline-flex", flexShrink: 0, fontSize: 11, color: "var(--text-tertiary)" }
-  -- Text, terminals and code blocks share one 72ch measure. Text grows on wide screens so the
-  -- article can widen without longer lines.
   , article:
       { marginInline: "auto"
-      , maxWidth: "calc(72ch + 2 * clamp(24px, 4.5vw, 72px))"
-      , paddingInline: "clamp(24px, 4.5vw, 72px)"
+      , maxWidth: "calc(" <> articleMeasure <> " + 2 * " <> articleGutter <> ")"
+      , paddingInline: articleGutter
       , fontSize: "clamp(16px, 0.25vw + 12.4px, 18px)"
       , paddingBlockStart:
           StyleX.conditionalValue 56 [ StyleX.conditionalCase breakpoints.upTo720 32 ]
@@ -235,7 +229,6 @@ styles = StyleX.create
       , marginBlockEnd: 20
       }
   , intro: { display: "flex", flexDirection: "column", gap: 18, marginBlockEnd: 48 }
-  -- Clear the sticky header, and below the desktop layout the navigation bar under it.
   , section:
       { marginBlockEnd: 48
       , scrollMarginTop:

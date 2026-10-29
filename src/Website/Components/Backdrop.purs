@@ -27,7 +27,6 @@ styles = StyleX.create
       , position: "relative"
       }
   , layer: { inset: 0, pointerEvents: "none", position: "absolute", zIndex: 0 }
-  -- The field fades out over its bottom 22% so the canvas texture continues beneath it.
   , canvas:
       { height: "100%"
       , inset: 0
@@ -40,8 +39,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | The brand's animated dot field, with a clearing in the top-left corner behind the copy.
--- | Incrementing `ripples` sends a ripple through the field from the centre of `rippleOrigin`.
 component ::
   ReactComponent { content :: Array JSX, rippleOrigin :: Ref (Nullable Element), ripples :: Int }
 component = unsafePerformEffect $ Hooks.reactComponent "Backdrop" \props -> Hooks.do

@@ -29,7 +29,6 @@ styles = StyleX.create
       , borderRadius: 8
       , borderStyle: "solid"
       , borderWidth: 1
-      -- Controls use the regular arrow on every platform, as on macOS.
       , cursor: "default"
       , display: "inline-flex"
       , flexShrink: 0
@@ -75,7 +74,6 @@ styles = StyleX.create
           }
       , color: "var(--text-primary)"
       }
-  -- Lucide icons render at 1.2em.
   , icon: { display: "inline-flex", flexShrink: 0 }
   , smallIcon: { fontSize: 12 }
   , mediumIcon: { fontSize: 13 }
@@ -100,7 +98,6 @@ variantStyle = case _ of
   Secondary -> styles.secondary
   Glass -> styles.glass
 
--- | An action styled as a button.
 buttonAction :: ButtonAction -> JSX
 buttonAction { label, icon, onPress, size, variant } = DOM.button
   { className: (StyleX.props [ styles.button, sizeStyle size, variantStyle variant ]).className

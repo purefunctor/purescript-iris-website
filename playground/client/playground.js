@@ -1,45 +1,29 @@
-// The playground's controller. It owns the project's files, the editor, the language client and the
-// runner, and publishes one plain state object for the UI to render. The UI never sees Monaco or
-// LSP: it calls the actions returned by `createPlayground`.
-//
-// The page starts in the `loading` phase while the worker downloads the project's active packages
-// and loads the language server. The editor is created once both are ready, so the first thing it
-// shows is a checked project. The project activates packages by name, and the server loads them
-// with their dependencies; changing them restarts the server, which downloads what is missing.
 
 import index from "../packages/index.json";
+import { TraceMap } from "@jridgewell/trace-mapping";
 import { resolveClosure } from "../packages/registry.js";
+import { createGeneratedOutput } from "./generated-output.js";
 import { LanguageClient } from "./language-client.js";
 import { applyDiagnostics, LANGUAGE, registerProviders } from "./monaco-bridge.js";
 import { configure, createEditor, monaco } from "./monaco.js";
 import { link, Runner } from "./runner.js";
+import { stackFrames } from "./source-maps.js";
 import { decodeProject, encodeProject, loadSavedProject, saveProject } from "./storage.js";
 import { TEMPLATES } from "./templates.js";
 
 const PROJECT = "file:///project/";
-// The sidebar overlays the editor up to Website.Breakpoints' upTo720, so it starts closed there and
-// closes once a file opens.
-const NARROW = "(max-width: 720px)";
+const SIDEBAR_OVERLAYS_EDITOR = "(max-width: 720px)";
 const MAX_LINES = 1000;
-// The reader's sidebar width, kept apart from the project so that shared links do not carry it.
-const SIDEBAR_WIDTH = "iris-playground-sidebar-width";
-// The panel's width beside the editor and its height below it, kept the same way.
-const PANEL_SIZE = "iris-playground-panel-size";
-// The height of the console over a program's view, kept the same way.
-const CONSOLE_HEIGHT = "iris-playground-console-height";
-// Every template activates what the `purescript` and `purescript-contrib` organizations publish.
-const CORE = Object.keys(index.packages).filter((name) => ["purescript", "purescript-contrib"].includes(index.packages[name].owner));
-const templatePackages = (template) => [...CORE, ...template.packages];
+const SIDEBAR_WIDTH_STORAGE_KEY = "iris-playground-sidebar-width";
+const PANEL_SIZE_STORAGE_KEY = "iris-playground-panel-size";
+const CONSOLE_HEIGHT_STORAGE_KEY = "iris-playground-console-height";
+const CORE_OWNERS = ["purescript", "purescript-contrib"];
+const CORE_PACKAGES = Object.keys(index.packages).filter((name) => CORE_OWNERS.includes(index.packages[name].owner));
+const templatePackages = (template) => [...CORE_PACKAGES, ...template.packages];
+const PACKAGES_OF_PROJECTS_SAVED_BEFORE_PACKAGE_CHOICE = TEMPLATES.flatMap(templatePackages);
 
 
-/**
- * @param {object} options
- * @param {HTMLElement} options.editor the element Monaco fills
- * @param {HTMLElement} options.frames where program frames live
- * @param {object} options.theme the Monaco theme computed at build time
- * @param {(state: object) => void} options.onChange
- */
-export async function createPlayground({ editor: host, frames, theme, onChange }) {
+export async function createPlayground({ editor: host, generated: generatedHost, frames, theme, onChange }) {
   const query = new URLSearchParams(location.search);
   const shared = await decodeProject(location.hash).catch(() => null);
   const project = shared ?? loadSavedProject() ?? { files: TEMPLATES[0].files, packages: templatePackages(TEMPLATES[0]) };
@@ -48,40 +32,62 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   const paths = project.files.map(({ path }) => path);
   const open = (project.open ?? paths).filter((path) => paths.includes(path));
   const active = open.includes(project.active) ? project.active : open[0] ?? null;
-  // A project saved before it chose packages gets every template's, which its code may rely on.
-  let activated = (project.packages ?? TEMPLATES.flatMap(templatePackages)).filter((name, at, names) => index.packages[name] && names.indexOf(name) === at);
+  let activated = (project.packages ?? PACKAGES_OF_PROJECTS_SAVED_BEFORE_PACKAGE_CHOICE).filter((name, at, names) => index.packages[name] && names.indexOf(name) === at);
   let installed = new Set();
-  const panelSize = safely(() => JSON.parse(localStorage.getItem(PANEL_SIZE))) ?? {};
+  const panelSize = ifStorageAvailable(() => JSON.parse(localStorage.getItem(PANEL_SIZE_STORAGE_KEY))) ?? {};
   let state = {
     phase: "loading",
     files: paths.map((path) => ({ path, errors: 0, warnings: 0 })),
     open,
     active,
     viewing: null,
-    sidebar: !matchMedia(NARROW).matches,
-    sidebarWidth: Number(safely(() => localStorage.getItem(SIDEBAR_WIDTH))) || 240,
+    sidebar: !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
+    sidebarWidth: Number(ifStorageAvailable(() => localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY))) || 240,
     panel: true,
     panelWidth: Number(panelSize.width) || 380,
     panelHeight: Number(panelSize.height) || Math.round(innerHeight * 0.4),
     panelTab: "output",
     console: true,
-    consoleHeight: Number(safely(() => localStorage.getItem(CONSOLE_HEIGHT))) || 0,
+    consoleHeight: Number(ifStorageAvailable(() => localStorage.getItem(CONSOLE_HEIGHT_STORAGE_KEY))) || 0,
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], active: 0, packageSet: index.packageSet.version, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [], view: false },
+    sourceMaps: true,
+    outputStale: false,
+    generated: { status: "idle", message: "Open a PureScript file to see its JavaScript.", mapped: false },
     templates: TEMPLATES.map(({ id, name, description }) => ({ id, name, description })),
     shared: false,
   };
   const setState = (update) => {
     state = { ...state, ...update(state) };
     onChange(state);
+    syncGenerated();
   };
 
   configure(theme);
   let editor = null;
+  let generated = null;
+  let projectRevision = 0;
+  let runGeneration = 0;
+  let runMaps = new Map();
+  let generatedShown = null;
   const models = new Map();
   let providers = null;
   let saveTimer;
+
+  const changed = () => {
+    projectRevision++;
+    generated?.invalidate();
+    setState(() => ({ outputStale: true }));
+  };
+  const syncGenerated = () => {
+    if (!generated) return;
+    const show = state.panel && state.panelTab === "javascript" && state.server.status === "ready";
+    const key = `${show} ${state.sourceMaps}`;
+    if (key === generatedShown) return;
+    generatedShown = key;
+    generated.update(show, state.sourceMaps);
+  };
 
   const uriOf = (path) => `${PROJECT}${path}`;
   const save = () => {
@@ -95,7 +101,6 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     packages: activated,
   });
 
-  /** The packages the server loads: the activated ones and their dependencies. */
   const activePackages = () => resolveClosure(index, activated).map(({ name }) => name);
   const publishPackages = () => {
     const active = activePackages();
@@ -104,11 +109,11 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     for (const name of active) {
       for (const dependency of index.packages[name].dependencies) dependents.get(dependency).push(name);
     }
-    // Only what no other active package needs can be deactivated; the rest is a dependency.
+    const canDeactivate = (name) => activated.includes(name) && dependents.get(name).length === 0;
     const statusOf = (name) =>
       !loaded.has(name)
         ? installed.has(name) ? "installed" : "available"
-        : activated.includes(name) && dependents.get(name).length === 0 ? "active" : "dependency";
+        : canDeactivate(name) ? "active" : "dependency";
     const available = Object.entries(index.packages).map(([name, { version }]) => ({
       name,
       version,
@@ -122,11 +127,13 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     createWorker: () => new Worker(new URL("./worker.js", import.meta.url), { type: "module", name: "iris-language-server" }),
     server: query.get("server") === "mock" ? "mock" : "auto",
     handlers: {
-      onStatus: ({ status, server, message }) =>
+      onStatus: ({ status, server, message }) => {
         setState((current) => ({
           phase: current.phase === "ready" ? "ready" : status === "failed" ? "failed" : "loading",
           server: { ...current.server, ...(server ?? {}), status, message: message ?? null },
-        })),
+        }));
+        if (status !== "ready") generated?.invalidate();
+      },
       onProgress: ({ packageSet, loaded, total, bytes, totalBytes }) =>
         setState((current) => ({
           packages: { ...current.packages, packageSet, loaded, total, bytes, totalBytes },
@@ -138,9 +145,9 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
           files: current.files.map((file) => (uriOf(file.path) === params.uri ? { ...file, ...counts } : file)),
         }));
       },
-      // A restarted server starts empty: open every document again.
       onRestart: () => {
-        for (const [path, model] of models) openDocument(path, model);
+        openEveryDocument();
+        generated?.invalidate();
       },
     },
   });
@@ -155,6 +162,10 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       },
     });
 
+  const openEveryDocument = () => {
+    for (const [path, model] of models) openDocument(path, model);
+  };
+
   const addModel = (path, text) => {
     const model = monaco.editor.createModel(text, path.endsWith(".purs") ? LANGUAGE : "javascript", monaco.Uri.parse(uriOf(path)));
     model.onDidChangeContent((event) => {
@@ -168,6 +179,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
           text: change.text,
         })),
       });
+      changed();
       save();
     });
     models.set(path, model);
@@ -175,6 +187,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
 
   const removeModel = (path) => {
+    changed();
     const model = models.get(path);
     models.delete(path);
     client.notify("textDocument/didClose", { textDocument: { uri: uriOf(path) } });
@@ -182,7 +195,6 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     model.dispose();
   };
 
-  // Read-only models for package and Prim sources, created when navigation reaches them.
   const ensureModel = async (uri) => {
     const parsed = monaco.Uri.parse(uri);
     if (monaco.editor.getModel(parsed)) return;
@@ -219,46 +231,49 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   for (const file of project.files) addModel(file.path, file.text);
   onChange(state);
 
-  // Starts and restarts run one at a time. `loaded` is the package list the server has, or null
-  // until it first starts.
-  let work = Promise.resolve();
-  let loaded = null;
-  const serially = (action) => (work = work.then(action));
+  let serverWork = Promise.resolve();
+  let serverPackageList = null;
+  const serially = (action) => (serverWork = serverWork.then(action));
 
-  // Starts the worker, which downloads the packages and loads the server, then creates the editor
-  // the first time it succeeds.
+  const createEditorView = () => {
+    editor = createEditor(host, { model: null });
+    generated = createGeneratedOutput({
+      host: generatedHost,
+      source: editor,
+      client,
+      onChange: (generated) => setState(() => ({ generated })),
+    });
+    monaco.editor.registerEditorOpener({
+      openCodeEditor: (_source, resource, selection) => view(resource.toString(), selection),
+    });
+    providers = registerProviders({ client: () => client, ensureModel, capabilities: client.capabilities });
+    show(state.active);
+  };
+
   const start = () => serially(async () => {
     setState((current) => ({ phase: current.phase === "ready" ? "ready" : "loading" }));
     const names = activePackages();
     const info = await client.start(names);
     if (!info) return;
-    loaded = names.join();
+    serverPackageList = names.join();
     installed = new Set(info.installed);
     publishPackages();
-    // Documents open before the editor asks for semantic tokens, which it does once per model.
-    for (const [path, model] of models) openDocument(path, model);
-    if (!editor) {
-      editor = createEditor(host, { model: null });
-      monaco.editor.registerEditorOpener({
-        openCodeEditor: (_source, resource, selection) => view(resource.toString(), selection),
-      });
-      providers = registerProviders({ client: () => client, ensureModel, capabilities: client.capabilities });
-      show(state.active);
-    }
+    openEveryDocument();
+    if (!editor) createEditorView();
     setState(() => ({ phase: "ready" }));
   });
 
-  /** Activates `packages` in place of the current ones, and restarts the server when that changes what it loads. */
   const activate = (packages) => {
+    changed();
     activated = packages;
     save();
     publishPackages();
     serially(async () => {
       const names = activePackages();
-      if (loaded === null || names.join() === loaded) return;
+      if (serverPackageList === null || names.join() === serverPackageList) return;
       const info = await client.restart(names);
       if (!info) return;
-      loaded = names.join();
+      serverPackageList = names.join();
       installed = new Set(info.installed);
       publishPackages();
     });
@@ -271,12 +286,11 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       open: current.open.includes(path) ? current.open : [...current.open, path],
       active: path,
       viewing: null,
-      sidebar: current.sidebar && !matchMedia(NARROW).matches,
+      sidebar: current.sidebar && !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
     }));
     save();
   };
 
-  /** Closes `path`'s tab and shows its neighbour, without touching the file. */
   const closeFile = (path) => {
     const index = state.open.indexOf(path);
     if (index === -1) return;
@@ -287,11 +301,12 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     save();
   };
 
-  /** Replaces the project with a template's files, and stops the previous project's program. */
   const loadTemplate = (id) => {
     const template = TEMPLATES.find((candidate) => candidate.id === id);
     if (!template) return;
+    runGeneration++;
     runner.stop();
+    runMaps = new Map();
     for (const path of [...models.keys()]) removeModel(path);
     for (const file of template.files) openDocument(file.path, addModel(file.path, file.text));
     const paths = template.files.map(({ path }) => path);
@@ -300,7 +315,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       open: paths,
       active: paths[0],
       viewing: null,
-      sidebar: current.sidebar && !matchMedia(NARROW).matches,
+      sidebar: current.sidebar && !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
       run: { status: "idle", lines: [], view: false },
     }));
     show(paths[0]);
@@ -308,9 +323,19 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
 
   const run = async () => {
-    setState(() => ({ run: { status: "compiling", lines: [], view: false } }));
+    const generation = ++runGeneration;
+    const revision = projectRevision;
+    runner.stop();
+    runMaps = new Map();
+    setState(() => ({
+      run: { status: "compiling", lines: [], view: false },
+      outputStale: false,
+      panel: true,
+      panelTab: "output",
+    }));
     try {
       const emitted = await client.request("iris/emit", {});
+      if (generation !== runGeneration) return;
       if (emitted.status === "failed") {
         const lines = emitted.errors.map(({ uri, diagnostic }) => ({
           kind: "error",
@@ -328,6 +353,10 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
         }));
       }
       const linked = await link(emitted.files);
+      if (generation !== runGeneration) return;
+      if (revision !== projectRevision) {
+        return setState(() => ({ run: { status: "failed", lines: [{ kind: "info", text: "The project changed while compiling. Run it again." }], view: false } }));
+      }
       if (linked.missing.length > 0) {
         const lines = linked.missing.map((specifier) => ({
           kind: "error",
@@ -335,20 +364,22 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
         }));
         return setState(() => ({ run: { status: "failed", lines, view: false } }));
       }
+      runMaps = new Map(Object.entries(linked.maps ?? {}).map(([path, map]) => [path, new TraceMap(map)]));
       setState(() => ({ run: { status: "running", lines: [], view: false } }));
       runner.run(linked.files, entry.path, linked.css);
     } catch (error) {
+      if (generation !== runGeneration) return;
       setState(() => ({ run: { status: "failed", lines: [{ kind: "error", text: error.message }], view: false } }));
     }
   };
 
-  // A program's view stays until it runs again or stops, and opens the Output panel.
   const runner = new Runner(frames, (event) => {
     setState((current) => {
       if (event.type === "view") return { run: { ...current.run, view: true }, panel: true, panelTab: "output" };
       if (event.type === "done") return { run: { ...current.run, status: "done" } };
       const kind = event.type === "error" || event.level === "error" ? "error" : event.level === "warn" ? "warning" : "log";
-      const lines = [...current.run.lines, { kind, text: event.text }].slice(-MAX_LINES);
+      const frames = /iris-playground:\/\/\//.test(event.text) ? stackFrames(event.text, runMaps, current.sourceMaps) : null;
+      const lines = [...current.run.lines, { kind, text: event.text, frames }].slice(-MAX_LINES);
       return { run: { ...current.run, status: event.type === "error" ? "failed" : current.run.status, lines } };
     });
   });
@@ -362,19 +393,34 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     toggleSidebar: () => setState((current) => ({ sidebar: !current.sidebar })),
     resizeSidebar: (width) => {
-      safely(() => localStorage.setItem(SIDEBAR_WIDTH, String(width)));
+      ifStorageAvailable(() => localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(width)));
       setState(() => ({ sidebar: true, sidebarWidth: width }));
     },
     closeSidebar: () => setState(() => ({ sidebar: false })),
     togglePanel: () => setState((current) => ({ panel: !current.panel })),
     resizePanel: ({ width, height }) => {
-      safely(() => localStorage.setItem(PANEL_SIZE, JSON.stringify({ width, height })));
+      ifStorageAvailable(() => localStorage.setItem(PANEL_SIZE_STORAGE_KEY, JSON.stringify({ width, height })));
       setState(() => ({ panel: true, panelWidth: width, panelHeight: height }));
     },
     closePanel: () => setState(() => ({ panel: false })),
     selectPanelTab: (tab) => setState(() => ({ panelTab: tab })),
+    toggleSourceMaps: () =>
+      setState((current) => {
+        const sourceMaps = !current.sourceMaps;
+        const lines = current.run.lines.map((line) =>
+          line.frames ? { ...line, frames: stackFrames(line.text, runMaps, sourceMaps) } : line,
+        );
+        return { sourceMaps, run: { ...current.run, lines } };
+      }),
+    openFrame: async ({ uri, line, column }) => {
+      if (!uri || state.outputStale) return;
+      const revision = projectRevision;
+      await ensureModel(uri);
+      if (revision !== projectRevision) return;
+      view(uri, { lineNumber: line, column });
+    },
     resizeConsole: (height) => {
-      safely(() => localStorage.setItem(CONSOLE_HEIGHT, String(height)));
+      ifStorageAvailable(() => localStorage.setItem(CONSOLE_HEIGHT_STORAGE_KEY, String(height)));
       setState(() => ({ console: true, consoleHeight: height }));
     },
     toggleConsole: () => setState((current) => ({ console: !current.console })),
@@ -385,11 +431,11 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
       const path = `src/Module${index}.purs`;
       const model = addModel(path, `module Module${index} where\n\nimport Prelude\n\n`);
       openDocument(path, model);
+      changed();
       setState((current) => ({ files: [...current.files, { path, errors: 0, warnings: 0 }] }));
       openFile(path);
       return path;
     },
-    /** Returns an error message, or null when the file was renamed. */
     renameFile: (from, to) => {
       const target = to.trim();
       const problem = validatePath(target, from, models);
@@ -421,6 +467,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
     },
     run,
     stop: () => {
+      runGeneration++;
       runner.stop();
       setState((current) => ({
         run: { status: "stopped", lines: [...current.run.lines, { kind: "info", text: "Stopped" }], view: false },
@@ -448,7 +495,10 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   return {
     actions,
     dispose: () => {
+      runGeneration++;
+      clearTimeout(saveTimer);
       runner.stop();
+      generated?.dispose();
       providers?.dispose();
       client.dispose();
       editor?.dispose();
@@ -457,8 +507,7 @@ export async function createPlayground({ editor: host, frames, theme, onChange }
   };
 }
 
-/** Storage can be unavailable, such as in some private windows; the layout then resets. */
-function safely(action) {
+function ifStorageAvailable(action) {
   try {
     return action();
   } catch {
@@ -480,7 +529,6 @@ function validatePath(path, from, models) {
   return null;
 }
 
-/** Updates `module Old.Name` to match a renamed file, when it matched the old name. */
 function renameModuleHeader(text, from, to) {
   if (!from.endsWith(".purs")) return text;
   const name = (path) => path.slice("src/".length, -".purs".length).replaceAll("/", ".");

@@ -10,7 +10,7 @@ interface Props {
 const { title, description } = Astro.props;
 ---
 
-<SiteLayout title={`${title} — Iris documentation`} description={description}>
+<SiteLayout title={`Iris | ${title}`} description={description}>
   <Fragment slot="head">
     {/* Links between pages that use this layout swap the document instead of reloading it, without
         an animation in browsers that lack view transitions. */}

@@ -4,8 +4,6 @@ import { Backdrop, Clip, EndScene, inOut, OpenScene } from "./Scenes";
 import { left, plan, right, split, type Manifest, type Marker } from "./playground";
 import { fps, width } from "./takes";
 
-// A feature's name, set as a closed caption centred near the bottom of the frame. Unlike the editor
-// trailer, the playground trailer has no chapter list beside it to name its features.
 function FeatureCaption({ marker }: { marker: Marker }) {
   const frame = useCurrentFrame();
   const shown = interpolate(frame, [0, 0.25 * fps, marker.duration - 0.3 * fps, marker.duration], [0, 1, 1, 0], {
@@ -22,8 +20,6 @@ function FeatureCaption({ marker }: { marker: Marker }) {
   );
 }
 
-// The playground take full screen, until Share copies its link: then it moves into the left half
-// while the incognito window slides in on the right and opens the link.
 export function PlaygroundTrailer({ manifest }: { manifest: Manifest }) {
   const { open, end, main, shared, splitFrom, markers } = useMemo(() => plan(manifest), [manifest]);
   const frame = useCurrentFrame();

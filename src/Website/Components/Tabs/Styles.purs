@@ -2,7 +2,6 @@ module Website.Components.Tabs.Styles (tabStyles) where
 
 import Iris.StyleX as StyleX
 
--- Shared by the installation platform tabs and the build benchmark tabs.
 tabStyles = StyleX.create
   { tabList: { display: "flex", gap: 2 }
   , tab:

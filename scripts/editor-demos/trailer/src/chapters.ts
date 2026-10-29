@@ -1,5 +1,3 @@
-// The trailer's running order: the beats of the one-shot take in editor.mjs, in the order that
-// editor-screenplay.md describes, each named by its generic feature name.
 export type Feature = { slug: string; title: string };
 export type Act = { heading: string; emphasis: string; features: Feature[] };
 

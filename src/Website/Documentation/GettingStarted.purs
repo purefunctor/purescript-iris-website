@@ -17,7 +17,6 @@ import Yoga.React.DOM as DOM
 
 styles = StyleX.create
   { noteRow: { display: "flex", alignItems: "flex-start", gap: 12 }
-  -- Center the logo on the first line of the note's text.
   , noteLogo: { width: 20, height: 20, flexShrink: 0, marginBlockStart: 2 }
   }
 
@@ -109,7 +108,7 @@ sections =
             ]
         , Installation.installation { fill: true }
         , paragraph [ DOM.text "Once installed, you can check the current version:" ]
-        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.10" } ]
+        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.13" } ]
         , paragraph
             [ DOM.text
                 "The installer does not modify system or shell configuration. The installation locations are as follows:"

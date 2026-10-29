@@ -1,14 +1,9 @@
-// Resolves and loads Registry packages for the playground. Runs in browsers and in Node 22, using
-// only `fetch`, Web Crypto and `DecompressionStream`.
 
 const REGISTRY = "https://packages.registry.purescript.org";
 
-// Limits for a single archive. The largest archive in package set 81.9.0 is about 600 KB, and
-// unpacks to a few megabytes.
 const MAX_UNPACKED_BYTES = 64 * 1024 * 1024;
 const MAX_ENTRIES = 20_000;
 
-/** Every package `roots` needs, in dependency-first order. */
 export function resolveClosure(index, roots) {
   const ordered = [];
   const visited = new Set();
@@ -29,10 +24,6 @@ export function archiveUrl(entry) {
   return `${REGISTRY}/${entry.name}/${entry.version}.tar.gz`;
 }
 
-/**
- * Checks an archive against the size and SHA-256 hash the Registry published for it, and returns
- * the package's source files as `{ path, text }`, with paths such as `src/Data/Maybe.purs`.
- */
 export async function unpackPackage(entry, archive) {
   const bytes = new Uint8Array(archive);
   if (bytes.byteLength !== entry.bytes) {
@@ -47,12 +38,15 @@ export async function unpackPackage(entry, archive) {
   const files = [];
   const decoder = new TextDecoder("utf-8", { fatal: true });
   for (const { path, data } of readTar(tar)) {
-    // Archives hold one top-level directory, `<name>-<version>/`.
-    const relative = path.slice(path.indexOf("/") + 1);
+    const relative = withoutArchiveRoot(path);
     if (!/^src\/.+\.(purs|js|jsx)$/.test(relative) || relative.split("/").includes("..")) continue;
     files.push({ path: relative, text: decoder.decode(data) });
   }
   return files;
+}
+
+function withoutArchiveRoot(path) {
+  return path.slice(path.indexOf("/") + 1);
 }
 
 async function gunzip(bytes) {
@@ -76,7 +70,6 @@ async function gunzip(bytes) {
   return result;
 }
 
-/** Yields the regular files in a ustar archive, with PAX and GNU long names. */
 function* readTar(bytes) {
   const decoder = new TextDecoder();
   const field = (offset, length) => {

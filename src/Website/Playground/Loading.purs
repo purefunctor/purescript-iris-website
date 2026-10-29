@@ -16,7 +16,6 @@ import Website.Playground.Types (State)
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
-  -- Covers the workspace, whose editor host stays mounted underneath for the controller.
   { root:
       { alignItems: "center"
       , backgroundColor: "var(--bg-canvas)"
@@ -46,8 +45,6 @@ styles = StyleX.create
       , margin: 0
       }
   , logo: { flexShrink: 0, height: "1em", width: "1em" }
-  -- A native progress bar, so progress needs no inline style, which the site's policy would block
-  -- on the server-rendered page.
   , progress:
       { appearance: "none"
       , backgroundColor: "var(--surface-2)"
@@ -82,8 +79,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | What the page shows while the active packages download and the language server loads, and when
--- | either failed.
 loading :: State -> Effect Unit -> JSX
 loading state retry =
   DOM.section { className: styleProps.root.className, "aria-labelledby": "playground-loading" }
@@ -103,7 +98,6 @@ loading state retry =
         , value: show packages.loaded
         }
         []
-    -- The worker reports the totals with its first message, so the row stays empty until then.
     , DOM.div styleProps.figures
         if packages.total == 0
         then []
@@ -140,8 +134,8 @@ loading state retry =
         ]
     ]
 
--- | Bytes in megabytes, to one decimal place.
 megabytes :: Int -> String
 megabytes bytes = show (tenths / 10) <> "." <> show (tenths `mod` 10)
   where
-  tenths = (bytes + 50000) / 100000
+  bytesPerTenth = 100000
+  tenths = (bytes + bytesPerTenth / 2) / bytesPerTenth

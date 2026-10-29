@@ -1,4 +1,3 @@
-//! JSON-RPC message shapes.
 
 use serde_json::{Value, json};
 

@@ -3,30 +3,37 @@ import stylex from "@stylexjs/unplugin";
 import icons from "unplugin-icons/vite";
 import { defineConfig } from "astro/config";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { devLibraryBundle } from "./src/lib/devLibraryBundle.ts";
 import { devModulePreload } from "./src/lib/devModulePreload.ts";
 import { inlineStyleHashes } from "./src/lib/inlineStyles.ts";
 import { monacoStyles } from "./src/lib/monacoStyles.ts";
 
-// The playground imports Monaco's editor features one module at a time. Prebundle each module it
-// lists, so that opening the playground never makes Vite reoptimize and reload the page.
-const monacoModules = Array.from(
+const monacoEditorModuleImport = /^import (?:\* as \w+ from |\{[^}]*\} from )?"(monaco-editor\/[^"?]+\.js)";$/gm;
+
+const playgroundMonacoModules = Array.from(
   readFileSync(new URL("./playground/client/monaco.js", import.meta.url), "utf8").matchAll(
-    /^import (?:\* as \w+ from |\{[^}]*\} from )?"(monaco-editor\/[^"?]+\.js)";$/gm,
+    monacoEditorModuleImport,
   ),
   (match) => match[1],
 );
 
-// Astro sets NODE_ENV before loading config.
+const packageImports = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).imports;
+
+const packageImportAliases = Object.entries(packageImports).map(([specifier, target]) => ({
+  find: specifier.replace(/\/\*$/, ""),
+  replacement: fileURLToPath(new URL(target.replace(/\/\*$/, ""), import.meta.url)),
+}));
+
+const babelSourceMapPreset = () => ({ sourceMaps: true });
+
 const development = process.env.NODE_ENV === "development";
 
 export default defineConfig({
   site: "https://iris-lang.com",
   integrations: [react(), devModulePreload()],
-  // The toolbar adds about 1.3 MB of client modules to every development page.
   devToolbar: { enabled: false },
   output: "static",
-  // DocumentationLayout prefetches and caches documentation pages itself.
   prefetch: false,
   session: false,
   security: {
@@ -52,11 +59,10 @@ export default defineConfig({
     port: process.env.PORT ? Number(process.env.PORT) : 4321,
   },
   vite: {
-    // A production build/sync must not replace a live dev server's prebundles.
     cacheDir: development
       ? "node_modules/.vite-dev"
       : "node_modules/.vite-build",
-    // Generated PureScript is not all visible to the initial dependency scan.
+    resolve: { alias: packageImportAliases },
     optimizeDeps: {
       include: [
         "@stylexjs/stylex",
@@ -68,10 +74,11 @@ export default defineConfig({
         "react-aria-components/Tabs",
         "react-aria-components/Tooltip",
         "es-module-lexer/js",
-        ...monacoModules,
+        "@jridgewell/trace-mapping",
+        "jotai",
+        ...playgroundMonacoModules,
       ],
     },
-    // StyleX aggregates all rules into one CSS asset.
     build: { cssCodeSplit: false },
     plugins: [
       devLibraryBundle(),
@@ -81,15 +88,11 @@ export default defineConfig({
         dev: development,
         runtimeInjection: false,
         useCSSLayers: true,
-        // The plugin reprints modules with Babel but requests no source map and
-        // returns `map: null`, which Vite reads as unchanged positions. That would
-        // apply Iris's map to shifted code, so ask Babel for a map to chain.
-        babelConfig: { presets: [() => ({ sourceMaps: true })] },
+        babelConfig: { presets: [babelSourceMapPreset] },
       }),
     ],
     server: {
       strictPort: process.env.PORT !== undefined,
-      // Iris watches PureScript sources; Vite only needs the JavaScript it emits.
       watch: { ignored: ["**/.spago/**", "**/output/.iris-watch*", "**/*.purs"] },
     },
   },

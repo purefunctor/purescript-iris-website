@@ -8,7 +8,7 @@ import React.Basic (ReactComponent)
 import React.Basic.Hooks as Hooks
 import Website.Components.CodeBlock as CodeBlock
 import Website.Components.Documentation as Documentation
-import Website.Documentation.Prose (inlineCode, link, paragraph)
+import Website.Documentation.Prose (inlineCode, item, link, list, paragraph)
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
@@ -17,8 +17,14 @@ component = unsafePerformEffect $ Hooks.reactComponent "LanguageServer" \_ ->
     { page: Documentation.LanguageServer
     , intro:
         [ paragraph
+            [ DOM.text "Iris includes a language server for PureScript. Start it with "
+            , inlineCode "iris lsp"
+            , DOM.text
+                ". It provides type information, completion, diagnostics, navigation, rename, and formatting through the Language Server Protocol (LSP)."
+            ]
+        , paragraph
             [ DOM.text
-                "Iris includes a language server that provides types, completion, and error reporting for PureScript in your editor. It is available in Visual Studio Code through the Iris extension and in any other editor that supports the Language Server Protocol (LSP)."
+                "Install the Visual Studio Code extension to use it in your editor, or connect another editor with an LSP client. This page also describes the protocol and settings for developers building an integration."
             ]
         ]
     , sections
@@ -26,50 +32,67 @@ component = unsafePerformEffect $ Hooks.reactComponent "LanguageServer" \_ ->
 
 sections :: Array Documentation.Section
 sections =
-  [ { id: "editor-features"
-    , title: "Editor features"
-    , body:
-        [ paragraph
-            [ DOM.text
-                "Hovering over a name shows its type, including types inferred by Iris. Completion suggests names from your project and its dependencies, and adds the matching import when you select one."
-            ]
-        , paragraph
-            [ DOM.text
-                "The language server also supports go to definition, find references, and rename across the workspace. Rename takes scope into account, so it does not change unrelated names that are spelled the same way."
-            ]
-        , paragraph
-            [ DOM.text
-                "Errors and warnings are reported as diagnostics. Iris also supports semantic highlighting, document highlights, document and workspace symbols, and suggestions for filling in typed holes such as "
-            , inlineCode "?value"
-            , DOM.text "."
-            ]
-        , paragraph
-            [ DOM.text "The "
-            , link "/#editor" "editor demos on the home page"
-            , DOM.text " show these features in Visual Studio Code."
-            ]
-        ]
-    }
-  , { id: "visual-studio-code"
+  [ { id: "visual-studio-code"
     , title: "Visual Studio Code"
     , body:
         [ paragraph
-            [ DOM.text "Install the "
+            [ DOM.text "Install Iris and Spago as described in "
+            , link "/docs/getting-started/" "Getting started"
+            , DOM.text ". Then install the "
             , link
                 "https://marketplace.visualstudio.com/items?itemName=purefunctor.purescript-analyzer"
                 "Iris extension"
             , DOM.text
                 " from the Visual Studio Marketplace. The extension starts the language server with the "
             , inlineCode "iris"
+            , DOM.text " executable on your PATH."
+            ]
+        ]
+    }
+  , { id: "settings"
+    , title: "Settings"
+    , body:
+        [ paragraph
+            [ DOM.text
+                "The Visual Studio Code extension uses the following settings. This example enables diagnostics as you type in "
+            , inlineCode "settings.json"
+            , DOM.text ":"
+            ]
+        , CodeBlock.codeBlock
+            { code:
+                "{\n  \"iris.client.serverPath\": \"\",\n  \"iris.server.diagnostics.onOpen\": null,\n  \"iris.server.diagnostics.onSave\": null,\n  \"iris.server.diagnostics.onChange\": true\n}"
+            , filename: "settings.json"
+            , highlight: []
+            , language: CodeBlock.JSON
+            , lineNumbers: false
+            , note: Nothing
+            , surface: CodeBlock.Flat
+            }
+        , paragraph
+            [ inlineCode "iris.client.serverPath"
             , DOM.text
-                " executable on your PATH, so no further configuration is required if you followed "
-            , link "/docs/getting-started/" "Getting started"
+                " selects the language server executable or command. When empty, the extension uses "
+            , inlineCode "iris"
+            , DOM.text " from your PATH."
+            ]
+        , paragraph
+            [ DOM.text
+                "Iris reports diagnostics when you open, close, or save a file, or when a file changes on disk. To report diagnostics as you type, set "
+            , inlineCode "iris.server.diagnostics.onChange"
+            , DOM.text " to "
+            , inlineCode "true"
             , DOM.text "."
             ]
         , paragraph
-            [ DOM.text "To use a different executable, set "
-            , inlineCode "iris.client.serverPath"
-            , DOM.text " to its path."
+            [ DOM.text "The diagnostic settings default to "
+            , inlineCode "null"
+            , DOM.text ", which uses the Iris defaults: on open and save, but not on change. Set "
+            , inlineCode "iris.server.diagnostics.onOpen"
+            , DOM.text " or "
+            , inlineCode "iris.server.diagnostics.onSave"
+            , DOM.text " to "
+            , inlineCode "false"
+            , DOM.text " to disable that trigger."
             ]
         ]
     }
@@ -89,74 +112,194 @@ sections =
     , title: "Other editors"
     , body:
         [ paragraph
-            [ DOM.text
-                "Any editor with an LSP client can use the Iris language server. Configure the client to start "
+            [ DOM.text "To connect another editor, configure its LSP client to start "
             , inlineCode "iris lsp --stdio"
-            , DOM.text " for PureScript files."
+            , DOM.text
+                " for PureScript files. The server communicates over standard input and output."
             ]
         , paragraph
-            [ DOM.text "The "
-            , inlineCode "lsp"
-            , DOM.text " subcommand is required. Running "
-            , inlineCode "iris"
+            [ DOM.text "Send the project folder in "
+            , inlineCode "workspaceFolders"
             , DOM.text
-                " without it does not start the language server, and language server options must follow "
-            , inlineCode "lsp"
-            , DOM.text ". Run "
-            , inlineCode "iris lsp --help"
-            , DOM.text " to list the available options."
-            ]
-        ]
-    }
-  , { id: "workspace-preparation"
-    , title: "Workspace preparation"
-    , body:
-        [ paragraph
-            [ DOM.text
-                "When the language server starts, it prepares the Spago workspace before providing any features. It runs "
-            , inlineCode "spago fetch"
-            , DOM.text " in the workspace root to download missing dependencies, and then reads "
-            , inlineCode "spago.yaml"
-            , DOM.text " and each package's manifest to find your source files. Iris uses the "
-            , inlineCode "spago.lock"
-            , DOM.text " file written by the fetch to select the exact packages in "
-            , inlineCode ".spago"
+                " when initializing the server. Iris uses only the first folder and does not support multi-root workspaces for now. If the first folder is missing or is not a file URI, Iris uses the server process's working directory. It does not use "
+            , inlineCode "rootUri"
+            , DOM.text " or "
+            , inlineCode "rootPath"
             , DOM.text "."
             ]
         , paragraph
-            [ DOM.text "To find Spago, Iris checks the "
-            , inlineCode "IRIS_SPAGO"
-            , DOM.text " environment variable first, then "
-            , inlineCode "node_modules/.bin"
-            , DOM.text " in the workspace root, and finally your PATH."
-            ]
-        , paragraph
-            [ DOM.text
-                "Preparation can take some time, particularly on the first run, when Spago downloads packages. During preparation, Iris records the files you open and edit, and applies those changes in order once the workspace is ready. Requests received before then, such as hover requests, fail with a "
-            , inlineCode "ContentModified"
-            , DOM.text
-                " error and the message \"Workspace is loading\". Editors that retry requests after this error will resend them."
-            ]
-        , paragraph
-            [ DOM.text
-                "If preparation fails, Iris reports the error in your editor and does not provide features for the project. Iris does not retry preparation automatically. Run "
-            , inlineCode "spago fetch"
-            , DOM.text
-                " to see the underlying error, fix the problem, and then restart the language server."
+            [ DOM.text "For an example integration, see the "
+            , link "https://github.com/purefunctor/purescript-iris-vscode"
+                "Visual Studio Code extension source"
+            , DOM.text ". Run "
+            , inlineCode "iris lsp --help"
+            , DOM.text " to see the language server options."
             ]
         ]
     }
-  , { id: "settings"
-    , title: "Settings"
+  , { id: "protocol-support"
+    , title: "Protocol support"
+    , body:
+        [ paragraph [ DOM.text "Iris handles these LSP requests and notifications:" ]
+        , list
+            [ item
+                [ DOM.text "Completion and hover: "
+                , inlineCode "textDocument/completion"
+                , DOM.text ", "
+                , inlineCode "completionItem/resolve"
+                , DOM.text ", and "
+                , inlineCode "textDocument/hover"
+                , DOM.text "."
+                ]
+            , item
+                [ DOM.text "Navigation and rename: "
+                , inlineCode "textDocument/definition"
+                , DOM.text ", "
+                , inlineCode "textDocument/references"
+                , DOM.text ", "
+                , inlineCode "textDocument/prepareRename"
+                , DOM.text ", and "
+                , inlineCode "textDocument/rename"
+                , DOM.text "."
+                ]
+            , item
+                [ DOM.text "Symbols and highlighting: "
+                , inlineCode "textDocument/documentSymbol"
+                , DOM.text ", "
+                , inlineCode "workspace/symbol"
+                , DOM.text ", "
+                , inlineCode "textDocument/documentHighlight"
+                , DOM.text ", and "
+                , inlineCode "textDocument/semanticTokens/full"
+                , DOM.text "."
+                ]
+            , item
+                [ DOM.text "Formatting and quick fixes: "
+                , inlineCode "textDocument/formatting"
+                , DOM.text " and "
+                , inlineCode "textDocument/codeAction"
+                , DOM.text "."
+                ]
+            , item
+                [ DOM.text "Document synchronization: "
+                , inlineCode "textDocument/didOpen"
+                , DOM.text ", "
+                , inlineCode "textDocument/didChange"
+                , DOM.text ", "
+                , inlineCode "textDocument/didSave"
+                , DOM.text ", and "
+                , inlineCode "textDocument/didClose"
+                , DOM.text
+                    ". Iris advertises incremental changes and also accepts full-document replacements."
+                ]
+            , item
+                [ DOM.text "File changes: "
+                , inlineCode "workspace/didChangeWatchedFiles"
+                , DOM.text "."
+                ]
+            ]
+        , paragraph
+            [ DOM.text "Iris handles file URIs ending in "
+            , inlineCode ".purs"
+            , DOM.text ", "
+            , inlineCode ".js"
+            , DOM.text ", or "
+            , inlineCode ".jsx"
+            , DOM.text ". It publishes diagnostics for PureScript sources with "
+            , inlineCode "textDocument/publishDiagnostics"
+            , DOM.text "."
+            ]
+        , paragraph
+            [ DOM.text "If the client supports dynamic registration for "
+            , inlineCode "workspace/didChangeWatchedFiles"
+            , DOM.text
+                ", Iris registers watchers for those file types. Otherwise, the client must send file change notifications itself to keep Iris up to date."
+            ]
+        , paragraph
+            [ DOM.text "Send "
+            , inlineCode "initialized"
+            , DOM.text " after initialization and "
+            , inlineCode "shutdown"
+            , DOM.text " before "
+            , inlineCode "exit"
+            , DOM.text ". The client can cancel requests with "
+            , inlineCode "$/cancelRequest"
+            , DOM.text ". It must handle "
+            , inlineCode "window/showMessage"
+            , DOM.text " and, when negotiated, "
+            , inlineCode "client/registerCapability"
+            , DOM.text ". If the client supports work-done progress, it must also handle "
+            , inlineCode "window/workDoneProgress/create"
+            , DOM.text " and "
+            , inlineCode "$/progress"
+            , DOM.text ". The client can cancel workspace preparation with "
+            , inlineCode "window/workDoneProgress/cancel"
+            , DOM.text "."
+            ]
+        , paragraph
+            [ DOM.text "Iris chooses a position encoding from the client's "
+            , inlineCode "general.positionEncodings"
+            , DOM.text
+                ", preferring UTF-8, then UTF-16, then UTF-32. It defaults to UTF-16 and returns its choice in "
+            , inlineCode "capabilities.positionEncoding"
+            , DOM.text "."
+            ]
+        , paragraph
+            [ DOM.text "For formatting, "
+            , inlineCode "options.tabSize"
+            , DOM.text " sets the indentation width and the optional "
+            , inlineCode "options.lineWidth"
+            , DOM.text
+                " sets the preferred line width as a positive integer. Iris uses spaces even when "
+            , inlineCode "options.insertSpaces"
+            , DOM.text " is false."
+            ]
+        ]
+    }
+  , { id: "configuration-updates"
+    , title: "LSP client configuration"
     , body:
         [ paragraph
-            [ DOM.text
-                "The language server provides settings that control when diagnostics are reported. All settings are optional. The defaults are:"
+            [ DOM.text "For LSP client developers, the "
+            , link
+                "https://github.com/purefunctor/purescript-iris/blob/main/compiler-services/iris-configuration/configuration.schema.json"
+                "configuration JSON Schema"
+            , DOM.text " describes the "
+            , inlineCode "iris.server"
+            , DOM.text " settings. Iris rejects unrecognized fields, including "
+            , inlineCode "$schema"
+            , DOM.text "."
+            ]
+        , paragraph
+            [ DOM.text "To configure Iris, advertise "
+            , inlineCode "workspace.configuration"
+            , DOM.text " and respond to "
+            , inlineCode "workspace/configuration"
+            , DOM.text ". After the client sends "
+            , inlineCode "initialized"
+            , DOM.text ", Iris requests the "
+            , inlineCode "iris.server"
+            , DOM.text
+                " section, scoped to the first workspace folder if present. Iris waits for the request to resolve before preparing the workspace. Without "
+            , inlineCode "workspace.configuration"
+            , DOM.text
+                ", Iris uses the defaults and the client cannot change them. When the client sends "
+            , inlineCode "workspace/didChangeConfiguration"
+            , DOM.text ", Iris requests the section again and ignores the "
+            , inlineCode "settings"
+            , DOM.text " value in the notification."
+            ]
+        , paragraph
+            [ DOM.text "Return the "
+            , inlineCode "iris.server"
+            , DOM.text " settings as the single item in the result array. A bare object or "
+            , inlineCode "null"
+            , DOM.text " is not a valid result. For example:"
             ]
         , CodeBlock.codeBlock
             { code:
-                "{\n  \"diagnostics\": {\n    \"onOpen\": true,\n    \"onSave\": true,\n    \"onChange\": false\n  }\n}"
-            , filename: "iris.server"
+                "[\n  {\n    \"diagnostics\": {\n      \"onOpen\": true,\n      \"onSave\": true,\n      \"onChange\": false\n    }\n  }\n]"
+            , filename: "workspace/configuration result"
             , highlight: []
             , language: CodeBlock.JSON
             , lineNumbers: false
@@ -164,71 +307,18 @@ sections =
             , surface: CodeBlock.Flat
             }
         , paragraph
-            [ DOM.text
-                "By default, Iris reports diagnostics for a file when it is opened and when it is saved, but not while you type. Set "
-            , inlineCode "onChange"
-            , DOM.text " to "
-            , inlineCode "true"
-            , DOM.text " to update diagnostics as you type."
-            ]
-        , paragraph
-            [ DOM.text
-                "These settings apply only to opening, saving, and editing. Iris also updates diagnostics in other cases, such as when a file is closed or changes on disk."
-            ]
-        , paragraph
-            [ DOM.text "In Visual Studio Code, the settings are named "
-            , inlineCode "iris.server.diagnostics.onOpen"
-            , DOM.text ", "
-            , inlineCode "iris.server.diagnostics.onSave"
-            , DOM.text ", and "
-            , inlineCode "iris.server.diagnostics.onChange"
-            , DOM.text ". In other editors, place them in the "
-            , inlineCode "iris.server"
-            , DOM.text " section of your LSP client's configuration."
-            ]
-        , paragraph
-            [ DOM.text "Editors that validate settings can use the "
-            , link
-                "https://github.com/purefunctor/purescript-iris/blob/main/compiler-services/iris-configuration/configuration.schema.json"
-                "configuration JSON Schema"
-            , DOM.text ". Associate the schema through your editor's settings instead of adding a "
-            , inlineCode "$schema"
-            , DOM.text " field, because Iris rejects unrecognized fields."
-            ]
-        ]
-    }
-  , { id: "configuration-updates"
-    , title: "Configuration updates"
-    , body:
-        [ paragraph
-            [ DOM.text
-                "This section describes how Iris reads its settings over LSP. It is mainly relevant when configuring an LSP client manually."
-            ]
-        , paragraph
-            [ DOM.text "Iris requests the "
-            , inlineCode "iris.server"
-            , DOM.text " section with "
-            , inlineCode "workspace/configuration"
-            , DOM.text
-                " once the server has initialized, using the first workspace folder. If your client does not support that request, Iris uses the defaults. When the client sends "
-            , inlineCode "workspace/didChangeConfiguration"
-            , DOM.text ", Iris requests the section again and ignores the "
-            , inlineCode "settings"
-            , DOM.text " value in the notification."
-            ]
-        , paragraph
             [ DOM.text "Each response replaces the previous configuration. A missing or "
             , inlineCode "null"
             , DOM.text
-                " field reverts to its default rather than keeping its previous value, and a response of "
+                " field reverts to its default rather than keeping its previous value. A settings object of "
             , inlineCode "{}"
             , DOM.text " or "
             , inlineCode "null"
-            , DOM.text " resets every setting."
+            , DOM.text " resets all settings."
             ]
         , paragraph
             [ DOM.text
-                "If a response contains an unknown field or an invalid value, Iris reports an error in the editor and keeps the last valid configuration."
+                "If a response contains an unknown field or an invalid value, Iris reports an error in the editor and keeps the last valid configuration. If there is no valid configuration yet, Iris uses the defaults."
             ]
         ]
     }

@@ -2,9 +2,7 @@ module Website.Playground.Button.Styles (buttonStyles) where
 
 import Iris.StyleX as StyleX
 
--- Shared by the playground's header and its loading screen.
 buttonStyles = StyleX.create
-  -- Transparent actions keep a subtle fill beside the tabs and strengthen it on hover.
   { action:
       { alignItems: "center"
       , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-3)" }
@@ -27,11 +25,6 @@ buttonStyles = StyleX.create
       , transitionTimingFunction: "var(--ease-out)"
       , whiteSpace: "nowrap"
       }
-  -- Run, Compiling, Stop, Try again, Share and Reset are one raised key, as on audio equipment of
-  -- the period: lit from above by a translucent sheen, with a lip below and an engraved label,
-  -- sinking while pressed.
-  -- Only its color changes between states, and colors and shadows interpolate, so the key eases
-  -- from one state to the next. Its shadows keep one shape for that reason.
   , raised:
       { backgroundColor: "var(--surface-2)"
       , backgroundImage: "linear-gradient(oklch(100% 0 0 / 12%), oklch(0% 0 0 / 10%))"

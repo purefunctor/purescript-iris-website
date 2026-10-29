@@ -1,10 +1,3 @@
-// Bundles the StyleX compiler for the playground page. Iris compiles Iris.StyleX to
-// `@stylexjs/stylex` calls that the StyleX Babel plugin must compile to CSS, as
-// @stylexjs/unplugin does for the site. The runner loads this module only when a program imports
-// StyleX, and runs it on the generated modules before linking them.
-//
-// The plugin's browser build runs on @babel/standalone, Babel's own build for browsers, which
-// also runs the plugin here.
 
 import { rolldown } from "rolldown";
 
@@ -16,16 +9,18 @@ import stylex from "@stylexjs/babel-plugin";
 // The site's settings in astro.config.mjs, without the bundler's development mode.
 const options = { dev: false, runtimeInjection: false };
 
-/** Compiles one generated module, returning its code and the StyleX rules it defines. */
-export function compile(code, filename) {
+/** Compiles one generated module, composing Iris's map through Babel's printed output. */
+export function compile(code, filename, inputSourceMap) {
   const result = transform(code, {
     babelrc: false,
     configFile: false,
     filename,
     sourceType: "module",
+    inputSourceMap: inputSourceMap ?? false,
+    sourceMaps: !!inputSourceMap,
     plugins: [[stylex, options]],
   });
-  return { code: result.code, rules: result.metadata.stylex ?? [] };
+  return { code: result.code, map: result.map, rules: result.metadata.stylex ?? [] };
 }
 
 /** The style sheet for the rules of every compiled module, in the site's cascade layers. */

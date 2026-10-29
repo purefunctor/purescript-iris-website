@@ -6,8 +6,6 @@ import { PlaygroundTrailer } from "./PlaygroundTrailer";
 import { plan as playgroundPlan } from "./playground";
 import { fps, height, width } from "./takes";
 
-// One trailer: its component and plan, and the manifest its render script writes to public/ and
-// passes as props; Remotion Studio fetches the manifest instead.
 function trailer<Manifest>(id: string, component: ComponentType<{ manifest: Manifest }>, plan: (manifest: Manifest) => { duration: number }, manifestFile: string) {
   return (
     <Composition

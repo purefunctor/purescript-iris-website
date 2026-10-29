@@ -37,13 +37,9 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | The ocean canvas and content classes, for JavaScript components that render these links.
 classNames :: { canvas :: String, content :: String }
 classNames = { canvas: styleProps.canvas.className, content: styleProps.content.className }
 
--- | A link that fades in the site's ocean while hovered or focused, marked when it leads to the
--- | current page. Its `className` must position and isolate the link so the ocean stays behind
--- | its content.
 navigationLink :: { href :: String, className :: String, current :: Boolean, content :: JSX } -> JSX
 navigationLink { href, className, current, content } = element navigationLinkImpl
   { href

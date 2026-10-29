@@ -8,20 +8,16 @@ publish = false
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-# The compiler crates are not published, so they come from the Iris repository at a release tag.
-# Bump every tag together, and regenerate `playground/packages/index.json` for the same tag.
 [dependencies]
-building = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
-files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
-iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
-javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
-prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.10" }
-# Match the version the Iris workspace pins.
+building = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.13" }
+files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.13" }
+iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.13" }
+javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.13" }
+prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.13" }
 lsp-types = { package = "gen-lsp-types", version = "=0.11.0", features = ["url"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 url = "2.5.8"
-# `scripts/build-playground-language-server.mjs` requires the same wasm-bindgen-cli version.
 wasm-bindgen = "=0.2.129"
 
 [profile.release]

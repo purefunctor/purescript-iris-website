@@ -5,8 +5,11 @@ import Prelude
 import Data.Array (filter, length, null)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Nullable (Nullable, toMaybe)
+import Data.String (toLower)
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (Milliseconds(..), delay)
+import Effect.Uncurried (EffectFn1, mkEffectFn1)
 import Effect.Unsafe (unsafePerformEffect)
 import Foreign (Foreign)
 import Iris.StyleX as StyleX
@@ -14,98 +17,66 @@ import React.Basic (JSX, ReactComponent, Ref, element, fragment)
 import React.Basic.Events (handler_)
 import React.Basic.Hooks as Hooks
 import React.Basic.Hooks.Aff (useAff)
+import Record (merge)
 import Web.DOM.Element (Element)
 import Website.Breakpoints (breakpoints)
 import Website.Components.ExternalLink (newTabLabel)
 import Website.Components.Icon as Icon
 import Website.Components.IconButton.Styles (iconButtonStyles)
+import Website.Jotai as Jotai
 import Website.Playground.Button.Styles (buttonStyles)
 import Website.Playground.FileTabs (fileTabs)
 import Website.Playground.FileTree (fileTree)
+import Website.Playground.Hooks
+  ( HandleProps
+  , useFollowOutput
+  , useFrameSlot
+  , usePanelBelowEditor
+  , usePlayground
+  , useResizable
+  , useTabListOverflow
+  )
 import Website.Playground.Loading (loading)
 import Website.Playground.Packages (packagesPanel)
 import Website.Playground.Templates (templateList)
 import Website.Playground.Types (Actions, Line, Run, State, View)
 import Yoga.React.DOM as DOM
 
-foreign import playgroundImpl :: ReactComponent { theme :: Foreign, render :: View -> JSX }
-
-foreign import sidebarImpl ::
+foreign import tabs ::
   ReactComponent
-    { id :: String
-    , open :: Boolean
-    , width :: Int
-    , resize :: Int -> Effect Unit
-    , close :: Effect Unit
-    , className :: String
-    , handleClassName :: String
+    { className :: String
+    , onSelectionChange :: EffectFn1 String Unit
+    , selectedKey :: String
     , children :: JSX
     }
 
--- | A status pill with a tooltip. An empty `href` makes it a focusable label instead of a link.
-foreign import pillImpl ::
+foreign import tabList ::
   ReactComponent
-    { href :: String
-    , label :: String
-    , accessibleLabel :: String
-    , tooltip :: String
-    , className :: String
-    , iconClassName :: String
-    , tooltipClassName :: String
-    }
+    { "aria-label" :: String, className :: String, ref :: Ref (Nullable Element), children :: JSX }
 
-foreign import panelImpl ::
+foreign import tab :: ReactComponent { className :: String, id :: String, children :: JSX }
+
+foreign import tabPanel :: ReactComponent { className :: String, id :: String, children :: JSX }
+
+foreign import tooltipTrigger :: ReactComponent { closeDelay :: Int, delay :: Int, children :: JSX }
+
+foreign import tooltip ::
+  ReactComponent { className :: String, offset :: Int, placement :: String, children :: JSX }
+
+foreign import focusable :: ReactComponent { children :: JSX }
+
+foreign import link ::
   ReactComponent
-    { id :: String
-    , label :: String
-    , open :: Boolean
-    , width :: Int
-    , height :: Int
-    , resize :: { width :: Int, height :: Int } -> Effect Unit
-    , close :: Effect Unit
+    { "aria-label" :: String
     , className :: String
-    , handleClassName :: String
+    , href :: String
+    , rel :: String
+    , target :: String
     , children :: JSX
     }
 
--- | Shows the program's frame, which lives in `frames`, where this renders.
-foreign import outputViewImpl ::
-  ReactComponent { frames :: Ref (Nullable Element), className :: String }
-
--- | The program's messages, which follow new ones while scrolled to the bottom. An `overlay`
--- | console lies over the program's view below its `bar`, `height` pixels tall and at least ten
--- | messages, and collapses to the bar while not `open`.
-foreign import consoleImpl ::
-  ReactComponent
-    { overlay :: Boolean
-    , open :: Boolean
-    , height :: Int
-    , resize :: Int -> Effect Unit
-    , close :: Effect Unit
-    , className :: String
-    , scrollerClassName :: String
-    , handleClassName :: String
-    , bar :: JSX
-    , children :: JSX
-    }
-
-foreign import panelTabsImpl ::
-  ReactComponent
-    { selected :: String
-    , select :: String -> Effect Unit
-    , rootClassName :: String
-    , barClassName :: String
-    , tabListClassName :: String
-    , tabClassName :: String
-    , panelClassName :: String
-    , switchedPanelClassName :: String
-    , badgeClassName :: String
-    , output :: JSX
-    , outputAction :: JSX
-    , outputBadge :: String
-    , packages :: JSX
-    , packagesBadge :: String
-    }
+foreign import externalLinkIcon ::
+  ReactComponent { "aria-hidden" :: Boolean, className :: String, focusable :: Boolean }
 
 styles = StyleX.create
   { page:
@@ -117,7 +88,6 @@ styles = StyleX.create
       , fontSize: 14
       , height: "100dvh"
       }
-  -- The playground's own header replaces the site navigation with the project's controls.
   , header:
       { alignItems: "center"
       , backgroundColor: "var(--granite-950)"
@@ -130,8 +100,6 @@ styles = StyleX.create
       , height: "var(--nav-height)"
       , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
       }
-  -- Motion stays short and eases out, and reduced motion turns it off. The controls rise in once
-  -- the playground is ready, as the workspace fades in below them.
   , controls:
       { alignItems: "center"
       , animationDuration: "260ms"
@@ -143,9 +111,6 @@ styles = StyleX.create
       , minWidth: 0
       }
   , spacer: { flexGrow: 1 }
-  -- The editor and its panel meet at a hard edge; the panel drops below the editor on narrow
-  -- screens. The workspace is the container that sizes the panel's contents, and it clips the
-  -- program's frame as the panel slides in from its edge.
   , workspace:
       { containerType: "size"
       , display: "flex"
@@ -156,7 +121,6 @@ styles = StyleX.create
       , overflow: "hidden"
       , position: "relative"
       }
-  -- Switching between Output and Packages fades the new panel in.
   , switched:
       { animationDuration: "160ms"
       , animationName: { default: fadeIn, "@media (prefers-reduced-motion: reduce)": "none" }
@@ -175,14 +139,11 @@ styles = StyleX.create
       , minWidth: 0
       , position: "relative"
       }
-  -- The sidebar sits beside the editor, and over it on phones.
   , sidebar:
       { display: "flex"
       , flexShrink: 0
       , insetBlock: 0
       , insetInlineStart: 0
-      -- Opening and closing grow and shrink the sidebar, so the editor follows its edge. Its
-      -- sections keep their width at that edge, so they slide in rather than squeeze.
       , justifyContent: "flex-end"
       , position: StyleX.conditionalValue "relative"
           [ StyleX.conditionalCase breakpoints.upTo720 "absolute" ]
@@ -195,7 +156,6 @@ styles = StyleX.create
       , animationTimingFunction: "var(--ease-out)"
       , overflow: "hidden"
       }
-  -- Files take the sidebar's height above the templates.
   , sidebarSections:
       { borderInlineEndColor: StyleX.conditionalValue "var(--border-subtle)"
           [ StyleX.conditionalCase breakpoints.upTo720 "var(--border-strong)" ]
@@ -207,7 +167,6 @@ styles = StyleX.create
       , width: StyleX.conditionalValue "var(--sidebar-width)"
           [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
       }
-  -- The sidebar's and the panel's edges, which drag to resize and close them below a minimum size.
   , handle:
       { backgroundColor:
           { default: "transparent"
@@ -224,7 +183,6 @@ styles = StyleX.create
       , transitionProperty: "background-color"
       , zIndex: 4
       }
-  -- Phones open the sidebar over the editor instead, so they have no handle.
   , sidebarHandle:
       { cursor: "col-resize"
       , display:
@@ -233,8 +191,6 @@ styles = StyleX.create
       , paddingInline: 2
       , width: 6
       }
-  -- The panel's handle follows its leading edge: its start beside the editor, its top below it.
-  -- It reads the panel's capped size, so it stays on the edge at any window size.
   , panelHandle:
       { cursor: StyleX.conditionalValue "col-resize"
           [ StyleX.conditionalCase breakpoints.upTo960 "row-resize" ]
@@ -279,8 +235,6 @@ styles = StyleX.create
       , position: "absolute"
       }
   , panel:
-      -- The panel's size is its flex basis, which runs along the workspace beside the editor and
-      -- down it below, so one animation opens the panel in both places.
       { flexBasis: StyleX.conditionalValue "min(var(--panel-width), 70%)"
           [ StyleX.conditionalCase breakpoints.upTo960 "min(var(--panel-height), 70%)" ]
       , flexShrink: 0
@@ -292,8 +246,6 @@ styles = StyleX.create
       , animationName: { default: "none", "[data-entering]": basisIn, "[data-exiting]": basisOut }
       , animationTimingFunction: "var(--ease-out)"
       }
-  -- The tabs keep the panel's open size at its leading edge, so they slide in rather than squeeze.
-  -- The workspace's container units match the 70% cap of the panel's flex basis.
   , tabs:
       { backgroundColor: "var(--granite-950)"
       , borderInlineStartColor: "var(--border-subtle)"
@@ -311,20 +263,40 @@ styles = StyleX.create
       , width: StyleX.conditionalValue "min(var(--panel-width), 70cqw)"
           [ StyleX.conditionalCase breakpoints.upTo960 "100%" ]
       }
-  -- The panel's tabs share their row with the selected tab's actions, such as Clear.
   , panelBar:
-      { alignItems: "center"
+      { alignItems: "stretch"
       , borderBlockEndColor: "var(--border-subtle)"
       , borderBlockEndStyle: "solid"
       , borderBlockEndWidth: 1
       , display: "flex"
       , flexShrink: 0
-      , gap: 8
       , height: 36
-      , justifyContent: "space-between"
-      , paddingInlineEnd: 8
       }
-  , tabList: { alignSelf: "stretch", display: "flex" }
+  , tabList:
+      { display: "flex"
+      , flexGrow: 1
+      , maskImage:
+          { default: "none"
+          , "[data-overflow=start]": "linear-gradient(to right, transparent, black 24px)"
+          , "[data-overflow=end]": "linear-gradient(to left, transparent, black 24px)"
+          , "[data-overflow=both]":
+              "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)"
+          }
+      , minWidth: 0
+      , overflowX: "auto"
+      , overscrollBehaviorX: "contain"
+      , scrollbarWidth: "none"
+      }
+  , panelSettings:
+      { alignItems: "center"
+      , borderInlineStartColor: "var(--border-subtle)"
+      , borderInlineStartStyle: "solid"
+      , borderInlineStartWidth: 1
+      , display: "flex"
+      , flexShrink: 0
+      , gap: 6
+      , paddingInline: 8
+      }
   , tab:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -343,7 +315,7 @@ styles = StyleX.create
       , outlineOffset: -2
       , outlineStyle: { default: "none", "[data-focus-visible]": "solid" }
       , outlineWidth: 2
-      , paddingInline: 16
+      , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 8 ]
       , transitionDuration: "140ms"
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
@@ -367,7 +339,106 @@ styles = StyleX.create
       , outlineStyle: "none"
       , overflowY: "auto"
       }
-  -- Status pills are sans-serif with flat, high-contrast fills.
+  , subBar:
+      { alignItems: "center"
+      , borderBlockEndColor: "var(--border-subtle)"
+      , borderBlockEndStyle: "solid"
+      , borderBlockEndWidth: 1
+      , display: "flex"
+      , flexShrink: 0
+      , flexWrap: "wrap"
+      , fontFamily: "var(--font-sans)"
+      , fontSize: 12
+      , gap: 8
+      , paddingBlock: 8
+      , paddingInline: 12
+      }
+  , subBarLabel: { color: "var(--text-secondary)", overflowWrap: "anywhere" }
+  , generatedStatus:
+      { color: "var(--text-tertiary)"
+      , flexShrink: 0
+      , fontFamily: "var(--font-sans)"
+      , fontSize: 12
+      , margin: 0
+      , overflowWrap: "anywhere"
+      , paddingBlock: 6
+      , paddingInline: 12
+      }
+  , switch:
+      { alignItems: "center"
+      , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
+      , borderRadius: 999
+      , borderStyle: "none"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
+      , cursor: "default"
+      , display: "inline-flex"
+      , flexShrink: 0
+      , fontFamily: "var(--font-sans)"
+      , fontSize: 12
+      , fontWeight: 500
+      , gap: 10
+      , height: 28
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , paddingBlock: 0
+      , paddingInlineEnd: 5
+      , paddingInlineStart: 12
+      , transitionDuration: "140ms"
+      , transitionProperty: "background-color, color"
+      , transitionTimingFunction: "var(--ease-out)"
+      , whiteSpace: "nowrap"
+      }
+  , switchTrack:
+      { backgroundColor: "var(--granite-950)"
+      , borderRadius: 999
+      , boxShadow:
+          "inset 0 1px 2px oklch(0% 0 0 / 60%), inset 0 -1px 0 oklch(100% 0 0 / 6%), 0 0 0 oklch(from var(--accent) l c h / 0%)"
+      , display: "block"
+      , flexShrink: 0
+      , height: 18
+      , position: "relative"
+      , transitionDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "background-color, box-shadow"
+      , transitionTimingFunction: "var(--ease-out)"
+      , width: 30
+      }
+  , switchTrackOn:
+      { backgroundColor: "var(--accent)"
+      , boxShadow:
+          "inset 0 1px 2px oklch(0% 0 0 / 35%), inset 0 -1px 0 oklch(100% 0 0 / 12%), 0 0 8px oklch(from var(--accent) l c h / 45%)"
+      }
+  , switchKnob:
+      { backgroundColor: "var(--granite-300)"
+      , backgroundImage: "linear-gradient(oklch(100% 0 0 / 18%), oklch(0% 0 0 / 10%))"
+      , borderRadius: 999
+      , boxShadow: "inset 0 1px 0 oklch(100% 0 0 / 35%), 0 1px 2px oklch(0% 0 0 / 55%)"
+      , height: 14
+      , insetBlockStart: 2
+      , insetInlineStart: 2
+      , position: "absolute"
+      , transitionDuration: { default: "180ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "background-color, transform"
+      , transitionTimingFunction: "var(--ease-out)"
+      , width: 14
+      }
+  , switchKnobOn: { backgroundColor: "var(--granite-100)", transform: "translateX(12px)" }
+  , stackFrame:
+      { backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
+      , borderStyle: "none"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , color: "var(--text-primary)"
+      , cursor: "default"
+      , display: "block"
+      , fontFamily: "inherit"
+      , fontSize: "inherit"
+      , marginBlock: 3
+      , maxWidth: "100%"
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , overflowWrap: "anywhere"
+      , paddingBlock: 3
+      , paddingInline: 4
+      , textAlign: "start"
+      }
   , status:
       { alignItems: "center"
       , borderRadius: 999
@@ -384,9 +455,6 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , statusReady: { backgroundColor: "var(--green-400)" }
-  -- The ready pill links to the release, so it brightens on hover like the other controls.
-  -- The version and package set pills are raised like the Run key, from their own hues. The
-  -- version links to its release, so it also brightens on hover and sinks while pressed.
   , statusLink:
       { backgroundColor: "var(--green-400)"
       , backgroundImage:
@@ -411,7 +479,6 @@ styles = StyleX.create
       , transform: { default: "none", ":active": "translateY(1px)" }
       }
   , commit: { fontFamily: "var(--font-mono)" }
-  -- Lucide icons render at 1.2em, so the arrow sits a little smaller than the pill's label.
   , externalIcon: { flexShrink: 0, fontSize: 10, marginInlineStart: -1 }
   , statusBusy:
       { backgroundColor: "var(--surface-2)"
@@ -419,10 +486,7 @@ styles = StyleX.create
       , color: "var(--text-primary)"
       }
   , statusFailed: { backgroundColor: "var(--red-300)" }
-  -- Round keys hold their width, so a crowded header cannot squeeze them into ovals.
   , iconOnly: { flexShrink: 0, paddingInline: 0, justifyContent: "center", width: 32 }
-  -- While compiling, and running until Stop appears, the key stays held down rather than greying
-  -- out, so a quick run reads as one press.
   , pressed:
       { backgroundColor: "var(--accent-press)"
       , boxShadow:
@@ -431,7 +495,6 @@ styles = StyleX.create
       , textShadow: "0 1px 0 oklch(from var(--signal-200) l c h / 45%)"
       , transform: "translateY(1px)"
       }
-  -- Stop, Share and Reset are the Run key without its accent.
   , neutral:
       { backgroundColor:
           { default: "var(--surface-3)"
@@ -463,12 +526,8 @@ styles = StyleX.create
       , outline: { default: "revert", ":focus-visible": "none" }
       , paddingInline: 10
       }
-  -- The console reads like a browser's: one row per message, split by hairlines, with warnings
-  -- and errors tinted in their own hues and marked by an icon. consoleImpl's minimum height is its
-  -- bar and ten of these rows, so keep its arithmetic in step with their sizes.
   , console: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
   , consoleScroller: { flexGrow: 1, minHeight: 0, overflowY: "auto" }
-  -- A program that renders fills the panel, and its console lies over the view's lower edge.
   , view: { flexGrow: 1, minHeight: 0 }
   , overlayConsole:
       { backgroundColor: "var(--granite-950)"
@@ -485,7 +544,6 @@ styles = StyleX.create
       , zIndex: 5
       }
   , consoleHandle: { cursor: "row-resize", height: 6, insetInline: 0, paddingBlock: 2, zIndex: 6 }
-  -- The bar collapses and brings up the console, and counts its messages, warnings and errors.
   , consoleBar:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -538,7 +596,6 @@ styles = StyleX.create
       , paddingInlineEnd: 12
       , paddingInlineStart: 8
       }
-  -- The icon centers on the message's first line, which is as tall as the icon's box.
   , lineIcon:
       { alignItems: "center"
       , display: "inline-flex"
@@ -551,7 +608,6 @@ styles = StyleX.create
   , lineText: { minWidth: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
   , logLine: { color: "var(--text-secondary)" }
   , infoLine: { color: "var(--text-tertiary)" }
-  -- A tinted row also tints the separator above it, as browsers do.
   , warningLine:
       { backgroundColor: "oklch(from var(--yellow-300) l c h / 8%)"
       , borderBlockEndColor: "oklch(from var(--yellow-300) l c h / 22%)"
@@ -588,9 +644,6 @@ styles = StyleX.create
       , display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       }
-  -- Run and Stop, and Share and Copied, share one grid cell, so each button keeps its widest
-  -- label's width. Compiling, and running until Stop appears, keep the Run label and turn its
-  -- icon into a spinner.
   , labels: { display: "grid" }
   , label:
       { alignItems: "center"
@@ -602,14 +655,12 @@ styles = StyleX.create
       , transitionProperty: "opacity, visibility"
       , transitionTimingFunction: "var(--ease-out)"
       }
-  -- Labels crossfade, and a hidden one stays in the grid to hold the button's width.
   , inactiveLabel: { opacity: 0, visibility: "hidden" }
   , popped:
       { animationDuration: "240ms"
       , animationName: { default: pop, "@media (prefers-reduced-motion: reduce)": "none" }
       , animationTimingFunction: "var(--ease-out)"
       }
-  -- The panel toggle's icon shows where the panel sits: beside the editor, or below it.
   , besidePanel:
       { display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
@@ -622,7 +673,6 @@ styles = StyleX.create
       { display:
           StyleX.conditionalValue "grid" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
       }
-  -- Without its label, Share is a round key like Reset beside it.
   , shareKey:
       { flexShrink: 0
       , justifyContent: "center"
@@ -655,7 +705,6 @@ pop = StyleX.keyframes
   , to: { transform: "none" }
   }
 
--- Without a `to` frame, these open to the element's own size.
 widthIn = StyleX.keyframes { from: { width: 0 } }
 
 widthOut = StyleX.keyframes { to: { width: 0 } }
@@ -666,13 +715,16 @@ basisOut = StyleX.keyframes { to: { flexBasis: 0 } }
 
 component :: ReactComponent { theme :: Foreign }
 component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } ->
-  pure $ element playgroundImpl { theme, render: playground }
+  pure $ element Jotai.provider { children: element workspace { theme } }
+
+workspace :: ReactComponent { theme :: Foreign }
+workspace = unsafePerformEffect $ Hooks.reactComponent "PlaygroundWorkspace" \{ theme } -> Hooks.do
+  view <- usePlayground theme
+  pure (playground view)
 
 playground :: View -> JSX
-playground { state, actions, editor, frames } = DOM.div styleProps.page
+playground { state, actions, editor, generated, frames } = DOM.div styleProps.page
   [ DOM.header styleProps.header [ if ready then controls else mempty ]
-  -- The children keep their positions in every phase, so that React keeps the editor host that
-  -- the controller fills once loading finishes.
   , DOM.main (StyleX.props [ styles.workspace, StyleX.conditional ready styles.revealed ])
       [ DOM.div styleProps.upper
           [ if ready then sidebar else mempty
@@ -690,6 +742,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
       , if ready then panel else mempty
       , if ready then mempty else loading state actions.retry
       , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef frames } []
+      , DOM.div { className: styleProps.frames.className, ref: DOM.reactRef generated } []
       ]
   ]
   where
@@ -710,7 +763,7 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
     , DOM.div styleProps.spacer []
     , status state
     , case toMaybe state.packages.packageSet of
-        Just packageSet -> element pillImpl
+        Just packageSet -> tooltipPill
           { href: ""
           , label: packageSet
           , accessibleLabel: "Package set " <> packageSet
@@ -749,23 +802,21 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         , type: "button"
         , "aria-controls": "playground-panel"
         , "aria-expanded": state.panel
-        , "aria-label": "Output and packages"
+        , "aria-label": "Output, JavaScript and packages"
         }
         [ DOM.span (StyleX.props [ styles.icon, styles.besidePanel ]) (icon Icon.panelRight)
         , DOM.span (StyleX.props [ styles.icon, styles.belowPanel ]) (icon Icon.panelBottom)
         ]
     ]
 
-  sidebar = element sidebarImpl
-    { id: "playground-sidebar"
-    , open: state.sidebar
+  sidebar = element sidebarArea
+    { open: state.sidebar
     , width: state.sidebarWidth
     , resize: actions.resizeSidebar
     , close: actions.closeSidebar
-    , className: styleProps.sidebar.className
-    , handleClassName: (StyleX.props [ styles.handle, styles.sidebarHandle ]).className
-    , children: DOM.div styleProps.sidebarSections
-        [ fileTree { files: state.files, active: state.active, viewing: state.viewing, actions }
+    , content: DOM.div styleProps.sidebarSections
+        [ element fileTree
+            { files: state.files, active: state.active, viewing: state.viewing, actions }
         , templateList { templates: state.templates, actions }
         ]
     }
@@ -780,30 +831,22 @@ playground { state, actions, editor, frames } = DOM.div styleProps.page
         }
     ]
 
-  panel = element panelImpl
-    { id: "playground-panel"
-    , label: "Output and packages"
+  panel = element panelArea
+    { label: "Output, JavaScript and packages"
     , open: state.panel
     , width: state.panelWidth
     , height: state.panelHeight
     , resize: actions.resizePanel
     , close: actions.closePanel
-    , className: styleProps.panel.className
-    , handleClassName: (StyleX.props [ styles.handle, styles.panelHandle ]).className
-    , children: element panelTabsImpl
+    , content: element panelTabs
         { selected: state.panelTab
         , select: actions.selectPanelTab
-        , rootClassName: styleProps.tabs.className
-        , barClassName: styleProps.panelBar.className
-        , tabListClassName: styleProps.tabList.className
-        , tabClassName: styleProps.tab.className
-        , panelClassName: styleProps.tabPanel.className
-        , switchedPanelClassName: (StyleX.props [ styles.tabPanel, styles.switched ]).className
-        , badgeClassName: styleProps.badge.className
         , output: output state actions frames
         , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
-        , packages: packagesPanel
+        , settings: sourceMapsSwitch state actions
+        , javascript: javascriptPanel state generated
+        , packages: element packagesPanel
             { packages: state.packages
             , busy: state.server.status == "starting" || state.server.status == "restarting"
             , activate: actions.activatePackage
@@ -828,17 +871,19 @@ iconAction label icon' onPress = DOM.button
   }
   (DOM.span styleProps.icon (icon icon'))
 
--- | The Run key. Stop takes its place only once a program has run for half a second, so that
--- | quick programs do not flash Stop; until then the key stays Run and keeps compiling's spinner.
+stopAppearsAfter :: Milliseconds
+stopAppearsAfter = Milliseconds 500.0
+
 runButton ::
   ReactComponent { status :: String, ready :: Boolean, run :: Effect Unit, stop :: Effect Unit }
 runButton = unsafePerformEffect $ Hooks.reactComponent "RunButton" \{ status, ready, run, stop } ->
   Hooks.do
     let
       running = status == "running"
-    started <- useAff running (if running then delay (Milliseconds 500.0) $> true else pure false)
+    ranLongEnoughToStop <-
+      useAff running (if running then delay stopAppearsAfter $> true else pure false)
     let
-      stoppable = running && started == Just true
+      stoppable = running && ranLongEnoughToStop == Just true
       busy = status == "compiling" || running && not stoppable
       disabled = busy || not ready && not stoppable
     pure $ DOM.button
@@ -885,8 +930,6 @@ runButton = unsafePerformEffect $ Hooks.reactComponent "RunButton" \{ status, re
     }
     (icons <> [ DOM.text text ])
 
--- | One of several labels that share a grid cell, so that a button keeps its widest label's
--- | width as the label changes.
 stackedLabel :: String -> Boolean -> JSX
 stackedLabel text current = DOM.span
   { className:
@@ -899,11 +942,10 @@ stackedLabel text current = DOM.span
 status :: State -> JSX
 status state = case server.status, toMaybe server.kind, toMaybe server.version of
   "failed", _, _ -> pill "Language server stopped" styles.statusFailed
-  -- A restart keeps the same release, so a known version stays in place.
   "restarting", _, Nothing -> pill "Restarting the language server" styles.statusBusy
   "starting", _, _ -> pill "Starting the language server" styles.statusBusy
   _, Just "mock", _ -> mempty
-  _, _, Just version -> element pillImpl
+  _, _, Just version -> tooltipPill
     { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
     , label: version
     , accessibleLabel: "Iris " <> version <> " release" <> newTabLabel
@@ -922,37 +964,33 @@ status state = case server.status, toMaybe server.kind, toMaybe server.version o
     }
     label
 
--- | What `main` printed, below what it rendered, if it did. The Run key already shows whether the
--- | project is compiling or running, and errors and stops arrive as lines, so the output has no
--- | status of its own.
 output :: State -> Actions -> Ref (Nullable Element) -> JSX
 output state actions frames = DOM.div styleProps.output
-  if run.view
-  then
-    [ element outputViewImpl { frames, className: styleProps.view.className }
-    , if null run.lines then mempty else console true
+  ( [ if state.outputStale && not (null run.lines)
+      then DOM.div styleProps.subBar
+        [ DOM.span styleProps.subBarLabel "Previous run · rerun to navigate source locations" ]
+      else mempty
     ]
-  else
-    [ case run.status, null run.lines of
-        "idle", true -> DOM.p styleProps.empty "Run the project to see what main prints or renders."
-        "done", true -> DOM.p styleProps.empty "main finished without printing anything."
-        _, _ -> console false
-    ]
+      <> if run.view
+         then [ element outputView { frames }, if null run.lines then mempty else console true ]
+         else
+           [ case run.status, null run.lines of
+               "idle", true ->
+                 DOM.p styleProps.empty "Run the project to see what main prints or renders."
+               "done", true -> DOM.p styleProps.empty "main finished without printing anything."
+               _, _ -> console false
+           ]
+  )
   where
   run = state.run
-  console overlay = element consoleImpl
+  console overlay = element consoleArea
     { overlay
     , open: state.console
     , height: state.consoleHeight
     , resize: actions.resizeConsole
     , close: actions.closeConsole
-    , className:
-        ( StyleX.props [ styles.console, StyleX.conditional overlay styles.overlayConsole ]
-        ).className
-    , scrollerClassName: styleProps.consoleScroller.className
-    , handleClassName: (StyleX.props [ styles.handle, styles.consoleHandle ]).className
     , bar: consoleBar state.console run.lines actions.toggleConsole
-    , children: fragment (map outputLine run.lines)
+    , content: fragment (map (outputLine state actions) run.lines)
     }
 
 consoleBar :: Boolean -> Array Line -> Effect Unit -> JSX
@@ -996,12 +1034,339 @@ clearButton run clear
     DOM.button { className: styleProps.clear.className, onClick: handler_ clear, type: "button" }
       "Clear"
 
-outputLine :: Line -> JSX
-outputLine line = DOM.div (StyleX.props [ styles.line, tone ])
-  [ DOM.span styleProps.lineIcon marker, DOM.span styleProps.lineText line.text ]
+javascriptPanel :: State -> Ref (Nullable Element) -> JSX
+javascriptPanel state host = DOM.div styleProps.output
+  [ element outputView { frames: host }
+  , if state.generated.message == ""
+    then mempty
+    else DOM.p styleProps.generatedStatus state.generated.message
+  ]
+
+sourceMapsSwitch :: State -> Actions -> JSX
+sourceMapsSwitch state actions = DOM.button
+  { className: styleProps.switch.className
+  , type: "button"
+  , role: "switch"
+  , "aria-checked": state.sourceMaps
+  , onClick: handler_ actions.toggleSourceMaps
+  }
+  [ DOM.text "Source maps"
+  , DOM.span
+      { className:
+          ( StyleX.props
+              [ styles.switchTrack, StyleX.conditional state.sourceMaps styles.switchTrackOn ]
+          ).className
+      , "aria-hidden": true
+      }
+      [ DOM.span
+          ( StyleX.props
+              [ styles.switchKnob, StyleX.conditional state.sourceMaps styles.switchKnobOn ]
+          )
+          []
+      ]
+  ]
+
+outputLine :: State -> Actions -> Line -> JSX
+outputLine state actions line = DOM.div (StyleX.props [ styles.line, tone ])
+  [ DOM.span styleProps.lineIcon marker
+  , DOM.div styleProps.lineText case toMaybe line.frames of
+      Nothing -> DOM.text line.text
+      Just frames -> fragment (map frame frames)
+  ]
   where
+  frame item
+    | item.mapped && not state.outputStale = DOM.button
+      { className: styleProps.stackFrame.className
+      , type: "button"
+      , onClick: handler_ (actions.openFrame item)
+      , title: "Open PureScript source"
+      }
+      item.text
+    | otherwise = DOM.div {} item.text
   { tone, marker } = case line.kind of
     "error" -> { tone: styles.errorLine, marker: icon Icon.circleX }
     "warning" -> { tone: styles.warningLine, marker: icon Icon.triangleAlert }
     "info" -> { tone: styles.infoLine, marker: mempty }
     _ -> { tone: styles.logLine, marker: mempty }
+
+sidebarId :: String
+sidebarId = "playground-sidebar"
+
+sidebarArea ::
+  ReactComponent
+    { open :: Boolean
+    , width :: Int
+    , resize :: Int -> Effect Unit
+    , close :: Effect Unit
+    , content :: JSX
+    }
+sidebarArea = unsafePerformEffect $ Hooks.reactComponent "PlaygroundSidebar" \props -> Hooks.do
+  area <- useResizable
+    { id: sidebarId
+    , label: "Resize files"
+    , open: props.open
+    , size: props.width
+    , min: 180
+    , max: 480
+    , collapse: 120
+    , vertical: false
+    , fromEnd: false
+    , share: 1.0
+    , resize: props.resize
+    , close: props.close
+    }
+  pure $ fragment
+    [ if area.rendered
+      then DOM.div
+        ( merge
+            { className: styleProps.sidebar.className
+            , id: sidebarId
+            , style: DOM.css { "--sidebar-width": pixels area.current }
+            }
+            area.presenceProps
+        )
+        props.content
+      else mempty
+    , resizeHandle [ styles.handle, styles.sidebarHandle ]
+        (DOM.css { insetInlineStart: if area.shown then area.current - 3 else 0 }) area.handleProps
+    ]
+
+panelId :: String
+panelId = "playground-panel"
+
+panelArea ::
+  ReactComponent
+    { label :: String
+    , open :: Boolean
+    , width :: Int
+    , height :: Int
+    , resize :: { width :: Int, height :: Int } -> Effect Unit
+    , close :: Effect Unit
+    , content :: JSX
+    }
+panelArea = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPanel" \props -> Hooks.do
+  vertical <- usePanelBelowEditor
+  area <- useResizable
+    { id: panelId
+    , label: "Resize " <> toLower props.label
+    , open: props.open
+    , size: if vertical then props.height else props.width
+    , min: if vertical then 120 else 240
+    , max: if vertical then 800 else 900
+    , collapse: if vertical then 80 else 160
+    , vertical
+    , fromEnd: true
+    , share: 0.7
+    , resize: \size ->
+        props.resize
+          if vertical
+          then { width: props.width, height: size }
+          else { width: size, height: props.height }
+    , close: props.close
+    }
+  let
+    sizes :: Boolean -> DOM.CSS
+    sizes shown = DOM.css
+      { "--panel-width":
+          pixels if not shown then 0 else if vertical then props.width else area.current
+      , "--panel-height":
+          pixels if not shown then 0 else if vertical then area.current else props.height
+      }
+  pure $ fragment
+    [ if area.rendered
+      then DOM.aside
+        ( merge
+            { "aria-label": props.label
+            , className: styleProps.panel.className
+            , id: panelId
+            , style: sizes true
+            }
+            area.presenceProps
+        )
+        props.content
+      else mempty
+    , resizeHandle [ styles.handle, styles.panelHandle ] (sizes area.shown) area.handleProps
+    ]
+
+consoleBarHeight :: Int
+consoleBarHeight = 1 + 28
+
+consoleMinHeight :: Int
+consoleMinHeight = consoleBarHeight + 10 * (18 + 2 * 2 + 1)
+
+consoleArea ::
+  ReactComponent
+    { overlay :: Boolean
+    , open :: Boolean
+    , height :: Int
+    , resize :: Int -> Effect Unit
+    , close :: Effect Unit
+    , bar :: JSX
+    , content :: JSX
+    }
+consoleArea = unsafePerformEffect $ Hooks.reactComponent "PlaygroundConsole" \props -> Hooks.do
+  area <- useResizable
+    { id: "playground-console"
+    , label: "Resize console"
+    , open: props.open
+    , size: max consoleMinHeight props.height
+    , min: consoleMinHeight
+    , max: 4000
+    , collapse: consoleBarHeight + 40
+    , vertical: true
+    , fromEnd: true
+    , share: 0.9
+    , resize: props.resize
+    , close: props.close
+    }
+  follow <- useFollowOutput
+  let
+    shown :: Int
+    shown = if area.shown then area.current else consoleBarHeight
+  pure $ fragment
+    [ if props.overlay
+      then resizeHandle [ styles.handle, styles.consoleHandle ]
+        (DOM.css { insetBlockEnd: "calc(min(" <> pixels shown <> ", 100%) - 3px)" })
+        area.handleProps
+      else mempty
+    , DOM.div
+        { className:
+            ( StyleX.props
+                [ styles.console, StyleX.conditional props.overlay styles.overlayConsole ]
+            ).className
+        , style: if props.overlay then DOM.css { height: shown } else mempty
+        }
+        [ if props.overlay then props.bar else mempty
+        , DOM.div
+            { "aria-live": "polite"
+            , className: styleProps.consoleScroller.className
+            , id: "playground-console"
+            , onScroll: follow.onScroll
+            , ref: DOM.reactRef follow.scroller
+            , role: "log"
+            }
+            props.content
+        ]
+    ]
+
+resizeHandle :: Array StyleX.Style -> DOM.CSS -> HandleProps -> JSX
+resizeHandle styles' style props = DOM.createBuiltinElement_ "div"
+  (merge { className: (StyleX.props styles').className, style } props)
+
+pixels :: Int -> String
+pixels n = show n <> "px"
+
+switchedAtom :: Jotai.Atom Boolean
+switchedAtom = unsafePerformEffect (Jotai.atom false)
+
+panelTabs ::
+  ReactComponent
+    { selected :: String
+    , select :: String -> Effect Unit
+    , output :: JSX
+    , outputAction :: JSX
+    , outputBadge :: String
+    , javascript :: JSX
+    , settings :: JSX
+    , packages :: JSX
+    , packagesBadge :: String
+    }
+panelTabs = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPanelTabs" \props -> Hooks.do
+  switched /\ setSwitched <- Jotai.useAtom switchedAtom
+  tabListRef <- useTabListOverflow props.selected
+  let
+    panelClassName :: String
+    panelClassName =
+      (StyleX.props [ styles.tabPanel, StyleX.conditional switched styles.switched ]).className
+  pure $ element tabs
+    { className: styleProps.tabs.className
+    , onSelectionChange: mkEffectFn1 \key -> setSwitched (const true) *> props.select key
+    , selectedKey: props.selected
+    , children: fragment
+        [ DOM.div styleProps.panelBar
+            [ element tabList
+                { "aria-label": "Playground panels"
+                , className: styleProps.tabList.className
+                , ref: tabListRef
+                , children: fragment
+                    [ panelTabLabel "output" "Output" props.outputBadge
+                    , panelTabLabel "javascript" "JavaScript" ""
+                    , panelTabLabel "packages" "Packages" props.packagesBadge
+                    ]
+                }
+            , DOM.div styleProps.panelSettings
+                [ if props.selected == "output" then props.outputAction else mempty
+                , props.settings
+                ]
+            ]
+        , panelTabContent panelClassName "output" props.output
+        , panelTabContent panelClassName "javascript" props.javascript
+        , panelTabContent panelClassName "packages" props.packages
+        ]
+    }
+
+panelTabLabel :: String -> String -> String -> JSX
+panelTabLabel id label badge = element tab
+  { className: styleProps.tab.className
+  , id
+  , children:
+      fragment [ DOM.text label, if badge == "" then mempty else DOM.span styleProps.badge badge ]
+  }
+
+panelTabContent :: String -> String -> JSX -> JSX
+panelTabContent className id children = element tabPanel { className, id, children }
+
+outputView :: ReactComponent { frames :: Ref (Nullable Element) }
+outputView = unsafePerformEffect $ Hooks.reactComponent "PlaygroundOutputView" \{ frames } ->
+  Hooks.do
+    slot <- useFrameSlot frames
+    pure $ DOM.div { className: styleProps.view.className, ref: DOM.reactRef slot } []
+
+type PillProps =
+  { href :: String
+  , label :: String
+  , accessibleLabel :: String
+  , tooltip :: String
+  , className :: String
+  , iconClassName :: String
+  , tooltipClassName :: String
+  }
+
+tooltipPill :: PillProps -> JSX
+tooltipPill props = element tooltipTrigger
+  { closeDelay: 100
+  , delay: 300
+  , children: fragment
+      [ pillTrigger props
+      , element tooltip
+          { className: props.tooltipClassName
+          , offset: 8
+          , placement: "bottom"
+          , children: DOM.text props.tooltip
+          }
+      ]
+  }
+
+pillTrigger :: PillProps -> JSX
+pillTrigger props
+  | props.href == "" = element focusable
+    { children: DOM.span
+        { "aria-label": props.accessibleLabel
+        , className: props.className
+        , role: "img"
+        , tabIndex: 0
+        }
+        props.label
+    }
+  | otherwise = element link
+    { "aria-label": props.accessibleLabel
+    , className: props.className
+    , href: props.href
+    , rel: "noopener noreferrer"
+    , target: "_blank"
+    , children: fragment
+        [ DOM.text props.label
+        , element externalLinkIcon
+            { "aria-hidden": true, className: props.iconClassName, focusable: false }
+        ]
+    }

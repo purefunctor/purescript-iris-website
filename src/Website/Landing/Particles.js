@@ -1,13 +1,11 @@
-// Particle bursts for the benchmark's Cold and Hot tabs, drawn on one canvas that only animates
-// while particles remain: snowflakes that puff up and drift down for a cold build, and white-hot
-// sparks that arc over and cool along the fire ramp for a hot rebuild.
 
 const fireTokens = ["--fire-100", "--fire-200", "--fire-300", "--fire-400", "--fire-500", "--fire-600"];
 
+const tabUpperEdgeFraction = 0.3;
+
 const random = (from, to) => from + Math.random() * (to - from);
 
-// Resolves a CSS color to RGB channels by painting it, since the canvas can't interpolate `oklch()`.
-function channels(color) {
+function rgbChannelsByPainting(color) {
   const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
   probe.canvas.width = probe.canvas.height = 1;
   probe.fillStyle = color;
@@ -15,8 +13,7 @@ function channels(color) {
   return [...probe.getImageData(0, 0, 1, 1).data.slice(0, 3)];
 }
 
-// The color of fire at `heat` from 1 (white-hot) to 0 (a dying ember), along the fire ramp.
-function fire(ramp, heat) {
+function fireColorAtHeat(ramp, heat) {
   const position = (1 - Math.min(1, Math.max(0, heat))) * (ramp.length - 1);
   const index = Math.min(ramp.length - 2, Math.floor(position));
   const mix = position - index;
@@ -56,7 +53,6 @@ const effects = {
       context.restore();
     },
   },
-  // Sparks add light, so overlapping ones glow brighter. Each is drawn as a streak along its velocity.
   hot: {
     count: 34,
     blend: "lighter",
@@ -70,7 +66,7 @@ const effects = {
     draw(context, particle, colors) {
       const heat = 1 - particle.age / particle.life;
       context.globalAlpha = Math.min(1, heat * 3);
-      context.strokeStyle = fire(colors.fire, heat * 1.1);
+      context.strokeStyle = fireColorAtHeat(colors.fire, heat * 1.1);
       context.lineWidth = particle.size * (0.5 + heat * 0.7);
       context.beginPath();
       context.moveTo(particle.x - particle.vx * 0.03, particle.y - particle.vy * 0.03);
@@ -119,17 +115,16 @@ export function particleField(canvas) {
         const style = getComputedStyle(canvas);
         const token = name => style.getPropertyValue(name).trim();
         colors = {
-          fire: fireTokens.map(name => channels(token(name))),
+          fire: fireTokens.map(name => rgbChannelsByPainting(token(name))),
           frost300: token("--frost-300"),
           frost400: token("--frost-400"),
         };
       }
       const effect = effects[kind];
       const tab = origin.getBoundingClientRect();
-      // Particles leave from the tab's upper edge, so they clear its label as they spread.
       for (let index = 0; index < effect.count; index++) {
         const x = tab.left - bounds.left - 8 + Math.random() * (tab.width + 16);
-        const y = tab.top - bounds.top + tab.height * Math.random() * 0.3;
+        const y = tab.top - bounds.top + tab.height * Math.random() * tabUpperEdgeFraction;
         particles.push({
           age: 0,
           effect,

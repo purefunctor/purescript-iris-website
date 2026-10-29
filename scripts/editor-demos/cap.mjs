@@ -1,25 +1,16 @@
-// Cap (https://cap.so), the default capture backend for recorder.mjs.
-// Cap renders its own smoothed cursor, click ripples and zoom from the recorded pointer data.
-// Its CLI writes a default project configuration, so the zoom segments come from the action
-// timeline that recorder.mjs logs: pointer positions and the overlays visible at each check. cap-setup.sh installs the CLI as $IRIS_DEMO_HOME/cap-cli; IRIS_DEMO_CAP
-// overrides it, for example with `cap-cli` where Cap's packages install natively.
-//
-// Re-export a recorded take with different effects, without re-recording it:
-//   node scripts/editor-demos/cap.mjs <clip> [--zoom 1.5] [--no-zoom] [--no-ripple]
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-// The recording display, which editor-launch.sh sizes from IRIS_DEMO_SCALE: 1080p by default.
-export const [width, height] = { 150: [1920, 1080], 200: [2560, 1440], 300: [3840, 2160] }[process.env.IRIS_DEMO_SCALE || 150];
+const displaySizeByScale = { 150: [1920, 1080], 200: [2560, 1440], 300: [3840, 2160] };
+export const [width, height] = displaySizeByScale[process.env.IRIS_DEMO_SCALE || 150];
 const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
 const command = (process.env.IRIS_DEMO_CAP || `${tools}/cap-cli`).split(' ');
-// Takes play at 85% of captured speed, against 75% for FFmpeg takes without zoom. Zoom and motion
-// blur change every pixel, so CRF 28 keeps files near FFmpeg's size without visible loss in text.
-export const speed = 0.85;
-export const crf = 28;
+export const reviewSpeed = 0.85;
+export const reviewCrf = 28;
+export const slowWithFinalFrameHold = speed => `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`;
 
 function cap(...args) {
   const out = execFileSync(command[0], [...command.slice(1), ...args, '--json'],
@@ -37,84 +28,69 @@ export function start(project) {
 
 export const stop = id => cap('record', 'stop', '--id', id);
 
-// Script time starts when `record start` returns. Align it with Cap's pointer log by the first
-// moment Cap saw the pointer at the first logged action.
-function offset(actions, moves) {
-  const first = actions.find(a => a.x !== undefined);
-  if (!first) return 0;
-  const hit = moves.find(m => Math.abs(m.x * width - first.x) <= 2 && Math.abs(m.y * height - first.y) <= 2
-    && m.time_ms / 1000 > first.t - 2);
-  return hit ? hit.time_ms / 1000 - first.t : 0;
+function offsetToPointerLog(actions, moves) {
+  const firstPointerAction = actions.find(a => a.x !== undefined);
+  if (!firstPointerAction) return 0;
+  const firstSighting = moves.find(m => Math.abs(m.x * width - firstPointerAction.x) <= 2
+    && Math.abs(m.y * height - firstPointerAction.y) <= 2 && m.time_ms / 1000 > firstPointerAction.t - 2);
+  return firstSighting ? firstSighting.time_ms / 1000 - firstPointerAction.t : 0;
 }
 
-// Manual centres are in Cap's travel space: 0 is flush left/top and 1 flush right/bottom.
-const travel = (p, amount) => Math.min(1, Math.max(0, (p - 0.5 / amount) / (1 - 1 / amount)));
+const travelSpaceCentre = (p, amount) => Math.min(1, Math.max(0, (p - 0.5 / amount) / (1 - 1 / amount)));
 
-// What an action needs in view: the pointer and any overlays logged with it, as [left, top, right, bottom].
-function box(action) {
+function boxInView(action) {
   const boxes = [...action.boxes ?? []];
-  const reach = 24 * width / 1920;
-  if (action.x !== undefined) boxes.push([action.x - reach, action.y - reach, action.x + reach, action.y + reach]);
+  const pointerReach = 24 * width / 1920;
+  if (action.x !== undefined) boxes.push([action.x - pointerReach, action.y - pointerReach, action.x + pointerReach, action.y + pointerReach]);
   if (!boxes.length) return undefined;
   const [left, top] = [0, 1].map(i => Math.max(0, Math.min(...boxes.map(b => b[i]))));
   return [left, top, Math.min(width, Math.max(...boxes.map(b => b[2]))), Math.min(height, Math.max(...boxes.map(b => b[3])))];
 }
 const union = (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
+const overlayLoggedAfterAppearing = 0.2;
+const pointerLoggedAfterMoveStarted = 0.5;
 
-// Zoom segments that keep each action's pointer and overlays in frame. An action extends the
-// current framing for `hold` seconds when the framing can include it without zooming out, or
-// widens it from the start when its own framing contains the current one; otherwise the camera
-// moves to a framing of its own. Framings that cannot zoom past `minimum`
-// show the whole editor, as does an action with nothing to show. A framing holds across a pause of
-// up to `bridge` seconds before the next one. The last segment ends early enough for the zoom out
-// to settle.
 export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, margin = 48 * width / 1920, hold = 3, settle = 1, bridge = 2 } = {}) {
   const zoom = b => Math.min(amount, width / (b[2] - b[0] + 2 * margin), height / (b[3] - b[1] + 2 * margin));
   const runs = [];
+  const endFramingBefore = (last, start) => {
+    const bridgesPause = last && !last.closed && start - last.end < bridge;
+    if (bridgesPause) last.end = start;
+    else if (last) last.end = Math.min(last.end, start);
+  };
   for (const a of actions) {
     const last = runs.at(-1);
-    // A new feature starts a framing of its own: the camera pans to it rather than widening the
-    // previous feature's framing to include it.
     if (a.action === 'beat') {
       if (last) last.split = true;
       continue;
     }
-    // A steady stretch holds one given framing, however its actions move within it.
     if (a.action === 'steady') {
       if (last?.steady && last.box.join() === a.box.join()) {
         last.end = Math.max(last.end, a.t + hold);
         continue;
       }
-      if (last && !last.closed && a.t - last.end < bridge) last.end = a.t;
-      else if (last) last.end = Math.min(last.end, a.t);
+      endFramingBefore(last, a.t);
       runs.push({ start: a.t, end: a.t + hold, box: a.box, zoom: a.zoom, steady: true });
       continue;
     }
-    const b = box(a);
+    const b = boxInView(a);
     if (!b) {
-      // `overview` zooms out on purpose. A check that found nothing in view leaves the framing alone.
       if (a.action === 'overview' && last) Object.assign(last, { end: Math.min(last.end, a.t), closed: true });
       continue;
     }
-    // Overlays are logged once visible; the pointer is logged on arrival, after its move began.
-    const start = a.t - (a.action === 'ui' ? 0.2 : 0.5);
+    const start = a.t - (a.action === 'ui' ? overlayLoggedAfterAppearing : pointerLoggedAfterMoveStarted);
     const joined = last && !last.split && start < last.end && union(last.box, b);
     if (joined && zoom(joined) >= last.zoom - 0.05) {
       Object.assign(last, { box: joined, zoom: zoom(joined), end: Math.max(last.end, a.t + hold) });
       continue;
     }
-    // A wider framing that still shows everything the current one does replaces it from its start,
-    // so the camera settles once instead of moving out partway.
-    const contains = last && !last.split && start < last.end && b[0] <= last.box[0] && b[1] <= last.box[1]
+    const widensCurrentFraming = last && !last.split && start < last.end && b[0] <= last.box[0] && b[1] <= last.box[1]
       && b[2] >= last.box[2] && b[3] >= last.box[3];
-    if (contains) {
+    if (widensCurrentFraming) {
       Object.assign(last, { box: b, zoom: zoom(b), end: Math.max(last.end, a.t + hold) });
       continue;
     }
-    // A short pause between two framings holds the first until the camera moves to the next, rather
-    // than zooming out and straight back in.
-    if (last && !last.closed && start - last.end < bridge) last.end = start;
-    else if (last) last.end = Math.min(last.end, start);
+    endFramingBefore(last, start);
     runs.push({ start, end: a.t + hold, box: b, zoom: zoom(b) });
   }
   return runs
@@ -123,16 +99,13 @@ export function zoomSegments(actions, duration, { amount = 1.5, minimum = 1.2, m
     .map(r => ({
       start: r.start, end: r.end, amount: r.zoom,
       mode: { manual: {
-        x: travel((r.box[0] + r.box[2]) / 2 / width, r.zoom),
-        y: travel((r.box[1] + r.box[3]) / 2 / height, r.zoom),
+        x: travelSpaceCentre((r.box[0] + r.box[2]) / 2 / width, r.zoom),
+        y: travelSpaceCentre((r.box[1] + r.box[3]) / 2 / height, r.zoom),
       } },
       glideDirection: 'none', glideSpeed: 0.5, instantAnimation: false, edgeSnapRatio: 0.25,
     }));
 }
 
-// Cap replaces a last cursor shape held under a second until the last move. recorder.mjs ends each take
-// with an invisible move that logs the shape the pointer rests in, so date that shape from the last
-// scripted action when the pointer stayed put after it, such as a dialog closing under the pointer.
 function holdRestingShape(path, since) {
   const events = JSON.parse(readFileSync(path, 'utf8'));
   const last = events.moves.at(-1);
@@ -145,14 +118,13 @@ function holdRestingShape(path, since) {
   writeFileSync(path, JSON.stringify(events, null, 2));
 }
 
-// `planner` overrides zoomSegments' options, such as how long a framing holds.
 export function render(project, actions, output, { zoom = true, ripple = true, amount, planner = {} } = {}) {
   const json = path => JSON.parse(readFileSync(`${project}/${path}`, 'utf8'));
   const meta = json('recording-meta.json');
   const config = json('project-config.json');
   const moves = (meta.segments ?? [meta.segment]).flatMap(s => s.cursor ? json(s.cursor).moves : []);
   const duration = config.timeline.segments.reduce((sum, s) => sum + (s.end - s.start) / s.timescale, 0);
-  const shift = offset(actions, moves);
+  const shift = offsetToPointerLog(actions, moves);
   const aligned = actions.map(a => ({ ...a, t: a.t + shift }));
   const cursor = (meta.segments ?? [meta.segment]).at(-1).cursor;
   if (cursor && aligned.length) holdRestingShape(`${project}/${cursor}`, aligned.at(-1).t);
@@ -171,16 +143,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const raw = `${tools}/${name}-raw.mp4`;
   const output = process.env.IRIS_DEMO_OUTPUT || `${tools}/recordings`;
   const actions = JSON.parse(readFileSync(`${project}/iris-actions.json`, 'utf8'));
-  // Takes that set their own zoom planning, such as the playground's, save it beside their actions.
   const planner = existsSync(`${project}/iris-planner.json`) ? JSON.parse(readFileSync(`${project}/iris-planner.json`, 'utf8')) : {};
   console.log(JSON.stringify(render(project, actions, raw, { planner,
     zoom: !values['no-zoom'], ripple: !values['no-ripple'], amount: values.zoom && Number(values.zoom),
   })));
-  // The same retime and final hold as recorder.mjs, applied to the normal-speed export.
   mkdirSync(output, { recursive: true });
   execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
-    '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-pix_fmt', 'yuv420p',
+    '-vf', slowWithFinalFrameHold(reviewSpeed),
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(reviewCrf), '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart', `${output}/${name}.mp4`]);
   console.log(`Exported ${output}/${name}.mp4`);
 }

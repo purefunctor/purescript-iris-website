@@ -1,28 +1,4 @@
 #!/usr/bin/env bun
-/**
- * Compare PureScript build times for purs and Iris on acme, a project that depends on every
- * package in one Registry package set.
- *
- * Usage:
- *   bun scripts/benchmark-builds.ts --purs PATH --iris PATH [--package-set VERSION]
- *                                   [--directory DIR] [--runs N] [--edits N] [--fresh]
- *
- * Use an official purs release, such as node_modules/purescript/purs.bin from the purescript
- * npm package; it is used for `purs compile`, `spago build` and Spago's own compiler checks.
- *
- * Setup runs once and is reused: `spago init` in --directory with the pinned package set, then
- * `spago install` with every package that `spago ls packages` lists. Pass --fresh to rebuild it.
- *
- * Each tool writes to its own output directory, so no tool reuses another's cache. Every run
- * measures a cold build into an empty directory, a no-op rebuild, and a rebuild after changing
- * the string literal in src/Main.purs, for `spago build`, `purs compile` on `spago sources`
- * (compiler time without Spago) and `iris build`. `spago fetch` is timed on its own because
- * every tool runs it. `iris build` keeps no cache between runs, so `iris watch` is measured too:
- * its initial build and --edits rebuilds after the same edit, timed from writing the file and
- * from the watcher's own report. Watch timings include the file watcher noticing the change,
- * which varies between edits, hence the larger sample. src/Main.purs is restored and the
- * benchmark's output directories are removed afterwards.
- */
 
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -47,8 +23,6 @@ const edits = Number(options.edits);
 const project = resolve(options.directory);
 const iris = Bun.which(options.iris) ?? resolve(options.iris);
 
-// Spago runs whichever `purs` is first on PATH, so expose the chosen binary under that name.
-// Bun resolves a command against its own PATH, so purs is always invoked by its full path here.
 const pursDirectory = mkdtempSync(join(tmpdir(), "purs-"));
 const purs = join(pursDirectory, "purs");
 symlinkSync(Bun.which(options.purs) ?? resolve(options.purs), purs);
@@ -68,10 +42,9 @@ function time(cmd: string[]): number {
   return elapsed;
 }
 
-// Spago finds purs through PATH like a shell does; stop if that would pick a different binary.
 const pursVersion = output([purs, "--version"], tmpdir());
-const spagoPurs = output(["sh", "-c", "purs --version"], tmpdir());
-if (spagoPurs !== pursVersion) throw new Error(`Spago would run purs ${spagoPurs}, not ${pursVersion}`);
+const pursVersionOnPath = output(["sh", "-c", "purs --version"], tmpdir());
+if (pursVersionOnPath !== pursVersion) throw new Error(`Spago would run purs ${pursVersionOnPath}, not ${pursVersion}`);
 
 if (options.fresh) rmSync(project, { recursive: true, force: true });
 if (!existsSync(join(project, "spago.yaml"))) {
@@ -126,7 +99,6 @@ try {
   rmSync(out, { recursive: true, force: true });
   const report = /(Build|Rebuild) (succeeded|failed) in ([\d.]+) (ms|s)\b/;
   const start = performance.now();
-  // Merge stderr into stdout so build reports are seen wherever they are printed.
   const watcher = Bun.spawn({
     cmd: ["sh", "-c", 'exec "$0" watch --output "$1" 2>&1', iris, out],
     cwd: project,
@@ -143,7 +115,6 @@ try {
       for (const line of parts) yield { at: performance.now(), line };
     }
   })();
-  // Read with next() rather than `for await`, which would close the shared reader on return.
   const waitFor = async (kind: string) => {
     for (let next = await lines.next(); !next.done; next = await lines.next()) {
       const { at, line } = next.value;
@@ -190,7 +161,6 @@ console.log(
       purs: pursVersion,
       iris: output([iris, "--version"]),
       packageSet: options["package-set"],
-      // JavaScript modules in a cold `iris build`, the same for every tool.
       modules,
       runs,
       oneShot: {

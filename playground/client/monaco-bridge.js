@@ -1,10 +1,10 @@
-// Connects Monaco to the language client: converts between LSP and Monaco shapes, registers a
-// provider for each feature the server advertises, and shows published diagnostics as markers.
-// Monaco works without any of it; every provider here only adds to the plain editor.
 
 import * as monaco from "monaco-editor/editor/editor.api.js";
+import { REQUEST_CANCELLED } from "./language-client.js";
 
 export const LANGUAGE = "purescript";
+
+const CONTENT_MODIFIED = -32801;
 
 const toPosition = (position) => ({ line: position.lineNumber - 1, character: position.column - 1 });
 
@@ -18,8 +18,7 @@ const SEVERITY = {
   4: monaco.MarkerSeverity.Hint,
 };
 
-// LSP completion kinds start at Text = 1; Monaco's are in a different order.
-const COMPLETION_KIND = (() => {
+const MONACO_COMPLETION_KIND_BY_LSP_KIND = (() => {
   const kinds = monaco.languages.CompletionItemKind;
   return [
     null, kinds.Text, kinds.Method, kinds.Function, kinds.Constructor, kinds.Field, kinds.Variable,
@@ -38,8 +37,7 @@ const markdown = (contents) => {
   });
 };
 
-// The latest diagnostics for each document, which code actions send back to the server.
-const published = new Map();
+const publishedDiagnostics = new Map();
 
 const intersects = (a, b) =>
   !(
@@ -54,15 +52,6 @@ const documentation = (value) => {
   return typeof value === "string" ? value : { value: value.value };
 };
 
-/**
- * Registers the providers the server supports.
- *
- * @param {object} options
- * @param {() => import("./language-client.js").LanguageClient} options.client the current client
- * @param {(uri: string) => Promise<void>} options.ensureModel creates a read-only model for a
- *   package or Prim source before Monaco navigates to it
- * @param {object} options.capabilities the server's capabilities from `initialize`
- */
 export function registerProviders({ client, ensureModel, capabilities }) {
   const disposables = [];
   const register = (enabled, create) => {
@@ -74,8 +63,7 @@ export function registerProviders({ client, ensureModel, capabilities }) {
     return client()
       .request(method, params, controller.signal)
       .catch((error) => {
-        // Cancelled, superseded or restarted requests are not editor errors.
-        if ([-32800, -32801].includes(error.code)) return null;
+        if ([REQUEST_CANCELLED, CONTENT_MODIFIED].includes(error.code)) return null;
         throw error;
       });
   };
@@ -236,7 +224,7 @@ export function registerProviders({ client, ensureModel, capabilities }) {
     monaco.languages.registerCodeActionProvider(LANGUAGE, {
       async provideCodeActions(model, range, context, token) {
         const lspRange = { start: toPosition(range.getStartPosition()), end: toPosition(range.getEndPosition()) };
-        const diagnostics = (published.get(model.uri.toString()) ?? []).filter((diagnostic) =>
+        const diagnostics = (publishedDiagnostics.get(model.uri.toString()) ?? []).filter((diagnostic) =>
           intersects(diagnostic.range, lspRange),
         );
         const params = {
@@ -281,7 +269,7 @@ function completionItem(item, fallback) {
   const range = edit ? toRange(edit.range ?? edit.insert) : fallback;
   return {
     label: item.labelDetails ? { label: item.label, detail: item.labelDetails.detail, description: item.labelDetails.description } : item.label,
-    kind: COMPLETION_KIND[item.kind] ?? monaco.languages.CompletionItemKind.Text,
+    kind: MONACO_COMPLETION_KIND_BY_LSP_KIND[item.kind] ?? monaco.languages.CompletionItemKind.Text,
     detail: item.detail,
     documentation: documentation(item.documentation),
     insertText: edit?.newText ?? item.insertText ?? item.label,
@@ -293,9 +281,8 @@ function completionItem(item, fallback) {
   };
 }
 
-/** Shows published diagnostics as markers and returns per-severity counts. */
 export function applyDiagnostics(params) {
-  published.set(params.uri, params.diagnostics);
+  publishedDiagnostics.set(params.uri, params.diagnostics);
   const model = monaco.editor.getModel(monaco.Uri.parse(params.uri));
   const counts = { errors: 0, warnings: 0 };
   if (!model) return counts;

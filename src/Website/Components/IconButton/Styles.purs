@@ -2,7 +2,6 @@ module Website.Components.IconButton.Styles (iconButtonStyles) where
 
 import Iris.StyleX as StyleX
 
--- Shared by the copy and information buttons in code block and command line headers.
 iconButtonStyles = StyleX.create
   { button:
       { alignItems: "center"
@@ -19,7 +18,6 @@ iconButtonStyles = StyleX.create
       , transitionProperty: "background-color, color, transform"
       , transitionTimingFunction: "var(--ease-out)"
       }
-  -- Lucide icons render at 1.2em.
   , small: { fontSize: 12, height: 28, width: 28 }
   , medium: { fontSize: 13, height: 36, width: 36 }
   , tooltip:

@@ -1,22 +1,3 @@
-// The playground's Web Worker. It hosts a language server, either the WebAssembly build of the
-// Iris server or the JavaScript mock, and downloads the project's active packages for it. The page
-// changes the active packages by starting a new worker.
-//
-// Page to worker:
-//   { type: "start", server: "auto" | "mock", packages }   the active packages' names
-//   { type: "lsp", message }                  a JSON-RPC message for the server
-//   { type: "read", id, uri }                 the text of a package or Prim source
-// Worker to page:
-//   { type: "progress", packageSet, loaded, total, bytes, totalBytes }   packages downloaded so far
-//   { type: "started", server: { kind: "iris" | "mock", version, revision }, installed }
-//                                             installed: every package the cache holds
-//   { type: "failed", error }                 the packages or the server could not be loaded
-//   { type: "lsp", message }
-//   { type: "read", id, text }
-//   { type: "crashed", error }                the server panicked
-//
-// The server receives the active packages once the client sends `initialized`, before any document,
-// and loads the modules that the project imports.
 
 import index from "../packages/index.json";
 import { archiveUrl, unpackPackage } from "../packages/registry.js";
@@ -24,8 +5,8 @@ import { MockServer } from "./mock-server.js";
 
 const CACHE = "iris-playground-registry-v1";
 const SERVER_BASE = "/playground/language-server/";
-// Registry archives are small, so the download is bound by round trips rather than bandwidth.
-const CONCURRENCY = 16;
+const CONCURRENT_DOWNLOADS = 16;
+const REQUEST_CANCELLED = -32800;
 
 let server;
 let packages;
@@ -66,7 +47,6 @@ async function start(preference, names) {
   }
 }
 
-/** Loads the built or downloaded server, or returns null when there is none. */
 async function loadIris() {
   const response = await fetch(`${SERVER_BASE}manifest.json`, { cache: "no-cache" });
   const type = response.headers.get("content-type") ?? "";
@@ -80,8 +60,6 @@ async function loadIris() {
   return instance;
 }
 
-// Messages are handled in batches, so that a request cancelled while it waited is dropped, and
-// diagnostics are collected one source at a time while nothing else waits.
 function schedule() {
   if (draining || !server || crashed) return;
   draining = true;
@@ -100,11 +78,11 @@ function drain() {
     for (const message of batch) {
       if (message.method === "$/cancelRequest") continue;
       if (message.id !== undefined && cancelled.has(message.id)) {
-        send({ jsonrpc: "2.0", id: message.id, error: { code: -32800, message: "Request cancelled" } });
+        send({ jsonrpc: "2.0", id: message.id, error: { code: REQUEST_CANCELLED, message: "Request cancelled" } });
         continue;
       }
       for (const reply of JSON.parse(server.handle(JSON.stringify(message)))) send(reply);
-      if (message.method === "initialized") setPackages();
+      if (message.method === "initialized") handPackagesToServer();
     }
   } catch (error) {
     return fail(error);
@@ -112,8 +90,7 @@ function drain() {
   idle = setTimeout(collectDiagnostics, 0);
 }
 
-/** Hands the downloaded packages to the server, which keeps them, and drops this copy. */
-function setPackages() {
+function handPackagesToServer() {
   const message = { jsonrpc: "2.0", id: "packages", method: "iris/setPackages", params: { packages } };
   packages = null;
   const [reply, ...notifications] = JSON.parse(server.handle(JSON.stringify(message)));
@@ -142,10 +119,6 @@ function fail(error) {
   self.postMessage({ type: "crashed", error: String(error?.stack ?? error) });
 }
 
-/**
- * Downloads the named packages, or reads them from the cache, and reports progress. Each package
- * is fetched and cached on its own, so that every project reuses the entries it shares with others.
- */
 async function downloadPackages(cache, names) {
   const entries = names.map((name) => ({ name, ...index.packages[name] }));
   const total = entries.length;
@@ -155,7 +128,7 @@ async function downloadPackages(cache, names) {
   const packageSet = index.packageSet.version;
   const report = () => self.postMessage({ type: "progress", packageSet, loaded, total, bytes, totalBytes });
   report();
-  return mapConcurrently(entries, CONCURRENCY, async (entry) => {
+  return mapConcurrently(entries, CONCURRENT_DOWNLOADS, async (entry) => {
     const files = await loadPackage(cache, entry);
     loaded += 1;
     bytes += entry.bytes;
@@ -164,7 +137,6 @@ async function downloadPackages(cache, names) {
   });
 }
 
-/** The names of the packages the cache holds, which include `active` once they downloaded. */
 async function installedPackages(cache, active) {
   const names = new Map(Object.entries(index.packages).map(([name, entry]) => [archiveUrl({ name, ...entry }), name]));
   const requests = (await cache?.keys().catch(() => null)) ?? [];
@@ -185,7 +157,6 @@ async function loadPackage(cache, entry) {
     if (!cached) await cache?.put(url, new Response(archive)).catch(() => {});
     return files;
   } catch (error) {
-    // A corrupt cached copy is dropped, so a retry downloads it again.
     if (cached) await cache?.delete(url).catch(() => {});
     throw error;
   }
@@ -210,7 +181,6 @@ async function fetchWithRetry(url) {
   throw new Error(`Could not download ${url}: ${lastError.message}`);
 }
 
-/** Maps `items` with at most `limit` actions in flight, and stops at the first failure. */
 async function mapConcurrently(items, limit, action) {
   const results = new Array(items.length);
   let next = 0;

@@ -1,7 +1,7 @@
 {
-  "iris": "v0.1.10",
+  "iris": "v0.1.13",
   "packageSet": {
-    "version": "81.9.0",
+    "version": "81.11.0",
     "compiler": "0.15.16"
   },
   "packages": {
@@ -2840,7 +2840,7 @@
       "bytes": 14927
     },
     "free": {
-      "version": "7.1.1",
+      "version": "7.2.0",
       "owner": "purescript",
       "dependencies": [
         "catenable-lists",
@@ -2852,14 +2852,16 @@
         "invariant",
         "lazy",
         "maybe",
+        "newtype",
         "prelude",
+        "safe-coerce",
         "tailrec",
         "transformers",
         "tuples",
         "unsafe-coerce"
       ],
-      "integrity": "sha256-T/sBDMKA60R43xU+j94B9YkgMA0grziOKM1NTDfts8E=",
-      "bytes": 9259
+      "integrity": "sha256-krd1dX0v1rRvjD5TOizF0TI3FZwAYp39AO1oTLcVns0=",
+      "bytes": 9827
     },
     "freeap": {
       "version": "7.0.0",
@@ -8610,7 +8612,7 @@
       "bytes": 19276
     },
     "spec-discovery": {
-      "version": "8.4.1",
+      "version": "8.4.2",
       "owner": "purescript-spec",
       "dependencies": [
         "aff",
@@ -8620,8 +8622,8 @@
         "spec",
         "spec-node"
       ],
-      "integrity": "sha256-guvY+NtSOBQmM+HqNJ7woX6taN8hS1wEz7JDmdKF11E=",
-      "bytes": 7501
+      "integrity": "sha256-E7OSCtJX66LAAPFhvm2yFf/pUAVWsun/afy+EjYY63c=",
+      "bytes": 7523
     },
     "spec-mocha": {
       "version": "5.1.1",

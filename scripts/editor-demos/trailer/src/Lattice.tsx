@@ -1,14 +1,11 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useCurrentFrame } from "remotion";
-// The site's hero backdrop, rendered frame by frame instead of on requestAnimationFrame.
 import { layoutField, makeField, makeOcean, palette } from "../../../../src/Website/Components/Backdrop.js";
 import { fps, height, width } from "./takes";
 
 const seed = 5139;
-// The video is watched smaller than the page it borrows from, so the lattice is laid out at
-// two-thirds size and drawn enlarged.
-const scale = 1.5;
-const morph = 2.6;
+const drawnEnlargement = 1.5;
+const morphPeriod = 2.6;
 const rippleSpeed = 900;
 const rippleWidth = 90;
 
@@ -19,7 +16,6 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-// The noise fields for one moment: the field morphs into the next one every `morph` seconds.
 const fields = new Map<number, ReturnType<typeof makeField>>();
 const field = (step: number) => {
   if (!fields.has(step)) fields.set(step, makeField(seed + step));
@@ -27,7 +23,6 @@ const field = (step: number) => {
 };
 const ocean = makeOcean(seed);
 
-// `reveal` maps each point to how far the lattice has appeared there, from 0 to 1.
 export function Lattice({
   ripples,
   reveal,
@@ -49,11 +44,10 @@ export function Lattice({
   useLayoutEffect(() => {
     const context = canvas.current?.getContext("2d");
     if (!context) return;
-    // Remotion renders the 4K master at twice the composition's size; the canvas keeps up.
-    const ratio = window.devicePixelRatio || 1;
+    const masterScale = window.devicePixelRatio || 1;
     const seconds = frame / fps;
-    const step = Math.floor(seconds / morph);
-    const blend = smoothstep(0, 1, seconds / morph - step);
+    const step = Math.floor(seconds / morphPeriod);
+    const blend = smoothstep(0, 1, seconds / morphPeriod - step);
     const [from, to] = [field(step), field(step + 1)];
     const noise = (x: number, y: number) => from.noise(x, y) * (1 - blend) + to.noise(x, y) * blend;
     const hue = (x: number, y: number) => from.hue(x, y) * (1 - blend) + to.hue(x, y) * blend;
@@ -61,7 +55,7 @@ export function Lattice({
       .map((r) => ({ ...r, radius: ((frame - r.frame) / fps) * rippleSpeed, reach: Math.hypot(width, height) }))
       .filter((r) => r.radius >= 0 && r.radius < r.reach + rippleWidth);
     const ring = (x: number, y: number) => {
-      [x, y] = [x * scale, y * scale];
+      [x, y] = [x * drawnEnlargement, y * drawnEnlargement];
       let strength = 0;
       let dx = 0;
       let dy = 0;
@@ -72,12 +66,12 @@ export function Lattice({
       }
       return [strength, dx, dy];
     };
-    const dots = layoutField(width / scale, height / scale, seconds * 1000, { noise, hue, ocean }, live.length ? ring : null, clearing);
+    const dots = layoutField(width / drawnEnlargement, height / drawnEnlargement, seconds * 1000, { noise, hue, ocean }, live.length ? ring : null, clearing);
     context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, width * ratio, height * ratio);
-    context.setTransform(scale * ratio, 0, 0, scale * ratio, 0, 0);
+    context.clearRect(0, 0, width * masterScale, height * masterScale);
+    context.setTransform(drawnEnlargement * masterScale, 0, 0, drawnEnlargement * masterScale, 0, 0);
     for (const dot of dots) {
-      const shown = reveal ? reveal(dot.x * scale, dot.y * scale) : 1;
+      const shown = reveal ? reveal(dot.x * drawnEnlargement, dot.y * drawnEnlargement) : 1;
       if (shown <= 0.01) continue;
       context.fillStyle = colors[dot.color];
       context.globalAlpha = dot.alpha * shown * opacity;

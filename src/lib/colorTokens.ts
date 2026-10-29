@@ -3,12 +3,6 @@ import { resolve } from "node:path";
 
 type Oklch = [lightness: number, chroma: number, hue: number];
 
-/**
- * Read the opaque OKLCH color tokens from `src/global.css` as sRGB hex, for build-time renderers
- * such as Satori and librsvg that cannot parse `oklch()`. Resolves `var()` aliases and relative
- * `oklch(from var(--token) …)` colors whose channels are `l`, `c`, `h`, numbers, or
- * `calc(channel ± number)`; translucent and other tokens are skipped.
- */
 export async function readColorTokens(): Promise<Record<string, string>> {
   const css = await readFile(resolve("src/global.css"), "utf8");
   const declarations = new Map(Array.from(css.matchAll(/--([\w-]+):\s*([^;]+);/g), ([, name, value]) => [name, value.trim()]));

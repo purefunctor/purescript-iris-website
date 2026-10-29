@@ -1,9 +1,3 @@
-//! The protocol: lifecycle, document notifications, requests, and deferred diagnostics.
-//!
-//! [`Server::handle`] answers one message at once. Diagnostics are not collected there: changes
-//! queue the affected project sources, and the host drains the queue with
-//! [`Server::next_diagnostics`] while no messages are waiting. Several quick edits therefore
-//! collect diagnostics once, and requests never wait behind a diagnostic pass.
 
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -39,8 +33,6 @@ struct InitializeParams {
     capabilities: ClientCapabilities,
 }
 
-/// The parameters of `textDocument/didChange`. As in the native server, a change replaces the
-/// whole document only when `range` is absent, so a malformed range is rejected.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct DidChangeParameters {
@@ -54,10 +46,14 @@ struct ContentChange {
     text: String,
 }
 
-/// The parameters of `iris/setPackages`, which replaces every package source.
 #[derive(Deserialize)]
 struct SetPackagesParams {
     packages: Vec<PackageParams>,
+}
+
+#[derive(Deserialize)]
+struct GeneratedParams {
+    uri: Uri,
 }
 
 #[derive(Deserialize)]
@@ -73,7 +69,6 @@ struct PackageFileParams {
 }
 
 impl Server {
-    /// Handles one JSON-RPC message and returns the messages to send back.
     pub fn handle(&mut self, message: Value) -> Vec<Value> {
         let method = message.get("method").and_then(Value::as_str).map(str::to_string);
         let id = message.get("id").cloned();
@@ -86,13 +81,10 @@ impl Server {
                 outgoing
             }
             (None, Some(method)) => self.notification(&method, params),
-            // Responses from the client; the server sends no requests.
             (_, None) => Vec::new(),
         }
     }
 
-    /// Collects diagnostics for the next queued project source, or returns `None` when the queue
-    /// is empty.
     pub fn next_diagnostics(&mut self) -> Option<Value> {
         loop {
             let file_id = self.pending_diagnostics.pop_front()?;
@@ -118,7 +110,6 @@ impl Server {
         }
     }
 
-    /// The text of a project or package file, including package foreign files.
     pub fn read_source(&self, uri: &str) -> Option<String> {
         if let Some(file_id) = self.workspace.files.source_id(uri)
             && let Ok(content) = self.workspace.engine.content(file_id)
@@ -160,6 +151,11 @@ impl Server {
                 let change = self.workspace.set_packages(packages.collect());
                 self.schedule(&change, None, outgoing);
                 Ok(json!({ "sources": self.workspace.package_sources() }))
+            }
+            "iris/generated" => {
+                let params: GeneratedParams = decode(params)?;
+                let generated = emit::generated(&self.workspace, params.uri.as_str())?;
+                Ok(serde_json::to_value(generated).expect("invariant violated: must serialize"))
             }
             "iris/emit" => {
                 let emitted = emit::emit(&self.workspace)
@@ -260,7 +256,6 @@ impl Server {
         Ok(())
     }
 
-    /// Closing a project document removes it: the playground has no disk to fall back to.
     fn did_close(
         &mut self,
         params: DidCloseTextDocumentParams,
@@ -284,8 +279,6 @@ impl Server {
         Ok(())
     }
 
-    /// Foreign siblings of a newly opened source that the editor has not opened. They are
-    /// observed as missing, as the native server observes them on disk.
     fn missing_foreign_siblings(
         &self,
         unit: &SourceUnitKey,
@@ -320,8 +313,6 @@ impl Server {
         }
     }
 
-    /// Clears the diagnostics of removed project sources and queues collection for the project
-    /// sources a change affects, including the one the edited document belongs to.
     fn schedule(
         &mut self,
         change: &LifecycleChange,
@@ -382,7 +373,6 @@ fn project_document(uri: &Uri) -> Result<(DocumentKind, SourceUnitKey), Rejectio
         .ok_or_else(|| Rejection::InvalidParams(format!("{uri:?} is not a source or FFI file")))
 }
 
-/// Applies incremental changes, as `apply_content_changes` in the native server does.
 fn apply_content_changes(
     content: &str,
     content_changes: &[ContentChange],

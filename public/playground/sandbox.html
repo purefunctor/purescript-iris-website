@@ -28,12 +28,23 @@
     <script>
       (() => {
         const post = (message) => parent.postMessage(message, "*");
+        const moduleURLs = new Map();
+        // Error.stack is not source-mapped consistently by browsers. Give the page stable raw
+        // generated locations instead; it owns source mapping and can leave FFI frames raw.
+        const normalize = (text) => {
+          if (!text.includes("blob:")) return text;
+          for (const [blob, source] of moduleURLs) text = text.replaceAll(blob, source);
+          return text;
+        };
         // Output waits until main has returned and the tasks it queued have run, so that a program
         // that prints and then mounts shows as a view at once rather than briefly as a log. React
         // mounts in a MessageChannel task, which runs before the one release() queues after it, and
         // a view takes the held output with it, so the page lays both out together.
         let held = [];
-        const send = (message) => (held ? held.push(message) : post(message));
+        const send = (message) => {
+          if (typeof message.text === "string") message.text = normalize(message.text);
+          return held ? held.push(message) : post(message);
+        };
         const flush = () => {
           for (const message of held ?? []) post(message);
           held = null;
@@ -81,7 +92,12 @@
           await Promise.all(faces.map((face) => face.load().catch(() => {})));
           const imports = {};
           for (const [path, text] of Object.entries(files)) {
-            imports[path] = URL.createObjectURL(new Blob([text], { type: "text/javascript" }));
+            const source = `iris-playground:///${path.replace(/^iris-output\//, "").split("/").map(encodeURIComponent).join("/")}`;
+            // The final sourceURL wins over an existing compiler/FFI directive. Appending a new
+            // line does not move any executable code, so linked maps and raw columns stay valid.
+            const blob = URL.createObjectURL(new Blob([text, `\n//# sourceURL=${source}\n`], { type: "text/javascript" }));
+            moduleURLs.set(blob, source);
+            imports[path] = blob;
           }
           const map = document.createElement("script");
           map.type = "importmap";

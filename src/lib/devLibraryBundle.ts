@@ -8,23 +8,17 @@ const bundleId = "virtual:iris-library";
 const resolvedBundleId = `\0${bundleId}`;
 const entryId = "\0iris-library-entry";
 
-/** The bundle export for a PureScript module; `$` cannot occur in module names. */
-const exportName = (module: string) => module.replaceAll(".", "$");
+const bundleExportName = (module: string) => module.replaceAll(".", "$");
 
-/** The fields of Iris's `output/<Module>/metadata.json` record that the bundle reads. */
 type ModuleMetadata = { version: number; editable: boolean; source: string };
+
+const isBareImport = (id: string) => !id.startsWith("\0") && !id.startsWith(".") && !path.isAbsolute(id);
+
+const fileExists = (file: string) => access(file).then(() => true, () => false);
 
 const namespaceImport = /^import\s*\*\s*as\s+([\w$]+)\s+from\s*["'][^"']+["']\s*;?$/;
 const namedImport = /^import\s*\{([^}]*)\}\s*from\s*["'][^"']+["']\s*;?$/;
 
-/**
- * Development only: serves every library module that the client reaches from
- * editable modules as one bundle instead of ~170 requests. Iris's module
- * metadata says which modules come from editable workspace packages and which
- * from Registry or git packages. Library output only changes with dependencies
- * or the compiler, in which case the bundle is rebuilt and the page reloaded.
- * Editable modules keep HMR.
- */
 export function devLibraryBundle(): Plugin {
   let output = "";
   let logger: Logger | undefined;
@@ -33,14 +27,12 @@ export function devLibraryBundle(): Plugin {
   const warned = new Set<string>();
   const metadata = new Map<string, Promise<ModuleMetadata | undefined>>();
 
-  /** The PureScript module that owns `file`, if it is in the output directory. */
-  const moduleOf = (file: string) => {
+  const outputModuleOf = (file: string) => {
     const relative = path.relative(output, file.split("?", 1)[0]);
     const [module, ...rest] = relative.split(path.sep);
     return rest.length && !module.startsWith(".") ? module : undefined;
   };
 
-  /** The module's metadata record, or `undefined` if Iris hasn't written one. */
   const metadataOf = (module: string) => {
     let record = metadata.get(module);
     if (!record) {
@@ -51,7 +43,6 @@ export function devLibraryBundle(): Plugin {
           return parsed;
         },
         () => {
-          // Only a missing record is retried; Iris writes it after the module's JavaScript.
           metadata.delete(module);
           if (!warned.has(module)) {
             warned.add(module);
@@ -66,17 +57,16 @@ export function devLibraryBundle(): Plugin {
   };
   const isLibrary = async (module: string) => (await metadataOf(module))?.editable === false;
   const isEditableIndex = async (file: string) => {
-    const module = moduleOf(file);
+    const module = outputModuleOf(file);
     return !!module && path.basename(file.split("?", 1)[0]) === "index.js" && (await metadataOf(module))?.editable === true;
   };
 
-  /** Library modules imported by generated editable code, with each import statement. */
   const libraryImports = async (file: string, code: string) => {
     const imports = await Promise.all(
       parse(code)[0].map(async (entry) => {
         if (entry.d !== -1 || !entry.n?.startsWith(".")) return [];
         const target = path.resolve(path.dirname(file), entry.n);
-        const module = moduleOf(target);
+        const module = outputModuleOf(target);
         if (!module || path.basename(target) !== "index.js" || !(await isLibrary(module))) return [];
         return [{ ...entry, module }];
       }),
@@ -84,11 +74,7 @@ export function devLibraryBundle(): Plugin {
     return imports.flat();
   };
 
-  /**
-   * Library modules imported by current editable modules. Iris never deletes
-   * output, so a module whose source file is gone is a stale leftover.
-   */
-  const frontier = async () => {
+  const libraryModulesImportedByEditableModules = async () => {
     await init;
     const modules = new Set<string>();
     await Promise.all(
@@ -96,7 +82,7 @@ export function devLibraryBundle(): Plugin {
         if (!entry.isDirectory() || entry.name.startsWith(".")) return;
         const directory = entry.name;
         const record = await metadataOf(directory);
-        if (!record?.editable || !(await access(record.source).then(() => true, () => false))) return;
+        if (!record?.editable || !(await fileExists(record.source))) return;
         const file = path.join(output, directory, "index.js");
         const code = await readFile(file, "utf8").catch(() => "");
         for (const { module } of await libraryImports(file, code)) modules.add(module);
@@ -106,14 +92,13 @@ export function devLibraryBundle(): Plugin {
   };
 
   const build = async () => {
-    const modules = await frontier();
+    const modules = await libraryModulesImportedByEditableModules();
     const entry = modules
-      .map((module) => `export * as ${exportName(module)} from ${JSON.stringify(path.join(output, module, "index.js"))};`)
+      .map((module) => `export * as ${bundleExportName(module)} from ${JSON.stringify(path.join(output, module, "index.js"))};`)
       .join("\n");
     const bundle = await rolldown({
       input: entryId,
-      // Bare imports such as `react` stay external so Vite resolves them to its optimized dependencies.
-      external: (id) => !id.startsWith("\0") && !id.startsWith(".") && !path.isAbsolute(id),
+      external: isBareImport,
       plugins: [
         {
           name: "iris-library-entry",
@@ -154,10 +139,9 @@ export function devLibraryBundle(): Plugin {
     load(id) {
       if (id === resolvedBundleId) {
         building ??= build();
-        // The bundle is served as-is; a source map would only point back into itself.
         return building.then((code) => ({ code, map: { mappings: "" } }));
       }
-      const module = moduleOf(id);
+      const module = outputModuleOf(id);
       if (!module) return null;
       return isLibrary(module).then((library) => {
         if (library && !warned.has(id)) {
@@ -167,11 +151,10 @@ export function devLibraryBundle(): Plugin {
         return null;
       });
     },
-    // Rewrite before StyleX, which loads each import of a module it transforms.
     transform: {
       order: "pre",
       async handler(code, id) {
-        if (!moduleOf(id) || !/\.js(?:\?|$)/.test(id)) return null;
+        if (!outputModuleOf(id) || !/\.js(?:\?|$)/.test(id)) return null;
         let rewritten = code;
         if (await isEditableIndex(id)) {
           await init;
@@ -179,13 +162,12 @@ export function devLibraryBundle(): Plugin {
           if (bundled && imports.some(({ module }) => !bundled!.has(module))) reload(this.environment as DevEnvironment);
           for (const { ss, se, module } of imports.reverse()) {
             const statement = code.slice(ss, se);
-            const local = `$iris_${exportName(module)}`;
-            const source = `import { ${exportName(module)} as ${local} } from "${bundleId}";`;
+            const local = `$iris_${bundleExportName(module)}`;
+            const source = `import { ${bundleExportName(module)} as ${local} } from "${bundleId}";`;
             const namespace = namespaceImport.exec(statement);
             const named = namedImport.exec(statement);
-            // Keep each replacement on one line so later source maps stay aligned.
             const replacement = namespace
-              ? `import { ${exportName(module)} as ${namespace[1]} } from "${bundleId}";`
+              ? `import { ${bundleExportName(module)} as ${namespace[1]} } from "${bundleId}";`
               : named
                 ? `${source} const { ${named[1]
                     .split(",")
@@ -201,18 +183,14 @@ export function devLibraryBundle(): Plugin {
             rewritten = rewritten.slice(0, ss) + replacement + rewritten.slice(se);
           }
         }
-        // Return no map: Vite then keeps the `index.js.map` that Iris writes beside
-        // each module, and chains StyleX's map after it. An empty `{ mappings: "" }`
-        // would drop that chain and leave the module without a map.
         return rewritten === code ? null : { code: rewritten, map: null };
       },
     },
     async hotUpdate({ file }) {
-      const module = moduleOf(file);
+      const module = outputModuleOf(file);
       if (!module) return;
       let library = await isLibrary(module);
       if (path.basename(file) === "metadata.json") {
-        // A package that moves between editable and library changes the bundle.
         metadata.delete(module);
         library ||= await isLibrary(module);
       }

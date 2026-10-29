@@ -1,7 +1,3 @@
-//! The Iris language server for the playground, built from the compiler's own analysis crates.
-//!
-//! It speaks LSP as JSON strings, one message at a time, and runs on the single thread of a Web
-//! Worker. A panic aborts the instance, so the host restarts it and replays its documents.
 
 mod capabilities;
 mod emit;
@@ -37,7 +33,6 @@ impl LanguageServer {
         LanguageServer { server: Server::default() }
     }
 
-    /// Handles one JSON-RPC message and returns a JSON array of the messages to send back.
     pub fn handle(&mut self, message: &str) -> String {
         let outgoing = match serde_json::from_str(message) {
             Ok(message) => self.server.handle(message),
@@ -50,8 +45,6 @@ impl LanguageServer {
         serde_json::to_string(&outgoing).expect("invariant violated: messages must serialize")
     }
 
-    /// Collects the next queued diagnostics and returns a `publishDiagnostics` notification, or
-    /// `undefined` when nothing is queued. Call it while no messages are waiting.
     #[wasm_bindgen(js_name = nextDiagnostics)]
     pub fn next_diagnostics(&mut self) -> Option<String> {
         let notification = self.server.next_diagnostics()?;
@@ -61,8 +54,6 @@ impl LanguageServer {
 
 #[wasm_bindgen]
 impl LanguageServer {
-    /// The text of any source the server knows, such as a package or Prim module that the editor
-    /// opens read-only, or `undefined`.
     #[wasm_bindgen(js_name = readSource)]
     pub fn read_source(&self, uri: &str) -> Option<String> {
         self.server.read_source(uri)

@@ -1,5 +1,39 @@
-// Brings the hero and its installation commands into view, scrolling only when they are off screen, then
-// focuses the selected command's copy button and runs `onRevealed` once scrolling has settled.
+const stillFramesOnceSettled = 6;
+const unmovedScrollTimeoutMilliseconds = 300;
+const longestScrollMilliseconds = 4000;
+
+const afterScrollSettles = onSettled => {
+  const started = performance.now();
+  let done = false;
+  let frame = 0;
+  let lastY = window.scrollY;
+  let moved = false;
+  let still = 0;
+  const settle = () => {
+    if (done) return;
+    done = true;
+    cancelAnimationFrame(frame);
+    window.removeEventListener("scrollend", settle);
+    onSettled();
+  };
+  const watch = now => {
+    if (window.scrollY !== lastY) {
+      lastY = window.scrollY;
+      moved = true;
+      still = 0;
+    } else {
+      still++;
+    }
+    const elapsed = now - started;
+    const stopped = moved && still >= stillFramesOnceSettled;
+    const neverStarted = !moved && elapsed > unmovedScrollTimeoutMilliseconds;
+    if (stopped || neverStarted || elapsed > longestScrollMilliseconds) settle();
+    else frame = requestAnimationFrame(watch);
+  };
+  window.addEventListener("scrollend", settle);
+  frame = requestAnimationFrame(watch);
+};
+
 export const revealInstall = installRef => onRevealed => () => {
   const install = installRef.current;
   if (!install) return;
@@ -17,46 +51,16 @@ export const revealInstall = installRef => onRevealed => () => {
     return;
   }
 
-  // The hero fills the first screen, so bring all of it back rather than only the commands.
-  (install.closest("section") ?? install).scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  const hero = install.closest("section") ?? install;
+  hero.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   if (reduced) {
     finish();
     return;
   }
 
-  // Wait until scrolling has settled: `scrollend` where supported, otherwise a few frames
-  // without movement. Safari lacks `scrollend`, and long smooth scrolls outlast a fixed delay.
-  const started = performance.now();
-  let done = false;
-  let frame = 0;
-  let lastY = window.scrollY;
-  let moved = false;
-  let still = 0;
-  const settle = () => {
-    if (done) return;
-    done = true;
-    cancelAnimationFrame(frame);
-    window.removeEventListener("scrollend", settle);
-    finish();
-  };
-  const watch = now => {
-    if (window.scrollY !== lastY) {
-      lastY = window.scrollY;
-      moved = true;
-      still = 0;
-    } else {
-      still++;
-    }
-    const elapsed = now - started;
-    if ((moved && still >= 6) || (!moved && elapsed > 300) || elapsed > 4000) settle();
-    else frame = requestAnimationFrame(watch);
-  };
-  window.addEventListener("scrollend", settle);
-  frame = requestAnimationFrame(watch);
+  afterScrollSettles(finish);
 };
 
-// Development only: visiting with `?edit` makes all copy editable in place for drafting and
-// screenshots. Production builds remove this branch.
 export const enableCopyEditing = () => {
   if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("edit")) return () => {};
   document.designMode = "on";

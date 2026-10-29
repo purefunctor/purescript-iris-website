@@ -2,13 +2,15 @@ module Website.Documentation.Installation (component) where
 
 import Prelude
 
+import Data.Maybe (Maybe(..))
 import Effect.Unsafe (unsafePerformEffect)
 import React.Basic (ReactComponent)
 import React.Basic.Hooks as Hooks
+import Website.Components.CodeBlock as CodeBlock
 import Website.Components.Documentation as Documentation
 import Website.Components.Installation as Installation
 import Website.Components.Terminal as Terminal
-import Website.Documentation.Prose (inlineCode, item, link, list, note, paragraph)
+import Website.Documentation.Prose (inlineCode, item, link, list, paragraph)
 import Yoga.React.DOM as DOM
 
 component :: ReactComponent {}
@@ -18,7 +20,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Installation" \_ ->
     , intro:
         [ paragraph
             [ DOM.text
-                "Iris provides install scripts for macOS, Linux, and Windows. By default, the scripts install the latest stable release. They can also install a specific version, use a different installation directory, or install a canary build. Iris 0.1.7 and later can also update themselves."
+                "The official installer is the easiest way to install Iris on macOS, Linux, and Windows. This page covers how to choose a version or installation directory, verify releases, and keep Iris up to date."
             ]
         ]
     , sections
@@ -31,36 +33,30 @@ sections =
     , body:
         [ paragraph
             [ DOM.text
-                "Releases are available for Linux on x86-64, macOS on Intel and Apple silicon, and 64-bit Windows. To install the latest stable release, run the command for your platform:"
+                "Iris is available for Linux on x86-64 and ARM64, macOS on Intel and Apple silicon, and 64-bit Windows. To install the latest stable release, run the command for your platform:"
             ]
         , Installation.installation { fill: true }
         , paragraph
-            [ DOM.text "The script downloads Iris from GitHub and installs the "
+            [ DOM.text "The installer downloads Iris from GitHub and places the "
             , inlineCode "iris"
             , DOM.text " executable in "
             , inlineCode "~/.local/bin"
             , DOM.text " on macOS and Linux, or in "
             , inlineCode "%LOCALAPPDATA%\\Iris\\bin"
-            , DOM.text " on Windows."
-            ]
-        , paragraph
-            [ DOM.text
-                "The script does not modify your PATH. If the installation directory is not on your PATH, the script prints a reminder. "
-            , link "/docs/getting-started/#install-iris" "Getting started"
-            , DOM.text " explains how to add it."
+            , DOM.text " on Windows. The installer does not modify your PATH."
             ]
         ]
     }
   , { id: "installer-options"
     , title: "Choose a release or directory"
     , body:
-        [ paragraph [ DOM.text "The install scripts read the following environment variables:" ]
+        [ paragraph
+            [ DOM.text "You can configure the installer with the following environment variables:" ]
         , list
             [ item
                 [ inlineCode "IRIS_VERSION"
-                , DOM.text " selects a release by its tag, such as "
-                , inlineCode "v0.1.5"
-                , DOM.text ". If it is not set, the latest stable release is installed."
+                , DOM.text
+                    " selects a release by its tag. The installer selects the latest stable release otherwise."
                 ]
             , item [ inlineCode "IRIS_INSTALL_DIR", DOM.text " sets the installation directory." ]
             , item
@@ -72,28 +68,27 @@ sections =
                 , DOM.text "."
                 ]
             ]
-        , paragraph
-            [ DOM.text "On macOS and Linux, set the variables immediately before "
-            , inlineCode "sh"
-            , DOM.text " so that they apply to the script:"
-            ]
-        , Terminal.terminal
-            [ { command: "curl -fsSL https://iris-lang.com/install.sh | IRIS_VERSION=v0.1.5 sh"
-              , output: ""
-              }
-            ]
-        , paragraph
-            [ DOM.text
-                "In PowerShell, set the variables before running the install command. For example, "
-            , inlineCode "$env:IRIS_VERSION = \"v0.1.5\""
-            , DOM.text " selects version 0.1.5."
-            ]
-        , paragraph
-            [ DOM.text
-                "The install scripts support Iris 0.1.0 and later. To install a 0.0.x release, use the install script from that release's "
-            , link "https://github.com/purefunctor/purescript-iris/tags" "Git tag"
-            , DOM.text "."
-            ]
+        , paragraph [ DOM.text "On macOS and Linux:" ]
+        , CodeBlock.codeBlock
+            { code:
+                "export IRIS_VERSION=v0.1.5\ncurl -fsSL https://iris-lang.com/install.sh | sh\n# optional: unset IRIS_VERSION"
+            , filename: "Shell"
+            , highlight: []
+            , language: CodeBlock.Shell
+            , lineNumbers: false
+            , note: Nothing
+            , surface: CodeBlock.Flat
+            }
+        , paragraph [ DOM.text "On Windows PowerShell:" ]
+        , CodeBlock.codeBlock
+            { code: "$env:IRIS_VERSION = \"v0.1.5\"\nirm https://iris-lang.com/install.ps1 | iex"
+            , filename: "PowerShell"
+            , highlight: []
+            , language: CodeBlock.Shell
+            , lineNumbers: false
+            , note: Nothing
+            , surface: CodeBlock.Flat
+            }
         ]
     }
   , { id: "verify-releases"
@@ -101,7 +96,7 @@ sections =
     , body:
         [ paragraph
             [ DOM.text
-                "Iris releases are built with GitHub Actions. For each release archive, GitHub signs a record of the repository and workflow that built it, known as a build provenance attestation. The install scripts verify this record before installing, which confirms that the download came from the Iris repository and was not modified."
+                "Iris releases are built with GitHub Actions. GitHub signs a record of the repository and workflow that built each release archive; this is called a build provenance attestation. The installer verifies this record before installation to confirm that the download came from the Iris repository and was not modified."
             ]
         , paragraph
             [ DOM.text "Verification requires the "
@@ -110,150 +105,40 @@ sections =
             , inlineCode "gh"
             , DOM.text ") with the "
             , inlineCode "gh attestation"
-            , DOM.text " command. If "
+            , DOM.text ". Without "
             , inlineCode "gh"
             , DOM.text
-                " is installed and verification fails, the script stops without installing anything. If "
+                ", the installer warns you and continues without verification. If verification fails, the installer stops. If "
             , inlineCode "gh"
-            , DOM.text
-                " is not installed, the script prints a warning and installs Iris without verification."
-            ]
-        , paragraph
-            [ DOM.text "If "
-            , inlineCode "gh"
-            , DOM.text " is installed but cannot access the attestations, set "
+            , DOM.text " cannot access the attestations, use "
             , inlineCode "IRIS_SKIP_ATTESTATION=1"
-            , DOM.text ", or "
+            , DOM.text " or "
             , inlineCode "$env:IRIS_SKIP_ATTESTATION = \"1\""
-            , DOM.text
-                " in PowerShell, to skip verification. The script then prints a warning, because it cannot confirm where the download came from."
+            , DOM.text " in PowerShell to skip verification."
             ]
         ]
     }
   , { id: "update-iris"
     , title: "Update Iris"
     , body:
-        [ note
-            [ DOM.strong {} "Requires Iris 0.1.7 or later"
-            , DOM.p {}
-                [ DOM.text "Iris 0.1.6 and earlier do not include "
-                , inlineCode "iris self update"
-                , DOM.text
-                    ". To update from one of these releases, run the install script again. Later updates can use the command below."
-                ]
+        [ paragraph
+            [ DOM.text
+                "If you installed Iris with a tool such as Cargo, mise, or Nix, use that tool to update it. Otherwise, run:"
             ]
-        , paragraph [ DOM.text "To update Iris to the latest release, run:" ]
         , Terminal.terminal [ { command: "iris self update", output: "" } ]
         , paragraph
             [ DOM.text "The command replaces the running "
             , inlineCode "iris"
             , DOM.text
-                " executable with the latest release on its channel. A stable release updates to the latest stable release. A "
+                " executable with the latest release on its channel. If you have a stable release, this gives you the latest stable release. A "
             , link "#canary-builds" "canary build"
             , DOM.text ", whose version ends in "
             , inlineCode "-dev.<revision>"
             , DOM.text ", updates to the latest canary build."
             ]
-        , paragraph [ DOM.text "The command also accepts a release tag and the following options:" ]
-        , list
-            [ item
-                [ inlineCode "iris self update v0.1.7"
-                , DOM.text
-                    " installs a specific release by its tag, including an older release. As with the install scripts, Iris 0.1.0 and later are supported."
-                ]
-            , item
-                [ inlineCode "--stable"
-                , DOM.text " and "
-                , inlineCode "--canary"
-                , DOM.text " switch to the latest release on the stable or canary channel."
-                ]
-            , item
-                [ inlineCode "--check"
-                , DOM.text
-                    " reports whether a different release is available, without installing it. The command exits with status 0 if Iris is up to date, 100 if a different release is available, and 1 if an error occurs."
-                ]
-            ]
         , paragraph
-            [ DOM.text
-                "Iris 0.1.6 and earlier cannot update themselves. If you install one of these releases with "
-            , inlineCode "iris self update"
-            , DOM.text ", Iris prints a warning, and later updates must use the install script."
-            ]
-        , paragraph
-            [ DOM.text "Running "
-            , inlineCode "iris watch"
-            , DOM.text " processes and editor "
-            , link "/docs/language-server/" "language servers"
-            , DOM.text
-                " continue to use the previous version until they are restarted. Restart them after updating."
-            ]
-        ]
-    }
-  , { id: "how-updates-work"
-    , title: "How updates are installed"
-    , body:
-        [ paragraph
-            [ inlineCode "iris self update"
-            , DOM.text
-                " replaces the executable that is running, regardless of how it was installed. If the "
-            , inlineCode "iris"
-            , DOM.text
-                " command on your PATH is a symbolic link, the link continues to point to the updated file."
-            ]
-        , paragraph
-            [ DOM.text
-                "If you installed Iris with another tool, such as Cargo, mise, or Nix, update it with that tool instead. "
-            , inlineCode "iris self update"
-            , DOM.text
-                " also replaces copies installed by other tools, but the tool's records then remain out of date until it reinstalls Iris."
-            ]
-        , paragraph
-            [ DOM.text
-                "If Iris cannot write to its installation directory, for example because it was installed in "
-            , inlineCode "/usr/local/bin"
-            , DOM.text " with "
-            , inlineCode "sudo"
-            , DOM.text
-                ", the command stops before downloading anything. Run the update with the same permissions that were used to install Iris."
-            ]
-        , paragraph
-            [ DOM.text "Updates are verified in the same way as installations, as described in "
-            , link "#verify-releases" "Verify releases"
-            , DOM.text ". "
-            , inlineCode "IRIS_SKIP_ATTESTATION=1"
-            , DOM.text " also skips verification for updates. If "
-            , inlineCode "gh"
-            , DOM.text " is installed but not signed in, the update stops and asks you to run "
-            , inlineCode "gh auth login"
-            , DOM.text " or set "
-            , inlineCode "IRIS_SKIP_ATTESTATION=1"
-            , DOM.text "."
-            ]
-        , paragraph
-            [ DOM.text
-                "Downloads use HTTPS and the operating system's certificate store, so proxies that use a private certificate authority are supported. Iris respects "
-            , inlineCode "HTTPS_PROXY"
-            , DOM.text
-                " and the related proxy variables. On the canary channel, Iris uses the GitHub API to find the latest canary build. If GitHub refuses the request, usually because of its rate limit, the update stops. To raise the limit, set "
-            , inlineCode "GH_TOKEN"
-            , DOM.text " or "
-            , inlineCode "GITHUB_TOKEN"
-            , DOM.text ". Iris sends the token only with these API requests."
-            ]
-        , paragraph
-            [ DOM.text
-                "On Windows, a running executable cannot be deleted, so the previous executable is kept next to the new one as "
-            , inlineCode "iris.exe.old"
-            , DOM.text
-                ". The next update removes it. If Iris cannot remove that file, for example because it is still running or is read-only, the update stops. Stop the Iris processes that use it, or remove the file yourself, and then try again."
-            ]
-        , paragraph
-            [ DOM.text
-                "Updates are available on the same platforms as the install scripts. On other platforms, the command stops with an error, even with "
-            , inlineCode "--check"
-            , DOM.text
-                ". The error says that no release is built for the platform and advises updating Iris with the tool that built it."
-            ]
+            [ DOM.text "To see the available options, including how to choose a release, run:" ]
+        , Terminal.terminal [ { command: "iris self update --help", output: "" } ]
         ]
     }
   , { id: "canary-builds"
@@ -261,7 +146,7 @@ sections =
     , body:
         [ paragraph
             [ DOM.text
-                "Canary builds allow you to test changes before they are released. Every successful build of the "
+                "You can use canary builds to try changes before they are released. Every successful build of the "
             , inlineCode "main"
             , DOM.text " branch is published on GitHub as a prerelease, tagged "
             , inlineCode "v<version>-dev.<revision>"
@@ -277,8 +162,7 @@ sections =
             , DOM.text ", they install the latest stable release."
             ]
         , paragraph
-            [ DOM.text "In Iris 0.1.7 and later, "
-            , inlineCode "iris self update --canary"
+            [ inlineCode "iris self update --canary"
             , DOM.text " switches to the latest canary build, and "
             , inlineCode "iris self update --stable"
             , DOM.text " switches back to stable releases. See "
@@ -291,21 +175,21 @@ sections =
     , title: "Packaging Iris"
     , body:
         [ paragraph
-            [ DOM.text
-                "When building Iris from source with Cargo, for example to package it for a Linux distribution, you can include the Git revision in the version reported by the CLI and the language server. Set "
+            [ DOM.text "When building Iris with Cargo, set "
             , inlineCode "IRIS_BUILD_REVISION"
             , DOM.text
-                " to the revision when building. The value is read at compile time and must be 7 to 64 hexadecimal characters long."
+                " to include a Git revision in the version reported by the CLI and language server. The revision must be 7 to 64 hexadecimal characters."
             ]
         , paragraph
-            [ DOM.text "For example, a 0.1.5 build with the revision "
-            , inlineCode "bcea1aafe65e"
+            [ DOM.text "For example, a 0.1.13 build with the revision "
+            , inlineCode "7ddab4481c3b"
             , DOM.text " reports:"
             ]
-        , Terminal.terminal [ { command: "iris --version", output: "iris 0.1.5-dev.bcea1aafe65e" } ]
+        , Terminal.terminal
+            [ { command: "iris --version", output: "iris 0.1.13-dev.7ddab4481c3b" } ]
         , paragraph
             [ DOM.text "Builds without the variable report only the package version, such as "
-            , inlineCode "iris 0.1.5"
+            , inlineCode "iris 0.1.13"
             , DOM.text "."
             ]
         ]

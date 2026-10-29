@@ -1,4 +1,3 @@
-//! Records which Iris revision the compiler crates come from, for `serverInfo.version`.
 
 use std::{env, fs, path::Path};
 

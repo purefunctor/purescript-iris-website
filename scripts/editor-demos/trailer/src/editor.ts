@@ -1,18 +1,14 @@
-// The editor trailer's plan: the one-shot take from editor.mjs, full screen between the opening and
-// end cards, at recorded speed throughout.
 import { acts, type Act, type Feature } from "./chapters.ts";
-import { beat, fps, retime, sec, tail, timing, type Take } from "./takes.ts";
+import { beat, fromFirstFeatureToLastResult, sec, timing, type Take } from "./takes.ts";
 
 export { chapters } from "./takes.ts";
 export type Manifest = { take: Take };
 
-// Where each feature starts in the trailer, for the landing page's chapter list.
 export type Marker = { feature: Feature; index: number; act: Act; from: number };
 export type Scene = { kind: "open"; from: number; duration: number } | { kind: "end"; from: number; duration: number };
 
 export function plan({ take }: Manifest) {
-  // The take plays once at recorded speed, from just before its first feature to its last result.
-  const times = retime(Math.max(0, take.beats[0].t - 0.8), Math.min(take.duration - 1 / fps, take.last + tail));
+  const times = fromFirstFeatureToLastResult(take);
   const from = sec(timing.open - timing.crossfade);
   const fade = sec(timing.crossfade);
   const track: { source: number; opacity: number }[] = [];

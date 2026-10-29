@@ -2,28 +2,21 @@ module Website.Playground.FileTabs (fileTabs) where
 
 import Prelude
 
-import Data.Nullable (Nullable)
+import Data.Array (find)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing, maybe)
+import Data.Nullable (Nullable, toMaybe)
+import Data.String (Pattern(..), stripPrefix)
+import Effect (Effect)
 import Iris.StyleX as StyleX
 import Iris.StyleX.When as When
 import React.Basic (JSX, ReactComponent, element)
+import React.Basic.Events (handler_)
 import Website.Playground.Types (Actions, File, Viewer)
+import Yoga.React.DOM as DOM
 
-foreign import fileTabsImpl ::
-  ReactComponent
-    { files :: Array File
-    , open :: Array String
-    , active :: Nullable String
-    , viewing :: Nullable Viewer
-    , actions :: Actions
-    , rootClassName :: String
-    , tabClassName :: String
-    , activeTabClassName :: String
-    , nameClassName :: String
-    , errorCountClassName :: String
-    , warningCountClassName :: String
-    , closeClassName :: String
-    , activeCloseClassName :: String
-    }
+foreign import lockIcon :: ReactComponent { "aria-label" :: String }
+
+foreign import closeIcon :: ReactComponent { "aria-hidden" :: Boolean }
 
 tabIn = StyleX.keyframes
   { from: { opacity: 0, transform: "translateY(4px)" }, to: { opacity: 1, transform: "none" } }
@@ -38,7 +31,6 @@ styles = StyleX.create
       , overflowX: "auto"
       , scrollbarWidth: "none"
       }
-  -- Flat tabs that fill the toolbar's height; the open file takes the editor's surface.
   , tab:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -54,7 +46,6 @@ styles = StyleX.create
       , transitionDuration: "140ms"
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
-      -- A newly opened tab settles into the strip.
       , animationDuration: "180ms"
       , animationName: { default: tabIn, "@media (prefers-reduced-motion: reduce)": "none" }
       , animationTimingFunction: "var(--ease-out)"
@@ -95,7 +86,6 @@ styles = StyleX.create
       }
   , errorCount: { backgroundColor: "var(--red-300)", color: "var(--granite-950)" }
   , warningCount: { backgroundColor: "var(--yellow-400)", color: "var(--granite-950)" }
-  -- Inactive tabs show their close button on hover or focus, and always on touch screens.
   , close:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
@@ -121,27 +111,78 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | The open files as tabs, with the read-only source that navigation opened.
-fileTabs ::
+type FileTabsProps =
   { files :: Array File
   , open :: Array String
   , active :: Nullable String
   , viewing :: Nullable Viewer
   , actions :: Actions
-  } -> JSX
-fileTabs { files, open, active, viewing, actions } = element fileTabsImpl
-  { files
-  , open
-  , active
-  , viewing
-  , actions
-  , rootClassName: styleProps.root.className
-  , tabClassName: (StyleX.props [ styles.tab, StyleX.defaultMarker ]).className
-  , activeTabClassName:
-      (StyleX.props [ styles.tab, styles.activeTab, StyleX.defaultMarker ]).className
-  , nameClassName: styleProps.name.className
-  , errorCountClassName: (StyleX.props [ styles.count, styles.errorCount ]).className
-  , warningCountClassName: (StyleX.props [ styles.count, styles.warningCount ]).className
-  , closeClassName: (StyleX.props [ styles.close ]).className
-  , activeCloseClassName: (StyleX.props [ styles.close, styles.activeClose ]).className
   }
+
+fileTabs :: FileTabsProps -> JSX
+fileTabs props =
+  DOM.div { className: styleProps.root.className, role: "group", "aria-label": "Open files" }
+    ( map (openFileTab props) props.open
+        <> [ maybe mempty (viewerTab props.actions) (toMaybe props.viewing) ]
+    )
+
+openFileTab :: FileTabsProps -> String -> JSX
+openFileTab props path =
+  let
+    selected :: Boolean
+    selected = isNothing (toMaybe props.viewing) && toMaybe props.active == Just path
+  in
+    DOM.div { className: tabClassName selected, key: path }
+      [ DOM.button
+          { "aria-current": if selected then "true" else "false"
+          , className: styleProps.name.className
+          , onClick: handler_ (props.actions.openFile path)
+          , title: path
+          , type: "button"
+          }
+          [ DOM.text (label path)
+          , case find (\file -> file.path == path) props.files of
+              Just file
+                | file.errors > 0 -> countBadge styles.errorCount file.errors "errors"
+                | file.warnings > 0 -> countBadge styles.warningCount file.warnings "warnings"
+              _ -> mempty
+          ]
+      , closeButton selected ("Close " <> label path) (props.actions.closeFile path)
+      ]
+
+viewerTab :: Actions -> Viewer -> JSX
+viewerTab actions viewer = DOM.div { className: tabClassName true }
+  [ DOM.span
+      { "aria-current": "true"
+      , className: styleProps.name.className
+      , title: viewer.uri <> " (read-only)"
+      }
+      [ element lockIcon { "aria-label": "Read-only" }, DOM.text viewer.label ]
+  , closeButton true ("Close " <> viewer.label) actions.closeViewer
+  ]
+
+tabClassName :: Boolean -> String
+tabClassName selected =
+  ( StyleX.props [ styles.tab, StyleX.conditional selected styles.activeTab, StyleX.defaultMarker ]
+  ).className
+
+countBadge :: StyleX.Style -> Int -> String -> JSX
+countBadge tone count noun = DOM.span
+  { className: (StyleX.props [ styles.count, tone ]).className
+  , "aria-label": show count <> " " <> noun
+  }
+  (show count)
+
+closeButton :: Boolean -> String -> Effect Unit -> JSX
+closeButton selected accessibleLabel onClose = DOM.button
+  { "aria-label": accessibleLabel
+  , className:
+      (StyleX.props [ styles.close, StyleX.conditional selected styles.activeClose ]).className
+  , onClick: handler_ onClose
+  , title: "Close"
+  , type: "button"
+  }
+  (element closeIcon { "aria-hidden": true })
+
+label :: String -> String
+label path = fromMaybe path (stripPrefix (Pattern "src/") path)

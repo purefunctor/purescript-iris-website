@@ -13,7 +13,6 @@ import Website.Landing.Example as Example
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
-  -- The hero fills the first screen below the navigation and grows when its content is taller.
   { section:
       { alignContent: "center"
       , alignItems: "center"
@@ -29,8 +28,6 @@ styles = StyleX.create
       }
   , copy:
       { alignItems: "flex-start", display: "flex", flexDirection: "column", gap: 32, minWidth: 0 }
-  -- The heading's font size is the wordmark's. Its gaps, and the lockup's, leave the same visible
-  -- space beside and below the wordmark, tighter than the gaps between the copy's blocks.
   , heading:
       { display: "flex"
       , flexDirection: "column"
@@ -39,8 +36,6 @@ styles = StyleX.create
       , maxWidth: "100%"
       }
   , lockup: { alignItems: "center", display: "flex", gap: "0.04em" }
-  -- The dots span 72% of the mark's box, so a 1em mark matches Geist's cap height. Its margins
-  -- keep the box within the wordmark's line height.
   , mark: { flexShrink: 0, height: "1em", marginBlock: "-0.1em", width: "1em" }
   , wordmark:
       { color: "var(--text-primary)"
@@ -48,7 +43,6 @@ styles = StyleX.create
       , fontWeight: 900
       , letterSpacing: "-0.05em"
       , lineHeight: 0.8
-      -- Pulls the I's side bearing back to the column edge.
       , marginInlineStart: "-0.045em"
       }
   , subtitle:
@@ -71,7 +65,6 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
--- | `install` marks the installation commands, where the header's Install action starts a ripple.
 hero :: { install :: Ref (Nullable Element), ripples :: Int } -> JSX
 hero { install, ripples } = element Backdrop.component
   { rippleOrigin: install

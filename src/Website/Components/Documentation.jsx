@@ -7,10 +7,9 @@ import MenuIcon from "~icons/lucide/menu";
 import XIcon from "~icons/lucide/x";
 import { NavigationLink } from "#src/Website/Components/NavigationLink.jsx";
 
-// The reader is in the last section whose top has passed a line a third of the way down the
-// viewport, or in the last section once the page cannot scroll further. A section the reader
-// jumps to stays current until they scroll a third of the viewport away from where the jump
-// landed, so short sections below it cannot take over.
+const minimumReadingLinePixels = 160;
+const scrollPauseMilliseconds = 150;
+
 function useActiveSection(sections) {
   const [active, setActive] = useState(null);
   const ids = sections.map(({ id }) => id).join(" ");
@@ -21,27 +20,28 @@ function useActiveSection(sections) {
     let settle = 0;
     let frame = 0;
 
-    const spy = () => {
-      const line = Math.max(window.innerHeight / 3, 160);
-      const end = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+    const sectionPastReadingLine = () => {
+      const readingLine = Math.max(window.innerHeight / 3, minimumReadingLinePixels);
+      const scrolledToEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
       let current = null;
       for (const id of targets) {
         const section = document.getElementById(id);
-        if (section && section.getBoundingClientRect().top <= line) current = id;
+        if (section && section.getBoundingClientRect().top <= readingLine) current = id;
       }
-      return end && targets.length ? targets[targets.length - 1] : current;
+      return scrolledToEnd && targets.length ? targets[targets.length - 1] : current;
     };
+    const scrolledAwayFromLanding = () =>
+      pinned?.landed != null && Math.abs(window.scrollY - pinned.landed) > window.innerHeight / 3;
     const update = () => {
       frame = 0;
-      if (pinned?.landed != null && Math.abs(window.scrollY - pinned.landed) > window.innerHeight / 3) {
+      if (scrolledAwayFromLanding()) {
         pinned = null;
       }
-      setActive(pinned ? pinned.id : spy());
+      setActive(pinned ? pinned.id : sectionPastReadingLine());
     };
-    // The jump has landed once scrolling has paused, including when it did not scroll at all.
     const awaitLanding = () => {
       clearTimeout(settle);
-      settle = setTimeout(() => { if (pinned) pinned.landed = window.scrollY; }, 150);
+      settle = setTimeout(() => { if (pinned) pinned.landed = window.scrollY; }, scrollPauseMilliseconds);
     };
     const pin = hash => {
       const id = decodeURIComponent(hash.slice(1));
@@ -104,8 +104,6 @@ export function sectionNavigationImpl({ sections, links }) {
   return <SectionLinks sections={sections} active={active} links={links} />;
 }
 
-// Below the desktop layout a sticky bar replaces the section rail, and on phones it also replaces
-// the page rail. Both menus open as panels the full width of the bar, below it.
 export function navigationBarImpl({ sections, links, pages, classes }) {
   const active = useActiveSection(sections);
   const [menu, setMenu] = useState(null);
@@ -113,16 +111,15 @@ export function navigationBarImpl({ sections, links, pages, classes }) {
   const pagesButton = useRef(null);
   const title = sections.find(({ id }) => id === active)?.title;
 
-  // Close a menu once a shared StyleX breakpoint hides the control that opened it.
   useEffect(() => {
-    const resize = () => {
+    const closeMenusHiddenByBreakpoint = () => {
       if (getComputedStyle(bar.current).display === "none") setMenu(null);
       else if (getComputedStyle(pagesButton.current).display === "none") {
         setMenu(current => (current === "pages" ? null : current));
       }
     };
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    window.addEventListener("resize", closeMenusHiddenByBreakpoint);
+    return () => window.removeEventListener("resize", closeMenusHiddenByBreakpoint);
   }, []);
 
   const trigger = name => ({

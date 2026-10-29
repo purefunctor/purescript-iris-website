@@ -9,8 +9,6 @@ export const prerender = true;
 
 const theme = await playgroundTheme();
 
-// Monaco adds style elements and style attributes at run time, which the site's hashed styles
-// cannot allow. The relaxation stays on this page, which loads no third-party styles.
 Astro.csp.insertStyleResource({ resource: "'self'", kind: "element" });
 Astro.csp.insertStyleResource({ resource: "'unsafe-inline'", kind: "element" });
 Astro.csp.insertStyleResource({ resource: "'unsafe-inline'", kind: "attribute" });
@@ -18,8 +16,8 @@ Astro.csp.insertStyleResource({ resource: "'unsafe-inline'", kind: "attribute" }
 
 <SiteLayout
   application
-  title="Playground — Iris"
-  description="Write Iris in the browser, with the compiler's own language server and packages from the PureScript Registry."
+  title="Iris | Playground"
+  description="Write and run PureScript in your browser with the Iris language server and packages from the PureScript Registry."
 >
   <Fragment slot="head">
     <link rel="preload" href={geistFont} as="font" type="font/woff2" crossorigin="anonymous" />

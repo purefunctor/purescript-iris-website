@@ -1,16 +1,7 @@
-// Runs the built playground language server in Node against real Registry packages, checks the
-// main editor features, and reports timings, memory and the module's size.
-//
-// `--stress` also replays typing a module one character at a time, requesting diagnostics, hover
-// and completion along the way, so that incomplete code at every step goes through the analyzer.
-//
-// `--all` loads the whole package set, as the playground does, instead of the starter closure.
-//
-// Usage: node scripts/test-playground-language-server.mjs [--stress] [--all]
-// Build the server first with `node scripts/build-playground-language-server.mjs`.
 
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { SourceMap } from "node:module";
 import { dirname } from "node:path";
 import { join } from "node:path";
 import { archiveUrl, resolveClosure, unpackPackage } from "../playground/packages/registry.js";
@@ -64,9 +55,9 @@ main = launchAff_ do
   liftEffect $ log $ show (fromMaybe 0 firstEven)
 `;
 
-// Maps `items` with at most 16 actions in flight, so the whole package set does not open hundreds
-// of connections at once.
-const pool = async (items, action) => {
+const CONCURRENT_DOWNLOADS = 16;
+
+const mapConcurrently = async (items, action) => {
   const results = new Array(items.length);
   let next = 0;
   const worker = async () => {
@@ -75,7 +66,7 @@ const pool = async (items, action) => {
       results[index] = await action(items[index]);
     }
   };
-  await Promise.all(Array.from({ length: 16 }, worker));
+  await Promise.all(Array.from({ length: CONCURRENT_DOWNLOADS }, worker));
   return results;
 };
 
@@ -87,7 +78,6 @@ const time = async (label, action) => {
   return result;
 };
 
-// Load the server.
 const { default: _init, initSync, LanguageServer } = await import(join(dist, "language_server.js"));
 const module = readFileSync(join(dist, "language_server_bg.wasm"));
 const exports = await time("Instantiate", () => initSync({ module }));
@@ -119,13 +109,12 @@ const initialized = request("initialize", {
 console.log(`Server: ${initialized.serverInfo.name} ${initialized.serverInfo.version}`);
 notify("initialized", {});
 
-// Load the starter packages from the Registry, caching archives on disk.
 const index = JSON.parse(readFileSync(join(root, "playground/packages/index.json"), "utf8"));
 const closure = all
   ? Object.entries(index.packages).map(([name, entry]) => ({ name, ...entry }))
   : resolveClosure(index, ROOTS);
 const packages = await time(`Fetch and unpack ${closure.length} packages`, () =>
-  pool(
+  mapConcurrently(
     closure,
     async (entry) => {
       const cached = join(archives, `${entry.name}-${entry.version}.tar.gz`);
@@ -153,7 +142,6 @@ const loaded = await time("iris/setPackages", () => request("iris/setPackages", 
 assert.ok(loaded.sources > 200, `expected package sources, got ${loaded.sources}`);
 const packagesMemory = exports.memory.buffer.byteLength;
 
-// Open the project and collect its first diagnostics, which checks everything Main imports.
 const open = (path, text, languageId = "purescript") =>
   notify("textDocument/didOpen", { textDocument: { uri: PROJECT + path, languageId, version: 1, text } });
 open("src/Util.js", UTIL_JS, "javascript");
@@ -173,6 +161,59 @@ const at = (text, needle, offset = 0) => {
 };
 const position = (needle, offset) => ({ textDocument: { uri: main }, position: at(MAIN, needle, offset) });
 
+const generated = await time("iris/generated", () => request("iris/generated", { uri: main }));
+assert.equal(generated.status, "generated");
+assert.equal(generated.path, "Main/index.js");
+assert.equal(generated.map.version, 3);
+assert.deepEqual(generated.map.sources, [main]);
+assert.ok(generated.map.mappings.length > 0);
+assert.match(generated.text, /export/);
+assert.equal(generated.files, undefined, "generated returns one module, not its dependency closure");
+
+const coordinatesUri = PROJECT + "src/Coordinates.purs";
+const COORDINATES = 'module Coordinates where\n\nvalues = [ "😀", "next" ]\n';
+open("src/Coordinates.purs", COORDINATES);
+const coordinates = request("iris/generated", { uri: coordinatesUri });
+assert.equal(coordinates.status, "generated");
+const generatedPoint = at(coordinates.text, '"next"');
+const sourcePoint = at(COORDINATES, '"next"');
+const mapped = new SourceMap(coordinates.map).findEntry(generatedPoint.line, generatedPoint.character);
+assert.equal(mapped.originalSource, coordinatesUri);
+assert.equal(mapped.originalLine, sourcePoint.line);
+assert.equal(mapped.originalColumn, sourcePoint.character);
+assert.equal(mapped.generatedLine, generatedPoint.line);
+assert.equal(mapped.generatedColumn, generatedPoint.character);
+
+notify("textDocument/didChange", {
+  textDocument: { uri: coordinatesUri, version: 2 },
+  contentChanges: [{ text: COORDINATES.replace("values =", "\nvalues =") }],
+});
+const shifted = request("iris/generated", { uri: coordinatesUri });
+assert.equal(shifted.text, coordinates.text);
+const shiftedPoint = new SourceMap(shifted.map).findEntry(generatedPoint.line, generatedPoint.character);
+assert.equal(shiftedPoint.originalLine, sourcePoint.line + 1);
+assert.equal(shiftedPoint.originalColumn, sourcePoint.character);
+notify("textDocument/didChange", {
+  textDocument: { uri: coordinatesUri, version: 3 },
+  contentChanges: [{ text: "module Coordinates where\nvalues = [" }],
+});
+const syntaxFailure = request("iris/generated", { uri: coordinatesUri });
+assert.equal(syntaxFailure.status, "failed");
+assert.ok(syntaxFailure.errors.some(({ uri, diagnostic }) => uri === coordinatesUri && diagnostic.severity === 1));
+assert.equal(syntaxFailure.map, undefined);
+notify("textDocument/didClose", { textDocument: { uri: coordinatesUri } });
+
+for (const params of [
+  {}, { uri: 42 }, { uri: "not a URI" },
+  { uri: coordinatesUri }, { uri: PROJECT + "src/Util.js" },
+]) {
+  const id = nextId++;
+  const response = JSON.parse(server.handle(JSON.stringify({
+    jsonrpc: "2.0", id, method: "iris/generated", params,
+  }))).find((message) => message.id === id);
+  assert.equal(response.error?.code, -32602, `invalid generated params: ${JSON.stringify(params)}`);
+}
+
 const hover = await time("Hover", () => request("textDocument/hover", position("log $ String", 1)));
 assert.match(JSON.stringify(hover), /String -> Effect Unit/);
 
@@ -188,7 +229,6 @@ const definition = await time("Definition", () =>
 );
 assert.match(JSON.stringify(definition), /file:\/\/\/packages\/aff\/src\/Effect\/Aff\.purs/);
 
-// From the definition in Util, references reach the use in Main.
 const references = await time("References", () =>
   request("textDocument/references", {
     textDocument: { uri: PROJECT + "src/Util.purs" },
@@ -205,7 +245,6 @@ const formatted = await time("Formatting", () =>
 );
 assert.ok(Array.isArray(formatted));
 
-// An edit that breaks a definition, then one that fixes it again.
 const change = (version, needle, replacement) => {
   const start = at(MAIN, needle);
   const end = at(MAIN, needle, needle.length);
@@ -215,12 +254,21 @@ const change = (version, needle, replacement) => {
   });
 };
 change(2, "Array.foldl (+) 0 (Array.range 1 10)", '"ten"');
+const generatedFailure = request("iris/generated", { uri: main });
+assert.equal(generatedFailure.status, "failed");
+assert.ok(generatedFailure.errors.some(({ uri, diagnostic }) => uri === main && diagnostic.severity === 1));
+assert.equal(generatedFailure.text, undefined);
+assert.equal(generatedFailure.map, undefined);
+assert.equal(
+  request("iris/generated", { uri: PROJECT + "src/Util.purs" }).status, "generated",
+  "an unrelated broken source must not prevent generating Util",
+);
 const broken = await time("Diagnostics after an edit", drainDiagnostics);
 assert.ok(errors(broken.get(main)).length > 0, "a String total should not type check");
 notify("textDocument/didChange", { textDocument: { uri: main, version: 3 }, contentChanges: [{ text: MAIN }] });
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
+assert.deepEqual(request("iris/generated", { uri: main }), generated, "fixing the source restores generation");
 
-// Completion offers imports from package modules that nothing in the project imports yet.
 const UNIMPORTED = MAIN + "\nmatches = unsafeRege\n";
 notify("textDocument/didChange", { textDocument: { uri: main, version: 4 }, contentChanges: [{ text: UNIMPORTED }] });
 drainDiagnostics();
@@ -237,10 +285,28 @@ assert.ok(
 notify("textDocument/didChange", { textDocument: { uri: main, version: 5 }, contentChanges: [{ text: MAIN }] });
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 
-// The emitted JavaScript runs: write it out, import Main and capture what main logs.
 const emitted = await time("iris/emit", () => request("iris/emit", {}));
 assert.equal(emitted.status, "emitted");
 assert.deepEqual(emitted.modules.map((module) => module.name), ["Main", "Util"]);
+assert.deepEqual(emitted.files.find((file) => file.path === generated.path), {
+  path: generated.path, text: generated.text, map: generated.map,
+});
+for (const file of emitted.files) {
+  if (file.path.endsWith("/index.js")) {
+    assert.equal(file.map?.version, 3, `${file.path} should have a v3 map`);
+    assert.equal(file.map.sources.length, 1);
+    assert.ok(server.readSource(file.map.sources[0]), `${file.path} should map to a known source URI`);
+  } else {
+    assert.ok(!Object.hasOwn(file, "map"), `${file.path}: FFI/runtime must not have a map`);
+  }
+}
+assert.ok(emitted.files.some((file) => file.path === "Util/foreign.js"));
+assert.ok(emitted.files.some((file) => !file.path.includes("/")), "exercise runtime map omission");
+const packageUri = "file:///packages/maybe/src/Data/Maybe.purs";
+const packageGenerated = request("iris/generated", { uri: packageUri });
+assert.equal(packageGenerated.status, "generated");
+assert.deepEqual(packageGenerated.map.sources, [packageUri]);
+assert.deepEqual(emitted.files.find((file) => file.path === packageGenerated.path).map, packageGenerated.map);
 const output = join(root, "playground/.cache/emit");
 rmSync(output, { recursive: true, force: true });
 for (const file of emitted.files) {
@@ -259,13 +325,15 @@ try {
 }
 assert.deepEqual(logged, ["SUM: 152", "4"]);
 
-// Removing Util breaks Main's import.
 notify("textDocument/didClose", { textDocument: { uri: PROJECT + "src/Util.purs" } });
 const removed = drainDiagnostics();
 assert.ok(errors(removed.get(main)).length > 0, "Main should report the missing Util module");
 const failed = request("iris/emit", {});
 assert.equal(failed.status, "failed");
 assert.ok(failed.errors.some((error) => error.uri === main));
+const missingImport = request("iris/generated", { uri: main });
+assert.equal(missingImport.status, "failed");
+assert.ok(missingImport.errors.some((error) => error.uri === main));
 open("src/Util.purs", UTIL);
 assert.deepEqual(errors(drainDiagnostics().get(main)), []);
 

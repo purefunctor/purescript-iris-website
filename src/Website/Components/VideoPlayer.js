@@ -9,13 +9,9 @@ export const formatTime = seconds => {
 
 export const wholeSeconds = seconds => Math.floor(seconds || 0);
 
-// Cloudflare's static asset server answers Range requests with the whole file. Browsers cannot seek
-// a recording served that way, and Safari does not play it at all, so the player plays a copy held in
-// memory. It is fetched on demand: when the pointer or focus enters the player, or on a request to
-// play or seek. Each player's copy and pending requests are kept by its video element.
 const players = new WeakMap();
 
-const load = video => {
+const loadInMemoryCopy = video => {
   const player = players.get(video);
   if (!player) return Promise.resolve();
   if (!player.loaded) {
@@ -23,11 +19,9 @@ const load = video => {
     player.loaded = fetch(source.src)
       .then(response => (response.ok ? response.blob() : Promise.reject(new Error(response.statusText))))
       .then(blob => (player.url = URL.createObjectURL(blob)))
-      // A failed copy streams the file instead, which plays but cannot seek.
       .catch(() => source.src)
       .then(src => {
         if (player.disposed) return;
-        // A copy in memory costs nothing more to load.
         if (player.url) video.preload = "auto";
         video.src = src;
         if (player.playing) video.play().catch(() => {});
@@ -43,22 +37,20 @@ export const setPlayback = videoRef => shouldPlay => () => {
   player.playing = shouldPlay;
   if (!shouldPlay) video.pause();
   else if (video.src) video.play().catch(() => {});
-  else load(video);
+  else loadInMemoryCopy(video);
 };
 
-// A seek before the copy has loaded applies once its metadata has.
 export const seekTo = videoRef => time => () => {
   const video = videoRef.current;
   const player = video && players.get(video);
   if (!player) return;
-  if (video.readyState >= 1) video.currentTime = time;
+  if (video.readyState >= HTMLMediaElement.HAVE_METADATA) video.currentTime = time;
   else {
     player.target = time;
-    load(video);
+    loadInMemoryCopy(video);
   }
 };
 
-// iPhone Safari only supports native fullscreen on the video element itself.
 export const toggleFullscreen = ({ frame: frameRef, video: videoRef }) => () => {
   if (document.fullscreenElement) {
     document.exitFullscreen().catch(() => {});
@@ -69,8 +61,6 @@ export const toggleFullscreen = ({ frame: frameRef, video: videoRef }) => () => 
   else videoRef.current?.webkitEnterFullscreen?.();
 };
 
-// Media events, fullscreen changes, visibility and the seek bar's pointer and keyboard input.
-// Positions are written as CSS variables on the seek bar so seeking does not re-render.
 export const observePlayer = ({
   bubble: bubbleRef,
   frame: frameRef,
@@ -97,7 +87,6 @@ export const observePlayer = ({
     bubble.textContent = formatTime(fraction * duration());
   };
   const update = () => {
-    // Until a pending seek applies, the position is the one requested rather than the start.
     if (player.target !== undefined) return;
     const total = duration();
     const fraction = total ? video.currentTime / total : 0;
@@ -153,7 +142,7 @@ export const observePlayer = ({
     update();
   };
   const focus = () => update();
-  const intent = () => void load(video);
+  const intent = () => void loadInMemoryCopy(video);
   const visibility = new IntersectionObserver(([entry]) => onVisible(entry.isIntersecting)(), { threshold: 0.25 });
 
   for (const name of ["timeupdate", "loadedmetadata", "durationchange", "emptied"]) video.addEventListener(name, update);

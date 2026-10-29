@@ -1,7 +1,3 @@
-// The recording primitives that every video's scenario script shares: the action log that Cap's zoom
-// planner reads (cap.mjs), beats, checks, pointer and scrolling helpers, and the capture of a take.
-// A scenario script calls `recorder` once with what is specific to its app, and keeps its own
-// key presses, typing and staging, because those differ between apps in ways the take shows.
 import { execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -10,36 +6,23 @@ import * as cap from './cap.mjs';
 
 export const tools = process.env.IRIS_DEMO_HOME || '/tmp/iris-editor-tools';
 export const output = resolve(process.env.IRIS_DEMO_OUTPUT || `${tools}/recordings`);
-// The recording display's size in device pixels, which follows IRIS_DEMO_SCALE.
 export const { width, height } = cap;
 export const env = { ...process.env, DISPLAY: ':94' };
 export const run = (name, args) => execFileSync(name, args, { env, encoding: 'utf8' }).trim();
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-// cap renders Cap's cursor, click ripples and zoom (cap.mjs); ffmpeg captures the X display as is.
 const backend = process.env.IRIS_DEMO_RECORDER || 'cap';
-// Playback speed and quality of the review copy. Cap's zoom makes faster takes easy to follow.
-const [speed, crf] = backend === 'cap' ? [cap.speed, cap.crf] : [0.75, 23];
+const [reviewSpeed, reviewCrf] = backend === 'cap' ? [cap.reviewSpeed, cap.reviewCrf] : [0.75, 23];
+const resultHoldBeforeBeat = 500;
+const clickHoldForCapPointerPolling = 50;
 
-// Page scripts for Monaco, which both the editor and the playground use.
-// The visible lines that contain any of `texts`.
 export const lines = (...texts) => `[...document.querySelectorAll('.view-line')].filter(line => ${JSON.stringify(texts)}
   .some(text => line.textContent.replaceAll('\\u00a0', ' ').includes(text)))`;
-// Whether the focused suggestion mentions every text.
 export const suggestion = (...texts) => `${JSON.stringify(texts)}.every(text => document.querySelector('.suggest-widget .monaco-list-row.focused')?.innerText.includes(text))`;
 
-// `session` and `cdp` name the agent-browser session and the app's remote debugging port.
-// `overlays` are selectors for popups that each passing check logs when they are in view, so the zoom
-// keeps them in frame. `caret` is a page script returning where keyboard work happens, in device
-// pixels, or null. `chrome` is how far the app's own chrome covers the page at the top and bottom,
-// in CSS pixels, where a token cannot be clicked. `offset` returns where the page starts on screen,
-// for a window whose page sits below its toolbar. `planner` overrides cap.mjs's zoom planning.
 export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bottom: 0 }, offset = () => 0, planner = {} }) {
   const browser = (...args) => run('agent-browser', ['--session', session, '--cdp', String(cdp), ...args]);
   const evaluate = code => JSON.parse(browser('eval', code));
 
-  // Pointer and keyboard actions in the current take, in seconds since capture started, and the
-  // beats where each feature starts and the captions the trailer lays over the take. Capture clears
-  // them in place, so references to them stay valid.
   const actions = [], beats = [], captions = [];
   let epoch, steady = null, wide = false;
   const now = () => (Date.now() - epoch) / 1000;
@@ -47,39 +30,31 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     ? { t: now(), action: 'steady', box: steady.box, zoom: steady.zoom }
     : wide ? { t: now(), action: 'overview' } : { t: now(), x, y, ...detail });
 
-  // Actions inside `steadily` keep one fixed framing, `box` in device pixels at `zoom`, however the
-  // pointer, caret and popups move within it.
   async function steadily(frame, action) {
     steady = frame;
     mark();
     try { await action(); } finally { steady = null; }
   }
-  // Actions inside `overview` show the whole screen rather than zooming in.
   async function overview(action) {
     wide = true;
     mark();
     try { await action(); } finally { wide = false; }
   }
   async function beat(slug, { continues = false } = {}) {
-    // Each feature's result holds on screen for a moment before the next one starts.
-    await sleep(500);
+    await sleep(resultHoldBeforeBeat);
     beats.push({ slug, t: now() });
-    // Cap's zoom starts a new framing here, so one feature's framing never stretches over the next,
-    // unless the feature continues in the place, and the framing, where the previous one ended.
-    if (epoch && !steady && !continues) actions.push({ t: now(), action: 'beat' });
+    const startsNewFraming = epoch && !steady && !continues;
+    if (startsNewFraming) actions.push({ t: now(), action: 'beat' });
     await sleep(200);
   }
 
-  // Keyboard work is framed on the caret, and without one on the last pointer action.
-  const pointer = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
+  const lastPointerAction = () => actions.findLast(a => a.action !== 'key' && a.action !== 'ui' && a.x !== undefined);
   const focus = () => {
     if (!epoch) return;
-    const at = evaluate(caret) ?? pointer();
+    const at = evaluate(caret) ?? lastPointerAction();
     if (at) mark(at.x, at.y, { action: 'key' });
   };
 
-  // Waits for `code` to hold, then logs the overlays in view, and anything `shows` returns, as the
-  // check's framing. A check that names what it shows is framed on that alone.
   async function expect(code, message, { shows = '[]', timeout = 15000 } = {}) {
     const boxes = evaluate(`new Promise(resolve => {
       const deadline = Date.now() + ${timeout};
@@ -109,7 +84,6 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     const shell = run('xdotool', ['getmouselocation', '--shell']);
     return ['X', 'Y'].map(axis => Number(shell.match(new RegExp(`^${axis}=(\\d+)`, 'm'))[1]));
   };
-  // An eased pointer move, in screen pixels.
   async function move(x, y, duration = 650) {
     const [fromX, fromY] = location();
     const steps = Math.max(2, Math.round(duration / 25));
@@ -120,12 +94,11 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
       await sleep(Math.max(0, start + duration * i / steps - Date.now()));
     }
   }
-  // Holds each button press for a few frames. Cap polls the pointer every 16 ms and misses instant clicks.
   async function hold(count = 1) {
     for (let i = 0; i < count; i++) {
       if (i) await sleep(70);
       run('xdotool', ['mousedown', '1']);
-      await sleep(50);
+      await sleep(clickHoldForCapPointerPolling);
       run('xdotool', ['mouseup', '1']);
     }
   }
@@ -137,16 +110,12 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     if (shift) run('xdotool', ['keyup', 'shift']);
     await sleep(300);
   }
-  // The centre of the element a script returns, in screen pixels.
   const centre = element => evaluate(`(() => {
     const r = (${element}).getBoundingClientRect();
     return { x: Math.round((r.x + r.width / 2) * devicePixelRatio), y: Math.round((r.y + r.height / 2) * devicePixelRatio) + ${offset()} };
   })()`);
   const clickOn = (element, options) => clickAt(centre(element), options);
 
-  // A token in the editor's visible lines, found from the start of `line`'s text: its centre, or with
-  // `end` the position just after it. Rendered text ranges rather than fixed coordinates, so this
-  // works at any scale.
   function tokenPoint(line, token, { occurrence = 0, end = false } = {}) {
     return evaluate(`(() => {
       const normalize = s => s.replaceAll('\\u00a0', ' ');
@@ -174,10 +143,6 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     })()`);
   }
 
-  // The pointer stays visible while typing, so it moves aside first, into the nearest negative
-  // space of the editor under `from` (the pointer by default): clear of text, outside the area
-  // around `from` where suggestion lists, quick fixes and hovers open, and preferably below and to
-  // the right of it.
   async function aside(from) {
     const [x, y] = from ? [from.x, from.y] : location();
     const target = evaluate(`(() => {
@@ -193,26 +158,21 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
         return { top: r.top, bottom: r.bottom, end: text ? text.getBoundingClientRect().right : -Infinity };
       });
       const clear = (x, y, gap) => lines.every(l => l.bottom < y - gap || l.top > y + gap || l.end + 24 < x);
-      const popups = (x, y) => x > px - 40 && x < px + 520 && y > py - 80 && y < py + 260;
-      const [x0, y0] = [px + 160, py + 200];
+      const wherePopupsOpen = (x, y) => x > px - 40 && x < px + 520 && y > py - 80 && y < py + 260;
+      const [preferredX, preferredY] = [px + 160, py + 200];
       const candidates = [];
       for (let y = bounds.top + 24; y <= bounds.bottom - 40; y += 12)
         for (let x = bounds.left + 24; x <= bounds.right - 40; x += 24)
-          if (!popups(x, y)) candidates.push([x, y]);
+          if (!wherePopupsOpen(x, y)) candidates.push([x, y]);
       // Points above or left of the caret count as further away.
-      const cost = ([x, y]) => Math.hypot(x - x0, y - y0) + (y < py + 24 ? 400 : 0) + (x < px ? 400 : 0);
+      const cost = ([x, y]) => Math.hypot(x - preferredX, y - preferredY) + (y < py + 24 ? 400 : 0) + (x < px ? 400 : 0);
       const [x, y] = [36, 12].map(gap => candidates.filter(([x, y]) => clear(x, y, gap)).sort((a, b) => cost(a) - cost(b))[0])
-        .find(Boolean) ?? [Math.min(x0, bounds.right - 40), Math.min(y0, bounds.bottom - 40)];
+        .find(Boolean) ?? [Math.min(preferredX, bounds.right - 40), Math.min(preferredY, bounds.bottom - 40)];
       return { x: Math.round(x * devicePixelRatio), y: Math.round(y * devicePixelRatio) };
     })()`);
     await move(target.x, target.y, 300);
   }
 
-  // One swift, eased scroll that ends with `line` (1-based) at fraction `at` of the visible editor's
-  // height, or as near as the ends of the file allow. The page animates it itself, a wheel event per
-  // frame, with the editor's own smooth scrolling off so that each event applies at once. Monaco
-  // scrolls a synthetic wheel event's wheelDeltaY / 120 × 50 pixels, and Chrome sets wheelDeltaY to
-  // the event's deltaY.
   async function smoothScroll(line, at = 0.45, duration = 700) {
     evaluate(`new Promise(resolve => {
       const scrollable = [...document.querySelectorAll('.monaco-editor .monaco-scrollable-element.editor-scrollable')]
@@ -226,9 +186,10 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
           .sort((a, b) => a[1].top - b[1].top)[0];
         return r.top + (${line} - number + 0.5) * r.height - view.top - ${at} * view.height;
       };
+      const [wheelDeltaPerNotch, monacoPixelsPerNotch] = [120, 50];
       const wheel = pixels => {
         const r = scrollable.getBoundingClientRect();
-        scrollable.dispatchEvent(new WheelEvent('wheel', { deltaY: -pixels * 120 / 50, deltaMode: 0, bubbles: true,
+        scrollable.dispatchEvent(new WheelEvent('wheel', { deltaY: -pixels * wheelDeltaPerNotch / monacoPixelsPerNotch, deltaMode: 0, bubbles: true,
           cancelable: true, clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 }));
       };
       const distance = offset(), started = performance.now();
@@ -246,16 +207,19 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     await sleep(300);
   }
 
-  // Typing that continues at the caret, without moving the pointer aside.
   async function keys(text, delay = 85) {
     focus();
     run('xdotool', ['type', '--clearmodifiers', '--delay', String(delay), text]);
     await sleep(300);
   }
 
-  // Records `action` as the take `name`: the raw export at recorded speed, which the trailer is cut
-  // from, the actions and planner settings beside the Cap project, so `cap.mjs <name>` re-exports
-  // it, the pacing the trailer reads, a review copy and the app's last accessibility snapshot.
+  async function logRestingCursorShape() {
+    run('xdotool', ['mousemove_relative', '--', '1', '0']);
+    await sleep(50);
+    run('xdotool', ['mousemove_relative', '--', '-1', '0']);
+    await sleep(50);
+  }
+
   async function capture(name, action) {
     const raw = `${tools}/${name}-raw.mp4`;
     const project = `${tools}/cap/${name}.cap`;
@@ -273,12 +237,7 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
     } finally {
       epoch = undefined;
       if (backend === 'cap') {
-        // Cap logs the cursor shape only when the pointer moves. An invisible move just before
-        // stopping, too late to raise a hover, logs the shape the pointer rests in; cap.mjs dates it back.
-        run('xdotool', ['mousemove_relative', '--', '1', '0']);
-        await sleep(50);
-        run('xdotool', ['mousemove_relative', '--', '-1', '0']);
-        await sleep(50);
+        await logRestingCursorShape();
         cap.stop(recording);
       } else {
         recording.stdin.end('q\n');
@@ -291,20 +250,17 @@ export function recorder({ session, cdp, overlays, caret, chrome = { top: 0, bot
       writeFileSync(`${project}/iris-planner.json`, JSON.stringify(planner));
       const rendered = cap.render(project, actions, raw, { planner });
       console.log(JSON.stringify(rendered));
-      // The trailer's pacing, on the timeline of the raw export: where the scripted work begins and
-      // ends, each feature's beat, and the captions.
-      const align = t => t + rendered.shift;
+      const onRawExportTimeline = t => t + rendered.shift;
       writeFileSync(`${output}/${name}.pace.json`, JSON.stringify({
-        first: align(actions[0]?.t ?? 0),
-        last: align(actions.at(-1)?.t ?? 0),
-        beats: beats.map(({ slug, t }) => ({ slug, t: align(t) })),
-        captions: captions.map(caption => ({ ...caption, t: align(caption.t) })),
+        first: onRawExportTimeline(actions[0]?.t ?? 0),
+        last: onRawExportTimeline(actions.at(-1)?.t ?? 0),
+        beats: beats.map(({ slug, t }) => ({ slug, t: onRawExportTimeline(t) })),
+        captions: captions.map(caption => ({ ...caption, t: onRawExportTimeline(caption.t) })),
       }, null, 2));
     }
     run('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-an',
-      // Slow the interactions, then hold the final frame for one extra second.
-      '-vf', `setpts=(PTS-STARTPTS)/${speed},fps=60,tpad=stop_mode=clone:stop_duration=1`,
-      '-c:v', 'libx264', '-preset', 'slow', '-crf', String(crf), '-pix_fmt', 'yuv420p',
+      '-vf', cap.slowWithFinalFrameHold(reviewSpeed),
+      '-c:v', 'libx264', '-preset', 'slow', '-crf', String(reviewCrf), '-pix_fmt', 'yuv420p',
       '-movflags', '+faststart', `${output}/${name}.mp4`]);
     writeFileSync(`${output}/${name}.txt`, browser('snapshot', '-i'));
     console.log(`Recorded ${name}`);
