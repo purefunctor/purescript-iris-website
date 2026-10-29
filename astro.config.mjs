@@ -75,6 +75,7 @@ export default defineConfig({
         "react-aria-components/Tooltip",
         "es-module-lexer/js",
         "@jridgewell/trace-mapping",
+        "jotai",
         ...playgroundMonacoModules,
       ],
     },

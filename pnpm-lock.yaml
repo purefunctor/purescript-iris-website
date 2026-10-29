@@ -142,6 +142,9 @@ importers:
       inter-ui:
         specifier: 4.1.1
         version: 4.1.1
+      jotai:
+        specifier: 3.0.1
+        version: 3.0.1(@types/react@19.2.18)(react@18.3.1)
       monaco-editor:
         specifier: 0.57.0
         version: 0.57.0
@@ -2179,6 +2182,18 @@ packages:
   jackspeak@4.2.3:
     resolution: {integrity: sha512-ykkVRwrYvFm1nb2AJfKKYPr0emF6IiXDYUaFx4Zn9ZuIH7MrzEZ3sD5RlqGXNRpHtvUHJyOnCEFxOlNDtGo7wg==}
     engines: {node: 20 || >=22}
+
+  jotai@3.0.1:
+    resolution: {integrity: sha512-6tS7wY9otdiNp26Wqb/1ds3OuVJVoV+tJlN4hpLrYmfFf/t9bauVt+zKBNSpS5qSl5h6GieVQ+OknVraZX+udQ==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      react: '>=18.0.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -5237,6 +5252,11 @@ snapshots:
   jackspeak@4.2.3:
     dependencies:
       '@isaacs/cliui': 9.0.0
+
+  jotai@3.0.1(@types/react@19.2.18)(react@18.3.1):
+    optionalDependencies:
+      '@types/react': 19.2.18
+      react: 18.3.1
 
   js-tokens@4.0.0: {}
 
