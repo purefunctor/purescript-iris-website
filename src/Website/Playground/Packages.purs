@@ -2,39 +2,24 @@ module Website.Playground.Packages (packagesPanel) where
 
 import Prelude
 
+import Data.Array (filter, length, null, sortBy)
+import Data.Maybe (isJust)
+import Data.Ord (comparing)
+import Data.Set (Set)
+import Data.Set as Set
+import Data.String (Pattern(..), contains, localeCompare, stripPrefix, toLower, trim)
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
+import Effect.Unsafe (unsafePerformEffect)
 import Iris.StyleX as StyleX
-import React.Basic (JSX, ReactComponent, element)
-import Website.Playground.Types (Packages)
-
-foreign import packagesImpl ::
-  ReactComponent
-    { packages :: Packages
-    , busy :: Boolean
-    , activate :: String -> Effect Unit
-    , deactivate :: String -> Effect Unit
-    , rootClassName :: String
-    , searchClassName :: String
-    , inputClassName :: String
-    , filtersClassName :: String
-    , filterClassName :: String
-    , thumbClassName :: String
-    , thumbEndClassName :: String
-    , noteClassName :: String
-    , listClassName :: String
-    , rowClassName :: String
-    , nameClassName :: String
-    , versionClassName :: String
-    , toggleClassNames ::
-        { track :: String
-        , trackOn :: String
-        , knob :: String
-        , knobOn :: String
-        , icon :: String
-        , mark :: String
-        , markOn :: String
-        }
-    }
+import React.Basic (JSX, ReactComponent)
+import React.Basic.Events (EventFn, SyntheticEvent, handler, handler_, unsafeEventFn)
+import React.Basic.Hooks as Hooks
+import Unsafe.Coerce (unsafeCoerce)
+import Website.Jotai as Jotai
+import Website.Playground.Types (Available, Packages)
+import Yoga.React.DOM as DOM
+import Yoga.React.DOM.Attributes.Target (targetBlank)
 
 styles = StyleX.create
   { root: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
@@ -214,36 +199,174 @@ styles = StyleX.create
 
 styleProps = StyleX.recordProps styles
 
+queryAtom :: Jotai.Atom String
+queryAtom = unsafePerformEffect (Jotai.atom "")
+
+showAllAtom :: Jotai.Atom Boolean
+showAllAtom = unsafePerformEffect (Jotai.atom false)
+
+rowsKeptAfterDeactivatingAtom :: Jotai.Atom (Set String)
+rowsKeptAfterDeactivatingAtom = unsafePerformEffect (Jotai.atom Set.empty)
+
 packagesPanel ::
-  { packages :: Packages
-  , busy :: Boolean
-  , activate :: String -> Effect Unit
-  , deactivate :: String -> Effect Unit
-  } -> JSX
-packagesPanel { packages, busy, activate, deactivate } = element packagesImpl
-  { packages
-  , busy
-  , activate
-  , deactivate
-  , rootClassName: styleProps.root.className
-  , searchClassName: styleProps.search.className
-  , inputClassName: styleProps.input.className
-  , filtersClassName: styleProps.filters.className
-  , filterClassName: styleProps.filter.className
-  , thumbClassName: styleProps.thumb.className
-  , thumbEndClassName: (StyleX.props [ styles.thumb, styles.thumbEnd ]).className
-  , noteClassName: styleProps.note.className
-  , listClassName: styleProps.list.className
-  , rowClassName: styleProps.row.className
-  , nameClassName: styleProps.name.className
-  , versionClassName: styleProps.version.className
-  , toggleClassNames:
-      { track: styleProps.track.className
-      , trackOn: (StyleX.props [ styles.track, styles.trackOn ]).className
-      , knob: styleProps.knob.className
-      , knobOn: (StyleX.props [ styles.knob, styles.knobOn ]).className
-      , icon: styleProps.icon.className
-      , mark: styleProps.mark.className
-      , markOn: (StyleX.props [ styles.mark, styles.markOn ]).className
-      }
+  ReactComponent
+    { packages :: Packages
+    , busy :: Boolean
+    , activate :: String -> Effect Unit
+    , deactivate :: String -> Effect Unit
+    }
+packagesPanel = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPackages" \props -> Hooks.do
+  query /\ setQuery <- Jotai.useAtom queryAtom
+  showAll /\ setShowAll <- Jotai.useAtom showAllAtom
+  rowsKept /\ setRowsKept <- Jotai.useAtom rowsKeptAfterDeactivatingAtom
+  let
+    found :: Array Available
+    found = search query props.packages.available
+
+    isActive :: Available -> Boolean
+    isActive entry =
+      entry.status == "active" || entry.status == "dependency" || Set.member entry.name rowsKept
+
+    matches :: Array Available
+    matches = if showAll then found else filter isActive found
+
+    showOnly :: Boolean -> Effect Unit
+    showOnly all = do
+      setShowAll (const all)
+      setRowsKept (const Set.empty)
+
+    deactivateKeepingShownRows :: String -> Effect Unit
+    deactivateKeepingShownRows name = do
+      unless showAll do
+        setRowsKept (_ `Set.union` Set.fromFoldable (map _.name matches))
+      props.deactivate name
+  pure $ DOM.div styleProps.root
+    [ DOM.div styleProps.search
+        [ DOM.input
+            { "aria-label": "Search packages"
+            , className: styleProps.input.className
+            , onChange: handler targetValue \value -> setQuery (const value)
+            , placeholder: "Search "
+                <> show (if showAll then length props.packages.available else props.packages.active)
+                <> " packages"
+            , spellCheck: false
+            , type: "search"
+            , value: query
+            }
+        , DOM.div
+            { "aria-label": "Show packages"
+            , className: styleProps.filters.className
+            , role: "group"
+            }
+            [ DOM.span
+                { "aria-hidden": true
+                , className:
+                    ( StyleX.props [ styles.thumb, StyleX.conditional showAll styles.thumbEnd ]
+                    ).className
+                }
+                ([] :: Array JSX)
+            , filterButton (not showAll) (showOnly false) ("Active " <> show props.packages.active)
+            , filterButton showAll (showOnly true)
+                ("All " <> show (length props.packages.available))
+            ]
+        ]
+    , DOM.ul { "aria-label": "Packages", className: styleProps.list.className }
+        ( map
+            ( packageRow
+                { busy: props.busy
+                , activate: props.activate
+                , deactivate: deactivateKeepingShownRows
+                }
+            )
+            matches
+        )
+    , if null matches
+      then DOM.p styleProps.note
+        if null found
+        then "No package in this package set matches."
+        else "No active package matches; show all packages to activate one."
+      else mempty
+    ]
+
+search :: String -> Array Available -> Array Available
+search query available =
+  let
+    needle :: String
+    needle = toLower (trim query)
+
+    startsWith :: Available -> Boolean
+    startsWith entry = isJust (stripPrefix (Pattern needle) entry.name)
+
+    byPrefixThenName :: Available -> Available -> Ordering
+    byPrefixThenName a b = comparing (not <<< startsWith) a b <> localeCompare a.name b.name
+  in
+    if needle == ""
+    then available
+    else sortBy byPrefixThenName (filter (\entry -> contains (Pattern needle) entry.name) available)
+
+filterButton :: Boolean -> Effect Unit -> String -> JSX
+filterButton pressed onPress label = DOM.button
+  { "aria-pressed": pressed
+  , className: styleProps.filter.className
+  , onClick: handler_ onPress
+  , type: "button"
   }
+  label
+
+type PackageActions =
+  { busy :: Boolean, activate :: String -> Effect Unit, deactivate :: String -> Effect Unit }
+
+packageRow :: PackageActions -> Available -> JSX
+packageRow actions entry = DOM.li { className: styleProps.row.className, key: entry.name }
+  [ DOM.a
+      { className: styleProps.name.className
+      , href: "https://pursuit.purescript.org/packages/purescript-"
+          <> entry.name
+          <> "/"
+          <> entry.version
+      , rel: "noreferrer"
+      , target: targetBlank
+      , title: entry.name
+      }
+      entry.name
+  , DOM.span styleProps.version entry.version
+  , packageToggle actions entry
+  ]
+
+targetValue :: EventFn SyntheticEvent String
+targetValue = unsafeEventFn \event ->
+  (unsafeCoerce event :: { target :: { value :: String } }).target.value
+
+packageToggle :: PackageActions -> Available -> JSX
+packageToggle { busy, activate, deactivate } entry =
+  let
+    locked :: Boolean
+    locked = entry.status == "dependency"
+
+    on :: Boolean
+    on = locked || entry.status == "active"
+  in
+    DOM.button
+      { "aria-checked": on
+      , "aria-label": entry.name
+      , className: (StyleX.props [ styles.track, StyleX.conditional on styles.trackOn ]).className
+      , disabled: busy || locked
+      , onClick: handler_ ((if on then deactivate else activate) entry.name)
+      , role: "switch"
+      , title: if locked then "Required by " <> entry.requiredBy else ""
+      , type: "button"
+      }
+      ( DOM.span
+          { className: (StyleX.props [ styles.knob, StyleX.conditional on styles.knobOn ]).className
+          }
+          ( DOM.createBuiltinElement "svg"
+              { "aria-hidden": true, className: styleProps.icon.className, viewBox: "0 0 12 12" }
+              [ DOM.createBuiltinElement "path"
+                  { className:
+                      (StyleX.props [ styles.mark, StyleX.conditional on styles.markOn ]).className
+                  , d: if on then "M2.5 6.5 L5 9 M5 9 L9.5 3" else "M3 3 L9 9 M9 3 L3 9"
+                  }
+                  ([] :: Array JSX)
+              ]
+          )
+      )

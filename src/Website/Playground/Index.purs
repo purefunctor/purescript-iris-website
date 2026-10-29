@@ -881,7 +881,7 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
         , outputBadge: ""
         , settings: sourceMapsSwitch state actions
         , javascript: javascriptPanel state generated
-        , packages: packagesPanel
+        , packages: element packagesPanel
             { packages: state.packages
             , busy: state.server.status == "starting" || state.server.status == "restarting"
             , activate: actions.activatePackage
