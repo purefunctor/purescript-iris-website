@@ -21,34 +21,49 @@ const CORE_OWNERS = ["purescript", "purescript-contrib"];
 const CORE_PACKAGES = Object.keys(index.packages).filter((name) => CORE_OWNERS.includes(index.packages[name].owner));
 const templatePackages = (template) => [...CORE_PACKAGES, ...template.packages];
 const PACKAGES_OF_PROJECTS_SAVED_BEFORE_PACKAGE_CHOICE = TEMPLATES.flatMap(templatePackages);
+const EMBEDDED_EDITOR = {
+  fontSize: 13,
+  lineHeight: 20,
+  lineNumbersMinChars: 2,
+  lineDecorationsWidth: 10,
+  folding: false,
+  overviewRulerLanes: 0,
+  hideCursorInOverviewRuler: true,
+  wordWrap: "on",
+  tabFocusMode: true,
+  padding: { top: 10, bottom: 10 },
+};
 
 
-export async function createPlayground({ editor: host, generated: generatedHost, frames, theme, onChange }) {
+export async function createPlayground({ editor: host, generated: generatedHost, frames, theme, embedded, onChange }) {
   const query = new URLSearchParams(location.search);
   const shared = await decodeProject(location.hash).catch(() => null);
-  const project = shared ?? loadSavedProject() ?? { files: TEMPLATES[0].files, packages: templatePackages(TEMPLATES[0]) };
+  const project = shared ?? (embedded ? null : loadSavedProject()) ?? { files: TEMPLATES[0].files, packages: templatePackages(TEMPLATES[0]), template: TEMPLATES[0].id };
+  const sidebarOverlaysEditor = embedded ? "all" : SIDEBAR_OVERLAYS_EDITOR;
   if (shared) history.replaceState(null, "", location.pathname + location.search);
 
   const paths = project.files.map(({ path }) => path);
-  const open = (project.open ?? paths).filter((path) => paths.includes(path));
+  const listed = (project.open ?? paths).filter((path) => paths.includes(path));
+  const open = embedded && listed.length === 0 ? [paths.includes("src/Main.purs") ? "src/Main.purs" : paths[0]] : listed;
   const active = open.includes(project.active) ? project.active : open[0] ?? null;
   let activated = (project.packages ?? PACKAGES_OF_PROJECTS_SAVED_BEFORE_PACKAGE_CHOICE).filter((name, at, names) => index.packages[name] && names.indexOf(name) === at);
   let installed = new Set();
-  const panelSize = ifStorageAvailable(() => JSON.parse(localStorage.getItem(PANEL_SIZE_STORAGE_KEY))) ?? {};
+  const preference = (action) => (embedded ? null : ifStorageAvailable(action));
+  const panelSize = preference(() => JSON.parse(localStorage.getItem(PANEL_SIZE_STORAGE_KEY))) ?? {};
   let state = {
     phase: "loading",
     files: paths.map((path) => ({ path, errors: 0, warnings: 0 })),
     open,
     active,
     viewing: null,
-    sidebar: !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
-    sidebarWidth: Number(ifStorageAvailable(() => localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY))) || 240,
+    sidebar: !matchMedia(sidebarOverlaysEditor).matches,
+    sidebarWidth: Number(preference(() => localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY))) || 240,
     panel: true,
     panelWidth: Number(panelSize.width) || 380,
     panelHeight: Number(panelSize.height) || Math.round(innerHeight * 0.4),
     panelTab: "output",
     console: true,
-    consoleHeight: Number(ifStorageAvailable(() => localStorage.getItem(CONSOLE_HEIGHT_STORAGE_KEY))) || 0,
+    consoleHeight: Number(preference(() => localStorage.getItem(CONSOLE_HEIGHT_STORAGE_KEY))) || 0,
     server: { kind: null, version: null, revision: null, status: "starting", message: null },
     packages: { available: [], active: 0, packageSet: index.packageSet.version, loaded: 0, total: 0, bytes: 0, totalBytes: 0 },
     run: { status: "idle", lines: [], view: false },
@@ -57,6 +72,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     generated: { status: "idle", message: "Open a PureScript file to see its JavaScript.", mapped: false },
     templates: TEMPLATES.map(({ id, name, description }) => ({ id, name, description })),
     shared: false,
+    template: project.template ?? null,
   };
   const setState = (update) => {
     state = { ...state, ...update(state) };
@@ -90,8 +106,14 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   };
 
   const uriOf = (path) => `${PROJECT}${path}`;
+  const framesOf = (text, sourceMaps) => {
+    const frames = stackFrames(text, runMaps, sourceMaps);
+    if (!embedded) return frames;
+    return frames.map((frame) => (models.has(frame.uri.slice(PROJECT.length)) && frame.uri.startsWith(PROJECT) ? frame : { ...frame, mapped: false }));
+  };
   const save = () => {
     clearTimeout(saveTimer);
+    if (embedded) return;
     saveTimer = setTimeout(() => saveProject(snapshot()), 400);
   };
   const snapshot = () => ({
@@ -211,7 +233,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
 
   const view = (uri, selection) => {
     const model = monaco.editor.getModel(monaco.Uri.parse(uri));
-    if (!model) return false;
+    if (!model || (embedded && !uri.startsWith(PROJECT) && model !== editor.getModel())) return false;
     if (uri.startsWith(PROJECT)) {
       openFile(uri.slice(PROJECT.length));
     } else {
@@ -236,7 +258,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
   const serially = (action) => (serverWork = serverWork.then(action));
 
   const createEditorView = () => {
-    editor = createEditor(host, { model: null });
+    editor = createEditor(host, { model: null, ...(embedded ? EMBEDDED_EDITOR : {}) });
     generated = createGeneratedOutput({
       host: generatedHost,
       source: editor,
@@ -248,6 +270,17 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     });
     providers = registerProviders({ client: () => client, ensureModel, capabilities: client.capabilities });
     show(state.active);
+    if (embedded) revealMain();
+  };
+
+  const revealMain = () => {
+    const main = editor.getModel()?.findNextMatch("^main\\b", { lineNumber: 1, column: 1 }, true, true, null, false);
+    if (!main) return;
+    const lowest = editor.getScrollHeight() - editor.getLayoutInfo().height;
+    let line = main.range.startLineNumber;
+    while (line > 1 && editor.getTopForLineNumber(line) > lowest) line--;
+    editor.setPosition({ lineNumber: main.range.startLineNumber, column: 1 });
+    editor.setScrollTop(editor.getTopForLineNumber(line));
   };
 
   const start = () => serially(async () => {
@@ -259,8 +292,10 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     installed = new Set(info.installed);
     publishPackages();
     openEveryDocument();
-    if (!editor) createEditorView();
+    const first = !editor;
+    if (first) createEditorView();
     setState(() => ({ phase: "ready" }));
+    if (first && embedded) run();
   });
 
   const activate = (packages) => {
@@ -270,7 +305,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     publishPackages();
     serially(async () => {
       const names = activePackages();
-      if (serverPackageList === null || names.join() === serverPackageList) return;
+      if (serverPackageList === null || (names.join() === serverPackageList && state.server.status !== "failed")) return;
       const info = await client.restart(names);
       if (!info) return;
       serverPackageList = names.join();
@@ -286,7 +321,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       open: current.open.includes(path) ? current.open : [...current.open, path],
       active: path,
       viewing: null,
-      sidebar: current.sidebar && !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
+      sidebar: current.sidebar && !matchMedia(sidebarOverlaysEditor).matches,
     }));
     save();
   };
@@ -301,9 +336,11 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     save();
   };
 
+  let templateLoads = 0;
   const loadTemplate = (id) => {
     const template = TEMPLATES.find((candidate) => candidate.id === id);
     if (!template) return;
+    if (embedded && id === state.template && state.server.status !== "failed") return setState((current) => ({ sidebar: current.sidebar && !matchMedia(sidebarOverlaysEditor).matches }));
     runGeneration++;
     runner.stop();
     runMaps = new Map();
@@ -315,11 +352,25 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       open: paths,
       active: paths[0],
       viewing: null,
-      sidebar: current.sidebar && !matchMedia(SIDEBAR_OVERLAYS_EDITOR).matches,
+      sidebar: current.sidebar && !matchMedia(sidebarOverlaysEditor).matches,
       run: { status: "idle", lines: [], view: false },
+      template: id,
     }));
     show(paths[0]);
     activate(templatePackages(template));
+    if (embedded) {
+      revealMain();
+      const load = ++templateLoads;
+      serially(() => {
+        if (load !== templateLoads) return;
+        if (state.server.status === "ready") return run();
+        const text = `Could not start the language server for ${template.name}: ${state.server.message ?? "unknown error"}. Pick the example again to retry.`;
+        setState(() => ({
+          run: { status: "failed", lines: [{ kind: "error", text }], view: false },
+          outputStale: false,
+        }));
+      });
+    }
   };
 
   const run = async () => {
@@ -378,7 +429,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       if (event.type === "view") return { run: { ...current.run, view: true }, panel: true, panelTab: "output" };
       if (event.type === "done") return { run: { ...current.run, status: "done" } };
       const kind = event.type === "error" || event.level === "error" ? "error" : event.level === "warn" ? "warning" : "log";
-      const frames = /iris-playground:\/\/\//.test(event.text) ? stackFrames(event.text, runMaps, current.sourceMaps) : null;
+      const frames = /iris-playground:\/\/\//.test(event.text) ? framesOf(event.text, current.sourceMaps) : null;
       const lines = [...current.run.lines, { kind, text: event.text, frames }].slice(-MAX_LINES);
       return { run: { ...current.run, status: event.type === "error" ? "failed" : current.run.status, lines } };
     });
@@ -393,13 +444,13 @@ export async function createPlayground({ editor: host, generated: generatedHost,
     },
     toggleSidebar: () => setState((current) => ({ sidebar: !current.sidebar })),
     resizeSidebar: (width) => {
-      ifStorageAvailable(() => localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(width)));
+      preference(() => localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(width)));
       setState(() => ({ sidebar: true, sidebarWidth: width }));
     },
     closeSidebar: () => setState(() => ({ sidebar: false })),
     togglePanel: () => setState((current) => ({ panel: !current.panel })),
     resizePanel: ({ width, height }) => {
-      ifStorageAvailable(() => localStorage.setItem(PANEL_SIZE_STORAGE_KEY, JSON.stringify({ width, height })));
+      preference(() => localStorage.setItem(PANEL_SIZE_STORAGE_KEY, JSON.stringify({ width, height })));
       setState(() => ({ panel: true, panelWidth: width, panelHeight: height }));
     },
     closePanel: () => setState(() => ({ panel: false })),
@@ -408,7 +459,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       setState((current) => {
         const sourceMaps = !current.sourceMaps;
         const lines = current.run.lines.map((line) =>
-          line.frames ? { ...line, frames: stackFrames(line.text, runMaps, sourceMaps) } : line,
+          line.frames ? { ...line, frames: framesOf(line.text, sourceMaps) } : line,
         );
         return { sourceMaps, run: { ...current.run, lines } };
       }),
@@ -420,7 +471,7 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       view(uri, { lineNumber: line, column });
     },
     resizeConsole: (height) => {
-      ifStorageAvailable(() => localStorage.setItem(CONSOLE_HEIGHT_STORAGE_KEY, String(height)));
+      preference(() => localStorage.setItem(CONSOLE_HEIGHT_STORAGE_KEY, String(height)));
       setState(() => ({ console: true, consoleHeight: height }));
     },
     toggleConsole: () => setState((current) => ({ console: !current.console })),
@@ -480,6 +531,13 @@ export async function createPlayground({ editor: host, generated: generatedHost,
       history.replaceState(null, "", url);
       setState(() => ({ shared: true }));
       setTimeout(() => setState(() => ({ shared: false })), 2500);
+    },
+    openFullPlayground: async () => {
+      const opened = window.open("", "_blank");
+      const url = `/playground/${await encodeProject(snapshot())}`;
+      if (!opened) return window.open(url, "_blank", "noopener");
+      opened.location.href = url;
+      opened.opener = null;
     },
     loadTemplate,
     activatePackage: (name) => activate([...activated, name]),

@@ -23,11 +23,12 @@ const initialState = {
   generated: { status: "idle", message: "", mapped: false },
   templates: [],
   shared: false,
+  template: null,
 };
 
 const stateAtom = atom(initialState);
 
-export const usePlaygroundImpl = (theme) => () => {
+export const usePlaygroundImpl = ({ theme, embedded }) => () => {
   const editor = useRef(null);
   const generated = useRef(null);
   const frames = useRef(null);
@@ -44,6 +45,7 @@ export const usePlaygroundImpl = (theme) => () => {
           generated: generated.current,
           frames: frames.current,
           theme,
+          embedded,
           onChange: setState,
         }),
       )
@@ -92,6 +94,15 @@ export const usePlaygroundImpl = (theme) => () => {
       stop: () => call("stop"),
       clearOutput: () => call("clearOutput"),
       share: () => call("share"),
+      openFullPlayground: (event) => {
+        if (event.button > 1) return;
+        if (!controller.current) {
+          event.currentTarget.href = `/playground/${location.hash}`;
+          return;
+        }
+        event.preventDefault();
+        call("openFullPlayground");
+      },
       loadTemplate: (id) => () => call("loadTemplate", id),
       activatePackage: (name) => () => call("activatePackage", name),
       deactivatePackage: (name) => () => call("deactivatePackage", name),

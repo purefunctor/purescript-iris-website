@@ -71,8 +71,8 @@ type Resizable =
   , handleProps :: HandleProps
   }
 
-usePlayground :: Foreign -> Hook UsePlayground View
-usePlayground theme = unsafeHook (usePlaygroundImpl theme)
+usePlayground :: { theme :: Foreign, embedded :: Boolean } -> Hook UsePlayground View
+usePlayground options = unsafeHook (usePlaygroundImpl options)
 
 useTabListOverflow :: String -> Hook UseTabListOverflow (Ref (Nullable Element))
 useTabListOverflow selected = unsafeHook (useTabListOverflowImpl selected)
@@ -103,7 +103,7 @@ useFollowOutput ::
   Hook UseFollowOutput { scroller :: Ref (Nullable Element), onScroll :: EventHandler }
 useFollowOutput = unsafeHook useFollowOutputImpl
 
-foreign import usePlaygroundImpl :: Foreign -> Effect View
+foreign import usePlaygroundImpl :: { theme :: Foreign, embedded :: Boolean } -> Effect View
 
 foreign import useTabListOverflowImpl :: String -> Effect (Ref (Nullable Element))
 

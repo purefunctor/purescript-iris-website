@@ -3,7 +3,8 @@ module Website.Breakpoints (breakpoints) where
 import Iris.StyleX as StyleX
 
 breakpoints = StyleX.defineConsts
-  { upTo480: "@media (max-width: 480px)"
+  { upTo400: "@media (max-width: 400px)"
+  , upTo480: "@media (max-width: 480px)"
   , upTo600: "@media (max-width: 600px)"
   , upTo720: "@media (max-width: 720px)"
   , upTo800: "@media (max-width: 800px)"

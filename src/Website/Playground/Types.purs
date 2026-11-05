@@ -19,6 +19,7 @@ import Prelude
 import Data.Nullable (Nullable)
 import Effect (Effect)
 import React.Basic (Ref)
+import React.Basic.Events (EventHandler)
 import Web.DOM.Element (Element)
 
 type State =
@@ -43,6 +44,7 @@ type State =
   , generated :: { status :: String, message :: String, mapped :: Boolean }
   , templates :: Array Template
   , shared :: Boolean
+  , template :: Nullable String
   }
 
 type File = { path :: String, errors :: Int, warnings :: Int }
@@ -100,6 +102,7 @@ type Actions =
   , stop :: Effect Unit
   , clearOutput :: Effect Unit
   , share :: Effect Unit
+  , openFullPlayground :: EventHandler
   , loadTemplate :: String -> Effect Unit
   , activatePackage :: String -> Effect Unit
   , deactivatePackage :: String -> Effect Unit

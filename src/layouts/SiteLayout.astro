@@ -9,9 +9,10 @@ interface Props {
   image?: string;
   imageAlt?: string;
   application?: boolean;
+  player?: { url: string; image: string; imageAlt: string };
 }
 
-const { title, description, image = "/og.png", imageAlt = "The IRIS logo and wordmark over a field of spectrum-colored dots", application = false } = Astro.props;
+const { title, description, image = "/og.png", imageAlt = "The IRIS logo and wordmark over a field of spectrum-colored dots", application = false, player } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site!);
 const imageUrl = new URL(image, Astro.site!);
 ---
@@ -38,11 +39,20 @@ const imageUrl = new URL(image, Astro.site!);
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={imageAlt} />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content={player ? "player" : "summary_large_image"} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={imageUrl.href} />
-    <meta name="twitter:image:alt" content={imageAlt} />
+    <meta name="twitter:image" content={new URL(player?.image ?? image, Astro.site!).href} />
+    <meta name="twitter:image:alt" content={player?.imageAlt ?? imageAlt} />
+    {
+      player && (
+        <>
+          <meta name="twitter:player" content={new URL(player.url, Astro.site!).href} />
+          <meta name="twitter:player:width" content="480" />
+          <meta name="twitter:player:height" content="480" />
+        </>
+      )
+    }
     <slot name="head" />
   </head>
   <body>

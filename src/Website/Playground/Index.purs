@@ -1,4 +1,4 @@
-module Website.Playground.Index (component) where
+module Website.Playground.Index (component, output, runButton) where
 
 import Prelude
 
@@ -866,7 +866,7 @@ component = unsafePerformEffect $ Hooks.reactComponent "Playground" \{ theme } -
 
 workspace :: ReactComponent { theme :: Foreign }
 workspace = unsafePerformEffect $ Hooks.reactComponent "PlaygroundWorkspace" \{ theme } -> Hooks.do
-  view <- usePlayground theme
+  view <- usePlayground { theme, embedded: false }
   pure (playground view)
 
 playground :: View -> JSX
