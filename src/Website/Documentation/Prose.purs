@@ -21,6 +21,7 @@ styles = StyleX.create
       }
   , note:
       { backgroundColor: "var(--surface-1)"
+      , boxShadow: "inset 2px 0 0 var(--accent)"
       , display: "flex"
       , flexDirection: "column"
       , gap: 12
