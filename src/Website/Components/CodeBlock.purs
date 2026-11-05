@@ -40,6 +40,8 @@ styles = StyleX.create
   { root:
       { borderStyle: "solid"
       , borderWidth: 1
+      , display: "flex"
+      , flexDirection: "column"
       , minWidth: 0
       , overflow: "hidden"
       , position: "relative"
@@ -78,6 +80,7 @@ styles = StyleX.create
   , pre:
       { color: "var(--syn-text)"
       , fontFamily: "var(--font-mono)"
+      , flexGrow: 1
       , fontSize: 13
       , lineHeight: 1.62
       , margin: 0

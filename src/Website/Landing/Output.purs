@@ -143,24 +143,19 @@ styles = StyleX.create
           [ StyleX.conditionalCase breakpoints.upTo720 "12px" ]
       }
   , panes:
-      { alignItems: "start"
-      , display: "grid"
+      { display: "grid"
       , gap: 16
       , gridTemplateColumns: StyleX.conditionalValue "minmax(0, 1fr) auto minmax(0, 1fr)"
           [ StyleX.conditionalCase breakpoints.upTo960 "minmax(0, 1fr)" ]
       }
   , step:
       { alignItems: "center"
-      , alignSelf:
-          StyleX.conditionalValue "start" [ StyleX.conditionalCase breakpoints.upTo960 "stretch" ]
-      , height:
-          StyleX.conditionalValue "240px" [ StyleX.conditionalCase breakpoints.upTo960 "auto" ]
       , display: "flex"
       , flexDirection:
           StyleX.conditionalValue "column" [ StyleX.conditionalCase breakpoints.upTo960 "row" ]
       , gap: 10
       }
-  , stackedStep: { alignSelf: "stretch", flexDirection: "row", height: "auto" }
+  , stackedStep: { flexDirection: "row" }
   , stepRule:
       { backgroundColor: "var(--border-default)"
       , flexGrow: 1
