@@ -156,6 +156,14 @@ styles = StyleX.create
       , paddingInline: 12
       }
   , socialLink: { width: 44, paddingInline: 0 }
+  , wideOnly:
+      { display:
+          StyleX.conditionalValue "flex" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
+      }
+  , desktopSocial:
+      { display:
+          StyleX.conditionalValue "flex" [ StyleX.conditionalCase breakpoints.upTo1160 "none" ]
+      }
   , actions:
       { alignItems: "center"
       , alignSelf: "stretch"
@@ -325,11 +333,15 @@ siteHeader { contained } navigation =
 siteNav :: { onInstall :: Effect Unit } -> JSX
 siteNav { onInstall } = siteHeader { contained: true }
   [ DOM.nav { className: styleProps.links.className, "aria-label": "Explore Iris" }
-      [ link false "/#benchmarks" "Benchmarks"
+      [ wideLink "/#toolchain" "Toolchain"
+      , wideLink "/#output" "Output"
+      , link false "/#benchmarks" "Benchmarks"
       , link false "/#editor" "Editor"
-      , socialLink "https://github.com/purefunctor/purescript-iris" "Iris on GitHub" Icon.gitHub
-      , socialLink "https://x.com/purefunctor" "purefunctor on X" Icon.xSocial
-      , socialLink "https://bsky.app/profile/purefunctor.me" "purefunctor on Bluesky" Icon.bluesky
+      , desktopSocialLink "https://github.com/purefunctor/purescript-iris" "Iris on GitHub"
+          Icon.gitHub
+      , desktopSocialLink "https://x.com/purefunctor" "purefunctor on X" Icon.xSocial
+      , desktopSocialLink "https://bsky.app/profile/purefunctor.me" "purefunctor on Bluesky"
+          Icon.bluesky
       , documentationLink
       , link false "/playground/" "Playground"
       ]
@@ -342,7 +354,9 @@ siteNav { onInstall } = siteHeader { contained: true }
           , openIcon: element Icon.menu { "aria-hidden": true, focusable: false }
           , closeIcon: element Icon.x { "aria-hidden": true, focusable: false }
           , content:
-              [ link true "/#benchmarks" "Benchmarks"
+              [ link true "/#toolchain" "Toolchain"
+              , link true "/#output" "Output"
+              , link true "/#benchmarks" "Benchmarks"
               , link true "/#editor" "Editor"
               , link true "/playground/" "Playground"
               , link true "/docs/getting-started/" "Documentation"
@@ -394,22 +408,21 @@ siteNav { onInstall } = siteHeader { contained: true }
     }
   spectrumInstallStyles =
     [ styles.link, styles.landingItem, styles.desktopInstall, styles.spectrumInstall ]
-  link mobile href label = NavigationLink.navigationLink
+  link mobile = linkWith [ StyleX.conditional mobile styles.menuItem ] mobile
+  wideLink = linkWith [ styles.wideOnly ] false
+  linkWith extra mobile href label = NavigationLink.navigationLink
     { href
     , className:
-        ( StyleX.props
-            [ styles.link
-            , styles.landingItem
-            , styles.sectionLink
-            , StyleX.conditional mobile styles.menuItem
-            ]
-        ).className
+        (StyleX.props ([ styles.link, styles.landingItem, styles.sectionLink ] <> extra)).className
     , current: false
     , content:
         DOM.span (StyleX.props [ styles.label, StyleX.conditional mobile styles.menuLabel ]) label
     }
-  socialLink href label icon = DOM.a
-    { className: (StyleX.props [ styles.link, styles.landingItem, styles.socialLink ]).className
+  socialLink = socialLinkWith []
+  desktopSocialLink = socialLinkWith [ styles.desktopSocial ]
+  socialLinkWith extra href label icon = DOM.a
+    { className:
+        (StyleX.props ([ styles.link, styles.landingItem, styles.socialLink ] <> extra)).className
     , href
     , rel: "noopener noreferrer"
     , target: targetBlank
