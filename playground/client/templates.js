@@ -317,9 +317,8 @@ import Prelude
 import Data.Array (filter, length, snoc)
 import Data.String (trim)
 import Effect.Aff (Aff)
-import Effect.Class (liftEffect)
 ${HALOGEN_IMPORTS}
-import Web.Event.Event (Event, preventDefault)
+import Web.UIEvent.KeyboardEvent as KeyboardEvent
 
 ${TODO_STYLES}
 
@@ -353,7 +352,7 @@ type Todo = { key :: Int, text :: String, done :: Boolean }
 
 type State = { todos :: Array Todo, draft :: String, next :: Int }
 
-data Action = SetDraft String | Add Event | Toggle Int | Remove Int
+data Action = SetDraft String | Press KeyboardEvent.KeyboardEvent | Add | Toggle Int | Remove Int
 
 todos :: forall query input output. H.Component query input output Aff
 todos = H.mkComponent
@@ -371,14 +370,17 @@ todos = H.mkComponent
   where
   render state = HH.div [ style styleProps.page ]
     [ HH.h1 [ style styleProps.title ] [ HH.text "Halogen todos" ]
-    , HH.form [ style styleProps.form, HE.onSubmit Add ]
+    , HH.div [ style styleProps.form ]
         [ HH.input
             [ style styleProps.input
             , HP.placeholder "What needs doing?"
             , HP.value state.draft
             , HE.onValueInput SetDraft
+            , HE.onKeyDown Press
             ]
-        , HH.button [ style styleProps.key, HP.type_ HP.ButtonSubmit ] [ icon plusIcon, HH.text "Add" ]
+        , HH.button
+            [ style styleProps.key, HP.type_ HP.ButtonButton, HE.onClick \_ -> Add ]
+            [ icon plusIcon, HH.text "Add" ]
         ]
     , HH.ul [ style styleProps.list ] (map item state.todos)
     , HH.p [ style styleProps.remaining ]
@@ -403,9 +405,8 @@ todos = H.mkComponent
 
   handleAction = case _ of
     SetDraft draft -> H.modify_ _ { draft = draft }
-    Add event -> do
-      -- The form only collects the todo; it is never submitted.
-      liftEffect (preventDefault event)
+    Press event -> when (KeyboardEvent.key event == "Enter") (handleAction Add)
+    Add ->
       H.modify_ \state -> case trim state.draft of
         "" -> state
         text -> state
@@ -505,7 +506,8 @@ import React.Basic (JSX, keyed)
 import Foreign.Object as Object
 import React.Basic.DOM as R
 import React.Basic.DOM.SVG as SVG
-import React.Basic.DOM.Events (preventDefault, targetValue)
+import React.Basic.DOM.Events (targetValue)
+import React.Basic.DOM.Events as Events
 import React.Basic.Events (handler, handler_)
 import React.Basic.Hooks (Component, component, useState, (/\))
 import React.Basic.Hooks as React
@@ -585,20 +587,20 @@ mkTodos = component "Todos" \_ -> React.do
     { className: styleProps.page.className
     , children:
         [ R.h1 { className: styleProps.title.className, children: [ R.text "React todos" ] }
-        , R.form
+        , R.div
             { className: styleProps.form.className
-            -- The form only collects the todo; it is never submitted.
-            , onSubmit: handler preventDefault (const add)
             , children:
                 [ R.input
                     { className: styleProps.input.className
                     , placeholder: "What needs doing?"
                     , value: draft
                     , onChange: handler targetValue \value -> setDraft (const (fromMaybe "" value))
+                    , onKeyDown: handler Events.key \pressed -> when (pressed == Just "Enter") add
                     }
                 , R.button
                     { className: styleProps.key.className
-                    , type: "submit"
+                    , type: "button"
+                    , onClick: handler_ add
                     , children: [ icon plusIcon, R.text "Add" ]
                     }
                 ]
