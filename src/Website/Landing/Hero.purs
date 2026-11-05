@@ -5,11 +5,13 @@ import Data.Nullable (Nullable)
 import Iris.StyleX as StyleX
 import React.Basic (JSX, Ref, element)
 import Web.DOM.Element (Element)
+import Website.Breakpoints (breakpoints)
 import Website.Components.Backdrop as Backdrop
 import Website.Components.CodeBlock as CodeBlock
 import Website.Components.Installation as Installation
 import Website.Components.Logo (logo)
-import Website.Landing.Example as Example
+import Website.Landing.Actions (actions)
+import Website.Landing.Output (examples, step)
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
@@ -19,10 +21,11 @@ styles = StyleX.create
       , boxSizing: "border-box"
       , display: "grid"
       , gap: 56
-      , gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 460px), 1fr))"
+      , gridTemplateColumns: StyleX.conditionalValue "minmax(0, 1fr) minmax(0, 1.2fr)"
+          [ StyleX.conditionalCase breakpoints.upTo960 "minmax(0, 1fr)" ]
       , marginInline: "auto"
       , maxWidth: "var(--container-wide)"
-      , minHeight: "calc(100svh - var(--nav-height))"
+      , minHeight: "min(calc(100svh - var(--nav-height) - 160px), 820px)"
       , paddingBlock: "clamp(32px, 5vw, 64px)"
       , paddingInline: "var(--gutter)"
       }
@@ -60,7 +63,26 @@ styles = StyleX.create
       , textWrap: "pretty"
       }
   , install: { maxWidth: "100%" }
-  , code: { minWidth: 0 }
+  , code: { display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }
+  , source:
+      { display:
+          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
+      , minWidth: 0
+      }
+  , disclosure:
+      { display:
+          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo960 "block" ]
+      , minWidth: 0
+      }
+  , summary:
+      { color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
+      , cursor: "default"
+      , fontFamily: "var(--font-mono)"
+      , fontSize: 12
+      , outlineColor: "var(--focus-ring)"
+      , paddingBlock: 8
+      }
+  , disclosed: { marginBlockStart: 8, minWidth: 0 }
   }
 
 styleProps = StyleX.recordProps styles
@@ -80,25 +102,42 @@ hero { install, ripples } = element Backdrop.component
                   , DOM.p styleProps.subtitle "a superset of PureScript"
                   ]
               , DOM.p styleProps.lead
-                  "Iris is a superset of the PureScript programming language, written in Rust. Tooling is vertically integrated into a single binary, such as feature-rich language analysis, a queryable build server, and skills for agents."
+                  "In our benchmark, Iris built all 648 packages in 4.25 seconds. It compiles PureScript to JavaScript you can read, and ships its language server, build server, formatter and agent skills in one binary, written in Rust."
               , DOM.div
                   { className: styleProps.install.className
                   , id: "install"
                   , ref: DOM.reactRef install
                   }
                   (Installation.installation { fill: false })
+              , actions
               ]
           , DOM.div styleProps.code
-              ( CodeBlock.codeBlock
-                  { code: Example.source
-                  , filename: "src/Main.purs"
-                  , highlight: []
-                  , language: CodeBlock.PureScript
+              [ DOM.div styleProps.source source
+              , DOM.details styleProps.disclosure
+                  [ DOM.summary styleProps.summary "Show the source, Factorial.purs"
+                  , DOM.div styleProps.disclosed source
+                  ]
+              , step { stacked: true, note: "tail call → while loop" }
+              , CodeBlock.codeBlock
+                  { code: examples.factorial.output
+                  , filename: "Factorial/index.js"
+                  , highlight: examples.factorial.outputHighlight
+                  , language: CodeBlock.JavaScript
                   , lineNumbers: true
                   , note: Nothing
                   , surface: CodeBlock.Glass
                   }
-              )
+              ]
           ]
       ]
   }
+  where
+  source = CodeBlock.codeBlock
+    { code: examples.factorial.source
+    , filename: "Factorial.purs"
+    , highlight: examples.factorial.sourceHighlight
+    , language: CodeBlock.PureScript
+    , lineNumbers: true
+    , note: Nothing
+    , surface: CodeBlock.Glass
+    }

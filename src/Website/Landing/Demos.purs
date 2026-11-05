@@ -90,8 +90,8 @@ chapters :: Array Chapter
 chapters = reading <> writing
 
 styles = StyleX.create
-  { introduction:
-      { display: "flex", flexDirection: "column", gap: 14, marginBlockEnd: 40, maxWidth: 640 }
+  { introduction: { display: "flex", flexDirection: "column", gap: 14, marginBlockEnd: 40 }
+  , lead: { maxWidth: 640 }
   , layout:
       { alignItems: "start"
       , display: "grid"
@@ -166,10 +166,14 @@ component = unsafePerformEffect $ Hooks.reactComponent "EditorDemos" \_ -> Hooks
         { className: Section.section.className, id: "editor", "aria-labelledby": "editor-heading" }
         [ DOM.div ContentShell.contentShell
             [ DOM.div styleProps.introduction
-                [ Section.heading
-                    { id: "editor-heading", text: "Language analysis in the editor.", emphasis: "" }
-                , Section.lead
-                    "The IRIS language server provides completion, navigation, diagnostics and code actions via the Language Server Protocol. See the demo on Visual Studio Code:"
+                [ DOM.div {}
+                    [ Section.eyebrow { index: "04", label: "Editor" }
+                    , Section.heading
+                        { id: "editor-heading", text: "Completion, navigation and diagnostics." }
+                    ]
+                , DOM.div styleProps.lead
+                    $ Section.lead
+                        "The Iris language server provides completion, navigation, diagnostics and code actions through the Language Server Protocol, in any editor that speaks it."
                 ]
             , DOM.div styleProps.layout
                 [ DOM.div styleProps.playerColumn

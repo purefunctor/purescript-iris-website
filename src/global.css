@@ -98,7 +98,6 @@
     --text-primary: var(--granite-50);
     --text-secondary: var(--granite-100);
     --text-tertiary: oklch(from var(--granite-400) calc(l + 0.04) c h);
-    --text-emphasis: var(--signal-300);
     --accent: var(--signal-400);
     --accent-hover: var(--signal-300);
     --accent-press: var(--signal-500);

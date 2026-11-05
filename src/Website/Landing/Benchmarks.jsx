@@ -11,6 +11,7 @@ export function benchmarkChartImpl({
   introduction,
   panelClassName,
   particlesClassName,
+  anchorClassName,
   rootClassName,
   tabListClassName,
   tabs,
@@ -42,15 +43,30 @@ export function benchmarkChartImpl({
     };
   }, []);
 
+  useEffect(() => {
+    const follow = () => {
+      const key = tabs.find(({ id }) => location.hash === `#benchmarks-${id}`)?.id;
+      if (key) {
+        setStarted(true);
+        setSelected(key);
+      }
+    };
+    follow();
+    window.addEventListener("hashchange", follow);
+    return () => window.removeEventListener("hashchange", follow);
+  }, []);
+
   const select = key => {
     setStarted(true);
     setSelected(key);
+    if (location.hash.startsWith("#benchmarks-")) history.replaceState(history.state, "", `#benchmarks-${key}`);
     const tab = root.current?.querySelector(`[role="tab"][id$="-tab-${key}"]`);
     if (tab && !matchMedia("(prefers-reduced-motion: reduce)").matches) particles.current?.burst(key, tab);
   };
 
   return (
     <div ref={root}>
+      {tabs.map(({ id }) => <span className={anchorClassName} id={`benchmarks-${id}`} key={id} />)}
       <Tabs className={rootClassName} onSelectionChange={select} selectedKey={selected}>
         <div className={headerClassName}>
           {introduction}

@@ -22,6 +22,7 @@ foreign import benchmarkChartImpl ::
     , panelClassName :: String
     , rootClassName :: String
     , particlesClassName :: String
+    , anchorClassName :: String
     , tabListClassName :: String
     , tabs :: Array Tab
     }
@@ -57,7 +58,9 @@ strongEaseOut :: String
 strongEaseOut = "cubic-bezier(0.16, 1, 0.3, 1)"
 
 styles = StyleX.create
-  { root: { display: "flex", flexDirection: "column", gap: 32 }
+  { section: { overflowX: "clip" }
+  , anchor: { display: "block", scrollMarginTop: "calc(var(--nav-height) + 24px)" }
+  , root: { display: "flex", flexDirection: "column", gap: 32 }
   , panel: { display: "flex", flexDirection: "column" }
   , header:
       { alignItems: "flex-end"
@@ -331,7 +334,7 @@ badge =
 
 benchmarks :: JSX
 benchmarks = DOM.section
-  { className: Section.section.className
+  { className: (StyleX.props [ Section.sectionStyle, styles.section ]).className
   , id: "benchmarks"
   , "aria-labelledby": "benchmarks-heading"
   }
@@ -342,14 +345,17 @@ benchmarks = DOM.section
           , footer
           , headerClassName: styleProps.header.className
           , introduction: DOM.div styleProps.introduction
-              [ Section.heading
-                  { id: "benchmarks-heading"
-                  , text: "Builds in seconds, "
-                  , emphasis: "rebuilds in milliseconds."
-                  }
+              [ DOM.div {}
+                  [ Section.eyebrow { index: "03", label: "Benchmarks" }
+                  , Section.heading
+                      { id: "benchmarks-heading"
+                      , text: "Builds in seconds, rebuilds in milliseconds."
+                      }
+                  ]
               ]
           , panelClassName: styleProps.panel.className
           , particlesClassName: styleProps.particles.className
+          , anchorClassName: styleProps.anchor.className
           , rootClassName: styleProps.root.className
           , tabListClassName: (StyleX.props tabStyles.tabList).className
           , tabs
