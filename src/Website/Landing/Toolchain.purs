@@ -309,7 +309,8 @@ toolchain = DOM.section
           [ DOM.div styleProps.intro
               [ DOM.div {}
                   [ Section.eyebrow { index: "01", label: "Toolchain" }
-                  , Section.heading { id: "toolchain-heading", text: "One binary. Every tool." }
+                  , Section.heading
+                      { id: "toolchain-heading", text: "Single binary, multiple tools" }
                   ]
               , DOM.p styleProps.lead
                   [ DOM.text
@@ -336,14 +337,10 @@ toolchain = DOM.section
                   ]
               ]
           , DOM.div styleProps.commands
-              [ DOM.p styleProps.commandsLabel
-                  [ DOM.text "Subcommands, as "
-                  , DOM.code styleProps.inlineCode "iris --help"
-                  , DOM.text " describes them"
-                  ]
+              [ DOM.p styleProps.commandsLabel [ DOM.code styleProps.inlineCode "iris --help" ]
               , DOM.dl styleProps.table (map subcommand (filter _.featured subcommands))
               , DOM.details styleProps.more
-                  [ DOM.summary styleProps.summary "Every other subcommand"
+                  [ DOM.summary styleProps.summary "Show more"
                   , DOM.dl styleProps.table
                       (map subcommand (filter (not <<< _.featured) subcommands))
                   ]

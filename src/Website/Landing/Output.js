@@ -2,8 +2,8 @@ import factorialSource from "#src/Website/Landing/Example/Factorial.purs?raw";
 import factorialOutput from "#output/Website.Landing.Example.Factorial/index.js?raw";
 import shapeSource from "#src/Website/Landing/Example/Shape.purs?raw";
 import shapeOutput from "#output/Website.Landing.Example.Shape/index.js?raw";
-import effectSource from "#src/Website/Landing/Example/Effect.purs?raw";
-import effectOutput from "#output/Website.Landing.Example.Effect/index.js?raw";
+import greeterSource from "#src/Website/Landing/Example/Greeter.purs?raw";
+import greeterOutput from "#output/Website.Landing.Example.Greeter/index.js?raw";
 import stylesSource from "#src/Website/Landing/Example/Styles.purs?raw";
 import stylesOutput from "#output/Website.Landing.Example.Styles/index.js?raw";
 
@@ -25,6 +25,6 @@ const compiled = (source, output, sourcePattern, outputPattern) => {
 export const examples = {
   factorial: compiled(factorialSource, factorialOutput, /= factorial/, /while \(true\)|continue;/),
   shape: compiled(shapeSource, shapeOutput, /^\s+[A-Z]\w*.*->/, /tag === |tag: /),
-  effect: compiled(effectSource, effectOutput, /<-|Console\.log/, /\$action(\$\d+)?\(\);|\)\(\);/),
+  greeter: compiled(greeterSource, greeterOutput, /<-|Console\.log/, /= \$action\(\);|Console\.log\(/),
   styles: compiled(stylesSource, stylesOutput, /StyleX\.create/, /\$stylex\.(create|props)/),
 };

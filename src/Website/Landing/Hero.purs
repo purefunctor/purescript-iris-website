@@ -64,25 +64,6 @@ styles = StyleX.create
       }
   , install: { maxWidth: "100%" }
   , code: { display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }
-  , source:
-      { display:
-          StyleX.conditionalValue "block" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
-      , minWidth: 0
-      }
-  , disclosure:
-      { display:
-          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo960 "block" ]
-      , minWidth: 0
-      }
-  , summary:
-      { color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
-      , cursor: "default"
-      , fontFamily: "var(--font-mono)"
-      , fontSize: 12
-      , outlineColor: "var(--focus-ring)"
-      , paddingBlock: 8
-      }
-  , disclosed: { marginBlockStart: 8, minWidth: 0 }
   }
 
 styleProps = StyleX.recordProps styles
@@ -102,7 +83,7 @@ hero { install, ripples } = element Backdrop.component
                   , DOM.p styleProps.subtitle "a superset of PureScript"
                   ]
               , DOM.p styleProps.lead
-                  "In our benchmark, Iris built all 648 packages in 4.25 seconds. It compiles PureScript to JavaScript you can read, and ships its language server, build server, formatter and agent skills in one binary, written in Rust."
+                  "Iris is a superset of the PureScript programming language, written in Rust. Tooling is vertically integrated into a single binary, such as feature-rich language analysis, a queryable build server, and skills for agents."
               , DOM.div
                   { className: styleProps.install.className
                   , id: "install"
@@ -112,16 +93,20 @@ hero { install, ripples } = element Backdrop.component
               , actions
               ]
           , DOM.div styleProps.code
-              [ DOM.div styleProps.source source
-              , DOM.details styleProps.disclosure
-                  [ DOM.summary styleProps.summary "Show the source, Factorial.purs"
-                  , DOM.div styleProps.disclosed source
-                  ]
-              , step { stacked: true, note: "tail call → while loop" }
+              [ CodeBlock.codeBlock
+                  { code: examples.greeter.source
+                  , filename: "Greeter.purs"
+                  , highlight: examples.greeter.sourceHighlight
+                  , language: CodeBlock.PureScript
+                  , lineNumbers: true
+                  , note: Nothing
+                  , surface: CodeBlock.Glass
+                  }
+              , step { stacked: true, note: "" }
               , CodeBlock.codeBlock
-                  { code: examples.factorial.output
-                  , filename: "Factorial/index.js"
-                  , highlight: examples.factorial.outputHighlight
+                  { code: examples.greeter.output
+                  , filename: "Greeter/index.js"
+                  , highlight: examples.greeter.outputHighlight
                   , language: CodeBlock.JavaScript
                   , lineNumbers: true
                   , note: Nothing
@@ -131,13 +116,3 @@ hero { install, ripples } = element Backdrop.component
           ]
       ]
   }
-  where
-  source = CodeBlock.codeBlock
-    { code: examples.factorial.source
-    , filename: "Factorial.purs"
-    , highlight: examples.factorial.sourceHighlight
-    , language: CodeBlock.PureScript
-    , lineNumbers: true
-    , note: Nothing
-    , surface: CodeBlock.Glass
-    }

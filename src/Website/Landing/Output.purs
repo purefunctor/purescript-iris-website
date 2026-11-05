@@ -20,7 +20,7 @@ type Compiled =
   { source :: String, output :: String, sourceHighlight :: Array Int, outputHighlight :: Array Int }
 
 foreign import examples ::
-  { factorial :: Compiled, shape :: Compiled, effect :: Compiled, styles :: Compiled }
+  { factorial :: Compiled, shape :: Compiled, styles :: Compiled, greeter :: Compiled }
 
 type Example =
   { id :: String
@@ -48,19 +48,16 @@ exampleList =
         , DOM.text " arithmetic compiles to plain operators."
         ]
     }
-  , { id: "effects"
+  , { id: "tail-calls"
     , index: "02"
-    , title: "Effects"
-    , module: "Website.Landing.Example.Effect"
-    , compiled: examples.effect
+    , title: "Tail calls"
+    , module: "Website.Landing.Example.Factorial"
+    , compiled: examples.factorial
     , caption:
-        [ DOM.text "Iris recognises the canonical "
-        , inlineCode "Effect"
-        , DOM.text " instances and fuses "
-        , inlineCode "bind"
-        , DOM.text " and "
-        , inlineCode "discard"
-        , DOM.text " into a single action, instead of calling each combinator through a dictionary."
+        [ DOM.text "A function that calls itself in tail position becomes a "
+        , inlineCode "while"
+        , DOM.text
+            " loop that reassigns its arguments, so deep recursion runs without growing the stack."
         ]
     }
   , { id: "stylex"
@@ -271,11 +268,10 @@ output = DOM.section
       [ DOM.div styleProps.header
           [ DOM.div {}
               [ Section.eyebrow { index: "02", label: "Output" }
-              , Section.heading
-                  { id: "output-heading", text: "Compiles to JavaScript you can read." }
+              , Section.heading { id: "output-heading", text: "Readable, performant JavaScript" }
               ]
           , Section.lead
-              "Constructors become tagged objects, effect binds fuse into one action, and styles become StyleX calls. Every pane is a module from this website's source beside the JavaScript Iris generated for it, read from the build output."
+              "Constructors become tagged objects, tail calls become loops, and styles become StyleX calls. Every pane is a module from this website's source beside the JavaScript Iris generated for it, read from the build output."
           ]
       , Tabs.tabs
           { label: "Compiled examples"
