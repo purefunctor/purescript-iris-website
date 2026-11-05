@@ -23,6 +23,7 @@ import Website.Breakpoints (breakpoints)
 import Website.Components.ExternalLink (newTabLabel)
 import Website.Components.Icon as Icon
 import Website.Components.IconButton.Styles (iconButtonStyles)
+import Website.Components.Logo (logo)
 import Website.Jotai as Jotai
 import Website.Playground.Button.Styles (buttonStyles)
 import Website.Playground.FileTabs (fileTabs)
@@ -38,6 +39,7 @@ import Website.Playground.Hooks
   )
 import Website.Playground.Loading (loading)
 import Website.Playground.Packages (packagesPanel)
+import Website.Playground.Scroll (followingScroll)
 import Website.Playground.Templates (templateList)
 import Website.Playground.Types (Actions, Line, Run, State, View)
 import Yoga.React.DOM as DOM
@@ -64,6 +66,23 @@ foreign import tooltip ::
   ReactComponent { className :: String, offset :: Int, placement :: String, children :: JSX }
 
 foreign import focusable :: ReactComponent { children :: JSX }
+
+foreign import dialogTrigger :: ReactComponent { children :: JSX }
+
+foreign import pressable ::
+  ReactComponent { "aria-label" :: String, className :: String, children :: JSX }
+
+foreign import popover ::
+  ReactComponent
+    { className :: String
+    , containerPadding :: Int
+    , offset :: Int
+    , placement :: String
+    , children :: JSX
+    }
+
+foreign import dialog ::
+  ReactComponent { "aria-label" :: String, className :: String, children :: JSX }
 
 foreign import link ::
   ReactComponent
@@ -96,9 +115,9 @@ styles = StyleX.create
       , borderBlockEndWidth: 1
       , display: "flex"
       , flexShrink: 0
-      , gap: StyleX.conditionalValue 10 [ StyleX.conditionalCase breakpoints.upTo600 6 ]
+      , gap: StyleX.conditionalValue 10 [ StyleX.conditionalCase breakpoints.upTo600 4 ]
       , height: "var(--nav-height)"
-      , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 10 ]
+      , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 6 ]
       }
   , controls:
       { alignItems: "center"
@@ -107,10 +126,47 @@ styles = StyleX.create
       , animationTimingFunction: "var(--ease-out)"
       , display: "flex"
       , flexGrow: 1
-      , gap: StyleX.conditionalValue 8 [ StyleX.conditionalCase breakpoints.upTo600 6 ]
+      , gap: StyleX.conditionalValue 8 [ StyleX.conditionalCase breakpoints.upTo600 4 ]
       , minWidth: 0
       }
   , spacer: { flexGrow: 1 }
+  , brand:
+      { alignItems: "center"
+      , color: "var(--text-primary)"
+      , display: "inline-flex"
+      , flexShrink: 0
+      , gap: 6
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , outline: { default: "revert", ":focus-visible": "none" }
+      , minHeight: 32
+      , minWidth: 32
+      , justifyContent: "center"
+      , paddingInline: StyleX.conditionalValue 4 [ StyleX.conditionalCase breakpoints.upTo480 1 ]
+      , textDecoration: "none"
+      }
+  , brandMark: { flexShrink: 0, height: 18, width: 18 }
+  , brandWordmark:
+      { display:
+          StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
+      , fontSize: 17
+      , fontWeight: 900
+      , letterSpacing: "-0.05em"
+      , lineHeight: 1
+      }
+  , brandLabel:
+      { borderInlineStartColor: "var(--border-default)"
+      , borderInlineStartStyle: "solid"
+      , borderInlineStartWidth: 1
+      , color: "var(--text-secondary)"
+      , display:
+          StyleX.conditionalValue "inline" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
+      , fontFamily: "var(--font-mono)"
+      , fontSize: 11
+      , letterSpacing: "0.06em"
+      , marginInlineStart: 4
+      , paddingInlineStart: 10
+      , textTransform: "uppercase"
+      }
   , workspace:
       { containerType: "size"
       , display: "flex"
@@ -149,6 +205,8 @@ styles = StyleX.create
           [ StyleX.conditionalCase breakpoints.upTo720 "absolute" ]
       , width: StyleX.conditionalValue "var(--sidebar-width)"
           [ StyleX.conditionalCase breakpoints.upTo720 "min(300px, 85vw)" ]
+      , boxShadow: StyleX.conditionalValue "none"
+          [ StyleX.conditionalCase breakpoints.upTo720 "16px 0 40px oklch(0% 0 0 / 65%)" ]
       , zIndex: 3
       , animationDuration: "200ms"
       , animationFillMode: "forwards"
@@ -248,6 +306,7 @@ styles = StyleX.create
       }
   , tabs:
       { backgroundColor: "var(--granite-950)"
+      , containerType: "inline-size"
       , borderInlineStartColor: "var(--border-subtle)"
       , borderInlineStartStyle:
           StyleX.conditionalValue "solid" [ StyleX.conditionalCase breakpoints.upTo960 "none" ]
@@ -295,7 +354,7 @@ styles = StyleX.create
       , display: "flex"
       , flexShrink: 0
       , gap: 6
-      , paddingInline: 8
+      , paddingInline: 6
       }
   , tab:
       { alignItems: "center"
@@ -315,14 +374,14 @@ styles = StyleX.create
       , outlineOffset: -2
       , outlineStyle: { default: "none", "[data-focus-visible]": "solid" }
       , outlineWidth: 2
-      , paddingInline: StyleX.conditionalValue 16 [ StyleX.conditionalCase breakpoints.upTo600 8 ]
+      , paddingInline: StyleX.conditionalValue 12 [ StyleX.conditionalCase breakpoints.upTo600 8 ]
       , transitionDuration: "140ms"
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
       }
   , badge:
       { backgroundColor: "var(--surface-3)"
-      , borderRadius: 999
+      , borderRadius: 0
       , color: "var(--text-primary)"
       , fontSize: 11
       , fontWeight: 600
@@ -337,7 +396,7 @@ styles = StyleX.create
       , flexGrow: 1
       , minHeight: 0
       , outlineStyle: "none"
-      , overflowY: "auto"
+      , overflowY: "hidden"
       }
   , subBar:
       { alignItems: "center"
@@ -350,10 +409,11 @@ styles = StyleX.create
       , fontFamily: "var(--font-sans)"
       , fontSize: 12
       , gap: 8
-      , paddingBlock: 8
-      , paddingInline: 12
+      , paddingBlock: 3
+      , paddingInlineEnd: 4
+      , paddingInlineStart: 12
       }
-  , subBarLabel: { color: "var(--text-secondary)", overflowWrap: "anywhere" }
+  , subBarLabel: { color: "var(--text-secondary)", flexGrow: 1, overflowWrap: "anywhere" }
   , generatedStatus:
       { color: "var(--text-tertiary)"
       , flexShrink: 0
@@ -367,7 +427,7 @@ styles = StyleX.create
   , switch:
       { alignItems: "center"
       , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
-      , borderRadius: 999
+      , borderRadius: 0
       , borderStyle: "none"
       , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
       , color: { default: "var(--text-secondary)", ":hover": "var(--text-primary)" }
@@ -382,7 +442,7 @@ styles = StyleX.create
       , outline: { default: "revert", ":focus-visible": "none" }
       , paddingBlock: 0
       , paddingInlineEnd: 5
-      , paddingInlineStart: 12
+      , paddingInlineStart: 10
       , transitionDuration: "140ms"
       , transitionProperty: "background-color, color"
       , transitionTimingFunction: "var(--ease-out)"
@@ -421,6 +481,60 @@ styles = StyleX.create
       , transitionTimingFunction: "var(--ease-out)"
       , width: 14
       }
+  , settingsTrigger:
+      { backgroundColor:
+          { default: "transparent"
+          , ":hover": "var(--surface-2)"
+          , "[aria-expanded=true]": "var(--surface-2)"
+          }
+      , color:
+          { default: "var(--text-tertiary)"
+          , ":hover": "var(--text-primary)"
+          , "[aria-expanded=true]": "var(--accent)"
+          }
+      }
+  , settingsPopover:
+      { backgroundColor: "var(--granite-900)"
+      , borderColor: "var(--border-default)"
+      , borderStyle: "solid"
+      , borderWidth: 1
+      , boxShadow: "inset 0 1px 0 var(--glass-highlight), 0 24px 40px -18px oklch(0% 0 0 / 75%)"
+      , opacity: { default: 1, "[data-entering]": 0, "[data-exiting]": 0 }
+      , transform:
+          { default: "none"
+          , "[data-entering]": "translateY(-3px)"
+          , "[data-exiting]": "translateY(-3px)"
+          }
+      , transitionDuration: { default: "140ms", "@media (prefers-reduced-motion: reduce)": "0ms" }
+      , transitionProperty: "opacity, transform"
+      , transitionTimingFunction: "var(--ease-out)"
+      , width: 296
+      }
+  , settingsDialog:
+      { display: "flex", flexDirection: "column", gap: 10, outline: "none", padding: 12 }
+  , settingsHeading:
+      { color: "var(--text-tertiary)"
+      , fontFamily: "var(--font-mono)"
+      , fontSize: 11
+      , letterSpacing: "0.08em"
+      , margin: 0
+      , textTransform: "uppercase"
+      }
+  , settingsSwitch: { justifyContent: "space-between", width: "100%" }
+  , settingsDescription:
+      { color: "var(--text-secondary)", fontSize: 12, lineHeight: 1.5, margin: 0 }
+  , fullTabLabel:
+      { clipPath: StyleX.conditionalValue "none"
+          [ StyleX.conditionalCase "@container (max-width: 340px)" "inset(50%)" ]
+      , position: StyleX.conditionalValue "static"
+          [ StyleX.conditionalCase "@container (max-width: 340px)" "absolute" ]
+      , width: StyleX.conditionalValue "auto"
+          [ StyleX.conditionalCase "@container (max-width: 340px)" "1px" ]
+      }
+  , shortTabLabel:
+      { display: StyleX.conditionalValue "none"
+          [ StyleX.conditionalCase "@container (max-width: 340px)" "inline" ]
+      }
   , switchKnobOn: { backgroundColor: "var(--granite-100)", transform: "translateX(12px)" }
   , stackFrame:
       { backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-2)" }
@@ -439,54 +553,84 @@ styles = StyleX.create
       , paddingInline: 4
       , textAlign: "start"
       }
+  , readout:
+      { alignItems: "center"
+      , backgroundColor: "oklch(from var(--granite-950) calc(l - 0.03) c h)"
+      , boxShadow:
+          "inset 0 2px 5px oklch(0% 0 0 / 60%), inset 0 0 0 1px oklch(0% 0 0 / 50%), 0 1px 0 var(--glass-highlight)"
+      , display: "inline-flex"
+      , flexShrink: 0
+      , gap: StyleX.conditionalValue 8 [ StyleX.conditionalCase breakpoints.upTo480 5 ]
+      , height: 32
+      , minWidth: 0
+      , paddingInline: StyleX.conditionalValue 10 [ StyleX.conditionalCase breakpoints.upTo480 7 ]
+      }
+  , led: { backgroundColor: "var(--granite-700)", flexShrink: 0, height: 6, width: 6 }
+  , ledReady: { backgroundColor: "var(--accent)", boxShadow: "0 0 8px var(--accent)" }
+  , ledBusy:
+      { animationDuration: "1.2s"
+      , animationIterationCount: "infinite"
+      , animationName: { default: pulse, "@media (prefers-reduced-motion: reduce)": "none" }
+      , backgroundColor: "var(--accent)"
+      , boxShadow: "0 0 8px var(--accent)"
+      }
+  , ledFailed: { backgroundColor: "var(--red-300)", boxShadow: "0 0 8px var(--red-300)" }
   , status:
       { alignItems: "center"
-      , borderRadius: 999
-      , color: "var(--granite-950)"
+      , color: "var(--signal-300)"
       , display: "inline-flex"
+      , fontFamily: "var(--font-mono)"
       , fontSize: 12
-      , fontWeight: 600
-      , gap: 6
-      , height: 26
+      , gap: 4
       , maxWidth: 280
+      , minWidth: 0
       , overflow: "hidden"
-      , paddingInline: 11
       , textOverflow: "ellipsis"
+      , textShadow: "0 0 10px oklch(from var(--signal-400) l c h / 45%)"
       , whiteSpace: "nowrap"
       }
-  , statusReady: { backgroundColor: "var(--green-400)" }
+  , narrowHidden:
+      { clipPath:
+          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo600 "inset(50%)" ]
+      , position:
+          StyleX.conditionalValue "static" [ StyleX.conditionalCase breakpoints.upTo600 "absolute" ]
+      , width: StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo600 "1px" ]
+      }
+  , statusText:
+      { clipPath: "inset(50%)"
+      , height: 1
+      , overflow: "hidden"
+      , position: "absolute"
+      , whiteSpace: "nowrap"
+      , width: 1
+      }
+  , shortStatus:
+      { display:
+          StyleX.conditionalValue "none" [ StyleX.conditionalCase breakpoints.upTo600 "inline" ]
+      , textTransform: "uppercase"
+      , letterSpacing: "0.06em"
+      , fontSize: 11
+      }
+  , wideOnly:
+      { display: StyleX.conditionalValue "inline-flex"
+          [ StyleX.conditionalCase breakpoints.upTo600 "none" ]
+      }
   , statusLink:
-      { backgroundColor: "var(--green-400)"
-      , backgroundImage:
-          { default:
-              "linear-gradient(oklch(from var(--green-400) calc(l + 0.04) c h), oklch(from var(--green-400) calc(l - 0.04) c h))"
-          , ":hover":
-              "linear-gradient(oklch(from var(--green-400) calc(l + 0.07) c h), oklch(from var(--green-400) calc(l - 0.01) c h))"
-          , ":active":
-              "linear-gradient(oklch(from var(--green-400) calc(l - 0.04) c h), oklch(from var(--green-400) calc(l + 0.01) c h))"
-          }
-      , boxShadow:
-          { default:
-              "inset 0 1px 0 oklch(from var(--green-300) calc(l + 0.06) c h / 70%), inset 0 -1px 0 oklch(from var(--green-400) calc(l - 0.3) c h / 55%), 0 1px 2px oklch(0% 0 0 / 55%)"
-          , ":active": "inset 0 1px 3px oklch(from var(--green-400) calc(l - 0.35) c h / 65%)"
-          , ":focus-visible":
-              "inset 0 1px 0 oklch(from var(--green-300) calc(l + 0.06) c h / 70%), inset 0 -1px 0 oklch(from var(--green-400) calc(l - 0.3) c h / 55%), var(--shadow-focus)"
-          }
+      { color: { default: "var(--signal-300)", ":hover": "var(--signal-200)" }
       , cursor: "default"
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
       , outline: { default: "revert", ":focus-visible": "none" }
-      , textDecoration: "none"
-      , textShadow: "0 1px 0 oklch(from var(--green-300) calc(l + 0.06) c h / 45%)"
-      , transform: { default: "none", ":active": "translateY(1px)" }
+      , textDecorationLine: { default: "none", ":hover": "underline" }
+      , textUnderlineOffset: 3
       }
   , commit: { fontFamily: "var(--font-mono)" }
   , externalIcon: { flexShrink: 0, fontSize: 10, marginInlineStart: -1 }
-  , statusBusy:
-      { backgroundColor: "var(--surface-2)"
-      , boxShadow: "inset 0 0 0 1px var(--border-default)"
-      , color: "var(--text-primary)"
+  , iconOnly:
+      { flexShrink: 0
+      , paddingInline: 0
+      , justifyContent: "center"
+      , width: StyleX.conditionalValue 32 [ StyleX.conditionalCase breakpoints.upTo480 30 ]
       }
-  , statusFailed: { backgroundColor: "var(--red-300)" }
-  , iconOnly: { flexShrink: 0, paddingInline: 0, justifyContent: "center", width: 32 }
   , pressed:
       { backgroundColor: "var(--accent-press)"
       , boxShadow:
@@ -503,7 +647,7 @@ styles = StyleX.create
           }
       , color: "var(--text-primary)"
       }
-  , icon: { display: "inline-flex", fontSize: 12 }
+  , icon: { display: "inline-flex", flexShrink: 0, fontSize: 12 }
   , output:
       { display: "flex"
       , flexDirection: "column"
@@ -515,19 +659,23 @@ styles = StyleX.create
       }
   , clear:
       { backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
-      , borderRadius: 999
+      , borderRadius: 0
       , borderStyle: "none"
       , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
       , cursor: "default"
       , fontFamily: "var(--font-sans)"
       , fontSize: 12
-      , height: 24
+      , alignItems: "center"
+      , display: "inline-flex"
+      , height: 28
+      , justifyContent: "center"
       , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
       , outline: { default: "revert", ":focus-visible": "none" }
-      , paddingInline: 10
+      , padding: 0
+      , width: 28
       }
   , console: { display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }
-  , consoleScroller: { flexGrow: 1, minHeight: 0, overflowY: "auto" }
+  , consoleScroller: { flexGrow: 1, minHeight: 0 }
   , view: { flexGrow: 1, minHeight: 0 }
   , overlayConsole:
       { backgroundColor: "var(--granite-950)"
@@ -630,17 +778,14 @@ styles = StyleX.create
       , paddingInline: 16
       }
   , packageSet:
-      { backgroundColor: "var(--blue-300)"
-      , backgroundImage:
-          "linear-gradient(oklch(from var(--blue-300) calc(l + 0.04) c h), oklch(from var(--blue-300) calc(l - 0.04) c h))"
-      , boxShadow:
-          { default:
-              "inset 0 1px 0 oklch(from var(--blue-300) calc(l + 0.1) calc(c - 0.04) h / 70%), inset 0 -1px 0 oklch(from var(--blue-300) calc(l - 0.32) c h / 55%), 0 1px 2px oklch(0% 0 0 / 55%)"
-          , ":focus-visible":
-              "inset 0 1px 0 oklch(from var(--blue-300) calc(l + 0.1) calc(c - 0.04) h / 70%), inset 0 -1px 0 oklch(from var(--blue-300) calc(l - 0.32) c h / 55%), var(--shadow-focus)"
-          }
+      { borderInlineStartColor: "var(--border-default)"
+      , borderInlineStartStyle: "solid"
+      , borderInlineStartWidth: 1
+      , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
+      , color: "var(--text-secondary)"
       , outline: { default: "revert", ":focus-visible": "none" }
-      , textShadow: "0 1px 0 oklch(from var(--blue-300) calc(l + 0.1) calc(c - 0.04) h / 45%)"
+      , paddingInlineStart: 8
+      , textShadow: "none"
       , display: StyleX.conditionalValue "inline-flex"
           [ StyleX.conditionalCase breakpoints.upTo720 "none" ]
       }
@@ -694,6 +839,8 @@ styleProps = StyleX.recordProps styles
 
 spin = StyleX.keyframes { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } }
 
+pulse = StyleX.keyframes { from: { opacity: 1 }, "50%": { opacity: 0.35 }, to: { opacity: 1 } }
+
 fadeIn = StyleX.keyframes { from: { opacity: 0 }, to: { opacity: 1 } }
 
 rise = StyleX.keyframes
@@ -724,7 +871,7 @@ workspace = unsafePerformEffect $ Hooks.reactComponent "PlaygroundWorkspace" \{ 
 
 playground :: View -> JSX
 playground { state, actions, editor, generated, frames } = DOM.div styleProps.page
-  [ DOM.header styleProps.header [ if ready then controls else mempty ]
+  [ DOM.header styleProps.header [ brand, if ready then controls else mempty ]
   , DOM.main (StyleX.props [ styles.workspace, StyleX.conditional ready styles.revealed ])
       [ DOM.div styleProps.upper
           [ if ready then sidebar else mempty
@@ -749,6 +896,12 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
   ready = state.phase == "ready"
   noFile = isNothing (toMaybe state.active) && isNothing (toMaybe state.viewing)
 
+  brand = DOM.a { className: styleProps.brand.className, href: "/", "aria-label": "Iris home" }
+    [ logo styleProps.brandMark
+    , DOM.span styleProps.brandWordmark "IRIS"
+    , DOM.span styleProps.brandLabel "Playground"
+    ]
+
   controls = DOM.div styleProps.controls
     [ DOM.button
         { className: (StyleX.props [ buttonStyles.action, styles.iconOnly ]).className
@@ -761,18 +914,20 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
         }
         (DOM.span styleProps.icon (icon Icon.panelLeft))
     , DOM.div styleProps.spacer []
-    , status state
-    , case toMaybe state.packages.packageSet of
-        Just packageSet -> tooltipPill
-          { href: ""
-          , label: packageSet
-          , accessibleLabel: "Package set " <> packageSet
-          , tooltip: "Package set"
-          , className: (StyleX.props [ styles.status, styles.packageSet ]).className
-          , iconClassName: ""
-          , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className
-          }
-        Nothing -> mempty
+    , DOM.div styleProps.readout
+        [ status state
+        , case toMaybe state.packages.packageSet of
+            Just packageSet -> tooltipPill
+              { href: ""
+              , label: "SET " <> packageSet
+              , accessibleLabel: "Package set " <> packageSet
+              , tooltip: "Package set"
+              , className: (StyleX.props [ styles.status, styles.packageSet ]).className
+              , iconClassName: ""
+              , tooltipClassName: (StyleX.props iconButtonStyles.tooltip).className
+              }
+            Nothing -> mempty
+        ]
     , iconAction "Reset to the example" Icon.rotateCcw actions.reset
     , DOM.button
         { className:
@@ -842,9 +997,8 @@ playground { state, actions, editor, generated, frames } = DOM.div styleProps.pa
         { selected: state.panelTab
         , select: actions.selectPanelTab
         , output: output state actions frames
-        , outputAction: clearButton state.run actions.clearOutput
         , outputBadge: ""
-        , settings: sourceMapsSwitch state actions
+        , settings: panelSettingsMenu state actions
         , javascript: javascriptPanel state generated
         , packages: element packagesPanel
             { packages: state.packages
@@ -941,35 +1095,59 @@ stackedLabel text current = DOM.span
 
 status :: State -> JSX
 status state = case server.status, toMaybe server.kind, toMaybe server.version of
-  "failed", _, _ -> pill "Language server stopped" styles.statusFailed
-  "restarting", _, Nothing -> pill "Restarting the language server" styles.statusBusy
-  "starting", _, _ -> pill "Starting the language server" styles.statusBusy
-  _, Just "mock", _ -> mempty
-  _, _, Just version -> tooltipPill
-    { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
-    , label: version
-    , accessibleLabel: "Iris " <> version <> " release" <> newTabLabel
-    , tooltip: fromMaybe version (toMaybe server.revision)
-    , className: (StyleX.props [ styles.status, styles.statusLink ]).className
-    , iconClassName: styleProps.externalIcon.className
-    , tooltipClassName: (StyleX.props [ iconButtonStyles.tooltip, styles.commit ]).className
-    }
-  _, _, Nothing -> pill "Iris language server" styles.statusReady
+  "failed", _, _ -> pill "Language server stopped" "Fault" styles.ledFailed
+  "restarting", _, _ -> pill "Restarting" "Busy" styles.ledBusy
+  "starting", _, _ -> pill "Starting the language server" "Busy" styles.ledBusy
+  _, Just "mock", _ -> pill "Mock" "" styles.ledReady
+  _, _, Just version -> fragment
+    [ led styles.ledReady
+    , DOM.span styleProps.wideOnly
+        [ tooltipPill
+            { href: "https://github.com/purefunctor/purescript-iris/releases/tag/" <> version
+            , label: version
+            , accessibleLabel: "Iris " <> version <> " release" <> newTabLabel
+            , tooltip: fromMaybe version (toMaybe server.revision)
+            , className: (StyleX.props [ styles.status, styles.statusLink ]).className
+            , iconClassName: styleProps.externalIcon.className
+            , tooltipClassName: (StyleX.props [ iconButtonStyles.tooltip, styles.commit ]).className
+            }
+        ]
+    , DOM.span { className: styleProps.statusText.className, role: "status" }
+        ("Iris " <> version <> " language server ready")
+    ]
+  _, _, Nothing -> pill "Iris language server" "" styles.ledReady
   where
   server = state.server
-  pill label tone = DOM.span
-    { className: (StyleX.props [ styles.status, tone ]).className
-    , role: "status"
-    , title: fromMaybe label (toMaybe server.message)
+  led tone =
+    DOM.span { className: (StyleX.props [ styles.led, tone ]).className, "aria-hidden": true } []
+  short text = DOM.span
+    { className: (StyleX.props [ styles.status, styles.shortStatus ]).className
+    , "aria-hidden": true
     }
-    label
+    text
+  pill label brief tone = fragment
+    [ led tone
+    , if brief == "" then mempty else short brief
+    , DOM.span
+        { className: (StyleX.props [ styles.status, styles.narrowHidden ]).className
+        , role: "status"
+        , title: fromMaybe label (toMaybe server.message)
+        }
+        label
+    ]
 
 output :: State -> Actions -> Ref (Nullable Element) -> JSX
 output state actions frames = DOM.div styleProps.output
-  ( [ if state.outputStale && not (null run.lines)
-      then DOM.div styleProps.subBar
-        [ DOM.span styleProps.subBarLabel "Previous run · rerun to navigate source locations" ]
-      else mempty
+  ( [ if null run.lines
+      then mempty
+      else DOM.div styleProps.subBar
+        [ DOM.span styleProps.subBarLabel
+            ( if state.outputStale
+              then "Previous run · rerun to navigate source locations"
+              else "Last run"
+            )
+        , clearButton run actions.clearOutput
+        ]
     ]
       <> if run.view
          then [ element outputView { frames }, if null run.lines then mempty else console true ]
@@ -1030,9 +1208,14 @@ consoleBar open lines toggle = DOM.button
 clearButton :: Run -> Effect Unit -> JSX
 clearButton run clear
   | null run.lines = mempty
-  | otherwise =
-    DOM.button { className: styleProps.clear.className, onClick: handler_ clear, type: "button" }
-      "Clear"
+  | otherwise = DOM.button
+    { className: styleProps.clear.className
+    , onClick: handler_ clear
+    , title: "Clear output"
+    , type: "button"
+    , "aria-label": "Clear output"
+    }
+    (DOM.span styleProps.icon (icon Icon.eraser))
 
 javascriptPanel :: State -> Ref (Nullable Element) -> JSX
 javascriptPanel state host = DOM.div styleProps.output
@@ -1042,9 +1225,37 @@ javascriptPanel state host = DOM.div styleProps.output
     else DOM.p styleProps.generatedStatus state.generated.message
   ]
 
+panelSettingsMenu :: State -> Actions -> JSX
+panelSettingsMenu state actions = element dialogTrigger
+  { children: fragment
+      [ element pressable
+          { "aria-label": "Panel settings"
+          , className: (StyleX.props [ styles.clear, styles.settingsTrigger ]).className
+          , children: DOM.span styleProps.icon (icon Icon.settings)
+          }
+      , element popover
+          { className: styleProps.settingsPopover.className
+          , containerPadding: 0
+          , offset: 6
+          , placement: "bottom end"
+          , children: element dialog
+              { "aria-label": "Panel settings"
+              , className: styleProps.settingsDialog.className
+              , children: fragment
+                  [ DOM.p { className: styleProps.settingsHeading.className, "aria-hidden": true }
+                      "Settings"
+                  , sourceMapsSwitch state actions
+                  , DOM.p styleProps.settingsDescription
+                      "Link the JavaScript tab to its PureScript source, and point stack traces at PureScript lines."
+                  ]
+              }
+          }
+      ]
+  }
+
 sourceMapsSwitch :: State -> Actions -> JSX
 sourceMapsSwitch state actions = DOM.button
-  { className: styleProps.switch.className
+  { className: (StyleX.props [ styles.switch, styles.settingsSwitch ]).className
   , type: "button"
   , role: "switch"
   , "aria-checked": state.sourceMaps
@@ -1237,15 +1448,14 @@ consoleArea = unsafePerformEffect $ Hooks.reactComponent "PlaygroundConsole" \pr
         , style: if props.overlay then DOM.css { height: shown } else mempty
         }
         [ if props.overlay then props.bar else mempty
-        , DOM.div
-            { "aria-live": "polite"
-            , className: styleProps.consoleScroller.className
-            , id: "playground-console"
+        , followingScroll
+            { className: styleProps.consoleScroller.className
+            , label: "Console"
+            , scrollRef: follow.scroller
             , onScroll: follow.onScroll
-            , ref: DOM.reactRef follow.scroller
-            , role: "log"
             }
-            props.content
+            [ DOM.div { "aria-live": "polite", id: "playground-console", role: "log" } props.content
+            ]
         ]
     ]
 
@@ -1264,7 +1474,6 @@ panelTabs ::
     { selected :: String
     , select :: String -> Effect Unit
     , output :: JSX
-    , outputAction :: JSX
     , outputBadge :: String
     , javascript :: JSX
     , settings :: JSX
@@ -1290,14 +1499,22 @@ panelTabs = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPanelTabs" \pr
                 , ref: tabListRef
                 , children: fragment
                     [ panelTabLabel "output" "Output" props.outputBadge
-                    , panelTabLabel "javascript" "JavaScript" ""
+                    , element tab
+                        { className: styleProps.tab.className
+                        , id: "javascript"
+                        , children: fragment
+                            [ DOM.span styleProps.fullTabLabel "JavaScript"
+                            , DOM.span
+                                { className: styleProps.shortTabLabel.className
+                                , "aria-hidden": true
+                                }
+                                "JS"
+                            ]
+                        }
                     , panelTabLabel "packages" "Packages" props.packagesBadge
                     ]
                 }
-            , DOM.div styleProps.panelSettings
-                [ if props.selected == "output" then props.outputAction else mempty
-                , props.settings
-                ]
+            , DOM.div styleProps.panelSettings [ props.settings ]
             ]
         , panelTabContent panelClassName "output" props.output
         , panelTabContent panelClassName "javascript" props.javascript

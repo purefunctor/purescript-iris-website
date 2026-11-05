@@ -13,6 +13,7 @@ module Website.Components.Icon
   , copy
   , copyright
   , database
+  , eraser
   , externalLink
   , fileCode
   , flame
@@ -30,6 +31,7 @@ module Website.Components.Icon
   , pureScript
   , rotateCcw
   , server
+  , settings
   , share
   , shieldCheck
   , snowflake
@@ -58,6 +60,7 @@ foreign import codeXml :: ReactComponent IconProps
 foreign import copy :: ReactComponent IconProps
 foreign import copyright :: ReactComponent IconProps
 foreign import database :: ReactComponent IconProps
+foreign import eraser :: ReactComponent IconProps
 foreign import externalLink :: ReactComponent IconProps
 foreign import fileCode :: ReactComponent IconProps
 foreign import flame :: ReactComponent IconProps
@@ -75,6 +78,7 @@ foreign import play :: ReactComponent IconProps
 foreign import pureScript :: ReactComponent IconProps
 foreign import rotateCcw :: ReactComponent IconProps
 foreign import server :: ReactComponent IconProps
+foreign import settings :: ReactComponent IconProps
 foreign import share :: ReactComponent IconProps
 foreign import shieldCheck :: ReactComponent IconProps
 foreign import snowflake :: ReactComponent IconProps

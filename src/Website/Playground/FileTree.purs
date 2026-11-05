@@ -25,6 +25,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Web.DOM.Element (Element, getBoundingClientRect)
 import Web.HTML.HTMLInputElement as HTMLInputElement
 import Website.Jotai as Jotai
+import Website.Playground.Scroll (scroll)
 import Website.Playground.Types (Actions, File, Viewer)
 import Yoga.React.DOM as DOM
 
@@ -58,7 +59,7 @@ styles = StyleX.create
       , flexBasis: 0
       , flexDirection: "column"
       , flexGrow: 1
-      , minHeight: 0
+      , minHeight: 96
       }
   , header:
       { alignItems: "center"
@@ -69,8 +70,17 @@ styles = StyleX.create
       , paddingInlineEnd: 6
       , paddingInlineStart: 14
       }
-  , title: { color: "var(--text-tertiary)", fontSize: 12, fontWeight: 600, margin: 0 }
-  , scroll: { flexGrow: 1, minHeight: 0, overflowY: "auto", paddingBlockEnd: 12 }
+  , title:
+      { color: "var(--text-secondary)"
+      , fontFamily: "var(--font-mono)"
+      , fontSize: 11
+      , fontWeight: 500
+      , letterSpacing: "0.06em"
+      , margin: 0
+      , textTransform: "uppercase"
+      }
+  , scroll: { flexGrow: 1, minHeight: 0 }
+  , scrollContent: { paddingBlockEnd: 12 }
   , list:
       { animationDuration: "180ms"
       , animationName: { default: listIn, "@media (prefers-reduced-motion: reduce)": "none" }
@@ -119,7 +129,7 @@ styles = StyleX.create
   , icon: { flexShrink: 0, height: 16, width: 16 }
   , name: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }
   , count:
-      { borderRadius: 999
+      { borderRadius: 0
       , flexShrink: 0
       , fontFamily: "var(--font-sans)"
       , fontSize: 11
@@ -132,7 +142,7 @@ styles = StyleX.create
   , errorCount: { backgroundColor: "var(--red-300)", color: "var(--granite-950)" }
   , warningCount: { backgroundColor: "var(--yellow-400)", color: "var(--granite-950)" }
   , errorDot:
-      { backgroundColor: "var(--red-300)", borderRadius: 999, flexShrink: 0, height: 7, width: 7 }
+      { backgroundColor: "var(--red-300)", borderRadius: 0, flexShrink: 0, height: 7, width: 7 }
   , actions:
       { display: "flex"
       , gap: 2
@@ -151,7 +161,7 @@ styles = StyleX.create
   , action:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-3)" }
-      , borderRadius: 4
+      , borderRadius: 0
       , borderStyle: "none"
       , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
       , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
@@ -166,7 +176,7 @@ styles = StyleX.create
   , input:
       { backgroundColor: "var(--granite-950)"
       , borderColor: "var(--accent)"
-      , borderRadius: 4
+      , borderRadius: 0
       , borderStyle: "solid"
       , borderWidth: 1
       , boxSizing: "border-box"
@@ -348,7 +358,8 @@ fileTree = unsafePerformEffect $ Hooks.reactComponent "PlaygroundFileTree" \prop
             }
             (element filePlusIcon { "aria-hidden": true })
         ]
-    , DOM.div styleProps.scroll (folderContents tree 0 (buildTree props.files))
+    , scroll styleProps.scroll.className
+        [ DOM.div styleProps.scrollContent (folderContents tree 0 (buildTree props.files)) ]
     ]
 
 folderContents :: Tree -> Int -> Folder -> JSX

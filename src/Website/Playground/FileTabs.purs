@@ -75,7 +75,7 @@ styles = StyleX.create
       , whiteSpace: "nowrap"
       }
   , count:
-      { borderRadius: 999
+      { borderRadius: 0
       , fontFamily: "var(--font-sans)"
       , fontSize: 11
       , fontWeight: 600
@@ -89,7 +89,7 @@ styles = StyleX.create
   , close:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-2)" }
-      , borderRadius: 4
+      , borderRadius: 0
       , borderStyle: "none"
       , color: { default: "var(--text-tertiary)", ":hover": "var(--text-primary)" }
       , cursor: "default"

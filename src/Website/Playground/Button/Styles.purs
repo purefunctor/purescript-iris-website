@@ -6,7 +6,7 @@ buttonStyles = StyleX.create
   { action:
       { alignItems: "center"
       , backgroundColor: { default: "var(--surface-1)", ":hover": "var(--surface-3)" }
-      , borderRadius: 999
+      , borderRadius: 0
       , borderStyle: "none"
       , color: "var(--text-primary)"
       , cursor: "default"

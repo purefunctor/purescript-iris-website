@@ -17,6 +17,7 @@ import React.Basic.Events (EventFn, SyntheticEvent, handler, handler_, unsafeEve
 import React.Basic.Hooks as Hooks
 import Unsafe.Coerce (unsafeCoerce)
 import Website.Jotai as Jotai
+import Website.Playground.Scroll (scroll)
 import Website.Playground.Types (Available, Packages)
 import Yoga.React.DOM as DOM
 import Yoga.React.DOM.Attributes.Target (targetBlank)
@@ -35,7 +36,7 @@ styles = StyleX.create
   , input:
       { backgroundColor: "var(--granite-950)"
       , borderColor: { default: "var(--border-default)", ":focus": "var(--accent)" }
-      , borderRadius: 999
+      , borderRadius: 0
       , borderStyle: "solid"
       , borderWidth: 1
       , color: "var(--text-primary)"
@@ -75,7 +76,7 @@ styles = StyleX.create
   , thumbEnd: { transform: "translateX(100%)" }
   , filter:
       { backgroundColor: "transparent"
-      , borderRadius: 999
+      , borderRadius: 0
       , borderStyle: "none"
       , boxShadow: { default: "none", ":focus-visible": "var(--shadow-focus)" }
       , color:
@@ -110,15 +111,8 @@ styles = StyleX.create
       , paddingBlock: 8
       , paddingInline: 16
       }
-  , list:
-      { flexGrow: 1
-      , listStyle: "none"
-      , margin: 0
-      , minHeight: 0
-      , overflowY: "auto"
-      , paddingBlock: 8
-      , paddingInline: 0
-      }
+  , scroll: { flexGrow: 1, minHeight: 0 }
+  , list: { listStyle: "none", margin: 0, paddingBlock: 8, paddingInline: 0 }
   , row:
       { alignItems: "center"
       , backgroundColor: { default: "transparent", ":hover": "var(--surface-1)" }
@@ -246,9 +240,7 @@ packagesPanel = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPackages" 
             { "aria-label": "Search packages"
             , className: styleProps.input.className
             , onChange: handler targetValue \value -> setQuery (const value)
-            , placeholder: "Search "
-                <> show (if showAll then length props.packages.available else props.packages.active)
-                <> " packages"
+            , placeholder: "Search"
             , spellCheck: false
             , type: "search"
             , value: query
@@ -270,16 +262,18 @@ packagesPanel = unsafePerformEffect $ Hooks.reactComponent "PlaygroundPackages" 
                 ("All " <> show (length props.packages.available))
             ]
         ]
-    , DOM.ul { "aria-label": "Packages", className: styleProps.list.className }
-        ( map
-            ( packageRow
-                { busy: props.busy
-                , activate: props.activate
-                , deactivate: deactivateKeepingShownRows
-                }
+    , scroll styleProps.scroll.className
+        [ DOM.ul { "aria-label": "Packages", className: styleProps.list.className }
+            ( map
+                ( packageRow
+                    { busy: props.busy
+                    , activate: props.activate
+                    , deactivate: deactivateKeepingShownRows
+                    }
+                )
+                matches
             )
-            matches
-        )
+        ]
     , if null matches
       then DOM.p styleProps.note
         if null found
