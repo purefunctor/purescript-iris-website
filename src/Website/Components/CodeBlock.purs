@@ -31,6 +31,11 @@ type CodeBlock =
   , surface :: Surface
   }
 
+overflowCue = StyleX.keyframes
+  { from: { maskImage: "linear-gradient(to right, black calc(100% - 56px), transparent)" }
+  , to: { maskImage: "linear-gradient(to right, black, black)" }
+  }
+
 styles = StyleX.create
   { root:
       { borderStyle: "solid"
@@ -76,13 +81,25 @@ styles = StyleX.create
       , fontSize: 13
       , lineHeight: 1.62
       , margin: 0
+      , overflowX: "auto"
+      , scrollbarColor: "var(--granite-700) transparent"
+      , scrollbarWidth: "thin"
+      , animationName: overflowCue
+      , animationTimeline: "scroll(self inline)"
+      , animationTimingFunction: "linear"
+      , animationFillMode: "both"
+      , outlineColor: "var(--focus-ring)"
+      , outlineOffset: -2
+      , outlineStyle: { default: "none", ":focus-visible": "solid" }
+      , outlineWidth: 2
       , paddingBlock: 14
       , tabSize: 2
       }
-  , code: { display: "block" }
+  , code: { display: "block", minWidth: "100%" }
+  , numberedCode: { width: "max-content" }
   , line: { display: "flex", paddingInline: 18 }
   , highlighted:
-      { backgroundColor: "var(--syn-highlight)", boxShadow: "inset 2px 0 0 var(--yellow-400)" }
+      { backgroundColor: "var(--syn-highlight)", boxShadow: "inset 2px 0 0 var(--accent)" }
   , lineNumber:
       { color: "var(--syn-line-number)"
       , flexShrink: 0
@@ -92,7 +109,8 @@ styles = StyleX.create
       , userSelect: "none"
       , width: StyleX.conditionalValue 28 [ StyleX.conditionalCase breakpoints.upTo480 18 ]
       }
-  , content: { minWidth: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
+  , content: { whiteSpace: "pre" }
+  , wrapped: { minWidth: 0, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }
   , keyword: { color: "var(--syn-keyword)" }
   , type: { color: "var(--syn-type)" }
   , string: { color: "var(--syn-string)" }
@@ -139,12 +157,18 @@ codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =
         , foldMap InfoButton.infoButton note
         , CopyButton.copyButton { label: "Copy " <> filename, size: CopyButton.Small, text: code }
         ]
-    , DOM.pre styleProps.pre
-        ( DOM.code styleProps.code
-            (mapWithIndex renderLine (tokenizeImpl (tokenizerLanguage language) code))
-        )
+    , if lineNumbers
+      then DOM.pre
+        { className: styleProps.pre.className, tabIndex: 0, role: "region", "aria-label": filename }
+        lines
+      else DOM.pre styleProps.pre lines
     ]
   where
+  lines =
+    ( DOM.code (StyleX.props [ styles.code, StyleX.conditional lineNumbers styles.numberedCode ])
+        (mapWithIndex renderLine (tokenizeImpl (tokenizerLanguage language) code))
+    )
+
   icon = case language of
     Shell -> Icon.squareTerminal
     _ -> Icon.fileCode
@@ -160,7 +184,10 @@ codeBlock { code, filename, highlight, language, lineNumbers, note, surface } =
           ]
         else []
       )
-        <> [ DOM.span styleProps.content
+        <> [ DOM.span
+               ( StyleX.props
+                   [ styles.content, StyleX.conditional (not lineNumbers) styles.wrapped ]
+               )
                if null tokens then [ DOM.text " " ] else map renderToken tokens
            ]
     )
