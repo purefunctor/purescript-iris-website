@@ -76,6 +76,7 @@ export default defineConfig({
         "es-module-lexer/js",
         "@jridgewell/trace-mapping",
         "jotai",
+        "simplebar-react",
         ...playgroundMonacoModules,
       ],
     },

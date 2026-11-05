@@ -39,7 +39,8 @@
     "react-aria-components": "1.20.0",
     "react-dom": "18.3.1",
     "satori": "^0.33.4",
-    "sharp": "0.35.4"
+    "sharp": "0.35.4",
+    "simplebar-react": "3.3.2"
   },
   "devDependencies": {
     "@babel/standalone": "7.29.8",
