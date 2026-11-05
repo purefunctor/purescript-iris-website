@@ -12,6 +12,22 @@ const bundleExportName = (module: string) => module.replaceAll(".", "$");
 
 type ModuleMetadata = { version: number; editable: boolean; source: string };
 
+const compilerProvidedModules = new Set([
+  "Prim",
+  "Prim.Boolean",
+  "Prim.Coerce",
+  "Prim.Int",
+  "Prim.Ordering",
+  "Prim.Row",
+  "Prim.RowList",
+  "Prim.Symbol",
+  "Prim.TypeError",
+  "Iris.Effect",
+  "Iris.StyleX",
+  "Iris.StyleX.When",
+  "Iris.StyleX.Types",
+]);
+
 const isBareImport = (id: string) => !id.startsWith("\0") && !id.startsWith(".") && !path.isAbsolute(id);
 
 const fileExists = (file: string) => access(file).then(() => true, () => false);
@@ -44,7 +60,7 @@ export function devLibraryBundle(): Plugin {
         },
         () => {
           metadata.delete(module);
-          if (!warned.has(module)) {
+          if (!compilerProvidedModules.has(module) && !warned.has(module)) {
             warned.add(module);
             logger?.warn(`${module} has no metadata.json, so the library bundle ignores it. Iris 0.1.8 and later write it.`);
           }

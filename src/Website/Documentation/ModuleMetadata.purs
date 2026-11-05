@@ -49,9 +49,12 @@ sections =
             ]
         , paragraph
             [ DOM.text
-                "Only modules that a build compiled have a record. A module that no build has compiled has no directory, so a missing file means that Iris hasn't compiled the module. The "
+                "Only modules that a build compiled from a package have a record. Compiler-provided modules such as "
             , inlineCode "Prim"
-            , DOM.text " modules never have records."
+            , DOM.text " and "
+            , inlineCode "Iris.Effect"
+            , DOM.text
+                " never have records, even when the build writes their JavaScript, because they have no package or source file to record. For any other module, a missing file means that Iris hasn't compiled the module."
             ]
         , paragraph
             [ DOM.text
