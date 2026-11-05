@@ -11,7 +11,7 @@ import Website.Components.CodeBlock as CodeBlock
 import Website.Components.Installation as Installation
 import Website.Components.Logo (logo)
 import Website.Landing.Actions (actions)
-import Website.Landing.Output (examples, step)
+import Website.Landing.Output (examples)
 import Yoga.React.DOM as DOM
 
 styles = StyleX.create
@@ -102,7 +102,6 @@ hero { install, ripples } = element Backdrop.component
                   , note: Nothing
                   , surface: CodeBlock.Glass
                   }
-              , step { stacked: true, note: "" }
               , CodeBlock.codeBlock
                   { code: examples.greeter.output
                   , filename: "Greeter/index.js"

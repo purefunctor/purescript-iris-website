@@ -1,4 +1,4 @@
-module Website.Landing.Output (Compiled, examples, output, step) where
+module Website.Landing.Output (Compiled, examples, output) where
 
 import Prelude
 
@@ -145,57 +145,8 @@ styles = StyleX.create
   , panes:
       { display: "grid"
       , gap: 16
-      , gridTemplateColumns: StyleX.conditionalValue "minmax(0, 1fr) auto minmax(0, 1fr)"
+      , gridTemplateColumns: StyleX.conditionalValue "repeat(2, minmax(0, 1fr))"
           [ StyleX.conditionalCase breakpoints.upTo960 "minmax(0, 1fr)" ]
-      }
-  , step:
-      { alignItems: "center"
-      , display: "flex"
-      , flexDirection:
-          StyleX.conditionalValue "column" [ StyleX.conditionalCase breakpoints.upTo960 "row" ]
-      , gap: 10
-      }
-  , stackedStep: { flexDirection: "row" }
-  , stepRule:
-      { backgroundColor: "var(--border-default)"
-      , flexGrow: 1
-      , height: StyleX.conditionalValue "auto" [ StyleX.conditionalCase breakpoints.upTo960 "1px" ]
-      , width: StyleX.conditionalValue "1px" [ StyleX.conditionalCase breakpoints.upTo960 "auto" ]
-      }
-  , stackedRule: { height: "1px", width: "auto" }
-  , badge:
-      { alignItems: "center"
-      , backgroundColor: "var(--granite-800)"
-      , backgroundImage:
-          "linear-gradient(180deg, oklch(from var(--granite-50) l c h / 6%), transparent)"
-      , borderColor: "var(--border-default)"
-      , borderStyle: "solid"
-      , borderWidth: 1
-      , boxShadow: "inset 0 1px 0 var(--glass-highlight), 0 8px 18px -8px oklch(0% 0 0 / 80%)"
-      , color: "var(--text-primary)"
-      , display: "inline-flex"
-      , flexShrink: 0
-      , fontFamily: "var(--font-mono)"
-      , fontSize: 12
-      , gap: 8
-      , paddingBlock: 7
-      , paddingInline: 12
-      , whiteSpace: "nowrap"
-      }
-  , badgeIcon:
-      { color: "var(--accent-text)"
-      , display: "inline-flex"
-      , fontSize: 14
-      , transform: StyleX.conditionalValue "none"
-          [ StyleX.conditionalCase breakpoints.upTo960 "rotate(90deg)" ]
-      }
-  , stackedIcon: { transform: "rotate(90deg)" }
-  , note:
-      { color: "var(--text-secondary)"
-      , flexShrink: 0
-      , fontFamily: "var(--font-mono)"
-      , fontSize: 11
-      , letterSpacing: "0.02em"
       }
   , caption:
       { color: "var(--text-secondary)"
@@ -227,25 +178,6 @@ styles = StyleX.create
   }
 
 styleProps = StyleX.recordProps styles
-
-step :: { stacked :: Boolean, note :: String } -> JSX
-step { stacked, note } = DOM.div
-  { className:
-      (StyleX.props [ styles.step, StyleX.conditional stacked styles.stackedStep ]).className
-  , "aria-hidden": true
-  }
-  [ rule
-  , DOM.span styleProps.badge
-      [ DOM.text "iris build"
-      , DOM.span (StyleX.props [ styles.badgeIcon, StyleX.conditional stacked styles.stackedIcon ])
-          (element Icon.arrowRight { "aria-hidden": true, focusable: false })
-      ]
-  , if note == "" then mempty else DOM.span styleProps.note note
-  , rule
-  ]
-  where
-  rule =
-    DOM.span (StyleX.props [ styles.stepRule, StyleX.conditional stacked styles.stackedRule ]) []
 
 shortName :: String -> String
 shortName name = fromMaybe name (last (split (Pattern ".") name))
@@ -307,7 +239,6 @@ output = DOM.section
                 , note: Nothing
                 , surface: CodeBlock.Flat
                 }
-            , step { stacked: false, note: "" }
             , CodeBlock.codeBlock
                 { code: compiled.output
                 , filename: shortName name <> "/index.js"
