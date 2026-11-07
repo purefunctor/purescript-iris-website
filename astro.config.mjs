@@ -49,7 +49,7 @@ export default defineConfig({
         "img-src 'self' data:",
         "media-src 'self' blob:",
       ],
-      scriptDirective: { resources: ["'self'"] },
+      scriptDirective: { resources: ["'self'", "https://static.cloudflareinsights.com"] },
       styleDirective: { hashes: inlineStyleHashes },
     },
   },
