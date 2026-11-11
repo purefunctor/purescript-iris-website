@@ -159,17 +159,18 @@ main = do
   case app of
     Nothing -> throw "There is no #app element."
     Just element -> do
-      ${component} <- mk${component[0].toUpperCase()}${component.slice(1)}
       root <- createRoot element
       renderRoot root (${component} unit)`;
 
-const REACT_ROOT_IMPORTS = String.raw`import React.Basic.DOM.Client (createRoot, renderRoot)
-import Web.DOM.NonElementParentNode (getElementById)
+const REACT_ROOT_IMPORTS = String.raw`import Web.DOM.NonElementParentNode (getElementById)
 import Web.HTML (window)
 import Web.HTML.HTMLDocument (toNonElementParentNode)
-import Web.HTML.Window (document)`;
+import Web.HTML.Window (document)
+import Yoga.React (component)
+import Yoga.React.DOM as DOM
+import Yoga.React.DOM.Client (createRoot, renderRoot)`;
 
-const REACT = ["react-basic", "react-basic-dom", "react-basic-hooks"];
+const REACT = ["react-basic", "react-basic-hooks", "yoga-react", "yoga-react-dom"];
 
 const MAPPED_EXCEPTION = {
   id: "source-maps",
@@ -445,39 +446,31 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Exception (throw)
 import Iris.StyleX as StyleX
-import React.Basic (keyed)
-import React.Basic.DOM as R
+import React.Basic (JSX)
 import React.Basic.Events (handler_)
-import React.Basic.Hooks (Component, component, useState, (/\))
+import React.Basic.Hooks (useState, (/\))
 import React.Basic.Hooks as React
 ${REACT_ROOT_IMPORTS}
 
 ${COUNTER_STYLES}
 
-mkCounter :: Component Unit
-mkCounter = component "Counter" \_ -> React.do
+counter :: Unit -> JSX
+counter = component "Counter" \_ -> React.do
   count /\ setCount <- useState 0
   let
-    key keyStyles label change = R.button
+    key keyStyles label change = DOM.button
       { className: (StyleX.props keyStyles).className
       , onClick: handler_ (setCount change)
-      , children: [ R.text label ]
       }
-  pure $ R.div
-    { className: styleProps.page.className
-    , children:
-        [ R.h1 { className: styleProps.title.className, children: [ R.text "React counter" ] }
-        , R.div
-            { className: styleProps.row.className
-            , children:
-                [ key [ styles.key ] "−" (_ - 1)
-                , keyed (show count) $ R.span
-                    { className: styleProps.count.className, children: [ R.text (show count) ] }
-                , key [ styles.key, styles.accent ] "+" (_ + 1)
-                ]
-            }
+      label
+  pure $ DOM.div styleProps.page
+    [ DOM.h1 styleProps.title "React counter"
+    , DOM.div styleProps.row
+        [ key [ styles.key ] "−" (_ - 1)
+        , DOM.span { className: styleProps.count.className, key: show count } (show count)
+        , key [ styles.key, styles.accent ] "+" (_ + 1)
         ]
-    }
+    ]
 
 ${REACT_MAIN("counter")}
 `,
@@ -486,7 +479,7 @@ ${REACT_MAIN("counter")}
   },
   {
     id: "react-todos",
-    packages: REACT,
+    packages: [...REACT, "react-basic-dom"],
     name: "React todos",
     description: "A React todo list styled with StyleX",
     files: [
@@ -502,14 +495,10 @@ import Data.String (trim)
 import Effect (Effect)
 import Effect.Exception (throw)
 import Iris.StyleX as StyleX
-import React.Basic (JSX, keyed)
-import Foreign.Object as Object
-import React.Basic.DOM as R
-import React.Basic.DOM.SVG as SVG
-import React.Basic.DOM.Events (targetValue)
-import React.Basic.DOM.Events as Events
+import React.Basic (JSX)
+import React.Basic.DOM.Events (key, targetValue)
 import React.Basic.Events (handler, handler_)
-import React.Basic.Hooks (Component, component, useState, (/\))
+import React.Basic.Hooks (useState, (/\))
 import React.Basic.Hooks as React
 ${REACT_ROOT_IMPORTS}
 
@@ -524,7 +513,7 @@ trashIcon =
   "M10 11v6m4-6v6m5-11v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
 
 icon :: String -> JSX
-icon d = SVG.svg
+icon d = DOM.createBuiltinElement "svg"
   { className: styleProps.icon.className
   , viewBox: "0 0 24 24"
   , fill: "none"
@@ -532,14 +521,14 @@ icon d = SVG.svg
   , strokeWidth: "2"
   , strokeLinecap: "round"
   , strokeLinejoin: "round"
-  , _aria: Object.singleton "hidden" "true"
-  , children: [ SVG.path { d } ]
+  , "aria-hidden": true
   }
+  (DOM.createBuiltinElement_ "path" { d })
 
 type Todo = { key :: Int, text :: String, done :: Boolean }
 
-mkTodos :: Component Unit
-mkTodos = component "Todos" \_ -> React.do
+todoList :: Unit -> JSX
+todoList = component "Todos" \_ -> React.do
   todos /\ setTodos <- useState
     [ { key: 0, text: "Open the playground", done: true }
     , { key: 1, text: "Write some PureScript", done: false }
@@ -553,67 +542,45 @@ mkTodos = component "Todos" \_ -> React.do
         setTodos \current -> snoc current { key: next, text, done: false }
         setNext (_ + 1)
         setDraft (const "")
-    toggle key = setTodos $ map \todo ->
-      if todo.key == key then todo { done = not todo.done } else todo
-    remove key = setTodos (filter \todo -> todo.key /= key)
+    toggle todoKey = setTodos $ map \todo ->
+      if todo.key == todoKey then todo { done = not todo.done } else todo
+    remove todoKey = setTodos (filter \todo -> todo.key /= todoKey)
 
-    item todo = keyed (show todo.key) $ R.li
-      { className: styleProps.item.className
-      , children:
-          [ R.label
-              { className: styleProps.label.className
-              , children:
-                  [ R.input
-                      { className: styleProps.checkbox.className
-                      , type: "checkbox"
-                      , checked: todo.done
-                      , onChange: handler_ (toggle todo.key)
-                      }
-                  , R.span
-                      { className: (StyleX.props [ StyleX.conditional todo.done styles.done ]).className
-                      , children: [ R.text todo.text ]
-                      }
-                  ]
+    item todo = DOM.li { className: styleProps.item.className, key: show todo.key }
+      [ DOM.label styleProps.label
+          [ DOM.input
+              { className: styleProps.checkbox.className
+              , type: "checkbox"
+              , checked: todo.done
+              , onChange: handler_ (toggle todo.key)
               }
-          , R.button
-              { className: styleProps.remove.className
-              , title: "Remove"
-              , onClick: handler_ (remove todo.key)
-              , children: [ icon trashIcon ]
-              }
+          , DOM.span (StyleX.props [ StyleX.conditional todo.done styles.done ]) todo.text
           ]
-      }
-  pure $ R.div
-    { className: styleProps.page.className
-    , children:
-        [ R.h1 { className: styleProps.title.className, children: [ R.text "React todos" ] }
-        , R.div
-            { className: styleProps.form.className
-            , children:
-                [ R.input
-                    { className: styleProps.input.className
-                    , placeholder: "What needs doing?"
-                    , value: draft
-                    , onChange: handler targetValue \value -> setDraft (const (fromMaybe "" value))
-                    , onKeyDown: handler Events.key \pressed -> when (pressed == Just "Enter") add
-                    }
-                , R.button
-                    { className: styleProps.key.className
-                    , type: "button"
-                    , onClick: handler_ add
-                    , children: [ icon plusIcon, R.text "Add" ]
-                    }
-                ]
+      , DOM.button
+          { className: styleProps.remove.className
+          , title: "Remove"
+          , onClick: handler_ (remove todo.key)
+          }
+          (icon trashIcon)
+      ]
+  pure $ DOM.div styleProps.page
+    [ DOM.h1 styleProps.title "React todos"
+    , DOM.div styleProps.form
+        [ DOM.createBuiltinElement_ "input"
+            { className: styleProps.input.className
+            , placeholder: "What needs doing?"
+            , value: draft
+            , onChange: handler targetValue \value -> setDraft (const (fromMaybe "" value))
+            , onKeyDown: handler key \pressed -> when (pressed == Just "Enter") add
             }
-        , R.ul { className: styleProps.list.className, children: map item todos }
-        , R.p
-            { className: styleProps.remaining.className
-            , children: [ R.text (show (length (filter (not <<< _.done) todos)) <> " left") ]
-            }
+        , DOM.button { className: styleProps.key.className, type: "button", onClick: handler_ add }
+            [ icon plusIcon, DOM.text "Add" ]
         ]
-    }
+    , DOM.ul styleProps.list (map item todos)
+    , DOM.p styleProps.remaining (show (length (filter (not <<< _.done) todos)) <> " left")
+    ]
 
-${REACT_MAIN("todos")}
+${REACT_MAIN("todoList")}
 `,
       },
     ],

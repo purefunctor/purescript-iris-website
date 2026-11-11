@@ -140,7 +140,7 @@ async function cacheTakePackages() {
   evaluate(`(async () => {
     localStorage.clear();
     localStorage.setItem('iris-playground-project', JSON.stringify({ version: 1, files: [{ path: 'src/Main.purs', text: 'module Main where' }],
-      packages: ${JSON.stringify([...core, 'react-basic', 'react-basic-dom', 'react-basic-hooks', 'halogen', 'heckin'])} }));
+      packages: ${JSON.stringify([...core, 'react-basic', 'react-basic-dom', 'react-basic-hooks', 'yoga-react', 'yoga-react-dom', 'halogen', 'heckin'])} }));
     return true;
   })()`);
   browser('reload');
@@ -181,7 +181,7 @@ async function playground() {
 
     await beat('templates');
     await clickOn(button('React counterA React component styled with StyleX'));
-    await expect(`${shown('import React.Basic.Hooks')}`, 'The React counter template opens');
+    await expect(`${shown('import Yoga.React')}`, 'The React counter template opens');
     await sleep(800);
     await runProject(() => program('button', '+', 'The counter renders'));
     for (const name of ['+', '+', '+', '−']) {
@@ -226,7 +226,7 @@ async function playground() {
 
     await beat('todos');
     await clickOn(button('React todosA React todo list styled with StyleX'));
-    await expect(`${shown('mkTodos')} || ${shown('import React.Basic.DOM.SVG')}`, 'The React todos template opens');
+    await expect(`${shown('todoList')} || ${shown('import React.Basic.DOM.Events')}`, 'The React todos template opens');
     await sleep(600);
     await runProject(() => program('textbox', 'What needs doing?', 'The todo list renders'));
     await clickProgram('textbox', 'What needs doing?');
@@ -293,7 +293,7 @@ async function playground() {
     await type('Iris.StyleX as StyleX');
     key('Escape');
     await clickOn(editorTab('Main.purs'));
-    await expect(`${shown('module Main where')} || ${shown('mkTodos')} || ${shown('styles = StyleX.create')}`, 'Main.purs is back');
+    await expect(`${shown('module Main where')} || ${shown('todoList')} || ${shown('styles = StyleX.create')}`, 'Main.purs is back');
     const colorsCommentLine = todos.findIndex(l => l.startsWith('-- The program runs')) + 1;
     const stylePropsLine = todos.findIndex(l => l.startsWith('styleProps = StyleX.recordProps styles')) + 1;
     await smoothScroll(colorsCommentLine, 0.2);
