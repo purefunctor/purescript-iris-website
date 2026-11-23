@@ -35,8 +35,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install latest stable Iris release
         run: |
@@ -62,6 +60,14 @@ jobs:
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Restore the pnpm store
+        if: steps.playground.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Build static assets
         if: steps.playground.outputs.ready == 'true'
