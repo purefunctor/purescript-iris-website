@@ -77,7 +77,7 @@ fn source_map(workspace: &Workspace, file_id: FileId) -> Result<Value, QueryErro
         .files
         .source_path(file_id)
         .expect("invariant violated: a generated module has no source URI");
-    Ok(serde_json::from_str(&map.to_json(&uri))
+    Ok(serde_json::from_str(&map.to_json(&uri, None))
         .expect("invariant violated: compiler source maps must be valid JSON"))
 }
 

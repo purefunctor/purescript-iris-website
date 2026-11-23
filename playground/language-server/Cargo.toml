@@ -9,11 +9,11 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-building = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.15" }
-files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.15" }
-iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.15" }
-javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.15" }
-prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.15" }
+building = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.18" }
+files = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.18" }
+iris-analysis = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.18" }
+javascript = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.18" }
+prim-constants = { git = "https://github.com/purefunctor/purescript-iris", tag = "v0.1.18" }
 lsp-types = { package = "gen-lsp-types", version = "=0.11.0", features = ["url"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"

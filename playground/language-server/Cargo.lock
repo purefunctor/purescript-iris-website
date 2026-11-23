@@ -55,7 +55,7 @@ checksum = "36f64beae40a84da1b4b26ff2761a5b895c12adc41dc25aaee1c4f2bbfe97a6e"
 [[package]]
 name = "building"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "checking",
@@ -85,7 +85,7 @@ dependencies = [
 [[package]]
 name = "building-types"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "files",
  "parking_lot",
@@ -136,7 +136,7 @@ checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 [[package]]
 name = "checking"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "files",
@@ -216,7 +216,7 @@ dependencies = [
 [[package]]
 name = "documenting"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "indexing",
  "parsing",
@@ -270,7 +270,7 @@ checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
 [[package]]
 name = "files"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "rayon",
  "rustc-hash",
@@ -297,7 +297,7 @@ checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 [[package]]
 name = "foreign-javascript"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "files",
@@ -322,7 +322,7 @@ dependencies = [
 [[package]]
 name = "formatting"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "lexing",
  "parsing",
@@ -333,7 +333,7 @@ dependencies = [
 [[package]]
 name = "functional"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "checking",
@@ -543,11 +543,10 @@ dependencies = [
 [[package]]
 name = "indexing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
- "itertools",
+ "building-types",
  "la-arena",
- "paste",
  "rustc-hash",
  "smol_str",
  "stabilizing",
@@ -567,11 +566,10 @@ dependencies = [
 [[package]]
 name = "interner"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "boxcar",
  "hashbrown 0.17.1",
- "papaya",
  "parking_lot",
  "rustc-hash",
 ]
@@ -579,7 +577,7 @@ dependencies = [
 [[package]]
 name = "iris-analysis"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "checking",
@@ -613,7 +611,7 @@ dependencies = [
 [[package]]
 name = "iris-diagnostics"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "checking",
@@ -630,6 +628,7 @@ dependencies = [
  "resolving",
  "smol_str",
  "stabilizing",
+ "sugar",
  "syntax",
  "textwrap",
  "unicode-width",
@@ -669,7 +668,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "javascript"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "files",
@@ -708,7 +707,7 @@ checksum = "3752f229dcc5a481d60f385fa479ff46818033d881d2d801aa27dffcfb5e8306"
 [[package]]
 name = "lexing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "syntax",
  "unicode_categories",
@@ -748,17 +747,18 @@ dependencies = [
 [[package]]
 name = "lowering"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
+ "building-types",
  "files",
  "indexing",
  "indexmap",
  "itertools",
  "la-arena",
- "paste",
  "petgraph",
  "resolving",
  "rustc-hash",
+ "smallvec",
  "smol_str",
  "stabilizing",
  "syntax",
@@ -1086,16 +1086,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "papaya"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da2442474a9404698c42509b8967f437249dbc7b50493e83020333d3943ec0ae"
-dependencies = [
- "equivalent",
- "seize",
-]
-
-[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1121,20 +1111,14 @@ dependencies = [
 [[package]]
 name = "parsing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
+ "building-types",
  "drop_bomb",
  "lexing",
  "smol_str",
  "syntax",
- "syntree",
 ]
-
-[[package]]
-name = "paste"
-version = "1.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "percent-encoding"
@@ -1228,7 +1212,7 @@ dependencies = [
 [[package]]
 name = "prim-constants"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 
 [[package]]
 name = "proc-macro2"
@@ -1290,7 +1274,7 @@ dependencies = [
 [[package]]
 name = "resolving"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "files",
@@ -1316,16 +1300,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "seize"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b55fb86dfd3a2f5f76ea78310a88f96c4ea21a3031f8d212443d56123fd0521"
-dependencies = [
- "libc",
- "windows-sys",
-]
 
 [[package]]
 name = "self_cell"
@@ -1416,11 +1390,9 @@ dependencies = [
 [[package]]
 name = "stabilizing"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "hashbrown 0.17.1",
- "la-arena",
- "paste",
  "rustc-hash",
  "syntax",
 ]
@@ -1456,7 +1428,7 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 [[package]]
 name = "sugar"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
  "building-types",
  "files",
@@ -1502,22 +1474,10 @@ dependencies = [
 [[package]]
 name = "syntax"
 version = "0.1.0"
-source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.15#b998ef49d61d048443648ac693cd6afb33798eb3"
+source = "git+https://github.com/purefunctor/purescript-iris?tag=v0.1.18#0474906888e2a0e68de98d9b43bb3256475fe26f"
 dependencies = [
- "hashbrown 0.17.1",
- "la-arena",
- "parking_lot",
- "paste",
- "rustc-hash",
- "syntree",
  "text-size",
 ]
-
-[[package]]
-name = "syntree"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00c99c9cda412afe293a6b962af651b4594161ba88c1affe7ef66459ea040a06"
 
 [[package]]
 name = "text-size"
@@ -1718,15 +1678,6 @@ name = "windows-link"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5"
-
-[[package]]
-name = "windows-sys"
-version = "0.61.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
-dependencies = [
- "windows-link",
-]
 
 [[package]]
 name = "writeable"
